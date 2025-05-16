@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp();
   runApp(const MyApp());
 }
 
@@ -30,7 +34,63 @@ class MyApp extends StatelessWidget {
         // tested with just a hot reload.
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
       ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
+      home: AuthScreen(),
+    );
+  }
+}
+
+class AuthScreen extends StatefulWidget {
+  @override
+  _AuthScreenState createState() => _AuthScreenState();
+}
+
+class _AuthScreenState extends State<AuthScreen> {
+  final TextEditingController emailController = TextEditingController();
+  final TextEditingController passwordController = TextEditingController();
+  String message = '';
+
+  Future<void> signUp() async {
+    try {
+      await FirebaseAuth.instance.createUserWithEmailAndPassword(
+        email: emailController.text,
+        password: passwordController.text,
+      );
+      setState(() => message = 'Sign up successful!');
+    } catch (e) {
+      setState(() => message = 'Error: $e');
+    }
+  }
+
+  Future<void> signIn() async {
+    try {
+      await FirebaseAuth.instance.signInWithEmailAndPassword(
+        email: emailController.text,
+        password: passwordController.text,
+      );
+      setState(() => message = 'Sign in successful!');
+    } catch (e) {
+      setState(() => message = 'Error: $e');
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text('Auth Example')),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          children: [
+            TextField(controller: emailController, decoration: InputDecoration(labelText: 'Email')),
+            TextField(controller: passwordController, decoration: InputDecoration(labelText: 'Password'), obscureText: true),
+            SizedBox(height: 16),
+            ElevatedButton(onPressed: signUp, child: Text('Sign Up')),
+            ElevatedButton(onPressed: signIn, child: Text('Sign In')),
+            SizedBox(height: 16),
+            Text(message),
+          ],
+        ),
+      ),
     );
   }
 }
