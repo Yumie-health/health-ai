@@ -7,11 +7,6 @@
       <module name="android.firebase_core" target="21" />
       <module name="android.firebase_storage" target="21" />
       <module name="android.sign_in_with_apple" target="21" />
-      <module name="com.aboutyou.dart_packages.sign_in_with_apple.android.sign_in_with_apple" target="21" />
-      <module name="io.flutter.plugins.firebase.auth.android.firebase_auth" target="21" />
-      <module name="io.flutter.plugins.firebase.cloudfirestore.android.cloud_firestore" target="21" />
-      <module name="io.flutter.plugins.firebase.core.android.firebase_core" target="21" />
-      <module name="io.flutter.plugins.firebase.storage.android.firebase_storage" target="21" />
     </bytecodeTargetLevel>
   </component>
 </project>
