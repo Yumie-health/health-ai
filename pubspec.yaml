@@ -1,0 +1,10 @@
+name: health_ai
+description: A new Flutter project.
+
+environment:
+  sdk: '>=3.7.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  table_calendar: ^3.0.9 

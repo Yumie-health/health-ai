@@ -14,8 +14,8 @@ class MealService {
       return Stream.value([]);
     }
 
-    final now = DateTime.now().toUtc();
-    final startOfDay = DateTime.utc(now.year, now.month, now.day);
+    final now = DateTime.now();
+    final startOfDay = DateTime(now.year, now.month, now.day);
     final endOfDay = startOfDay.add(const Duration(days: 1));
 
     print('getTodayMeals: userId=${user.uid}, startOfDay=$startOfDay, endOfDay=$endOfDay');
@@ -34,6 +34,25 @@ class MealService {
           }
           return snapshot.docs.map((doc) => Meal.fromFirestore(doc)).toList();
         });
+  }
+
+  // Get meals for a specific date
+  Stream<List<Meal>> getMealsForDate(DateTime date) {
+    final user = _auth.currentUser;
+    if (user == null) {
+      print('No authenticated user!');
+      return Stream.value([]);
+    }
+    final startOfDay = DateTime(date.year, date.month, date.day);
+    final endOfDay = startOfDay.add(const Duration(days: 1));
+    return _firestore
+        .collection('meals')
+        .where('userId', isEqualTo: user.uid)
+        .where('timestamp', isGreaterThanOrEqualTo: Timestamp.fromDate(startOfDay))
+        .where('timestamp', isLessThan: Timestamp.fromDate(endOfDay))
+        .orderBy('timestamp', descending: true)
+        .snapshots()
+        .map((snapshot) => snapshot.docs.map((doc) => Meal.fromFirestore(doc)).toList());
   }
 
   // Add a new meal
@@ -61,8 +80,8 @@ class MealService {
     final snapshot = await _firestore
         .collection('meals')
         .where('userId', isEqualTo: user.uid)
-        .where('timestamp', isGreaterThanOrEqualTo: startOfDay)
-        .where('timestamp', isLessThan: endOfDay)
+        .where('timestamp', isGreaterThanOrEqualTo: Timestamp.fromDate(startOfDay))
+        .where('timestamp', isLessThan: Timestamp.fromDate(endOfDay))
         .get();
 
     int totalCalories = 0;

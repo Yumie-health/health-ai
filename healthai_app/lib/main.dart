@@ -6,6 +6,7 @@ import 'models/meal.dart';
 import 'models/user.dart';
 import 'services/meal_service.dart';
 import 'services/user_service.dart';
+import 'package:table_calendar/table_calendar.dart';
 
 // Define the color palette
 const Color kPrimaryGreen = Color(0xFF4CAF50); // Soft green
@@ -710,25 +711,6 @@ class DashboardScreen extends StatefulWidget {
 class _DashboardScreenState extends State<DashboardScreen> {
   final MealService _mealService = MealService();
   final UserService _userService = UserService();
-  Map<String, int> _dailyNutrition = {
-    'calories': 0,
-    'protein': 0,
-    'carbs': 0,
-    'fat': 0,
-  };
-
-  @override
-  void initState() {
-    super.initState();
-    _loadDailyNutrition();
-  }
-
-  Future<void> _loadDailyNutrition() async {
-    final nutrition = await _mealService.getDailyNutritionSummary();
-    setState(() {
-      _dailyNutrition = nutrition;
-    });
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -804,226 +786,244 @@ class _DashboardScreenState extends State<DashboardScreen> {
           return ListView(
             padding: const EdgeInsets.all(16),
             children: [
-              // Today's Summary Card
-              Container(
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(20),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.04),
-                      blurRadius: 12,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const Text(
-                          "Today's Summary",
-                          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
-                        ),
-                        Row(
-                          children: [
-                            Text(
-                              DateTime.now().toString().split(' ')[0],
-                              style: TextStyle(color: Colors.grey[600]),
-                            ),
-                            const SizedBox(width: 4),
-                            Icon(Icons.calendar_today, size: 18, color: Colors.grey),
-                          ],
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 20),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        _SummaryBox(
-                          icon: Icons.restaurant,
-                          color: kPrimaryGreen.withOpacity(0.12),
-                          label: 'Food',
-                          value: '${_dailyNutrition['calories']}',
-                          valueColor: kPrimaryGreen,
-                        ),
-                        _SummaryBox(
-                          icon: Icons.favorite_border,
-                          color: kSecondaryBlue.withOpacity(0.12),
-                          label: 'Activity',
-                          value: '320',
-                          valueColor: kSecondaryBlue,
-                        ),
-                        _SummaryBox(
-                          icon: Icons.cookie,
-                          color: kAccentOrange.withOpacity(0.12),
-                          label: 'Remaining',
-                          value: '${dailyCalorieGoal - _dailyNutrition['calories']!}',
-                          valueColor: kAccentOrange,
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 20),
-                    _ProgressRow(
-                      label: 'Daily Goal',
-                      value: '${_dailyNutrition['calories']} / $dailyCalorieGoal cal',
-                      percent: _dailyNutrition['calories']! / dailyCalorieGoal,
-                    ),
-                    _ProgressRow(
-                      label: 'Protein',
-                      value: '${_dailyNutrition['protein']} / $proteinGoal g',
-                      percent: _dailyNutrition['protein']! / proteinGoal,
-                    ),
-                    _ProgressRow(
-                      label: 'Carbs',
-                      value: '${_dailyNutrition['carbs']} / $carbsGoal g',
-                      percent: _dailyNutrition['carbs']! / carbsGoal,
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 20),
-              // AI Insight Card
-              Container(
-                padding: const EdgeInsets.all(18),
-                decoration: BoxDecoration(
-                  color: kSecondaryBlue.withOpacity(0.08),
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Icon(Icons.insights, color: kSecondaryBlue, size: 32),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text('AI Insight', style: TextStyle(fontWeight: FontWeight.bold, color: kSecondaryBlue)),
-                          const SizedBox(height: 4),
-                          Text(
-                            _getAIInsight(_dailyNutrition, userProfile),
-                            style: const TextStyle(color: Colors.black87),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 24),
-              // Today's Meals
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text("Today's Meals", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
-                  TextButton(
-                    onPressed: () {},
-                    child: const Text('See All'),
-                  ),
-                ],
-              ),
+              // Today's Summary Card and Meals
               StreamBuilder<List<Meal>>(
                 stream: _mealService.getTodayMeals(),
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
                     return const Center(child: CircularProgressIndicator());
                   }
-                  if (!snapshot.hasData || snapshot.data == null || snapshot.data!.isEmpty) {
-                    return Column(
-                      children: [
-                        const SizedBox(height: 16),
-                        Text('No meals logged for this day.', style: TextStyle(color: Colors.grey)),
-                        const SizedBox(height: 16),
-                      ],
-                    );
-                  }
-                  final meals = snapshot.data!;
-                  // Group meals by type
-                  final breakfastMeals = meals.where((m) => m.mealType == 'breakfast').toList();
-                  final lunchMeals = meals.where((m) => m.mealType == 'lunch').toList();
-                  final dinnerMeals = meals.where((m) => m.mealType == 'dinner').toList();
-                  final snackMeals = meals.where((m) => m.mealType == 'snack').toList();
+                  final meals = snapshot.data ?? [];
+                  // Calculate totals
+                  final totalCalories = meals.fold(0, (sum, m) => sum + m.calories);
+                  final totalProtein = meals.fold(0, (sum, m) => sum + m.protein);
+                  final totalCarbs = meals.fold(0, (sum, m) => sum + m.carbs);
+                  final totalFat = meals.fold(0, (sum, m) => sum + m.fat);
 
                   return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      if (breakfastMeals.isNotEmpty)
-                        _LogMealCard(
-                          meal: 'Breakfast',
-                          time: breakfastMeals.first.timestamp.toString().split(' ')[1].substring(0, 5),
-                          calories: breakfastMeals.fold(0, (sum, m) => sum + m.calories),
-                          macros: 'P: ${breakfastMeals.fold(0, (sum, m) => sum + m.protein)}g • C: ${breakfastMeals.fold(0, (sum, m) => sum + m.carbs)}g • F: ${breakfastMeals.fold(0, (sum, m) => sum + m.fat)}g',
-                          foods: breakfastMeals.map((m) => _LogFoodItem(
-                            name: m.name,
-                            calories: m.calories,
-                            macros: 'P: ${m.protein}g • C: ${m.carbs}g • F: ${m.fat}g',
-                          )).toList(),
+                      // Today's Summary Card
+                      Container(
+                        padding: const EdgeInsets.all(20),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(20),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.04),
+                              blurRadius: 12,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
                         ),
-                      if (lunchMeals.isNotEmpty)
-                        _LogMealCard(
-                          meal: 'Lunch',
-                          time: lunchMeals.first.timestamp.toString().split(' ')[1].substring(0, 5),
-                          calories: lunchMeals.fold(0, (sum, m) => sum + m.calories),
-                          macros: 'P: ${lunchMeals.fold(0, (sum, m) => sum + m.protein)}g • C: ${lunchMeals.fold(0, (sum, m) => sum + m.carbs)}g • F: ${lunchMeals.fold(0, (sum, m) => sum + m.fat)}g',
-                          foods: lunchMeals.map((m) => _LogFoodItem(
-                            name: m.name,
-                            calories: m.calories,
-                            macros: 'P: ${m.protein}g • C: ${m.carbs}g • F: ${m.fat}g',
-                          )).toList(),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                const Text(
+                                  "Today's Summary",
+                                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                                ),
+                                Row(
+                                  children: [
+                                    Text(
+                                      DateTime.now().toString().split(' ')[0],
+                                      style: TextStyle(color: Colors.grey[600]),
+                                    ),
+                                    const SizedBox(width: 4),
+                                    Icon(Icons.calendar_today, size: 18, color: Colors.grey),
+                                  ],
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 20),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                _SummaryBox(
+                                  icon: Icons.restaurant,
+                                  color: kPrimaryGreen.withOpacity(0.12),
+                                  label: 'Food',
+                                  value: '$totalCalories',
+                                  valueColor: kPrimaryGreen,
+                                ),
+                                _SummaryBox(
+                                  icon: Icons.favorite_border,
+                                  color: kSecondaryBlue.withOpacity(0.12),
+                                  label: 'Activity',
+                                  value: '320',
+                                  valueColor: kSecondaryBlue,
+                                ),
+                                _SummaryBox(
+                                  icon: Icons.cookie,
+                                  color: kAccentOrange.withOpacity(0.12),
+                                  label: 'Remaining',
+                                  value: '${dailyCalorieGoal - totalCalories}',
+                                  valueColor: kAccentOrange,
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 20),
+                            _ProgressRow(
+                              label: 'Daily Goal',
+                              value: '$totalCalories / $dailyCalorieGoal cal',
+                              percent: dailyCalorieGoal > 0 ? totalCalories / dailyCalorieGoal : 0,
+                            ),
+                            _ProgressRow(
+                              label: 'Protein',
+                              value: '$totalProtein / $proteinGoal g',
+                              percent: proteinGoal > 0 ? totalProtein / proteinGoal : 0,
+                            ),
+                            _ProgressRow(
+                              label: 'Carbs',
+                              value: '$totalCarbs / $carbsGoal g',
+                              percent: carbsGoal > 0 ? totalCarbs / carbsGoal : 0,
+                            ),
+                          ],
                         ),
-                      if (dinnerMeals.isNotEmpty)
-                        _LogMealCard(
-                          meal: 'Dinner',
-                          time: dinnerMeals.first.timestamp.toString().split(' ')[1].substring(0, 5),
-                          calories: dinnerMeals.fold(0, (sum, m) => sum + m.calories),
-                          macros: 'P: ${dinnerMeals.fold(0, (sum, m) => sum + m.protein)}g • C: ${dinnerMeals.fold(0, (sum, m) => sum + m.carbs)}g • F: ${dinnerMeals.fold(0, (sum, m) => sum + m.fat)}g',
-                          foods: dinnerMeals.map((m) => _LogFoodItem(
-                            name: m.name,
-                            calories: m.calories,
-                            macros: 'P: ${m.protein}g • C: ${m.carbs}g • F: ${m.fat}g',
-                          )).toList(),
+                      ),
+                      const SizedBox(height: 20),
+                      // AI Insight Card
+                      Container(
+                        padding: const EdgeInsets.all(18),
+                        decoration: BoxDecoration(
+                          color: kSecondaryBlue.withOpacity(0.08),
+                          borderRadius: BorderRadius.circular(16),
                         ),
-                      if (snackMeals.isNotEmpty)
-                        _LogMealCard(
-                          meal: 'Snack',
-                          time: snackMeals.first.timestamp.toString().split(' ')[1].substring(0, 5),
-                          calories: snackMeals.fold(0, (sum, m) => sum + m.calories),
-                          macros: 'P: ${snackMeals.fold(0, (sum, m) => sum + m.protein)}g • C: ${snackMeals.fold(0, (sum, m) => sum + m.carbs)}g • F: ${snackMeals.fold(0, (sum, m) => sum + m.fat)}g',
-                          foods: snackMeals.map((m) => _LogFoodItem(
-                            name: m.name,
-                            calories: m.calories,
-                            macros: 'P: ${m.protein}g • C: ${m.carbs}g • F: ${m.fat}g',
-                          )).toList(),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Icon(Icons.insights, color: kSecondaryBlue, size: 32),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Text('AI Insight', style: TextStyle(fontWeight: FontWeight.bold, color: kSecondaryBlue)),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    _getAIInsight({
+                                      'calories': totalCalories,
+                                      'protein': totalProtein,
+                                      'carbs': totalCarbs,
+                                      'fat': totalFat,
+                                    }, userProfile),
+                                    style: const TextStyle(color: Colors.black87),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
                         ),
+                      ),
+                      const SizedBox(height: 24),
+                      // Today's Meals
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text("Today's Meals", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+                          TextButton(
+                            onPressed: () {},
+                            child: const Text('See All'),
+                          ),
+                        ],
+                      ),
+                      if (meals.isEmpty)
+                        Column(
+                          children: [
+                            const SizedBox(height: 16),
+                            Text('No meals logged for this day.', style: TextStyle(color: Colors.grey)),
+                            const SizedBox(height: 16),
+                          ],
+                        ),
+                      if (meals.isNotEmpty)
+                        ..._buildMealCards(meals),
+                      const SizedBox(height: 16),
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton(
+                          onPressed: () {
+                            // Navigate to add meal screen
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: kPrimaryGreen,
+                            foregroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                          ),
+                          child: const Text('+ Add Meal', style: TextStyle(fontSize: 16)),
+                        ),
+                      ),
                     ],
                   );
                 },
-              ),
-              const SizedBox(height: 16),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: () {
-                    // Navigate to add meal screen
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: kPrimaryGreen,
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                  ),
-                  child: const Text('+ Add Meal', style: TextStyle(fontSize: 16)),
-                ),
               ),
             ],
           );
         },
       ),
     );
+  }
+
+  // Helper to build meal cards grouped by type
+  List<Widget> _buildMealCards(List<Meal> meals) {
+    final breakfastMeals = meals.where((m) => m.mealType == 'breakfast').toList();
+    final lunchMeals = meals.where((m) => m.mealType == 'lunch').toList();
+    final dinnerMeals = meals.where((m) => m.mealType == 'dinner').toList();
+    final snackMeals = meals.where((m) => m.mealType == 'snack').toList();
+    return [
+      if (breakfastMeals.isNotEmpty)
+        _LogMealCard(
+          meal: 'Breakfast',
+          time: breakfastMeals.first.timestamp.toString().split(' ')[1].substring(0, 5),
+          calories: breakfastMeals.fold(0, (sum, m) => sum + m.calories),
+          macros: 'P: ${breakfastMeals.fold(0, (sum, m) => sum + m.protein)}g • C: ${breakfastMeals.fold(0, (sum, m) => sum + m.carbs)}g • F: ${breakfastMeals.fold(0, (sum, m) => sum + m.fat)}g',
+          foods: breakfastMeals.map((m) => _LogFoodItem(
+            name: m.name,
+            calories: m.calories,
+            macros: 'P: ${m.protein}g • C: ${m.carbs}g • F: ${m.fat}g',
+          )).toList(),
+        ),
+      if (lunchMeals.isNotEmpty)
+        _LogMealCard(
+          meal: 'Lunch',
+          time: lunchMeals.first.timestamp.toString().split(' ')[1].substring(0, 5),
+          calories: lunchMeals.fold(0, (sum, m) => sum + m.calories),
+          macros: 'P: ${lunchMeals.fold(0, (sum, m) => sum + m.protein)}g • C: ${lunchMeals.fold(0, (sum, m) => sum + m.carbs)}g • F: ${lunchMeals.fold(0, (sum, m) => sum + m.fat)}g',
+          foods: lunchMeals.map((m) => _LogFoodItem(
+            name: m.name,
+            calories: m.calories,
+            macros: 'P: ${m.protein}g • C: ${m.carbs}g • F: ${m.fat}g',
+          )).toList(),
+        ),
+      if (dinnerMeals.isNotEmpty)
+        _LogMealCard(
+          meal: 'Dinner',
+          time: dinnerMeals.first.timestamp.toString().split(' ')[1].substring(0, 5),
+          calories: dinnerMeals.fold(0, (sum, m) => sum + m.calories),
+          macros: 'P: ${dinnerMeals.fold(0, (sum, m) => sum + m.protein)}g • C: ${dinnerMeals.fold(0, (sum, m) => sum + m.carbs)}g • F: ${dinnerMeals.fold(0, (sum, m) => sum + m.fat)}g',
+          foods: dinnerMeals.map((m) => _LogFoodItem(
+            name: m.name,
+            calories: m.calories,
+            macros: 'P: ${m.protein}g • C: ${m.carbs}g • F: ${m.fat}g',
+          )).toList(),
+        ),
+      if (snackMeals.isNotEmpty)
+        _LogMealCard(
+          meal: 'Snack',
+          time: snackMeals.first.timestamp.toString().split(' ')[1].substring(0, 5),
+          calories: snackMeals.fold(0, (sum, m) => sum + m.calories),
+          macros: 'P: ${snackMeals.fold(0, (sum, m) => sum + m.protein)}g • C: ${snackMeals.fold(0, (sum, m) => sum + m.carbs)}g • F: ${snackMeals.fold(0, (sum, m) => sum + m.fat)}g',
+          foods: snackMeals.map((m) => _LogFoodItem(
+            name: m.name,
+            calories: m.calories,
+            macros: 'P: ${m.protein}g • C: ${m.carbs}g • F: ${m.fat}g',
+          )).toList(),
+        ),
+    ];
   }
 
   String _getAIInsight(Map<String, int> nutrition, UserProfile? userProfile) {
@@ -1360,19 +1360,49 @@ class _LogScreenState extends State<LogScreen> {
   final MealService _mealService = MealService();
   final TextEditingController _searchController = TextEditingController();
   DateTime _selectedDate = DateTime.now();
+  // Add filter state
+  final Set<String> _selectedMealTypes = {'breakfast', 'lunch', 'dinner', 'snack'};
 
-  Future<void> _selectDate(BuildContext context) async {
-    final DateTime? picked = await showDatePicker(
+  void _showFilterDialog() {
+    showDialog(
       context: context,
-      initialDate: _selectedDate,
-      firstDate: DateTime(2020),
-      lastDate: DateTime.now(),
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Filter Meals'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _buildFilterCheckbox('Breakfast', 'breakfast'),
+              _buildFilterCheckbox('Lunch', 'lunch'),
+              _buildFilterCheckbox('Dinner', 'dinner'),
+              _buildFilterCheckbox('Snack', 'snack'),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Close'),
+            ),
+          ],
+        );
+      },
     );
-    if (picked != null && picked != _selectedDate) {
-      setState(() {
-        _selectedDate = picked;
-      });
-    }
+  }
+
+  Widget _buildFilterCheckbox(String label, String value) {
+    return CheckboxListTile(
+      title: Text(label),
+      value: _selectedMealTypes.contains(value),
+      onChanged: (checked) {
+        setState(() {
+          if (checked == true) {
+            _selectedMealTypes.add(value);
+          } else {
+            _selectedMealTypes.remove(value);
+          }
+        });
+      },
+    );
   }
 
   void _showAddMealDialog() {
@@ -1427,6 +1457,24 @@ class _LogScreenState extends State<LogScreen> {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
+          // Calendar always visible at the top
+          TableCalendar(
+            firstDay: DateTime(2020),
+            lastDay: DateTime.now(),
+            focusedDay: _selectedDate,
+            selectedDayPredicate: (day) => isSameDay(day, _selectedDate),
+            onDaySelected: (selectedDay, focusedDay) {
+              setState(() {
+                _selectedDate = selectedDay;
+              });
+            },
+            calendarFormat: CalendarFormat.week,
+            headerStyle: HeaderStyle(
+              formatButtonVisible: false,
+              titleCentered: true,
+            ),
+          ),
+          const SizedBox(height: 16),
           // Search bar and filter
           Row(
             children: [
@@ -1454,7 +1502,7 @@ class _LogScreenState extends State<LogScreen> {
                 ),
                 child: IconButton(
                   icon: Icon(Icons.filter_list, color: Colors.grey),
-                  onPressed: () {},
+                  onPressed: _showFilterDialog,
                 ),
               ),
             ],
@@ -1465,25 +1513,16 @@ class _LogScreenState extends State<LogScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               const Text("Today's Meals", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
-              GestureDetector(
-                onTap: () => _selectDate(context),
-                child: Row(
-                  children: [
-                    Text(
-                      '${_selectedDate.day}/${_selectedDate.month}/${_selectedDate.year}',
-                      style: TextStyle(color: Colors.grey[600]),
-                    ),
-                    const SizedBox(width: 4),
-                    Icon(Icons.calendar_today, size: 18, color: Colors.grey),
-                  ],
-                ),
+              Text(
+                '${_selectedDate.day}/${_selectedDate.month}/${_selectedDate.year}',
+                style: TextStyle(color: Colors.grey[600]),
               ),
             ],
           ),
           const SizedBox(height: 8),
           // Meal cards
           StreamBuilder<List<Meal>>(
-            stream: _mealService.getTodayMeals(),
+            stream: _mealService.getMealsForDate(_selectedDate),
             builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting) {
                 return const Center(child: CircularProgressIndicator());
@@ -1498,11 +1537,13 @@ class _LogScreenState extends State<LogScreen> {
                 );
               }
               final meals = snapshot.data!;
+              // Filter by selected meal types
+              final filteredMeals = meals.where((m) => _selectedMealTypes.contains(m.mealType)).toList();
               // Group meals by type
-              final breakfastMeals = meals.where((m) => m.mealType == 'breakfast').toList();
-              final lunchMeals = meals.where((m) => m.mealType == 'lunch').toList();
-              final dinnerMeals = meals.where((m) => m.mealType == 'dinner').toList();
-              final snackMeals = meals.where((m) => m.mealType == 'snack').toList();
+              final breakfastMeals = filteredMeals.where((m) => m.mealType == 'breakfast').toList();
+              final lunchMeals = filteredMeals.where((m) => m.mealType == 'lunch').toList();
+              final dinnerMeals = filteredMeals.where((m) => m.mealType == 'dinner').toList();
+              final snackMeals = filteredMeals.where((m) => m.mealType == 'snack').toList();
 
               return Column(
                 children: [
