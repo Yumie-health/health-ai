@@ -20,14 +20,14 @@
         <option name="gradleJvm" value="#GRADLE_LOCAL_JAVA_HOME" />
         <option name="modules">
           <set>
-            <option value="$USER_HOME$/.pub-cache/hosted/pub.dev/cloud_firestore-4.17.5/android" />
-            <option value="$USER_HOME$/.pub-cache/hosted/pub.dev/firebase_auth-4.20.0/android" />
-            <option value="$USER_HOME$/.pub-cache/hosted/pub.dev/firebase_core-2.32.0/android" />
-            <option value="$USER_HOME$/.pub-cache/hosted/pub.dev/firebase_storage-11.7.7/android" />
+            <option value="$USER_HOME$/.pub-cache/hosted/pub.dev/cloud_firestore-5.6.7/android" />
+            <option value="$USER_HOME$/.pub-cache/hosted/pub.dev/firebase_auth-5.5.3/android" />
+            <option value="$USER_HOME$/.pub-cache/hosted/pub.dev/firebase_core-3.13.0/android" />
+            <option value="$USER_HOME$/.pub-cache/hosted/pub.dev/firebase_storage-12.4.5/android" />
             <option value="$USER_HOME$/.pub-cache/hosted/pub.dev/flutter_plugin_android_lifecycle-2.0.28/android" />
             <option value="$USER_HOME$/.pub-cache/hosted/pub.dev/google_sign_in_android-6.2.1/android" />
             <option value="$USER_HOME$/.pub-cache/hosted/pub.dev/image_picker_android-0.8.12+23/android" />
-            <option value="$USER_HOME$/.pub-cache/hosted/pub.dev/sign_in_with_apple-6.1.4/android" />
+            <option value="$USER_HOME$/.pub-cache/hosted/pub.dev/sign_in_with_apple-7.0.1/android" />
             <option value="$PROJECT_DIR$/../../flutter/packages/flutter_tools/gradle" />
             <option value="$PROJECT_DIR$/healthai_app/android" />
             <option value="$PROJECT_DIR$/healthai_app/android/app" />
