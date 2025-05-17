@@ -39,6 +39,7 @@ class UserService {
       age: 0,
       height: 0,
       weight: 0,
+      targetWeight: 0,
       dailyCalorieGoal: 2000,
       proteinGoal: 120,
       carbsGoal: 250,

@@ -11,6 +11,7 @@ class UserProfile {
   final int proteinGoal; // in grams
   final int carbsGoal; // in grams
   final int fatGoal; // in grams
+  final double targetWeight; // in kg
   final DateTime createdAt;
   final DateTime lastUpdated;
 
@@ -25,6 +26,7 @@ class UserProfile {
     required this.proteinGoal,
     required this.carbsGoal,
     required this.fatGoal,
+    required this.targetWeight,
     required this.createdAt,
     required this.lastUpdated,
   });
@@ -40,6 +42,7 @@ class UserProfile {
       'proteinGoal': proteinGoal,
       'carbsGoal': carbsGoal,
       'fatGoal': fatGoal,
+      'targetWeight': targetWeight,
       'createdAt': createdAt,
       'lastUpdated': lastUpdated,
     };
@@ -58,6 +61,7 @@ class UserProfile {
       proteinGoal: data['proteinGoal'] ?? 120,
       carbsGoal: data['carbsGoal'] ?? 250,
       fatGoal: data['fatGoal'] ?? 70,
+      targetWeight: (data['targetWeight'] ?? 0).toDouble(),
       createdAt: (data['createdAt'] as Timestamp).toDate(),
       lastUpdated: (data['lastUpdated'] as Timestamp).toDate(),
     );

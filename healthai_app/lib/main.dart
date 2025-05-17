@@ -7,6 +7,8 @@ import 'models/user.dart';
 import 'services/meal_service.dart';
 import 'services/user_service.dart';
 import 'package:table_calendar/table_calendar.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:provider/provider.dart';
 
 // Define the color palette
 const Color kPrimaryGreen = Color(0xFF4CAF50); // Soft green
@@ -17,18 +19,57 @@ const Color kBackgroundWhite = Color(0xFFFFFFFF); // Clean white
 const Color kWarningRed = Color(0xFFFF7043); // Orange/Red for warnings
 const Color kContainerGrey = Color(0xFFF5F5F5); // Light grey for containers
 
+// Preferences Provider
+class PreferencesProvider extends ChangeNotifier {
+  bool _darkMode = false;
+  bool _useMetric = true;
+
+  bool get darkMode => _darkMode;
+  bool get useMetric => _useMetric;
+
+  PreferencesProvider() {
+    _loadPrefs();
+  }
+
+  Future<void> _loadPrefs() async {
+    final prefs = await SharedPreferences.getInstance();
+    _darkMode = prefs.getBool('darkMode') ?? false;
+    _useMetric = prefs.getBool('useMetric') ?? true;
+    notifyListeners();
+  }
+
+  Future<void> setDarkMode(bool value) async {
+    final prefs = await SharedPreferences.getInstance();
+    _darkMode = value;
+    await prefs.setBool('darkMode', value);
+    notifyListeners();
+  }
+
+  Future<void> setUnits(bool useMetric) async {
+    final prefs = await SharedPreferences.getInstance();
+    _useMetric = useMetric;
+    await prefs.setBool('useMetric', useMetric);
+    notifyListeners();
+  }
+}
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
-  runApp(const MyApp());
+  runApp(
+    ChangeNotifierProvider(
+      create: (_) => PreferencesProvider(),
+      child: const MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
+    final prefs = Provider.of<PreferencesProvider>(context);
     return MaterialApp(
       title: 'HealthAI App',
       theme: ThemeData(
@@ -82,7 +123,78 @@ class MyApp extends StatelessWidget {
           labelStyle: TextStyle(color: kPrimaryGreen),
         ),
       ),
-      home: StreamBuilder<User?>(
+      darkTheme: ThemeData(
+        brightness: Brightness.dark,
+        colorScheme: ColorScheme.dark(
+          primary: kPrimaryGreen,
+          secondary: kSecondaryBlue,
+          error: kWarningRed,
+          background: Colors.black,
+          surface: Colors.black,
+          onBackground: Colors.white,
+          onSurface: Colors.white,
+        ),
+        scaffoldBackgroundColor: Colors.black,
+        cardColor: Colors.black,
+        appBarTheme: AppBarTheme(
+          backgroundColor: Colors.black,
+          foregroundColor: Colors.white,
+        ),
+        elevatedButtonTheme: ElevatedButtonThemeData(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: kPrimaryGreen,
+            foregroundColor: Colors.white,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            textStyle: TextStyle(fontWeight: FontWeight.bold),
+          ),
+        ),
+        outlinedButtonTheme: OutlinedButtonThemeData(
+          style: OutlinedButton.styleFrom(
+            foregroundColor: kSecondaryBlue,
+            side: BorderSide(color: kSecondaryBlue, width: 2),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            textStyle: TextStyle(fontWeight: FontWeight.bold),
+          ),
+        ),
+        inputDecorationTheme: InputDecorationTheme(
+          filled: true,
+          fillColor: Colors.black,
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide.none,
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(color: kPrimaryGreen, width: 2),
+          ),
+          labelStyle: TextStyle(color: Colors.white),
+        ),
+        textTheme: const TextTheme(
+          bodyLarge: TextStyle(color: Colors.white),
+          bodyMedium: TextStyle(color: Colors.white),
+          bodySmall: TextStyle(color: Colors.white),
+          displayLarge: TextStyle(color: Colors.white),
+          displayMedium: TextStyle(color: Colors.white),
+          displaySmall: TextStyle(color: Colors.white),
+          headlineLarge: TextStyle(color: Colors.white),
+          headlineMedium: TextStyle(color: Colors.white),
+          headlineSmall: TextStyle(color: Colors.white),
+          titleLarge: TextStyle(color: Colors.white),
+          titleMedium: TextStyle(color: Colors.white),
+          titleSmall: TextStyle(color: Colors.white),
+          labelLarge: TextStyle(color: Colors.white),
+          labelMedium: TextStyle(color: Colors.white),
+          labelSmall: TextStyle(color: Colors.white),
+        ),
+        iconTheme: const IconThemeData(color: Colors.white),
+        dividerColor: Colors.white24,
+      ),
+      themeMode: prefs.darkMode ? ThemeMode.dark : ThemeMode.light,
+      home: StreamBuilder<User?> (
         stream: FirebaseAuth.instance.authStateChanges(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
@@ -319,6 +431,7 @@ class _StartupProfileScreenState extends State<StartupProfileScreen> {
         fatGoal: int.parse(fatController.text),
         createdAt: now,
         lastUpdated: now,
+        targetWeight: double.parse(weightController.text),
       );
       await FirebaseFirestore.instance.collection('users').doc(widget.user.uid).set(profile.toMap());
       if (mounted) {
@@ -714,17 +827,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Scaffold(
       appBar: AppBar(
-        title: Text('Dashboard', style: TextStyle(color: Colors.black)),
-        backgroundColor: kBackgroundWhite,
+        title: Text('Dashboard', style: TextStyle(color: theme.textTheme.bodyLarge?.color)),
+        backgroundColor: theme.scaffoldBackgroundColor,
         elevation: 0,
         automaticallyImplyLeading: false,
         actions: [
           IconButton(
             icon: Stack(
               children: [
-                Icon(Icons.notifications_none, color: Colors.black),
+                Icon(Icons.notifications_none, color: theme.iconTheme.color),
                 Positioned(
                   right: 0,
                   top: 0,
@@ -744,8 +858,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
           Padding(
             padding: const EdgeInsets.only(right: 16.0),
             child: CircleAvatar(
-              backgroundColor: kContainerGrey,
-              child: Icon(Icons.person, color: Colors.grey[400]),
+              backgroundColor: theme.cardColor,
+              child: Icon(Icons.person, color: theme.iconTheme.color?.withOpacity(0.5)),
             ),
           ),
         ],
@@ -763,7 +877,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text('No profile found.'),
+                  Text('No profile found.', style: TextStyle(color: theme.textTheme.bodyLarge?.color)),
                   ElevatedButton(
                     onPressed: () async {
                       final user = FirebaseAuth.instance.currentUser;
@@ -807,7 +921,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       Container(
                         padding: const EdgeInsets.all(20),
                         decoration: BoxDecoration(
-                          color: Colors.white,
+                          color: theme.cardColor,
                           borderRadius: BorderRadius.circular(20),
                           boxShadow: [
                             BoxShadow(
@@ -823,18 +937,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                const Text(
+                                Text(
                                   "Today's Summary",
-                                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: theme.textTheme.bodyLarge?.color),
                                 ),
                                 Row(
                                   children: [
                                     Text(
                                       DateTime.now().toString().split(' ')[0],
-                                      style: TextStyle(color: Colors.grey[600]),
+                                      style: TextStyle(color: theme.textTheme.bodyMedium?.color?.withOpacity(0.7)),
                                     ),
                                     const SizedBox(width: 4),
-                                    Icon(Icons.calendar_today, size: 18, color: Colors.grey),
+                                    Icon(Icons.calendar_today, size: 18, color: theme.iconTheme.color?.withOpacity(0.7)),
                                   ],
                                 ),
                               ],
@@ -890,7 +1004,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       Container(
                         padding: const EdgeInsets.all(18),
                         decoration: BoxDecoration(
-                          color: kSecondaryBlue.withOpacity(0.08),
+                          color: theme.cardColor,
                           borderRadius: BorderRadius.circular(16),
                         ),
                         child: Row(
@@ -902,7 +1016,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  const Text('AI Insight', style: TextStyle(fontWeight: FontWeight.bold, color: kSecondaryBlue)),
+                                  Text('AI Insight', style: TextStyle(fontWeight: FontWeight.bold, color: kSecondaryBlue)),
                                   const SizedBox(height: 4),
                                   Text(
                                     _getAIInsight({
@@ -911,7 +1025,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                       'carbs': totalCarbs,
                                       'fat': totalFat,
                                     }, userProfile),
-                                    style: const TextStyle(color: Colors.black87),
+                                    style: TextStyle(color: theme.textTheme.bodyLarge?.color),
                                   ),
                                 ],
                               ),
@@ -924,10 +1038,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          const Text("Today's Meals", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+                          Text("Today's Meals", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: theme.textTheme.bodyLarge?.color)),
                           TextButton(
                             onPressed: () {},
-                            child: const Text('See All'),
+                            child: Text('See All', style: TextStyle(color: kPrimaryGreen)),
                           ),
                         ],
                       ),
@@ -935,7 +1049,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         Column(
                           children: [
                             const SizedBox(height: 16),
-                            Text('No meals logged for this day.', style: TextStyle(color: Colors.grey)),
+                            Text('No meals logged for this day.', style: TextStyle(color: theme.textTheme.bodyLarge?.color?.withOpacity(0.7))),
                             const SizedBox(height: 16),
                           ],
                         ),
@@ -1182,17 +1296,18 @@ class _ScanScreenState extends State<ScanScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Scaffold(
       appBar: AppBar(
-        title: Text('Scan Food', style: TextStyle(color: Colors.black)),
-        backgroundColor: kBackgroundWhite,
+        title: Text('Scan Food', style: TextStyle(color: theme.textTheme.bodyLarge?.color)),
+        backgroundColor: theme.scaffoldBackgroundColor,
         elevation: 0,
         automaticallyImplyLeading: false,
         actions: [
           IconButton(
             icon: Stack(
               children: [
-                Icon(Icons.notifications_none, color: Colors.black),
+                Icon(Icons.notifications_none, color: theme.iconTheme.color),
                 Positioned(
                   right: 0,
                   top: 0,
@@ -1212,8 +1327,8 @@ class _ScanScreenState extends State<ScanScreen> {
           Padding(
             padding: const EdgeInsets.only(right: 16.0),
             child: CircleAvatar(
-              backgroundColor: kContainerGrey,
-              child: Icon(Icons.person, color: Colors.grey[400]),
+              backgroundColor: theme.cardColor,
+              child: Icon(Icons.person, color: theme.iconTheme.color?.withOpacity(0.5)),
             ),
           ),
         ],
@@ -1221,24 +1336,24 @@ class _ScanScreenState extends State<ScanScreen> {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          const Text('Scan Your Food', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+          Text('Scan Your Food', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: theme.textTheme.bodyLarge?.color)),
           const SizedBox(height: 16),
           Container(
             width: double.infinity,
             height: 260,
             decoration: BoxDecoration(
-              color: kContainerGrey,
+              color: theme.cardColor,
               borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: Colors.grey[300]!, style: BorderStyle.solid, width: 2),
+              border: Border.all(color: theme.dividerColor, style: BorderStyle.solid, width: 2),
             ),
             child: _isScanning
-                ? const Center(
+                ? Center(
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        CircularProgressIndicator(),
-                        SizedBox(height: 16),
-                        Text('Scanning...', style: TextStyle(color: Colors.black54)),
+                        CircularProgressIndicator(color: kPrimaryGreen),
+                        const SizedBox(height: 16),
+                        Text('Scanning...', style: TextStyle(color: theme.textTheme.bodyLarge?.color?.withOpacity(0.7))),
                       ],
                     ),
                   )
@@ -1247,12 +1362,12 @@ class _ScanScreenState extends State<ScanScreen> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         CircleAvatar(
-                          backgroundColor: Colors.grey[200],
+                          backgroundColor: theme.cardColor,
                           radius: 36,
-                          child: Icon(Icons.camera_alt, color: Colors.grey[500], size: 36),
+                          child: Icon(Icons.camera_alt, color: theme.iconTheme.color?.withOpacity(0.5), size: 36),
                         ),
                         const SizedBox(height: 12),
-                        const Text('Point camera at food to analyze', style: TextStyle(color: Colors.black54)),
+                        Text('Point camera at food to analyze', style: TextStyle(color: theme.textTheme.bodyLarge?.color?.withOpacity(0.7))),
                       ],
                     ),
                   ),
@@ -1293,16 +1408,16 @@ class _ScanScreenState extends State<ScanScreen> {
           Container(
             padding: const EdgeInsets.all(18),
             decoration: BoxDecoration(
-              color: kSecondaryBlue.withOpacity(0.08),
+              color: theme.cardColor,
               borderRadius: BorderRadius.circular(16),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(
-                  children: const [
+                  children: [
                     Icon(Icons.info_outline, color: kSecondaryBlue),
-                    SizedBox(width: 8),
+                    const SizedBox(width: 8),
                     Text('Scanning Tips', style: TextStyle(fontWeight: FontWeight.bold, color: kSecondaryBlue)),
                   ],
                 ),
@@ -1876,76 +1991,135 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Edit Profile'),
-        content: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                decoration: const InputDecoration(labelText: 'Name'),
-                controller: nameController,
-              ),
-              TextField(
-                decoration: const InputDecoration(labelText: 'Age'),
-                keyboardType: TextInputType.number,
-                controller: ageController,
-              ),
-              TextField(
-                decoration: const InputDecoration(labelText: 'Height (cm)'),
-                keyboardType: TextInputType.number,
-                controller: heightController,
-              ),
-              TextField(
-                decoration: const InputDecoration(labelText: 'Weight (kg)'),
-                keyboardType: TextInputType.number,
-                controller: weightController,
-              ),
-            ],
+      builder: (context) {
+        final theme = Theme.of(context);
+        return Dialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
+          backgroundColor: theme.cardColor,
+          child: Padding(
+            padding: const EdgeInsets.all(24.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Edit Profile', style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold, color: theme.textTheme.bodyLarge?.color)),
+                const SizedBox(height: 18),
+                TextField(
+                  controller: nameController,
+                  decoration: InputDecoration(
+                    labelText: 'Name',
+                    prefixIcon: Icon(Icons.person, color: theme.iconTheme.color),
+                    filled: true,
+                    fillColor: theme.cardColor,
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                    labelStyle: TextStyle(color: theme.textTheme.bodyLarge?.color),
+                  ),
+                  style: TextStyle(color: theme.textTheme.bodyLarge?.color),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: ageController,
+                  keyboardType: TextInputType.number,
+                  decoration: InputDecoration(
+                    labelText: 'Age',
+                    prefixIcon: Icon(Icons.cake, color: theme.iconTheme.color),
+                    filled: true,
+                    fillColor: theme.cardColor,
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                    labelStyle: TextStyle(color: theme.textTheme.bodyLarge?.color),
+                  ),
+                  style: TextStyle(color: theme.textTheme.bodyLarge?.color),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: heightController,
+                  keyboardType: TextInputType.number,
+                  decoration: InputDecoration(
+                    labelText: 'Height (cm)',
+                    prefixIcon: Icon(Icons.height, color: theme.iconTheme.color),
+                    filled: true,
+                    fillColor: theme.cardColor,
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                    labelStyle: TextStyle(color: theme.textTheme.bodyLarge?.color),
+                  ),
+                  style: TextStyle(color: theme.textTheme.bodyLarge?.color),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: weightController,
+                  keyboardType: TextInputType.number,
+                  decoration: InputDecoration(
+                    labelText: 'Current Weight (kg)',
+                    prefixIcon: Icon(Icons.monitor_weight, color: theme.iconTheme.color),
+                    filled: true,
+                    fillColor: theme.cardColor,
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                    labelStyle: TextStyle(color: theme.textTheme.bodyLarge?.color),
+                  ),
+                  style: TextStyle(color: theme.textTheme.bodyLarge?.color),
+                ),
+                const SizedBox(height: 24),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    OutlinedButton(
+                      onPressed: () => Navigator.pop(context),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: kPrimaryGreen,
+                        side: BorderSide(color: kPrimaryGreen, width: 2),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      ),
+                      child: const Text('Cancel'),
+                    ),
+                    const SizedBox(width: 12),
+                    ElevatedButton(
+                      onPressed: () async {
+                        try {
+                          final updatedProfile = UserProfile(
+                            id: profile.id,
+                            email: profile.email,
+                            name: nameController.text,
+                            age: int.parse(ageController.text),
+                            height: double.parse(heightController.text),
+                            weight: double.parse(weightController.text),
+                            dailyCalorieGoal: profile.dailyCalorieGoal,
+                            proteinGoal: profile.proteinGoal,
+                            carbsGoal: profile.carbsGoal,
+                            fatGoal: profile.fatGoal,
+                            createdAt: profile.createdAt,
+                            lastUpdated: DateTime.now(),
+                            targetWeight: profile.targetWeight,
+                          );
+                          await _userService.updateUserProfile(updatedProfile);
+                          if (mounted) {
+                            Navigator.pop(context);
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('Profile updated successfully')),
+                            );
+                          }
+                        } catch (e) {
+                          if (mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text('Error updating profile: $e')),
+                            );
+                          }
+                        }
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: kPrimaryGreen,
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 14),
+                      ),
+                      child: const Text('Save', style: TextStyle(fontSize: 16)),
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              try {
-                final updatedProfile = UserProfile(
-                  id: profile.id,
-                  email: profile.email,
-                  name: nameController.text,
-                  age: int.parse(ageController.text),
-                  height: double.parse(heightController.text),
-                  weight: double.parse(weightController.text),
-                  dailyCalorieGoal: profile.dailyCalorieGoal,
-                  proteinGoal: profile.proteinGoal,
-                  carbsGoal: profile.carbsGoal,
-                  fatGoal: profile.fatGoal,
-                  createdAt: profile.createdAt,
-                  lastUpdated: DateTime.now(),
-                );
-
-                await _userService.updateUserProfile(updatedProfile);
-                if (mounted) {
-                  Navigator.pop(context);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Profile updated successfully')),
-                  );
-                }
-              } catch (e) {
-                if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Error updating profile: $e')),
-                  );
-                }
-              }
-            },
-            child: const Text('Save'),
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 
@@ -2023,17 +2197,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Scaffold(
       appBar: AppBar(
-        title: Text('Profile', style: TextStyle(color: Colors.black)),
-        backgroundColor: kBackgroundWhite,
+        title: Text('Profile', style: TextStyle(color: theme.textTheme.bodyLarge?.color)),
+        backgroundColor: theme.scaffoldBackgroundColor,
         elevation: 0,
         automaticallyImplyLeading: false,
         actions: [
           IconButton(
             icon: Stack(
               children: [
-                Icon(Icons.notifications_none, color: Colors.black),
+                Icon(Icons.notifications_none, color: theme.iconTheme.color),
                 Positioned(
                   right: 0,
                   top: 0,
@@ -2053,8 +2228,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
           Padding(
             padding: const EdgeInsets.only(right: 16.0),
             child: CircleAvatar(
-              backgroundColor: kContainerGrey,
-              child: Icon(Icons.person, color: Colors.grey[400]),
+              backgroundColor: theme.cardColor,
+              child: Icon(Icons.person, color: theme.iconTheme.color?.withOpacity(0.5)),
             ),
           ),
         ],
@@ -2068,7 +2243,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
           final profile = userSnapshot.data;
           if (profile == null) {
-            return const Center(child: Text('No profile data available'));
+            return Center(child: Text('No profile data available', style: TextStyle(color: theme.textTheme.bodyLarge?.color)));
           }
 
           return ListView(
@@ -2078,7 +2253,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               Container(
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: theme.cardColor,
                   borderRadius: BorderRadius.circular(20),
                   boxShadow: [
                     BoxShadow(
@@ -2095,7 +2270,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       children: [
                         CircleAvatar(
                           radius: 32,
-                          backgroundColor: kContainerGrey,
+                          backgroundColor: theme.cardColor,
                           child: Icon(Icons.person, color: kSecondaryBlue, size: 36),
                         ),
                         const SizedBox(width: 16),
@@ -2103,8 +2278,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(profile.name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
-                              Text(profile.email, style: const TextStyle(color: Colors.grey)),
+                              Text(profile.name, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: theme.textTheme.bodyLarge?.color)),
+                              Text(profile.email, style: TextStyle(color: theme.textTheme.bodyLarge?.color?.withOpacity(0.7))),
                             ],
                           ),
                         ),
@@ -2155,7 +2330,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               Container(
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: theme.cardColor,
                   borderRadius: BorderRadius.circular(20),
                   boxShadow: [
                     BoxShadow(
@@ -2168,52 +2343,79 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const Text('Nutrition Goals', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                        TextButton(
-                          onPressed: () => _showEditGoalsDialog(profile),
-                          child: const Text('Edit'),
+                    InkWell(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => EditGoalsScreen(profile: profile, userService: _userService),
+                          ),
+                        );
+                      },
+                      borderRadius: BorderRadius.circular(20),
+                      child: Container(
+                        padding: const EdgeInsets.all(20),
+                        decoration: BoxDecoration(
+                          color: theme.cardColor,
+                          borderRadius: BorderRadius.circular(20),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.04),
+                              blurRadius: 12,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
                         ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                    _ProfileProgressRow(
-                      icon: Icons.bar_chart,
-                      label: 'Calories',
-                      value: '${profile.dailyCalorieGoal} cal/day',
-                      percent: 0.85,
-                      color: kPrimaryGreen,
-                      barColor: kPrimaryGreen,
-                      secondaryBarColor: kSecondaryBlue,
-                    ),
-                    _ProfileProgressRow(
-                      icon: Icons.favorite_border,
-                      label: 'Protein',
-                      value: '${profile.proteinGoal}g',
-                      percent: 0.6,
-                      color: kSecondaryBlue,
-                      barColor: kSecondaryBlue,
-                      secondaryBarColor: kPrimaryGreen,
-                    ),
-                    _ProfileProgressRow(
-                      icon: Icons.show_chart,
-                      label: 'Carbs',
-                      value: '${profile.carbsGoal}g',
-                      percent: 0.79,
-                      color: kAccentOrange,
-                      barColor: kPrimaryGreen,
-                      secondaryBarColor: kSecondaryBlue,
-                    ),
-                    _ProfileProgressRow(
-                      icon: Icons.show_chart,
-                      label: 'Fat',
-                      value: '${profile.fatGoal}g',
-                      percent: 0.65,
-                      color: kAccentOrange,
-                      barColor: kPrimaryGreen,
-                      secondaryBarColor: kSecondaryBlue,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text('Nutrition & Health Goals', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: theme.textTheme.bodyLarge?.color)),
+                                Icon(Icons.edit, color: kPrimaryGreen),
+                              ],
+                            ),
+                            const SizedBox(height: 16),
+                            _ProfileProgressRow(
+                              icon: Icons.bar_chart,
+                              label: 'Calories',
+                              value: '${profile.dailyCalorieGoal} cal/day',
+                              percent: 0.85,
+                              color: kPrimaryGreen,
+                              barColor: kPrimaryGreen,
+                              secondaryBarColor: kSecondaryBlue,
+                            ),
+                            _ProfileProgressRow(
+                              icon: Icons.favorite_border,
+                              label: 'Protein',
+                              value: '${profile.proteinGoal}g',
+                              percent: 0.6,
+                              color: kSecondaryBlue,
+                              barColor: kSecondaryBlue,
+                              secondaryBarColor: kPrimaryGreen,
+                            ),
+                            _ProfileProgressRow(
+                              icon: Icons.show_chart,
+                              label: 'Carbs',
+                              value: '${profile.carbsGoal}g',
+                              percent: 0.79,
+                              color: kAccentOrange,
+                              barColor: kPrimaryGreen,
+                              secondaryBarColor: kSecondaryBlue,
+                            ),
+                            _ProfileProgressRow(
+                              icon: Icons.show_chart,
+                              label: 'Fat',
+                              value: '${profile.fatGoal}g',
+                              percent: 0.65,
+                              color: kAccentOrange,
+                              barColor: kPrimaryGreen,
+                              secondaryBarColor: kSecondaryBlue,
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
                   ],
                 ),
@@ -2223,7 +2425,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               Container(
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: theme.cardColor,
                   borderRadius: BorderRadius.circular(20),
                   boxShadow: [
                     BoxShadow(
@@ -2236,17 +2438,24 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text('Settings', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                    Text('Settings', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: theme.textTheme.bodyLarge?.color)),
                     const SizedBox(height: 12),
-                    _ProfileSettingTile(icon: Icons.settings, label: 'Preferences', onTap: () {}),
-                    _ProfileSettingTile(icon: Icons.favorite, label: 'Health Goals', onTap: () => _showEditGoalsDialog(profile)),
-                    _ProfileSettingTile(icon: Icons.bar_chart, label: 'Nutrition Plan', onTap: () {}),
+                    _ProfileSettingTile(
+                      icon: Icons.settings,
+                      label: 'Preferences',
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (_) => const PreferencesScreen()),
+                        );
+                      },
+                    ),
                     _ProfileSettingTile(icon: Icons.person, label: 'Account', onTap: () {}),
                   ],
                 ),
               ),
               const SizedBox(height: 24),
-              Center(child: Text('Version 1.0.0', style: TextStyle(color: Colors.grey[600]))),
+              Center(child: Text('Version 1.0.0', style: TextStyle(color: theme.textTheme.bodyLarge?.color?.withOpacity(0.7)))),
               const SizedBox(height: 8),
               Center(
                 child: TextButton(
@@ -2351,6 +2560,207 @@ class _ProfileSettingTile extends StatelessWidget {
       title: Text(label, style: const TextStyle(fontWeight: FontWeight.w500)),
       trailing: const Icon(Icons.chevron_right, color: Colors.grey),
       onTap: onTap,
+    );
+  }
+}
+
+// Add this new screen for editing goals
+class EditGoalsScreen extends StatefulWidget {
+  final UserProfile profile;
+  final UserService userService;
+  const EditGoalsScreen({required this.profile, required this.userService, Key? key}) : super(key: key);
+
+  @override
+  State<EditGoalsScreen> createState() => _EditGoalsScreenState();
+}
+
+class _EditGoalsScreenState extends State<EditGoalsScreen> {
+  late TextEditingController _caloriesController;
+  late TextEditingController _proteinController;
+  late TextEditingController _carbsController;
+  late TextEditingController _fatController;
+  late TextEditingController _targetWeightController;
+  bool _isSaving = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _caloriesController = TextEditingController(text: widget.profile.dailyCalorieGoal.toString());
+    _proteinController = TextEditingController(text: widget.profile.proteinGoal.toString());
+    _carbsController = TextEditingController(text: widget.profile.carbsGoal.toString());
+    _fatController = TextEditingController(text: widget.profile.fatGoal.toString());
+    _targetWeightController = TextEditingController(text: widget.profile.targetWeight > 0 ? widget.profile.targetWeight.toString() : '');
+  }
+
+  @override
+  void dispose() {
+    _caloriesController.dispose();
+    _proteinController.dispose();
+    _carbsController.dispose();
+    _fatController.dispose();
+    _targetWeightController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _saveGoals() async {
+    setState(() => _isSaving = true);
+    try {
+      final updatedProfile = UserProfile(
+        id: widget.profile.id,
+        email: widget.profile.email,
+        name: widget.profile.name,
+        age: widget.profile.age,
+        height: widget.profile.height,
+        weight: widget.profile.weight,
+        dailyCalorieGoal: int.tryParse(_caloriesController.text) ?? widget.profile.dailyCalorieGoal,
+        proteinGoal: int.tryParse(_proteinController.text) ?? widget.profile.proteinGoal,
+        carbsGoal: int.tryParse(_carbsController.text) ?? widget.profile.carbsGoal,
+        fatGoal: int.tryParse(_fatController.text) ?? widget.profile.fatGoal,
+        targetWeight: double.tryParse(_targetWeightController.text) ?? widget.profile.targetWeight,
+        createdAt: widget.profile.createdAt,
+        lastUpdated: DateTime.now(),
+      );
+      await widget.userService.updateUserProfile(updatedProfile);
+      if (mounted) {
+        Navigator.pop(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Goals updated successfully')),
+        );
+      }
+    } catch (e) {
+      setState(() => _isSaving = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error updating goals: $e')),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Edit Nutrition & Health Goals')),
+      body: Padding(
+        padding: const EdgeInsets.all(24.0),
+        child: ListView(
+          children: [
+            const SizedBox(height: 12),
+            Text('Current Weight', style: Theme.of(context).textTheme.titleMedium),
+            const SizedBox(height: 8),
+            TextFormField(
+              initialValue: widget.profile.weight.toString(),
+              enabled: false,
+              decoration: const InputDecoration(
+                labelText: 'Current Weight (kg)',
+                filled: true,
+                fillColor: Color(0xFFF5F5F5),
+                border: OutlineInputBorder(),
+              ),
+            ),
+            const SizedBox(height: 20),
+            Text('Target Weight', style: Theme.of(context).textTheme.titleMedium),
+            const SizedBox(height: 8),
+            TextFormField(
+              controller: _targetWeightController,
+              keyboardType: TextInputType.number,
+              decoration: const InputDecoration(
+                labelText: 'Target Weight (kg)',
+                border: OutlineInputBorder(),
+              ),
+            ),
+            const SizedBox(height: 28),
+            Text('Nutrition Goals', style: Theme.of(context).textTheme.titleMedium),
+            const SizedBox(height: 8),
+            TextFormField(
+              controller: _caloriesController,
+              keyboardType: TextInputType.number,
+              decoration: const InputDecoration(
+                labelText: 'Daily Calorie Goal',
+                border: OutlineInputBorder(),
+              ),
+            ),
+            const SizedBox(height: 12),
+            TextFormField(
+              controller: _proteinController,
+              keyboardType: TextInputType.number,
+              decoration: const InputDecoration(
+                labelText: 'Protein Goal (g)',
+                border: OutlineInputBorder(),
+              ),
+            ),
+            const SizedBox(height: 12),
+            TextFormField(
+              controller: _carbsController,
+              keyboardType: TextInputType.number,
+              decoration: const InputDecoration(
+                labelText: 'Carbs Goal (g)',
+                border: OutlineInputBorder(),
+              ),
+            ),
+            const SizedBox(height: 12),
+            TextFormField(
+              controller: _fatController,
+              keyboardType: TextInputType.number,
+              decoration: const InputDecoration(
+                labelText: 'Fat Goal (g)',
+                border: OutlineInputBorder(),
+              ),
+            ),
+            const SizedBox(height: 28),
+            _isSaving
+                ? const Center(child: CircularProgressIndicator())
+                : ElevatedButton(
+                    onPressed: _saveGoals,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: kPrimaryGreen,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                    ),
+                    child: const Text('Save', style: TextStyle(fontSize: 16)),
+                  ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// Preferences Screen
+class PreferencesScreen extends StatefulWidget {
+  const PreferencesScreen({Key? key}) : super(key: key);
+  @override
+  State<PreferencesScreen> createState() => _PreferencesScreenState();
+}
+
+class _PreferencesScreenState extends State<PreferencesScreen> {
+  @override
+  Widget build(BuildContext context) {
+    final prefs = Provider.of<PreferencesProvider>(context);
+    return Scaffold(
+      appBar: AppBar(title: const Text('Preferences')),
+      body: ListView(
+        padding: const EdgeInsets.all(24),
+        children: [
+          ListTile(
+            title: const Text('Dark Mode', style: TextStyle(fontWeight: FontWeight.w500)),
+            trailing: Switch(
+              value: prefs.darkMode,
+              onChanged: prefs.setDarkMode,
+              activeColor: kPrimaryGreen,
+            ),
+          ),
+          const Divider(),
+          ListTile(
+            title: const Text('Units', style: TextStyle(fontWeight: FontWeight.w500)),
+            subtitle: Text(prefs.useMetric ? 'Metric (cm, kg)' : 'Imperial (in, lb)'),
+            trailing: Switch(
+              value: prefs.useMetric,
+              onChanged: prefs.setUnits,
+              activeColor: kPrimaryGreen,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
