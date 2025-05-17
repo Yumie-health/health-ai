@@ -2,6 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'models/meal.dart';
+import 'models/user.dart';
+import 'services/meal_service.dart';
+import 'services/user_service.dart';
 
 // Define the color palette
 const Color kPrimaryGreen = Color(0xFF4CAF50); // Soft green
@@ -84,7 +88,28 @@ class MyApp extends StatelessWidget {
             return const Center(child: CircularProgressIndicator());
           }
           if (snapshot.hasData) {
-            return MainNavScreen();
+            final user = snapshot.data!;
+            return StreamBuilder<DocumentSnapshot>(
+              stream: FirebaseFirestore.instance.collection('users').doc(user.uid).snapshots(),
+              builder: (context, userSnap) {
+                if (userSnap.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+                if (!userSnap.hasData || !userSnap.data!.exists) {
+                  // No profile, show startup page
+                  return StartupProfileScreen(user: user);
+                }
+                final data = userSnap.data!.data() as Map<String, dynamic>?;
+                // Check for required fields
+                if (data == null ||
+                    data['name'] == null || data['name'] == '' ||
+                    data['age'] == null || data['height'] == null || data['weight'] == null ||
+                    data['dailyCalorieGoal'] == null || data['proteinGoal'] == null || data['carbsGoal'] == null || data['fatGoal'] == null) {
+                  return StartupProfileScreen(user: user);
+                }
+                return MainNavScreen();
+              },
+            );
           }
           return AuthScreen();
         },
@@ -116,21 +141,14 @@ class _AuthScreenState extends State<AuthScreen> {
         email: emailController.text.trim(),
         password: passwordController.text,
       );
-      await FirebaseFirestore.instance
-          .collection('users')
-          .doc(FirebaseAuth.instance.currentUser!.uid)
-          .set({
-        'email': emailController.text.trim(),
-        'createdAt': FieldValue.serverTimestamp(),
-        // Add more user fields as needed
-      });
-      final userDoc = await FirebaseFirestore.instance
-          .collection('users')
-          .doc(FirebaseAuth.instance.currentUser!.uid)
-          .get();
-
-      if (userDoc.exists) {
-        print(userDoc.data());
+      // Check if user profile exists, if not, create it
+      final userService = UserService();
+      final user = FirebaseAuth.instance.currentUser;
+      if (user != null) {
+        final doc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
+        if (!doc.exists) {
+          await userService.createInitialUserProfile(user.email ?? '', '');
+        }
       }
       setState(() => message = 'Sign in successful!');
     } catch (e) {
@@ -150,14 +168,12 @@ class _AuthScreenState extends State<AuthScreen> {
         email: emailController.text.trim(),
         password: passwordController.text,
       );
-      await FirebaseFirestore.instance
-          .collection('users')
-          .doc(FirebaseAuth.instance.currentUser!.uid)
-          .set({
-        'email': emailController.text.trim(),
-        'createdAt': FieldValue.serverTimestamp(),
-        // Add more user fields as needed
-      });
+      // Create a full user profile
+      final userService = UserService();
+      await userService.createInitialUserProfile(
+        emailController.text.trim(),
+        '', // You can prompt for name or leave blank
+      );
       setState(() => message = 'Sign up successful!');
     } catch (e) {
       setState(() => message = 'Error: $e');
@@ -257,6 +273,140 @@ class _AuthScreenState extends State<AuthScreen> {
                   ),
               ],
             ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class StartupProfileScreen extends StatefulWidget {
+  final User user;
+  const StartupProfileScreen({super.key, required this.user});
+
+  @override
+  State<StartupProfileScreen> createState() => _StartupProfileScreenState();
+}
+
+class _StartupProfileScreenState extends State<StartupProfileScreen> {
+  final _formKey = GlobalKey<FormState>();
+  final nameController = TextEditingController();
+  final ageController = TextEditingController();
+  final heightController = TextEditingController();
+  final weightController = TextEditingController();
+  final calorieController = TextEditingController(text: '2000');
+  final proteinController = TextEditingController(text: '120');
+  final carbsController = TextEditingController(text: '250');
+  final fatController = TextEditingController(text: '70');
+  bool isLoading = false;
+
+  Future<void> _saveProfile() async {
+    if (!_formKey.currentState!.validate()) return;
+    setState(() => isLoading = true);
+    try {
+      final now = DateTime.now();
+      final profile = UserProfile(
+        id: widget.user.uid,
+        email: widget.user.email ?? '',
+        name: nameController.text,
+        age: int.parse(ageController.text),
+        height: double.parse(heightController.text),
+        weight: double.parse(weightController.text),
+        dailyCalorieGoal: int.parse(calorieController.text),
+        proteinGoal: int.parse(proteinController.text),
+        carbsGoal: int.parse(carbsController.text),
+        fatGoal: int.parse(fatController.text),
+        createdAt: now,
+        lastUpdated: now,
+      );
+      await FirebaseFirestore.instance.collection('users').doc(widget.user.uid).set(profile.toMap());
+      if (mounted) {
+        Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => MainNavScreen()));
+      }
+    } catch (e) {
+      setState(() => isLoading = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error saving profile: $e')),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Complete Your Profile')),
+      body: Padding(
+        padding: const EdgeInsets.all(24.0),
+        child: Form(
+          key: _formKey,
+          child: ListView(
+            children: [
+              Text("Let's get to know you!", style: Theme.of(context).textTheme.headlineSmall),
+              const SizedBox(height: 24),
+              TextFormField(
+                controller: nameController,
+                decoration: const InputDecoration(labelText: 'Name'),
+                validator: (v) => v == null || v.isEmpty ? 'Enter your name' : null,
+              ),
+              const SizedBox(height: 12),
+              TextFormField(
+                controller: ageController,
+                decoration: const InputDecoration(labelText: 'Age'),
+                keyboardType: TextInputType.number,
+                validator: (v) => v == null || v.isEmpty ? 'Enter your age' : null,
+              ),
+              const SizedBox(height: 12),
+              TextFormField(
+                controller: heightController,
+                decoration: const InputDecoration(labelText: 'Height (cm)'),
+                keyboardType: TextInputType.number,
+                validator: (v) => v == null || v.isEmpty ? 'Enter your height' : null,
+              ),
+              const SizedBox(height: 12),
+              TextFormField(
+                controller: weightController,
+                decoration: const InputDecoration(labelText: 'Weight (kg)'),
+                keyboardType: TextInputType.number,
+                validator: (v) => v == null || v.isEmpty ? 'Enter your weight' : null,
+              ),
+              const SizedBox(height: 24),
+              Text('Nutrition Goals', style: Theme.of(context).textTheme.titleMedium),
+              const SizedBox(height: 12),
+              TextFormField(
+                controller: calorieController,
+                decoration: const InputDecoration(labelText: 'Daily Calorie Goal'),
+                keyboardType: TextInputType.number,
+                validator: (v) => v == null || v.isEmpty ? 'Enter calorie goal' : null,
+              ),
+              const SizedBox(height: 12),
+              TextFormField(
+                controller: proteinController,
+                decoration: const InputDecoration(labelText: 'Protein Goal (g)'),
+                keyboardType: TextInputType.number,
+                validator: (v) => v == null || v.isEmpty ? 'Enter protein goal' : null,
+              ),
+              const SizedBox(height: 12),
+              TextFormField(
+                controller: carbsController,
+                decoration: const InputDecoration(labelText: 'Carbs Goal (g)'),
+                keyboardType: TextInputType.number,
+                validator: (v) => v == null || v.isEmpty ? 'Enter carbs goal' : null,
+              ),
+              const SizedBox(height: 12),
+              TextFormField(
+                controller: fatController,
+                decoration: const InputDecoration(labelText: 'Fat Goal (g)'),
+                keyboardType: TextInputType.number,
+                validator: (v) => v == null || v.isEmpty ? 'Enter fat goal' : null,
+              ),
+              const SizedBox(height: 24),
+              isLoading
+                  ? const Center(child: CircularProgressIndicator())
+                  : ElevatedButton(
+                      onPressed: _saveProfile,
+                      child: const Text('Save & Continue'),
+                    ),
+            ],
           ),
         ),
       ),
@@ -550,8 +700,35 @@ class _MainNavScreenState extends State<MainNavScreen> {
   }
 }
 
-class DashboardScreen extends StatelessWidget {
+class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
+
+  @override
+  State<DashboardScreen> createState() => _DashboardScreenState();
+}
+
+class _DashboardScreenState extends State<DashboardScreen> {
+  final MealService _mealService = MealService();
+  final UserService _userService = UserService();
+  Map<String, int> _dailyNutrition = {
+    'calories': 0,
+    'protein': 0,
+    'carbs': 0,
+    'fat': 0,
+  };
+
+  @override
+  void initState() {
+    super.initState();
+    _loadDailyNutrition();
+  }
+
+  Future<void> _loadDailyNutrition() async {
+    final nutrition = await _mealService.getDailyNutritionSummary();
+    setState(() {
+      _dailyNutrition = nutrition;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -591,151 +768,282 @@ class DashboardScreen extends StatelessWidget {
           ),
         ],
       ),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          // Today's Summary Card
-          Container(
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(20),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.04),
-                  blurRadius: 12,
-                  offset: const Offset(0, 4),
-                ),
-              ],
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text(
-                      "Today's Summary",
-                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+      body: StreamBuilder<UserProfile?>(
+        stream: _userService.getCurrentUserProfile(),
+        builder: (context, userSnapshot) {
+          if (!userSnapshot.hasData) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          final userProfile = userSnapshot.data;
+          if (userProfile == null) {
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text('No profile found.'),
+                  ElevatedButton(
+                    onPressed: () async {
+                      final user = FirebaseAuth.instance.currentUser;
+                      if (user != null) {
+                        final userService = UserService();
+                        await userService.createInitialUserProfile(user.email ?? '', '');
+                      }
+                    },
+                    child: Text('Create Profile'),
+                  ),
+                ],
+              ),
+            );
+          }
+
+          final dailyCalorieGoal = userProfile.dailyCalorieGoal ?? 2000;
+          final proteinGoal = userProfile.proteinGoal ?? 120;
+          final carbsGoal = userProfile.carbsGoal ?? 250;
+
+          return ListView(
+            padding: const EdgeInsets.all(16),
+            children: [
+              // Today's Summary Card
+              Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.04),
+                      blurRadius: 12,
+                      offset: const Offset(0, 4),
                     ),
+                  ],
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
                     Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text(
-                          'May 16, 2025',
-                          style: TextStyle(color: Colors.grey[600]),
+                        const Text(
+                          "Today's Summary",
+                          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
                         ),
-                        const SizedBox(width: 4),
-                        Icon(Icons.calendar_today, size: 18, color: Colors.grey),
+                        Row(
+                          children: [
+                            Text(
+                              DateTime.now().toString().split(' ')[0],
+                              style: TextStyle(color: Colors.grey[600]),
+                            ),
+                            const SizedBox(width: 4),
+                            Icon(Icons.calendar_today, size: 18, color: Colors.grey),
+                          ],
+                        ),
                       ],
                     ),
+                    const SizedBox(height: 20),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        _SummaryBox(
+                          icon: Icons.restaurant,
+                          color: kPrimaryGreen.withOpacity(0.12),
+                          label: 'Food',
+                          value: '${_dailyNutrition['calories']}',
+                          valueColor: kPrimaryGreen,
+                        ),
+                        _SummaryBox(
+                          icon: Icons.favorite_border,
+                          color: kSecondaryBlue.withOpacity(0.12),
+                          label: 'Activity',
+                          value: '320',
+                          valueColor: kSecondaryBlue,
+                        ),
+                        _SummaryBox(
+                          icon: Icons.cookie,
+                          color: kAccentOrange.withOpacity(0.12),
+                          label: 'Remaining',
+                          value: '${dailyCalorieGoal - _dailyNutrition['calories']!}',
+                          valueColor: kAccentOrange,
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 20),
+                    _ProgressRow(
+                      label: 'Daily Goal',
+                      value: '${_dailyNutrition['calories']} / $dailyCalorieGoal cal',
+                      percent: _dailyNutrition['calories']! / dailyCalorieGoal,
+                    ),
+                    _ProgressRow(
+                      label: 'Protein',
+                      value: '${_dailyNutrition['protein']} / $proteinGoal g',
+                      percent: _dailyNutrition['protein']! / proteinGoal,
+                    ),
+                    _ProgressRow(
+                      label: 'Carbs',
+                      value: '${_dailyNutrition['carbs']} / $carbsGoal g',
+                      percent: _dailyNutrition['carbs']! / carbsGoal,
+                    ),
                   ],
                 ),
-                const SizedBox(height: 20),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              ),
+              const SizedBox(height: 20),
+              // AI Insight Card
+              Container(
+                padding: const EdgeInsets.all(18),
+                decoration: BoxDecoration(
+                  color: kSecondaryBlue.withOpacity(0.08),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _SummaryBox(
-                      icon: Icons.restaurant,
-                      color: kPrimaryGreen.withOpacity(0.12),
-                      label: 'Food',
-                      value: '1,245',
-                      valueColor: kPrimaryGreen,
-                    ),
-                    _SummaryBox(
-                      icon: Icons.favorite_border,
-                      color: kSecondaryBlue.withOpacity(0.12),
-                      label: 'Activity',
-                      value: '320',
-                      valueColor: kSecondaryBlue,
-                    ),
-                    _SummaryBox(
-                      icon: Icons.cookie,
-                      color: kAccentOrange.withOpacity(0.12),
-                      label: 'Remaining',
-                      value: '635',
-                      valueColor: kAccentOrange,
+                    Icon(Icons.insights, color: kSecondaryBlue, size: 32),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text('AI Insight', style: TextStyle(fontWeight: FontWeight.bold, color: kSecondaryBlue)),
+                          const SizedBox(height: 4),
+                          Text(
+                            _getAIInsight(_dailyNutrition, userProfile),
+                            style: const TextStyle(color: Colors.black87),
+                          ),
+                        ],
+                      ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 20),
-                _ProgressRow(label: 'Daily Goal', value: '1,245 / 2,200 cal', percent: 1245/2200),
-                _ProgressRow(label: 'Protein', value: '42 / 120 g', percent: 42/120),
-                _ProgressRow(label: 'Carbs', value: '145 / 250 g', percent: 145/250),
-              ],
-            ),
-          ),
-          const SizedBox(height: 20),
-          // AI Insight Card
-          Container(
-            padding: const EdgeInsets.all(18),
-            decoration: BoxDecoration(
-              color: kSecondaryBlue.withOpacity(0.08),
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Icon(Icons.insights, color: kSecondaryBlue, size: 32),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: const [
-                      Text('AI Insight', style: TextStyle(fontWeight: FontWeight.bold, color: kSecondaryBlue)),
-                      SizedBox(height: 4),
-                      Text(
-                        "You're 15% under your protein goal this week. Adding Greek yogurt or lean chicken to your next meal would help balance your macros.",
-                        style: TextStyle(color: Colors.black87),
-                      ),
-                    ],
+              ),
+              const SizedBox(height: 24),
+              // Today's Meals
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text("Today's Meals", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+                  TextButton(
+                    onPressed: () {},
+                    child: const Text('See All'),
                   ),
+                ],
+              ),
+              StreamBuilder<List<Meal>>(
+                stream: _mealService.getTodayMeals(),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+                  if (!snapshot.hasData || snapshot.data == null || snapshot.data!.isEmpty) {
+                    return Column(
+                      children: [
+                        const SizedBox(height: 16),
+                        Text('No meals logged for this day.', style: TextStyle(color: Colors.grey)),
+                        const SizedBox(height: 16),
+                      ],
+                    );
+                  }
+                  final meals = snapshot.data!;
+                  // Group meals by type
+                  final breakfastMeals = meals.where((m) => m.mealType == 'breakfast').toList();
+                  final lunchMeals = meals.where((m) => m.mealType == 'lunch').toList();
+                  final dinnerMeals = meals.where((m) => m.mealType == 'dinner').toList();
+                  final snackMeals = meals.where((m) => m.mealType == 'snack').toList();
+
+                  return Column(
+                    children: [
+                      if (breakfastMeals.isNotEmpty)
+                        _LogMealCard(
+                          meal: 'Breakfast',
+                          time: breakfastMeals.first.timestamp.toString().split(' ')[1].substring(0, 5),
+                          calories: breakfastMeals.fold(0, (sum, m) => sum + m.calories),
+                          macros: 'P: ${breakfastMeals.fold(0, (sum, m) => sum + m.protein)}g • C: ${breakfastMeals.fold(0, (sum, m) => sum + m.carbs)}g • F: ${breakfastMeals.fold(0, (sum, m) => sum + m.fat)}g',
+                          foods: breakfastMeals.map((m) => _LogFoodItem(
+                            name: m.name,
+                            calories: m.calories,
+                            macros: 'P: ${m.protein}g • C: ${m.carbs}g • F: ${m.fat}g',
+                          )).toList(),
+                        ),
+                      if (lunchMeals.isNotEmpty)
+                        _LogMealCard(
+                          meal: 'Lunch',
+                          time: lunchMeals.first.timestamp.toString().split(' ')[1].substring(0, 5),
+                          calories: lunchMeals.fold(0, (sum, m) => sum + m.calories),
+                          macros: 'P: ${lunchMeals.fold(0, (sum, m) => sum + m.protein)}g • C: ${lunchMeals.fold(0, (sum, m) => sum + m.carbs)}g • F: ${lunchMeals.fold(0, (sum, m) => sum + m.fat)}g',
+                          foods: lunchMeals.map((m) => _LogFoodItem(
+                            name: m.name,
+                            calories: m.calories,
+                            macros: 'P: ${m.protein}g • C: ${m.carbs}g • F: ${m.fat}g',
+                          )).toList(),
+                        ),
+                      if (dinnerMeals.isNotEmpty)
+                        _LogMealCard(
+                          meal: 'Dinner',
+                          time: dinnerMeals.first.timestamp.toString().split(' ')[1].substring(0, 5),
+                          calories: dinnerMeals.fold(0, (sum, m) => sum + m.calories),
+                          macros: 'P: ${dinnerMeals.fold(0, (sum, m) => sum + m.protein)}g • C: ${dinnerMeals.fold(0, (sum, m) => sum + m.carbs)}g • F: ${dinnerMeals.fold(0, (sum, m) => sum + m.fat)}g',
+                          foods: dinnerMeals.map((m) => _LogFoodItem(
+                            name: m.name,
+                            calories: m.calories,
+                            macros: 'P: ${m.protein}g • C: ${m.carbs}g • F: ${m.fat}g',
+                          )).toList(),
+                        ),
+                      if (snackMeals.isNotEmpty)
+                        _LogMealCard(
+                          meal: 'Snack',
+                          time: snackMeals.first.timestamp.toString().split(' ')[1].substring(0, 5),
+                          calories: snackMeals.fold(0, (sum, m) => sum + m.calories),
+                          macros: 'P: ${snackMeals.fold(0, (sum, m) => sum + m.protein)}g • C: ${snackMeals.fold(0, (sum, m) => sum + m.carbs)}g • F: ${snackMeals.fold(0, (sum, m) => sum + m.fat)}g',
+                          foods: snackMeals.map((m) => _LogFoodItem(
+                            name: m.name,
+                            calories: m.calories,
+                            macros: 'P: ${m.protein}g • C: ${m.carbs}g • F: ${m.fat}g',
+                          )).toList(),
+                        ),
+                    ],
+                  );
+                },
+              ),
+              const SizedBox(height: 16),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () {
+                    // Navigate to add meal screen
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: kPrimaryGreen,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                  ),
+                  child: const Text('+ Add Meal', style: TextStyle(fontSize: 16)),
                 ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 24),
-          // Today's Meals
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Text("Today's Meals", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
-              TextButton(
-                onPressed: () {},
-                child: const Text('See All'),
               ),
             ],
-          ),
-          _MealCard(
-            meal: 'Breakfast',
-            calories: 320,
-            foods: ['Oatmeal with blueberries'],
-            iconColor: kPrimaryGreen.withOpacity(0.12),
-            icon: Icons.restaurant,
-          ),
-          _MealCard(
-            meal: 'Lunch',
-            calories: 450,
-            foods: ['Grilled chicken salad'],
-            iconColor: kSecondaryBlue.withOpacity(0.12),
-            icon: Icons.restaurant,
-          ),
-          const SizedBox(height: 16),
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              onPressed: () {},
-              style: ElevatedButton.styleFrom(
-                backgroundColor: kPrimaryGreen,
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                padding: const EdgeInsets.symmetric(vertical: 16),
-              ),
-              child: const Text('+ Add Meal', style: TextStyle(fontSize: 16)),
-            ),
-          ),
-        ],
+          );
+        },
       ),
     );
+  }
+
+  String _getAIInsight(Map<String, int> nutrition, UserProfile? userProfile) {
+    if (userProfile == null) return 'Complete your profile to get personalized insights.';
+
+    final proteinPercentage = nutrition['protein']! / userProfile.proteinGoal;
+    final carbsPercentage = nutrition['carbs']! / userProfile.carbsGoal;
+    final caloriesPercentage = nutrition['calories']! / userProfile.dailyCalorieGoal;
+
+    if (proteinPercentage < 0.7) {
+      return "You're ${((1 - proteinPercentage) * 100).round()}% under your protein goal this week. Adding Greek yogurt or lean chicken to your next meal would help balance your macros.";
+    } else if (carbsPercentage < 0.7) {
+      return "You're ${((1 - carbsPercentage) * 100).round()}% under your carbs goal. Consider adding whole grains or fruits to your next meal.";
+    } else if (caloriesPercentage < 0.7) {
+      return "You're ${((1 - caloriesPercentage) * 100).round()}% under your daily calorie goal. Make sure to eat enough to maintain your energy levels.";
+    } else if (caloriesPercentage > 1.1) {
+      return "You're ${((caloriesPercentage - 1) * 100).round()}% over your daily calorie goal. Consider lighter options for your next meal.";
+    }
+
+    return "Great job! Your nutrition is well-balanced today. Keep up the good work!";
   }
 }
 
@@ -850,8 +1158,27 @@ class _MealCard extends StatelessWidget {
   }
 }
 
-class ScanScreen extends StatelessWidget {
+class ScanScreen extends StatefulWidget {
   const ScanScreen({super.key});
+
+  @override
+  State<ScanScreen> createState() => _ScanScreenState();
+}
+
+class _ScanScreenState extends State<ScanScreen> {
+  final MealService _mealService = MealService();
+  bool _isScanning = false;
+
+  Future<void> _startScanning() async {
+    setState(() => _isScanning = true);
+    // TODO: Implement camera scanning
+    await Future.delayed(const Duration(seconds: 2)); // Simulate scanning
+    setState(() => _isScanning = false);
+  }
+
+  Future<void> _uploadImage() async {
+    // TODO: Implement image upload
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -904,27 +1231,38 @@ class ScanScreen extends StatelessWidget {
               borderRadius: BorderRadius.circular(20),
               border: Border.all(color: Colors.grey[300]!, style: BorderStyle.solid, width: 2),
             ),
-            child: Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  CircleAvatar(
-                    backgroundColor: Colors.grey[200],
-                    radius: 36,
-                    child: Icon(Icons.camera_alt, color: Colors.grey[500], size: 36),
+            child: _isScanning
+                ? const Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        CircularProgressIndicator(),
+                        SizedBox(height: 16),
+                        Text('Scanning...', style: TextStyle(color: Colors.black54)),
+                      ],
+                    ),
+                  )
+                : Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        CircleAvatar(
+                          backgroundColor: Colors.grey[200],
+                          radius: 36,
+                          child: Icon(Icons.camera_alt, color: Colors.grey[500], size: 36),
+                        ),
+                        const SizedBox(height: 12),
+                        const Text('Point camera at food to analyze', style: TextStyle(color: Colors.black54)),
+                      ],
+                    ),
                   ),
-                  const SizedBox(height: 12),
-                  const Text('Point camera at food to analyze', style: TextStyle(color: Colors.black54)),
-                ],
-              ),
-            ),
           ),
           const SizedBox(height: 20),
           Row(
             children: [
               Expanded(
                 child: ElevatedButton.icon(
-                  onPressed: () {},
+                  onPressed: _isScanning ? null : _startScanning,
                   icon: const Icon(Icons.camera_alt),
                   label: const Text('Scan Now'),
                   style: ElevatedButton.styleFrom(
@@ -938,7 +1276,7 @@ class ScanScreen extends StatelessWidget {
               const SizedBox(width: 12),
               Expanded(
                 child: OutlinedButton.icon(
-                  onPressed: () {},
+                  onPressed: _isScanning ? null : _uploadImage,
                   icon: const Icon(Icons.upload_file),
                   label: const Text('Upload Photo'),
                   style: OutlinedButton.styleFrom(
@@ -1011,8 +1349,42 @@ class _ScanTip extends StatelessWidget {
   }
 }
 
-class LogScreen extends StatelessWidget {
+class LogScreen extends StatefulWidget {
   const LogScreen({super.key});
+
+  @override
+  State<LogScreen> createState() => _LogScreenState();
+}
+
+class _LogScreenState extends State<LogScreen> {
+  final MealService _mealService = MealService();
+  final TextEditingController _searchController = TextEditingController();
+  DateTime _selectedDate = DateTime.now();
+
+  Future<void> _selectDate(BuildContext context) async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: _selectedDate,
+      firstDate: DateTime(2020),
+      lastDate: DateTime.now(),
+    );
+    if (picked != null && picked != _selectedDate) {
+      setState(() {
+        _selectedDate = picked;
+      });
+    }
+  }
+
+  void _showAddMealDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AddMealDialog(
+        onMealAdded: () {
+          Navigator.pop(context);
+        },
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -1060,6 +1432,7 @@ class LogScreen extends StatelessWidget {
             children: [
               Expanded(
                 child: TextField(
+                  controller: _searchController,
                   decoration: InputDecoration(
                     hintText: 'Search foods...',
                     prefixIcon: Icon(Icons.search, color: Colors.grey),
@@ -1092,52 +1465,104 @@ class LogScreen extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               const Text("Today's Meals", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
-              Row(
-                children: [
-                  Text('May 16, 2025', style: TextStyle(color: Colors.grey[600])),
-                  const SizedBox(width: 4),
-                  Icon(Icons.calendar_today, size: 18, color: Colors.grey),
-                ],
+              GestureDetector(
+                onTap: () => _selectDate(context),
+                child: Row(
+                  children: [
+                    Text(
+                      '${_selectedDate.day}/${_selectedDate.month}/${_selectedDate.year}',
+                      style: TextStyle(color: Colors.grey[600]),
+                    ),
+                    const SizedBox(width: 4),
+                    Icon(Icons.calendar_today, size: 18, color: Colors.grey),
+                  ],
+                ),
               ),
             ],
           ),
           const SizedBox(height: 8),
           // Meal cards
-          _LogMealCard(
-            meal: 'Breakfast',
-            time: '8:30 AM',
-            calories: 325,
-            macros: 'P: 12g • C: 59g • F: 6g',
-            foods: [
-              _LogFoodItem(name: 'Oatmeal with blueberries', calories: 320, macros: 'P: 12g • C: 58g • F: 6g'),
-              _LogFoodItem(name: 'Black coffee', calories: 5, macros: 'P: 0g • C: 1g • F: 0g'),
-            ],
-          ),
-          _LogMealCard(
-            meal: 'Lunch',
-            time: '12:45 PM',
-            calories: 450,
-            macros: 'P: 32g • C: 25g • F: 22g',
-            foods: [
-              _LogFoodItem(name: 'Grilled chicken salad', calories: 450, macros: 'P: 32g • C: 25g • F: 22g'),
-              _LogFoodItem(name: 'Sparkling water', calories: 0, macros: 'P: 0g • C: 0g • F: 0g'),
-            ],
-          ),
-          _LogMealCard(
-            meal: 'Snack',
-            time: '3:15 PM',
-            calories: 215,
-            macros: 'P: 15g • C: 32g • F: 0g',
-            foods: [
-              _LogFoodItem(name: 'Greek yogurt', calories: 120, macros: 'P: 15g • C: 7g • F: 0g'),
-              _LogFoodItem(name: 'Apple', calories: 95, macros: 'P: 0g • C: 25g • F: 0g'),
-            ],
+          StreamBuilder<List<Meal>>(
+            stream: _mealService.getTodayMeals(),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Center(child: CircularProgressIndicator());
+              }
+              if (!snapshot.hasData || snapshot.data == null || snapshot.data!.isEmpty) {
+                return Column(
+                  children: [
+                    const SizedBox(height: 16),
+                    Text('No meals logged for this day.', style: TextStyle(color: Colors.grey)),
+                    const SizedBox(height: 16),
+                  ],
+                );
+              }
+              final meals = snapshot.data!;
+              // Group meals by type
+              final breakfastMeals = meals.where((m) => m.mealType == 'breakfast').toList();
+              final lunchMeals = meals.where((m) => m.mealType == 'lunch').toList();
+              final dinnerMeals = meals.where((m) => m.mealType == 'dinner').toList();
+              final snackMeals = meals.where((m) => m.mealType == 'snack').toList();
+
+              return Column(
+                children: [
+                  if (breakfastMeals.isNotEmpty)
+                    _LogMealCard(
+                      meal: 'Breakfast',
+                      time: breakfastMeals.first.timestamp.toString().split(' ')[1].substring(0, 5),
+                      calories: breakfastMeals.fold(0, (sum, m) => sum + m.calories),
+                      macros: 'P: ${breakfastMeals.fold(0, (sum, m) => sum + m.protein)}g • C: ${breakfastMeals.fold(0, (sum, m) => sum + m.carbs)}g • F: ${breakfastMeals.fold(0, (sum, m) => sum + m.fat)}g',
+                      foods: breakfastMeals.map((m) => _LogFoodItem(
+                        name: m.name,
+                        calories: m.calories,
+                        macros: 'P: ${m.protein}g • C: ${m.carbs}g • F: ${m.fat}g',
+                      )).toList(),
+                    ),
+                  if (lunchMeals.isNotEmpty)
+                    _LogMealCard(
+                      meal: 'Lunch',
+                      time: lunchMeals.first.timestamp.toString().split(' ')[1].substring(0, 5),
+                      calories: lunchMeals.fold(0, (sum, m) => sum + m.calories),
+                      macros: 'P: ${lunchMeals.fold(0, (sum, m) => sum + m.protein)}g • C: ${lunchMeals.fold(0, (sum, m) => sum + m.carbs)}g • F: ${lunchMeals.fold(0, (sum, m) => sum + m.fat)}g',
+                      foods: lunchMeals.map((m) => _LogFoodItem(
+                        name: m.name,
+                        calories: m.calories,
+                        macros: 'P: ${m.protein}g • C: ${m.carbs}g • F: ${m.fat}g',
+                      )).toList(),
+                    ),
+                  if (dinnerMeals.isNotEmpty)
+                    _LogMealCard(
+                      meal: 'Dinner',
+                      time: dinnerMeals.first.timestamp.toString().split(' ')[1].substring(0, 5),
+                      calories: dinnerMeals.fold(0, (sum, m) => sum + m.calories),
+                      macros: 'P: ${dinnerMeals.fold(0, (sum, m) => sum + m.protein)}g • C: ${dinnerMeals.fold(0, (sum, m) => sum + m.carbs)}g • F: ${dinnerMeals.fold(0, (sum, m) => sum + m.fat)}g',
+                      foods: dinnerMeals.map((m) => _LogFoodItem(
+                        name: m.name,
+                        calories: m.calories,
+                        macros: 'P: ${m.protein}g • C: ${m.carbs}g • F: ${m.fat}g',
+                      )).toList(),
+                    ),
+                  if (snackMeals.isNotEmpty)
+                    _LogMealCard(
+                      meal: 'Snack',
+                      time: snackMeals.first.timestamp.toString().split(' ')[1].substring(0, 5),
+                      calories: snackMeals.fold(0, (sum, m) => sum + m.calories),
+                      macros: 'P: ${snackMeals.fold(0, (sum, m) => sum + m.protein)}g • C: ${snackMeals.fold(0, (sum, m) => sum + m.carbs)}g • F: ${snackMeals.fold(0, (sum, m) => sum + m.fat)}g',
+                      foods: snackMeals.map((m) => _LogFoodItem(
+                        name: m.name,
+                        calories: m.calories,
+                        macros: 'P: ${m.protein}g • C: ${m.carbs}g • F: ${m.fat}g',
+                      )).toList(),
+                    ),
+                ],
+              );
+            },
           ),
           const SizedBox(height: 16),
           SizedBox(
             width: double.infinity,
             child: ElevatedButton(
-              onPressed: () {},
+              onPressed: _showAddMealDialog,
               style: ElevatedButton.styleFrom(
                 backgroundColor: kPrimaryGreen,
                 foregroundColor: Colors.white,
@@ -1149,6 +1574,159 @@ class LogScreen extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+class AddMealDialog extends StatefulWidget {
+  final VoidCallback onMealAdded;
+
+  const AddMealDialog({super.key, required this.onMealAdded});
+
+  @override
+  State<AddMealDialog> createState() => _AddMealDialogState();
+}
+
+class _AddMealDialogState extends State<AddMealDialog> {
+  final _formKey = GlobalKey<FormState>();
+  final MealService _mealService = MealService();
+  String _selectedMealType = 'breakfast';
+  final TextEditingController _nameController = TextEditingController();
+  final TextEditingController _caloriesController = TextEditingController();
+  final TextEditingController _proteinController = TextEditingController();
+  final TextEditingController _carbsController = TextEditingController();
+  final TextEditingController _fatController = TextEditingController();
+
+  Future<void> _addMeal() async {
+    if (!_formKey.currentState!.validate()) return;
+
+    try {
+      final meal = Meal(
+        id: '', // Will be set by Firestore
+        name: _nameController.text,
+        calories: int.parse(_caloriesController.text),
+        protein: int.parse(_proteinController.text),
+        carbs: int.parse(_carbsController.text),
+        fat: int.parse(_fatController.text),
+        timestamp: DateTime.now(),
+        mealType: _selectedMealType,
+        userId: FirebaseAuth.instance.currentUser!.uid,
+      );
+
+      await _mealService.addMeal(meal);
+      widget.onMealAdded();
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error adding meal: $e')),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Add Meal'),
+      content: Form(
+        key: _formKey,
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              DropdownButtonFormField<String>(
+                value: _selectedMealType,
+                decoration: const InputDecoration(labelText: 'Meal Type'),
+                items: ['breakfast', 'lunch', 'dinner', 'snack']
+                    .map((type) => DropdownMenuItem(
+                          value: type,
+                          child: Text(type[0].toUpperCase() + type.substring(1)),
+                        ))
+                    .toList(),
+                onChanged: (value) {
+                  if (value != null) {
+                    setState(() => _selectedMealType = value);
+                  }
+                },
+              ),
+              TextFormField(
+                controller: _nameController,
+                decoration: const InputDecoration(labelText: 'Food Name'),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter a food name';
+                  }
+                  return null;
+                },
+              ),
+              TextFormField(
+                controller: _caloriesController,
+                decoration: const InputDecoration(labelText: 'Calories'),
+                keyboardType: TextInputType.number,
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter calories';
+                  }
+                  if (int.tryParse(value) == null) {
+                    return 'Please enter a valid number';
+                  }
+                  return null;
+                },
+              ),
+              TextFormField(
+                controller: _proteinController,
+                decoration: const InputDecoration(labelText: 'Protein (g)'),
+                keyboardType: TextInputType.number,
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter protein';
+                  }
+                  if (int.tryParse(value) == null) {
+                    return 'Please enter a valid number';
+                  }
+                  return null;
+                },
+              ),
+              TextFormField(
+                controller: _carbsController,
+                decoration: const InputDecoration(labelText: 'Carbs (g)'),
+                keyboardType: TextInputType.number,
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter carbs';
+                  }
+                  if (int.tryParse(value) == null) {
+                    return 'Please enter a valid number';
+                  }
+                  return null;
+                },
+              ),
+              TextFormField(
+                controller: _fatController,
+                decoration: const InputDecoration(labelText: 'Fat (g)'),
+                keyboardType: TextInputType.number,
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter fat';
+                  }
+                  if (int.tryParse(value) == null) {
+                    return 'Please enter a valid number';
+                  }
+                  return null;
+                },
+              ),
+            ],
+          ),
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Cancel'),
+        ),
+        ElevatedButton(
+          onPressed: _addMeal,
+          child: const Text('Add'),
+        ),
+      ],
     );
   }
 }
@@ -1239,8 +1817,168 @@ class _LogFoodItem extends StatelessWidget {
   }
 }
 
-class ProfileScreen extends StatelessWidget {
+class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
+
+  @override
+  State<ProfileScreen> createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends State<ProfileScreen> {
+  final UserService _userService = UserService();
+
+  void _showEditProfileDialog(UserProfile profile) {
+    final nameController = TextEditingController(text: profile.name);
+    final ageController = TextEditingController(text: profile.age.toString());
+    final heightController = TextEditingController(text: profile.height.toString());
+    final weightController = TextEditingController(text: profile.weight.toString());
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Edit Profile'),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                decoration: const InputDecoration(labelText: 'Name'),
+                controller: nameController,
+              ),
+              TextField(
+                decoration: const InputDecoration(labelText: 'Age'),
+                keyboardType: TextInputType.number,
+                controller: ageController,
+              ),
+              TextField(
+                decoration: const InputDecoration(labelText: 'Height (cm)'),
+                keyboardType: TextInputType.number,
+                controller: heightController,
+              ),
+              TextField(
+                decoration: const InputDecoration(labelText: 'Weight (kg)'),
+                keyboardType: TextInputType.number,
+                controller: weightController,
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              try {
+                final updatedProfile = UserProfile(
+                  id: profile.id,
+                  email: profile.email,
+                  name: nameController.text,
+                  age: int.parse(ageController.text),
+                  height: double.parse(heightController.text),
+                  weight: double.parse(weightController.text),
+                  dailyCalorieGoal: profile.dailyCalorieGoal,
+                  proteinGoal: profile.proteinGoal,
+                  carbsGoal: profile.carbsGoal,
+                  fatGoal: profile.fatGoal,
+                  createdAt: profile.createdAt,
+                  lastUpdated: DateTime.now(),
+                );
+
+                await _userService.updateUserProfile(updatedProfile);
+                if (mounted) {
+                  Navigator.pop(context);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Profile updated successfully')),
+                  );
+                }
+              } catch (e) {
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Error updating profile: $e')),
+                  );
+                }
+              }
+            },
+            child: const Text('Save'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showEditGoalsDialog(UserProfile profile) {
+    final caloriesController = TextEditingController(text: profile.dailyCalorieGoal.toString());
+    final proteinController = TextEditingController(text: profile.proteinGoal.toString());
+    final carbsController = TextEditingController(text: profile.carbsGoal.toString());
+    final fatController = TextEditingController(text: profile.fatGoal.toString());
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Edit Goals'),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                decoration: const InputDecoration(labelText: 'Daily Calorie Goal'),
+                keyboardType: TextInputType.number,
+                controller: caloriesController,
+              ),
+              TextField(
+                decoration: const InputDecoration(labelText: 'Protein Goal (g)'),
+                keyboardType: TextInputType.number,
+                controller: proteinController,
+              ),
+              TextField(
+                decoration: const InputDecoration(labelText: 'Carbs Goal (g)'),
+                keyboardType: TextInputType.number,
+                controller: carbsController,
+              ),
+              TextField(
+                decoration: const InputDecoration(labelText: 'Fat Goal (g)'),
+                keyboardType: TextInputType.number,
+                controller: fatController,
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              try {
+                await _userService.updateUserGoals(
+                  dailyCalorieGoal: int.parse(caloriesController.text),
+                  proteinGoal: int.parse(proteinController.text),
+                  carbsGoal: int.parse(carbsController.text),
+                  fatGoal: int.parse(fatController.text),
+                );
+                if (mounted) {
+                  Navigator.pop(context);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Goals updated successfully')),
+                  );
+                }
+              } catch (e) {
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Error updating goals: $e')),
+                  );
+                }
+              }
+            },
+            child: const Text('Save'),
+          ),
+        ],
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -1280,161 +2018,207 @@ class ProfileScreen extends StatelessWidget {
           ),
         ],
       ),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          // User info card
-          Container(
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(20),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.04),
-                  blurRadius: 12,
-                  offset: const Offset(0, 4),
-                ),
-              ],
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    CircleAvatar(
-                      radius: 32,
-                      backgroundColor: kContainerGrey,
-                      child: Icon(Icons.person, color: kSecondaryBlue, size: 36),
+      body: StreamBuilder<UserProfile?>(
+        stream: _userService.getCurrentUserProfile(),
+        builder: (context, userSnapshot) {
+          if (!userSnapshot.hasData) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          final profile = userSnapshot.data;
+          if (profile == null) {
+            return const Center(child: Text('No profile data available'));
+          }
+
+          return ListView(
+            padding: const EdgeInsets.all(16),
+            children: [
+              // User info card
+              Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.04),
+                      blurRadius: 12,
+                      offset: const Offset(0, 4),
                     ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: const [
-                          Text('John Doe', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
-                          SizedBox(height: 2),
-                          Text('john.doe@example.com', style: TextStyle(color: Colors.grey)),
-                        ],
+                  ],
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        CircleAvatar(
+                          radius: 32,
+                          backgroundColor: kContainerGrey,
+                          child: Icon(Icons.person, color: kSecondaryBlue, size: 36),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(profile.name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+                              Text(profile.email, style: const TextStyle(color: Colors.grey)),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        _ProfileStatBox(
+                          label: profile.age.toString(),
+                          sublabel: 'Age',
+                          color: kPrimaryGreen.withOpacity(0.12),
+                          valueColor: kPrimaryGreen,
+                        ),
+                        _ProfileStatBox(
+                          label: '${profile.height}cm',
+                          sublabel: 'Height',
+                          color: kSecondaryBlue.withOpacity(0.12),
+                          valueColor: kSecondaryBlue,
+                        ),
+                        _ProfileStatBox(
+                          label: '${profile.weight}kg',
+                          sublabel: 'Weight',
+                          color: kAccentOrange.withOpacity(0.12),
+                          valueColor: kAccentOrange,
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    SizedBox(
+                      width: double.infinity,
+                      child: OutlinedButton(
+                        onPressed: () => _showEditProfileDialog(profile),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: kSecondaryBlue,
+                          side: BorderSide(color: kSecondaryBlue, width: 2),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        ),
+                        child: const Text('Edit Profile'),
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 16),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    _ProfileStatBox(label: '28', sublabel: 'Age', color: kPrimaryGreen.withOpacity(0.12), valueColor: kPrimaryGreen),
-                    _ProfileStatBox(label: '175cm', sublabel: 'Height', color: kSecondaryBlue.withOpacity(0.12), valueColor: kSecondaryBlue),
-                    _ProfileStatBox(label: '72kg', sublabel: 'Weight', color: kAccentOrange.withOpacity(0.12), valueColor: kAccentOrange),
+              ),
+              const SizedBox(height: 20),
+              // Weekly Progress
+              Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.04),
+                      blurRadius: 12,
+                      offset: const Offset(0, 4),
+                    ),
                   ],
                 ),
-                const SizedBox(height: 16),
-                SizedBox(
-                  width: double.infinity,
-                  child: OutlinedButton(
-                    onPressed: () {},
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: kSecondaryBlue,
-                      side: BorderSide(color: kSecondaryBlue, width: 2),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text('Nutrition Goals', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                        TextButton(
+                          onPressed: () => _showEditGoalsDialog(profile),
+                          child: const Text('Edit'),
+                        ),
+                      ],
                     ),
-                    child: const Text('Edit Profile'),
-                  ),
+                    const SizedBox(height: 16),
+                    _ProfileProgressRow(
+                      icon: Icons.bar_chart,
+                      label: 'Calories',
+                      value: '${profile.dailyCalorieGoal} cal/day',
+                      percent: 0.85,
+                      color: kPrimaryGreen,
+                      barColor: kPrimaryGreen,
+                      secondaryBarColor: kSecondaryBlue,
+                    ),
+                    _ProfileProgressRow(
+                      icon: Icons.favorite_border,
+                      label: 'Protein',
+                      value: '${profile.proteinGoal}g',
+                      percent: 0.6,
+                      color: kSecondaryBlue,
+                      barColor: kSecondaryBlue,
+                      secondaryBarColor: kPrimaryGreen,
+                    ),
+                    _ProfileProgressRow(
+                      icon: Icons.show_chart,
+                      label: 'Carbs',
+                      value: '${profile.carbsGoal}g',
+                      percent: 0.79,
+                      color: kAccentOrange,
+                      barColor: kPrimaryGreen,
+                      secondaryBarColor: kSecondaryBlue,
+                    ),
+                    _ProfileProgressRow(
+                      icon: Icons.show_chart,
+                      label: 'Fat',
+                      value: '${profile.fatGoal}g',
+                      percent: 0.65,
+                      color: kAccentOrange,
+                      barColor: kPrimaryGreen,
+                      secondaryBarColor: kSecondaryBlue,
+                    ),
+                  ],
                 ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 20),
-          // Weekly Progress
-          Container(
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(20),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.04),
-                  blurRadius: 12,
-                  offset: const Offset(0, 4),
+              ),
+              const SizedBox(height: 20),
+              // Settings
+              Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.04),
+                      blurRadius: 12,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
                 ),
-              ],
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text('Weekly Progress', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                const SizedBox(height: 16),
-                _ProfileProgressRow(
-                  icon: Icons.bar_chart,
-                  label: 'Calories',
-                  value: '1,870 avg/day',
-                  percent: 0.85,
-                  color: kPrimaryGreen,
-                  barColor: kPrimaryGreen,
-                  secondaryBarColor: kSecondaryBlue,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text('Settings', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                    const SizedBox(height: 12),
+                    _ProfileSettingTile(icon: Icons.settings, label: 'Preferences', onTap: () {}),
+                    _ProfileSettingTile(icon: Icons.favorite, label: 'Health Goals', onTap: () => _showEditGoalsDialog(profile)),
+                    _ProfileSettingTile(icon: Icons.bar_chart, label: 'Nutrition Plan', onTap: () {}),
+                    _ProfileSettingTile(icon: Icons.person, label: 'Account', onTap: () {}),
+                  ],
                 ),
-                _ProfileProgressRow(
-                  icon: Icons.favorite_border,
-                  label: 'Exercise',
-                  value: '4 days',
-                  percent: 0.6,
-                  color: kSecondaryBlue,
-                  barColor: kSecondaryBlue,
-                  secondaryBarColor: kPrimaryGreen,
+              ),
+              const SizedBox(height: 24),
+              Center(child: Text('Version 1.0.0', style: TextStyle(color: Colors.grey[600]))),
+              const SizedBox(height: 8),
+              Center(
+                child: TextButton(
+                  onPressed: () async {
+                    await FirebaseAuth.instance.signOut();
+                  },
+                  style: TextButton.styleFrom(foregroundColor: kWarningRed),
+                  child: const Text('Log Out'),
                 ),
-                _ProfileProgressRow(
-                  icon: Icons.show_chart,
-                  label: 'Protein Goal',
-                  value: '79%',
-                  percent: 0.79,
-                  color: kAccentOrange,
-                  barColor: kPrimaryGreen,
-                  secondaryBarColor: kSecondaryBlue,
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 20),
-          // Settings
-          Container(
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(20),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.04),
-                  blurRadius: 12,
-                  offset: const Offset(0, 4),
-                ),
-              ],
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text('Settings', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                const SizedBox(height: 12),
-                _ProfileSettingTile(icon: Icons.settings, label: 'Preferences', onTap: () {}),
-                _ProfileSettingTile(icon: Icons.favorite, label: 'Health Goals', onTap: () {}),
-                _ProfileSettingTile(icon: Icons.bar_chart, label: 'Nutrition Plan', onTap: () {}),
-                _ProfileSettingTile(icon: Icons.person, label: 'Account', onTap: () {}),
-              ],
-            ),
-          ),
-          const SizedBox(height: 24),
-          Center(child: Text('Version 1.0.0', style: TextStyle(color: Colors.grey[600]))),
-          const SizedBox(height: 8),
-          Center(
-            child: TextButton(
-              onPressed: () async {
-                await FirebaseAuth.instance.signOut();
-              },
-              style: TextButton.styleFrom(foregroundColor: kWarningRed),
-              child: const Text('Log Out'),
-            ),
-          ),
-        ],
+              ),
+            ],
+          );
+        },
       ),
     );
   }
