@@ -35,13 +35,11 @@ class MyApp extends StatelessWidget {
           onSecondary: Colors.white,
           error: kWarningRed,
           onError: Colors.white,
-          background: kBackgroundWhite,
-          onBackground: Colors.black,
           surface: kContainerGrey,
           onSurface: Colors.black,
         ),
         scaffoldBackgroundColor: kBackgroundWhite,
-        appBarTheme: const AppBarTheme(
+        appBarTheme: AppBarTheme(
           backgroundColor: kPrimaryGreen,
           foregroundColor: Colors.white,
         ),
@@ -52,7 +50,7 @@ class MyApp extends StatelessWidget {
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(12),
             ),
-            textStyle: const TextStyle(fontWeight: FontWeight.bold),
+            textStyle: TextStyle(fontWeight: FontWeight.bold),
           ),
         ),
         outlinedButtonTheme: OutlinedButtonThemeData(
@@ -62,7 +60,7 @@ class MyApp extends StatelessWidget {
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(12),
             ),
-            textStyle: const TextStyle(fontWeight: FontWeight.bold),
+            textStyle: TextStyle(fontWeight: FontWeight.bold),
           ),
         ),
         inputDecorationTheme: InputDecorationTheme(
@@ -353,6 +351,8 @@ class _MyHomePageState extends State<MyHomePage> {
 }
 
 class FoodLogForm extends StatefulWidget {
+  const FoodLogForm({super.key});
+
   @override
   _FoodLogFormState createState() => _FoodLogFormState();
 }
@@ -424,6 +424,8 @@ class _FoodLogFormState extends State<FoodLogForm> {
 }
 
 class FoodLogList extends StatelessWidget {
+  const FoodLogList({super.key});
+
   @override
   Widget build(BuildContext context) {
     final user = FirebaseAuth.instance.currentUser;
@@ -462,6 +464,8 @@ class FoodLogList extends StatelessWidget {
 }
 
 class HomeScreen extends StatelessWidget {
+  const HomeScreen({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -491,6 +495,8 @@ class HomeScreen extends StatelessWidget {
 }
 
 class MainNavScreen extends StatefulWidget {
+  const MainNavScreen({super.key});
+
   @override
   State<MainNavScreen> createState() => _MainNavScreenState();
 }
@@ -545,11 +551,13 @@ class _MainNavScreenState extends State<MainNavScreen> {
 }
 
 class DashboardScreen extends StatelessWidget {
+  const DashboardScreen({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Dashboard', style: TextStyle(color: Colors.black)),
+        title: Text('Dashboard', style: TextStyle(color: Colors.black)),
         backgroundColor: kBackgroundWhite,
         elevation: 0,
         automaticallyImplyLeading: false,
@@ -557,7 +565,7 @@ class DashboardScreen extends StatelessWidget {
           IconButton(
             icon: Stack(
               children: [
-                const Icon(Icons.notifications_none, color: Colors.black),
+                Icon(Icons.notifications_none, color: Colors.black),
                 Positioned(
                   right: 0,
                   top: 0,
@@ -617,7 +625,7 @@ class DashboardScreen extends StatelessWidget {
                           style: TextStyle(color: Colors.grey[600]),
                         ),
                         const SizedBox(width: 4),
-                        const Icon(Icons.calendar_today, size: 18, color: Colors.grey),
+                        Icon(Icons.calendar_today, size: 18, color: Colors.grey),
                       ],
                     ),
                   ],
@@ -843,11 +851,13 @@ class _MealCard extends StatelessWidget {
 }
 
 class ScanScreen extends StatelessWidget {
+  const ScanScreen({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Scan Food', style: TextStyle(color: Colors.black)),
+        title: Text('Scan Food', style: TextStyle(color: Colors.black)),
         backgroundColor: kBackgroundWhite,
         elevation: 0,
         automaticallyImplyLeading: false,
@@ -855,7 +865,7 @@ class ScanScreen extends StatelessWidget {
           IconButton(
             icon: Stack(
               children: [
-                const Icon(Icons.notifications_none, color: Colors.black),
+                Icon(Icons.notifications_none, color: Colors.black),
                 Positioned(
                   right: 0,
                   top: 0,
@@ -1002,11 +1012,13 @@ class _ScanTip extends StatelessWidget {
 }
 
 class LogScreen extends StatelessWidget {
+  const LogScreen({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Food Log', style: TextStyle(color: Colors.black)),
+        title: Text('Food Log', style: TextStyle(color: Colors.black)),
         backgroundColor: kBackgroundWhite,
         elevation: 0,
         automaticallyImplyLeading: false,
@@ -1014,7 +1026,7 @@ class LogScreen extends StatelessWidget {
           IconButton(
             icon: Stack(
               children: [
-                const Icon(Icons.notifications_none, color: Colors.black),
+                Icon(Icons.notifications_none, color: Colors.black),
                 Positioned(
                   right: 0,
                   top: 0,
@@ -1050,7 +1062,7 @@ class LogScreen extends StatelessWidget {
                 child: TextField(
                   decoration: InputDecoration(
                     hintText: 'Search foods...',
-                    prefixIcon: const Icon(Icons.search, color: Colors.grey),
+                    prefixIcon: Icon(Icons.search, color: Colors.grey),
                     filled: true,
                     fillColor: kContainerGrey,
                     contentPadding: const EdgeInsets.symmetric(vertical: 0, horizontal: 12),
@@ -1068,7 +1080,7 @@ class LogScreen extends StatelessWidget {
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: IconButton(
-                  icon: const Icon(Icons.filter_list, color: Colors.grey),
+                  icon: Icon(Icons.filter_list, color: Colors.grey),
                   onPressed: () {},
                 ),
               ),
@@ -1084,7 +1096,7 @@ class LogScreen extends StatelessWidget {
                 children: [
                   Text('May 16, 2025', style: TextStyle(color: Colors.grey[600])),
                   const SizedBox(width: 4),
-                  const Icon(Icons.calendar_today, size: 18, color: Colors.grey),
+                  Icon(Icons.calendar_today, size: 18, color: Colors.grey),
                 ],
               ),
             ],
@@ -1228,11 +1240,13 @@ class _LogFoodItem extends StatelessWidget {
 }
 
 class ProfileScreen extends StatelessWidget {
+  const ProfileScreen({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Profile', style: TextStyle(color: Colors.black)),
+        title: Text('Profile', style: TextStyle(color: Colors.black)),
         backgroundColor: kBackgroundWhite,
         elevation: 0,
         automaticallyImplyLeading: false,
@@ -1240,7 +1254,7 @@ class ProfileScreen extends StatelessWidget {
           IconButton(
             icon: Stack(
               children: [
-                const Icon(Icons.notifications_none, color: Colors.black),
+                Icon(Icons.notifications_none, color: Colors.black),
                 Positioned(
                   right: 0,
                   top: 0,
