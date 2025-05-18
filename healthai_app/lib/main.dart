@@ -9,6 +9,7 @@ import 'services/user_service.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:provider/provider.dart';
+import 'dart:async';
 
 // Define the color palette
 const Color kPrimaryGreen = Color(0xFF4CAF50); // Soft green
@@ -1167,51 +1168,307 @@ class MainNavScreen extends StatefulWidget {
   State<MainNavScreen> createState() => _MainNavScreenState();
 }
 
-class _MainNavScreenState extends State<MainNavScreen> {
+class _MainNavScreenState extends State<MainNavScreen> with TickerProviderStateMixin {
   int _selectedIndex = 0;
+  bool _fabExpanded = false;
+  bool _showFabActions = false;
+  static bool _footerEntrancePlayed = false;
+  late AnimationController _footerController;
+
   final List<Widget> _screens = [
     DashboardScreen(),
-    ScanScreen(),
-    LogScreen(),
+    Center(child: Text('Food')), // Placeholder for Food
+    SizedBox.shrink(), // Placeholder for FAB
+    CoachScreen(), // Placeholder for Coach
     ProfileScreen(),
   ];
 
-  void _onItemTapped(int index) {
+  @override
+  void initState() {
+    super.initState();
+    _footerController = AnimationController(
+      vsync: this,
+      duration: Duration(milliseconds: 700),
+    );
+    if (!_footerEntrancePlayed) {
+      _footerController.forward();
+      _footerEntrancePlayed = true;
+    } else {
+      _footerController.value = 1.0;
+    }
+  }
+
+  @override
+  void dispose() {
+    _footerController.dispose();
+    super.dispose();
+  }
+
+  void _onItemTapped(int index) async {
+    if (index == 2) {
+      if (!_fabExpanded) {
+        setState(() {
+          _fabExpanded = true;
+        });
+        // Wait for X animation, then show actions
+        await Future.delayed(Duration(milliseconds: 220));
+        setState(() {
+          _showFabActions = true;
+        });
+      } else {
+        setState(() {
+          _showFabActions = false;
+        });
+        // Wait for actions to disappear, then animate X back to plus
+        await Future.delayed(Duration(milliseconds: 180));
+        setState(() {
+          _fabExpanded = false;
+        });
+      }
+    } else {
+      setState(() {
+        _selectedIndex = index;
+        _fabExpanded = false;
+        _showFabActions = false;
+      });
+    }
+  }
+
+  void _navigateToLog() {
     setState(() {
-      _selectedIndex = index;
+      _fabExpanded = false;
+      _showFabActions = false;
     });
+    Navigator.of(context).push(MaterialPageRoute(builder: (_) => Center(child: Text('Log Page'))));
+  }
+
+  void _navigateToScan() {
+    setState(() {
+      _fabExpanded = false;
+      _showFabActions = false;
+    });
+    Navigator.of(context).push(MaterialPageRoute(builder: (_) => Center(child: Text('Scan Page'))));
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: _screens[_selectedIndex],
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _selectedIndex,
-        onTap: _onItemTapped,
-        selectedItemColor: kPrimaryGreen,
-        unselectedItemColor: Colors.grey,
-        showUnselectedLabels: true,
-        type: BottomNavigationBarType.fixed,
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home),
-            label: 'Home',
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        Scaffold(
+          body: _screens[_selectedIndex],
+          bottomNavigationBar: SlideTransition(
+            position: Tween<Offset>(begin: Offset(0, 1), end: Offset.zero).animate(CurvedAnimation(parent: _footerController, curve: Curves.easeOutCubic)),
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.06),
+                    blurRadius: 8,
+                    offset: Offset(0, -2),
+                  ),
+                ],
+              ),
+              child: SafeArea(
+                child: SizedBox(
+                  height: 70,
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceAround,
+                        children: [
+                          _AnimatedNavBarItem(
+                            icon: Icons.home,
+                            label: 'Home',
+                            selected: _selectedIndex == 0,
+                            onTap: () => _onItemTapped(0),
+                            selectedColor: kPrimaryGreen,
+                          ),
+                          _AnimatedNavBarItem(
+                            icon: Icons.restaurant_menu,
+                            label: 'Food',
+                            selected: _selectedIndex == 1,
+                            onTap: () => _onItemTapped(1),
+                          ),
+                          SizedBox(width: 64), // Space for FAB
+                          _AnimatedNavBarItem(
+                            icon: Icons.chat_bubble_outline,
+                            label: 'Coach',
+                            selected: _selectedIndex == 3,
+                            onTap: () => _onItemTapped(3),
+                          ),
+                          _AnimatedNavBarItem(
+                            icon: Icons.person,
+                            label: 'Profile',
+                            selected: _selectedIndex == 4,
+                            onTap: () => _onItemTapped(4),
+                            iconSize: 28,
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
           ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.camera_alt),
-            label: 'Scan',
+        ),
+        // FAB always above the footer
+        // FAB always above the footer
+        Positioned(
+          left: 0,
+          right: 0,
+          bottom: 38, // Raise FAB above the footer
+          child: Center(
+            child: _AnimatedFab(
+              expanded: _fabExpanded,
+              onTap: () => _onItemTapped(2),
+            ),
           ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.list),
-            label: 'Log',
+        ),
+        // Overlay for Log/Scan
+        if (_fabExpanded)
+          Positioned.fill(
+            child: GestureDetector(
+              onTap: () => _onItemTapped(2),
+              child: Container(
+                color: Colors.black.withOpacity(0.08),
+                child: Stack(
+                  alignment: Alignment.bottomCenter,
+                  children: [
+                    if (_showFabActions)
+                      Positioned(
+                        bottom: 120, // Adjust for raised FAB
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            _FabActionButton(
+                              label: 'Log',
+                              icon: Icons.edit,
+                              onTap: _navigateToLog,
+                            ),
+                            const SizedBox(width: 32),
+                            _FabActionButton(
+                              label: 'Scan',
+                              icon: Icons.camera_alt,
+                              onTap: _navigateToScan,
+                            ),
+                          ],
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ),
           ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person),
-            label: 'Profile',
-          ),
-        ],
+      ],
+    );
+  }
+}
+
+class _AnimatedNavBarItem extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+  final Color? selectedColor;
+  final double? iconSize;
+  const _AnimatedNavBarItem({required this.icon, required this.label, required this.selected, required this.onTap, this.selectedColor, this.iconSize});
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: Duration(milliseconds: 200),
+        curve: Curves.easeOut,
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            AnimatedScale(
+              scale: selected ? 1.18 : 1.0,
+              duration: Duration(milliseconds: 200),
+              curve: Curves.easeOut,
+              child: Icon(icon, color: selected ? (selectedColor ?? kPrimaryGreen) : Colors.grey[600], size: iconSize ?? 28),
+            ),
+            const SizedBox(height: 2),
+            AnimatedDefaultTextStyle(
+              duration: Duration(milliseconds: 200),
+              style: TextStyle(
+                color: selected ? (selectedColor ?? kPrimaryGreen) : Colors.grey[600],
+                fontWeight: FontWeight.w500,
+                fontSize: 13,
+              ),
+              child: Text(label),
+            ),
+          ],
+        ),
       ),
+    );
+  }
+}
+
+class _AnimatedFab extends StatefulWidget {
+  final bool expanded;
+  final VoidCallback onTap;
+  const _AnimatedFab({required this.expanded, required this.onTap});
+  @override
+  State<_AnimatedFab> createState() => _AnimatedFabState();
+}
+class _AnimatedFabState extends State<_AnimatedFab> with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(vsync: this, duration: Duration(milliseconds: 220));
+  }
+  @override
+  void didUpdateWidget(covariant _AnimatedFab oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.expanded) {
+      _controller.forward();
+    } else {
+      _controller.reverse();
+    }
+  }
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, child) {
+        final color = Color.lerp(kPrimaryGreen, Colors.grey[200], _controller.value)!;
+        final icon = _controller.value < 0.5 ? Icons.add : Icons.close;
+        final iconColor = _controller.value < 0.5 ? Colors.white : Colors.grey[600];
+        return GestureDetector(
+          onTap: widget.onTap,
+          child: Container(
+            width: 64,
+            height: 64,
+            decoration: BoxDecoration(
+              color: color,
+              shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.08),
+                  blurRadius: 8,
+                  offset: Offset(0, 2),
+                ),
+              ],
+            ),
+            child: Center(
+              child: Icon(icon, color: iconColor, size: 32),
+            ),
+          ),
+        );
+      },
     );
   }
 }
@@ -1223,9 +1480,56 @@ class DashboardScreen extends StatefulWidget {
   State<DashboardScreen> createState() => _DashboardScreenState();
 }
 
-class _DashboardScreenState extends State<DashboardScreen> {
+class _DashboardScreenState extends State<DashboardScreen> with TickerProviderStateMixin {
   final MealService _mealService = MealService();
   final UserService _userService = UserService();
+
+  late AnimationController _headerController;
+  late AnimationController _summaryController;
+  late AnimationController _quickActionsController;
+  late AnimationController _mealsController;
+
+  static bool _hasAnimatedEntrance = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _headerController = AnimationController(vsync: this, duration: const Duration(milliseconds: 600));
+    _summaryController = AnimationController(vsync: this, duration: const Duration(milliseconds: 900));
+    _quickActionsController = AnimationController(vsync: this, duration: const Duration(milliseconds: 700));
+    _mealsController = AnimationController(vsync: this, duration: const Duration(milliseconds: 700));
+    _playEntranceAnimationsIfNeeded();
+  }
+
+  void _playEntranceAnimationsIfNeeded() {
+    if (!_hasAnimatedEntrance) {
+      _headerController.forward().then((_) {
+        _summaryController.forward().then((_) {
+          _quickActionsController.forward().then((_) {
+            _mealsController.forward().then((_) {
+              setState(() {
+                _hasAnimatedEntrance = true;
+              });
+            });
+          });
+        });
+      });
+    } else {
+      _headerController.value = 1.0;
+      _summaryController.value = 1.0;
+      _quickActionsController.value = 1.0;
+      _mealsController.value = 1.0;
+    }
+  }
+
+  @override
+  void dispose() {
+    _headerController.dispose();
+    _summaryController.dispose();
+    _quickActionsController.dispose();
+    _mealsController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -1238,205 +1542,299 @@ class _DashboardScreenState extends State<DashboardScreen> {
           padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 0),
           children: [
             // Header
-            Padding(
-              padding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text('Welcome back!', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 26, color: Colors.black)),
-                        const SizedBox(height: 4),
-                        Text("Let's track your nutrition today", style: TextStyle(color: Colors.grey[500], fontSize: 16)),
-                      ],
-                    ),
+            FadeTransition(
+              opacity: _headerController,
+              child: SlideTransition(
+                position: Tween<Offset>(begin: const Offset(0, 0.1), end: Offset.zero).animate(_headerController),
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text('Welcome back!', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 26, color: Colors.black)),
+                            const SizedBox(height: 4),
+                            Text("Let's track your nutrition today", style: TextStyle(color: Colors.grey[500], fontSize: 16)),
+                          ],
+                        ),
+                      ),
+                      AnimatedScale(
+                        scale: _headerController.value,
+                        duration: const Duration(milliseconds: 600),
+                        child: user != null && user.photoURL != null
+                          ? CircleAvatar(radius: 24, backgroundImage: NetworkImage(user.photoURL!))
+                          : CircleAvatar(radius: 24, backgroundColor: kPrimaryGreen.withOpacity(0.15), child: Icon(Icons.person, color: kPrimaryGreen)),
+                      ),
+                    ],
                   ),
-                  if (user != null && user.photoURL != null)
-                    CircleAvatar(radius: 24, backgroundImage: NetworkImage(user.photoURL!)),
-                  if (user == null || user.photoURL == null)
-                    CircleAvatar(radius: 24, backgroundColor: kPrimaryGreen.withOpacity(0.15), child: Icon(Icons.person, color: kPrimaryGreen)),
-                ],
+                ),
               ),
             ),
             const SizedBox(height: 18),
             // Nutrition Summary Card
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: StreamBuilder<UserProfile?>(
-                stream: _userService.getCurrentUserProfile(),
-                builder: (context, userSnap) {
-                  if (!userSnap.hasData) return const SizedBox(height: 220, child: Center(child: CircularProgressIndicator()));
-                  final userProfile = userSnap.data!;
-                  final dailyCalorieGoal = userProfile.dailyCalorieGoal ?? 2000;
-                  final proteinGoal = userProfile.proteinGoal ?? 120;
-                  final carbsGoal = userProfile.carbsGoal ?? 250;
-                  final fatGoal = userProfile.fatGoal ?? 50;
-                  return StreamBuilder<List<Meal>>(
-                    stream: _mealService.getTodayMeals(),
-                    builder: (context, snapshot) {
-                      if (!snapshot.hasData) return const SizedBox(height: 220, child: Center(child: CircularProgressIndicator()));
-                      final meals = snapshot.data!;
-                      final totalCalories = meals.fold(0, (sum, m) => sum + m.calories);
-                      final totalProtein = meals.fold(0, (sum, m) => sum + m.protein);
-                      final totalCarbs = meals.fold(0, (sum, m) => sum + m.carbs);
-                      final totalFat = meals.fold(0, (sum, m) => sum + m.fat);
-                      return Container(
-                        padding: const EdgeInsets.all(20),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(16),
-                          border: Border.all(color: const Color(0xFFE5E7EB)),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.grey.withOpacity(0.06),
-                              blurRadius: 16,
-                              offset: const Offset(0, 4),
-                            ),
-                          ],
-                        ),
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            // Macro Progress
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text('Nutrition Summary', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20)),
-                                  const SizedBox(height: 16),
-                                  _MacroProgressRow(
-                                    color: kSecondaryBlue,
-                                    label: 'Protein',
-                                    value: '$totalProtein g',
-                                    percent: totalProtein / proteinGoal,
-                                  ),
-                                  _MacroProgressRow(
-                                    color: kAccentOrange,
-                                    label: 'Carbs',
-                                    value: '$totalCarbs g',
-                                    percent: totalCarbs / carbsGoal,
-                                  ),
-                                  _MacroProgressRow(
-                                    color: kWarningRed,
-                                    label: 'Fat',
-                                    value: '$totalFat g',
-                                    percent: totalFat / fatGoal,
-                                  ),
-                                ],
-                              ),
-                            ),
-                            const SizedBox(width: 16),
-                            // Circular Calories
-                            Column(
-                              children: [
-                                Text('Calories', style: TextStyle(color: Colors.grey[600], fontWeight: FontWeight.w500)),
-                                const SizedBox(height: 8),
-                                _CircularCalories(
-                                  calories: totalCalories,
-                                  goal: dailyCalorieGoal,
+            FadeTransition(
+              opacity: _summaryController,
+              child: SlideTransition(
+                position: Tween<Offset>(begin: const Offset(0, 0.1), end: Offset.zero).animate(_summaryController),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: StreamBuilder<UserProfile?>(
+                    stream: _userService.getCurrentUserProfile(),
+                    builder: (context, userSnap) {
+                      if (!userSnap.hasData) return const SizedBox(height: 220, child: Center(child: CircularProgressIndicator()));
+                      final userProfile = userSnap.data!;
+                      final dailyCalorieGoal = userProfile.dailyCalorieGoal ?? 2000;
+                      final proteinGoal = userProfile.proteinGoal ?? 120;
+                      final carbsGoal = userProfile.carbsGoal ?? 250;
+                      final fatGoal = userProfile.fatGoal ?? 50;
+                      return StreamBuilder<List<Meal>>(
+                        stream: _mealService.getTodayMeals(),
+                        builder: (context, snapshot) {
+                          if (!snapshot.hasData) return const SizedBox(height: 220, child: Center(child: CircularProgressIndicator()));
+                          final meals = snapshot.data!;
+                          final totalCalories = meals.fold(0, (sum, m) => sum + m.calories);
+                          final totalProtein = meals.fold(0, (sum, m) => sum + m.protein);
+                          final totalCarbs = meals.fold(0, (sum, m) => sum + m.carbs);
+                          final totalFat = meals.fold(0, (sum, m) => sum + m.fat);
+                          return Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(18),
+                              border: Border.all(color: const Color(0xFFE5E7EB)),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.grey.withOpacity(0.06),
+                                  blurRadius: 16,
+                                  offset: const Offset(0, 4),
                                 ),
                               ],
                             ),
-                          ],
-                        ),
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                // Macro Progress
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Text('Nutrition Summary', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 22)),
+                                      const SizedBox(height: 18),
+                                      TweenAnimationBuilder<double>(
+                                        tween: Tween<double>(begin: 0, end: totalProtein / proteinGoal),
+                                        duration: const Duration(milliseconds: 900),
+                                        curve: Curves.easeOutCubic,
+                                        builder: (context, value, child) => _MacroProgressRow(
+                                          color: kSecondaryBlue,
+                                          label: 'Protein',
+                                          value: '${(value * proteinGoal).round()} g',
+                                          percent: value,
+                                          valueSuffix: 'g',
+                                          valueFontWeight: FontWeight.w600,
+                                          valueFontSize: 16,
+                                          barHeight: 8,
+                                          labelColor: Colors.black,
+                                          dotSize: 12,
+                                        ),
+                                      ),
+                                      TweenAnimationBuilder<double>(
+                                        tween: Tween<double>(begin: 0, end: totalCarbs / carbsGoal),
+                                        duration: const Duration(milliseconds: 1100),
+                                        curve: Curves.easeOutCubic,
+                                        builder: (context, value, child) => _MacroProgressRow(
+                                          color: kAccentOrange,
+                                          label: 'Carbs',
+                                          value: '${(value * carbsGoal).round()} g',
+                                          percent: value,
+                                          valueSuffix: 'g',
+                                          valueFontWeight: FontWeight.w600,
+                                          valueFontSize: 16,
+                                          barHeight: 8,
+                                          labelColor: Colors.black,
+                                          dotSize: 12,
+                                        ),
+                                      ),
+                                      TweenAnimationBuilder<double>(
+                                        tween: Tween<double>(begin: 0, end: totalFat / fatGoal),
+                                        duration: const Duration(milliseconds: 1200),
+                                        curve: Curves.easeOutCubic,
+                                        builder: (context, value, child) => _MacroProgressRow(
+                                          color: kWarningRed,
+                                          label: 'Fat',
+                                          value: '${(value * fatGoal).round()} g',
+                                          percent: value,
+                                          valueSuffix: 'g',
+                                          valueFontWeight: FontWeight.w600,
+                                          valueFontSize: 16,
+                                          barHeight: 8,
+                                          labelColor: Colors.black,
+                                          dotSize: 12,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                const SizedBox(width: 24),
+                                // Circular Calories (move down slightly)
+                                TweenAnimationBuilder<double>(
+                                  tween: Tween<double>(begin: 0, end: totalCalories / dailyCalorieGoal),
+                                  duration: const Duration(milliseconds: 1200),
+                                  curve: Curves.easeOutCubic,
+                                  builder: (context, value, child) => Column(
+                                    mainAxisAlignment: MainAxisAlignment.start,
+                                    children: [
+                                      const SizedBox(height: 24),
+                                      Text('Calories', style: TextStyle(color: Colors.grey[600], fontWeight: FontWeight.w600, fontSize: 16)),
+                                      const SizedBox(height: 8),
+                                      Stack(
+                                        alignment: Alignment.center,
+                                        children: [
+                                          SizedBox(
+                                            width: 90,
+                                            height: 90,
+                                            child: CircularProgressIndicator(
+                                              value: value.clamp(0.0, 1.0),
+                                              backgroundColor: kContainerGrey,
+                                              color: kPrimaryGreen,
+                                              strokeWidth: 8,
+                                            ),
+                                          ),
+                                          Column(
+                                            mainAxisAlignment: MainAxisAlignment.center,
+                                            children: [
+                                              TweenAnimationBuilder<int>(
+                                                tween: IntTween(begin: 0, end: totalCalories),
+                                                duration: const Duration(milliseconds: 900),
+                                                builder: (context, val, child) => Text('$val', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 26)),
+                                              ),
+                                              Text('/ $dailyCalorieGoal', style: TextStyle(color: Colors.grey[600], fontSize: 15)),
+                                            ],
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
+                        },
                       );
                     },
-                  );
-                },
+                  ),
+                ),
               ),
             ),
             const SizedBox(height: 24),
             // Quick Actions
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('Quick Actions', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
-                  const SizedBox(height: 12),
-                  GridView.count(
-                    crossAxisCount: 2,
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    mainAxisSpacing: 16,
-                    crossAxisSpacing: 16,
-                    childAspectRatio: 1.9,
+            FadeTransition(
+              opacity: _quickActionsController,
+              child: SlideTransition(
+                position: Tween<Offset>(begin: const Offset(0, 0.1), end: Offset.zero).animate(_quickActionsController),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _QuickActionCard(
-                        icon: Icons.camera_alt,
-                        label: 'Snap Meal',
-                        subtitle: 'Analyze your food',
-                        color: kPrimaryGreen,
-                        onTap: () {
-                          // TODO: Implement navigation
-                        },
-                      ),
-                      _QuickActionCard(
-                        icon: Icons.qr_code_scanner,
-                        label: 'Scan Fridge',
-                        subtitle: 'Check inventory',
-                        color: kSecondaryBlue,
-                        onTap: () {
-                          // TODO: Implement navigation
-                        },
-                      ),
-                      _QuickActionCard(
-                        icon: Icons.chat_bubble_outline,
-                        label: 'AI Coach',
-                        subtitle: 'Get advice',
-                        color: kAccentOrange,
-                        onTap: () {
-                          // TODO: Implement navigation
-                        },
-                      ),
-                      _QuickActionCard(
-                        icon: Icons.calendar_month,
-                        label: 'Meal Plan',
-                        subtitle: 'Plan your week',
-                        color: kWarningRed,
-                        onTap: () {
-                          // TODO: Implement navigation
-                        },
+                      Text('Quick Actions', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+                      const SizedBox(height: 12),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: _AnimatedScaleOnTap(
+                              child: _QuickActionCard(
+                                icon: Icons.camera_alt,
+                                label: 'Log Meal',
+                                subtitle: 'Track your food',
+                                color: kPrimaryGreen,
+                                onTap: () {
+                                  // TODO: Implement navigation
+                                },
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: _AnimatedScaleOnTap(
+                              child: _QuickActionCard(
+                                icon: Icons.qr_code_scanner,
+                                label: 'Scan',
+                                subtitle: 'Analyze your food',
+                                color: kSecondaryBlue,
+                                onTap: () {
+                                  // TODO: Implement navigation
+                                },
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
-                ],
+                ),
               ),
             ),
             const SizedBox(height: 24),
             // Today's Meals
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text("Today's Meals", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
-                  TextButton(
-                    onPressed: () {},
-                    child: Text('View All', style: TextStyle(color: kPrimaryGreen)),
+            FadeTransition(
+              opacity: _mealsController,
+              child: SlideTransition(
+                position: Tween<Offset>(begin: const Offset(0, 0.1), end: Offset.zero).animate(_mealsController),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text("Today's Meals", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+                      TextButton(
+                        onPressed: () {},
+                        child: Text('View All', style: TextStyle(color: kPrimaryGreen)),
+                      ),
+                    ],
                   ),
-                ],
+                ),
               ),
             ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: StreamBuilder<List<Meal>>(
-                stream: _mealService.getTodayMeals(),
-                builder: (context, snapshot) {
-                  if (!snapshot.hasData) return const SizedBox(height: 120, child: Center(child: CircularProgressIndicator()));
-                  final meals = snapshot.data!;
-                  if (meals.isEmpty) {
-                    return Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 24),
-                      child: Center(child: Text('No meals logged for this day.', style: TextStyle(color: Colors.grey[600]))),
-                    );
-                  }
-                  return Column(
-                    children: meals.take(2).map((meal) => _MealCardModern(meal: meal)).toList(),
-                  );
-                },
+            FadeTransition(
+              opacity: _mealsController,
+              child: SlideTransition(
+                position: Tween<Offset>(begin: const Offset(0, 0.1), end: Offset.zero).animate(_mealsController),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: StreamBuilder<List<Meal>>(
+                    stream: _mealService.getTodayMeals(),
+                    builder: (context, snapshot) {
+                      if (!snapshot.hasData) return const SizedBox(height: 120, child: Center(child: CircularProgressIndicator()));
+                      final meals = snapshot.data!;
+                      if (meals.isEmpty) {
+                        return Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 24),
+                          child: Center(child: Text('No meals logged for this day.', style: TextStyle(color: Colors.grey[600]))),
+                        );
+                      }
+                      return Column(
+                        children: [
+                          for (int i = 0; i < meals.take(2).length; i++)
+                            TweenAnimationBuilder<double>(
+                              tween: Tween<double>(begin: 0, end: 1),
+                              duration: Duration(milliseconds: 500 + i * 200),
+                              builder: (context, value, child) => Opacity(
+                                opacity: value,
+                                child: Transform.translate(
+                                  offset: Offset(0, (1 - value) * 30),
+                                  child: _AnimatedScaleOnTap(child: _MealCardModern(meal: meals[i])),
+                                ),
+                              ),
+                            ),
+                        ],
+                      );
+                    },
+                  ),
+                ),
               ),
             ),
             const SizedBox(height: 12),
@@ -1458,26 +1856,43 @@ class _MacroProgressRow extends StatelessWidget {
   final String label;
   final String value;
   final double percent;
-  const _MacroProgressRow({required this.color, required this.label, required this.value, required this.percent});
+  final String? valueSuffix;
+  final FontWeight? valueFontWeight;
+  final double? valueFontSize;
+  final double? barHeight;
+  final Color? labelColor;
+  final double? dotSize;
+  const _MacroProgressRow({
+    required this.color,
+    required this.label,
+    required this.value,
+    required this.percent,
+    this.valueSuffix,
+    this.valueFontWeight,
+    this.valueFontSize,
+    this.barHeight,
+    this.labelColor,
+    this.dotSize,
+  });
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4.0),
+      padding: const EdgeInsets.symmetric(vertical: 7.0),
       child: Row(
         children: [
-          Container(width: 10, height: 10, decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
-          const SizedBox(width: 8),
-          SizedBox(width: 60, child: Text(label, style: TextStyle(fontWeight: FontWeight.w500))),
+          Container(width: dotSize ?? 10, height: dotSize ?? 10, decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
+          const SizedBox(width: 10),
+          SizedBox(width: 70, child: Text(label, style: TextStyle(fontWeight: FontWeight.w600, color: labelColor ?? Colors.black))),
           Expanded(
             child: LinearProgressIndicator(
               value: percent.clamp(0.0, 1.0),
               backgroundColor: kContainerGrey,
               color: color,
-              minHeight: 8,
+              minHeight: barHeight ?? 8,
             ),
           ),
-          const SizedBox(width: 12),
-          Text(value, style: const TextStyle(fontWeight: FontWeight.w500)),
+          const SizedBox(width: 16),
+          Text(value, style: TextStyle(fontWeight: valueFontWeight ?? FontWeight.w500, fontSize: valueFontSize ?? 15)),
         ],
       ),
     );
@@ -1488,7 +1903,10 @@ class _MacroProgressRow extends StatelessWidget {
 class _CircularCalories extends StatelessWidget {
   final int calories;
   final int goal;
-  const _CircularCalories({required this.calories, required this.goal});
+  final double? size;
+  final double? fontSize;
+  final double? subFontSize;
+  const _CircularCalories({required this.calories, required this.goal, this.size, this.fontSize, this.subFontSize});
   @override
   Widget build(BuildContext context) {
     final percent = calories / goal;
@@ -1496,20 +1914,20 @@ class _CircularCalories extends StatelessWidget {
       alignment: Alignment.center,
       children: [
         SizedBox(
-          width: 80,
-          height: 80,
+          width: size ?? 80,
+          height: size ?? 80,
           child: CircularProgressIndicator(
             value: percent.clamp(0.0, 1.0),
             backgroundColor: kContainerGrey,
             color: kPrimaryGreen,
-            strokeWidth: 7,
+            strokeWidth: 8,
           ),
         ),
         Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text('$calories', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 20)),
-            Text('/ $goal', style: TextStyle(color: Colors.grey[600], fontSize: 14)),
+            Text('$calories', style: TextStyle(fontWeight: FontWeight.bold, fontSize: fontSize ?? 20)),
+            Text('/ $goal', style: TextStyle(color: Colors.grey[600], fontSize: subFontSize ?? 14)),
           ],
         ),
       ],
@@ -1671,708 +2089,6 @@ class _MacroTag extends StatelessWidget {
 
 extension StringCasingExtension on String {
   String capitalize() => isEmpty ? this : '${this[0].toUpperCase()}${substring(1)}';
-}
-
-class ScanScreen extends StatefulWidget {
-  const ScanScreen({super.key});
-
-  @override
-  State<ScanScreen> createState() => _ScanScreenState();
-}
-
-class _ScanScreenState extends State<ScanScreen> {
-  bool _isScanning = false;
-
-  Future<void> _startScanning() async {
-    setState(() => _isScanning = true);
-    // TODO: Implement camera scanning
-    await Future.delayed(const Duration(seconds: 2)); // Simulate scanning
-    setState(() => _isScanning = false);
-  }
-
-  Future<void> _uploadImage() async {
-    // TODO: Implement image upload
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Scan Food', style: TextStyle(color: theme.textTheme.bodyLarge?.color)),
-        backgroundColor: kPrimaryGreen,
-        elevation: 0,
-        automaticallyImplyLeading: false,
-        actions: [
-          IconButton(
-            icon: Stack(
-              children: [
-                Icon(Icons.notifications_none, color: theme.iconTheme.color),
-                Positioned(
-                  right: 0,
-                  top: 0,
-                  child: Container(
-                    width: 8,
-                    height: 8,
-                    decoration: BoxDecoration(
-                      color: Colors.red,
-                      shape: BoxShape.circle,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            onPressed: () {},
-          ),
-          Padding(
-            padding: const EdgeInsets.only(right: 16.0),
-            child: CircleAvatar(
-              backgroundColor: theme.cardColor,
-              child: Icon(Icons.person, color: theme.iconTheme.color?.withOpacity(0.5)),
-            ),
-          ),
-        ],
-      ),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          Text('Scan Your Food', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: theme.textTheme.bodyLarge?.color)),
-          const SizedBox(height: 16),
-          Container(
-            width: double.infinity,
-            height: 260,
-            decoration: BoxDecoration(
-              color: theme.cardColor,
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: theme.dividerColor, style: BorderStyle.solid, width: 2),
-            ),
-            child: _isScanning
-                ? Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        CircularProgressIndicator(color: kPrimaryGreen),
-                        const SizedBox(height: 16),
-                        Text('Scanning...', style: TextStyle(color: theme.textTheme.bodyLarge?.color?.withOpacity(0.7))),
-                      ],
-                    ),
-                  )
-                : Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        CircleAvatar(
-                          backgroundColor: theme.cardColor,
-                          radius: 36,
-                          child: Icon(Icons.camera_alt, color: theme.iconTheme.color?.withOpacity(0.5), size: 36),
-                        ),
-                        const SizedBox(height: 12),
-                        Text('Point camera at food to analyze', style: TextStyle(color: theme.textTheme.bodyLarge?.color?.withOpacity(0.7))),
-                      ],
-                    ),
-                  ),
-          ),
-          const SizedBox(height: 20),
-          Row(
-            children: [
-              Expanded(
-                child: ElevatedButton.icon(
-                  onPressed: _isScanning ? null : _startScanning,
-                  icon: const Icon(Icons.camera_alt),
-                  label: const Text('Scan Now'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: kSecondaryBlue,
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: OutlinedButton.icon(
-                  onPressed: _isScanning ? null : _uploadImage,
-                  icon: const Icon(Icons.upload_file),
-                  label: const Text('Upload Photo'),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: kSecondaryBlue,
-                    side: BorderSide(color: kSecondaryBlue, width: 2),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 28),
-          Container(
-            padding: const EdgeInsets.all(18),
-            decoration: BoxDecoration(
-              color: theme.cardColor,
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Icon(Icons.info_outline, color: kSecondaryBlue),
-                    const SizedBox(width: 8),
-                    Text('Scanning Tips', style: TextStyle(fontWeight: FontWeight.bold, color: kSecondaryBlue)),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                _ScanTip(number: 1, text: 'Place food on a plain background for better results'),
-                _ScanTip(number: 2, text: 'Make sure there\'s good lighting'),
-                _ScanTip(number: 3, text: 'Position camera 8-12 inches from food'),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _ScanTip extends StatelessWidget {
-  final int number;
-  final String text;
-  const _ScanTip({required this.number, required this.text});
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 2.0),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            width: 22,
-            height: 22,
-            decoration: BoxDecoration(
-              color: kSecondaryBlue.withOpacity(0.15),
-              shape: BoxShape.circle,
-            ),
-            child: Center(
-              child: Text('$number', style: const TextStyle(color: kSecondaryBlue, fontWeight: FontWeight.bold)),
-            ),
-          ),
-          const SizedBox(width: 8),
-          Expanded(child: Text(text, style: TextStyle(color: theme.textTheme.bodyLarge?.color))),
-        ],
-      ),
-    );
-  }
-}
-
-class LogScreen extends StatefulWidget {
-  const LogScreen({super.key});
-
-  @override
-  State<LogScreen> createState() => _LogScreenState();
-}
-
-class _LogScreenState extends State<LogScreen> {
-  final MealService _mealService = MealService();
-  final TextEditingController _searchController = TextEditingController();
-  DateTime _selectedDate = DateTime.now();
-  // Add filter state
-  final Set<String> _selectedMealTypes = {'breakfast', 'lunch', 'dinner', 'snack'};
-
-  void _showFilterDialog() {
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: const Text('Filter Meals'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              _buildFilterCheckbox('Breakfast', 'breakfast'),
-              _buildFilterCheckbox('Lunch', 'lunch'),
-              _buildFilterCheckbox('Dinner', 'dinner'),
-              _buildFilterCheckbox('Snack', 'snack'),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Close'),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  Widget _buildFilterCheckbox(String label, String value) {
-    return CheckboxListTile(
-      title: Text(label),
-      value: _selectedMealTypes.contains(value),
-      onChanged: (checked) {
-        setState(() {
-          if (checked == true) {
-            _selectedMealTypes.add(value);
-          } else {
-            _selectedMealTypes.remove(value);
-          }
-        });
-      },
-    );
-  }
-
-  void _showAddMealDialog() {
-    showDialog(
-      context: context,
-      builder: (context) => AddMealDialog(
-        onMealAdded: () {
-          Navigator.pop(context);
-        },
-      ),
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Food Log', style: TextStyle(color: Colors.black)),
-        backgroundColor: kPrimaryGreen,
-        elevation: 0,
-        automaticallyImplyLeading: false,
-        actions: [
-          IconButton(
-            icon: Stack(
-              children: [
-                Icon(Icons.notifications_none, color: Colors.black),
-                Positioned(
-                  right: 0,
-                  top: 0,
-                  child: Container(
-                    width: 8,
-                    height: 8,
-                    decoration: BoxDecoration(
-                      color: Colors.red,
-                      shape: BoxShape.circle,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            onPressed: () {},
-          ),
-          Padding(
-            padding: const EdgeInsets.only(right: 16.0),
-            child: CircleAvatar(
-              backgroundColor: kContainerGrey,
-              child: Icon(Icons.person, color: Colors.grey[400]),
-            ),
-          ),
-        ],
-      ),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          // Calendar always visible at the top
-          TableCalendar(
-            firstDay: DateTime(2020),
-            lastDay: DateTime.now(),
-            focusedDay: _selectedDate,
-            selectedDayPredicate: (day) => isSameDay(day, _selectedDate),
-            onDaySelected: (selectedDay, focusedDay) {
-              setState(() {
-                _selectedDate = selectedDay;
-              });
-            },
-            calendarFormat: CalendarFormat.week,
-            headerStyle: HeaderStyle(
-              formatButtonVisible: false,
-              titleCentered: true,
-            ),
-          ),
-          const SizedBox(height: 16),
-          // Search bar and filter
-          Row(
-            children: [
-              Expanded(
-                child: TextField(
-                  controller: _searchController,
-                  decoration: InputDecoration(
-                    hintText: 'Search foods...',
-                    prefixIcon: Icon(Icons.search, color: Colors.grey),
-                    filled: true,
-                    fillColor: kContainerGrey,
-                    contentPadding: const EdgeInsets.symmetric(vertical: 0, horizontal: 12),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide.none,
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 8),
-              Container(
-                decoration: BoxDecoration(
-                  color: kContainerGrey,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: IconButton(
-                  icon: Icon(Icons.filter_list, color: Colors.grey),
-                  onPressed: _showFilterDialog,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 20),
-          // Date and section title
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Text("Today's Meals", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
-              Text(
-                '${_selectedDate.day}/${_selectedDate.month}/${_selectedDate.year}',
-                style: TextStyle(color: Colors.grey[600]),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          // Meal cards
-          StreamBuilder<List<Meal>>(
-            stream: _mealService.getMealsForDate(_selectedDate),
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return const Center(child: CircularProgressIndicator());
-              }
-              if (!snapshot.hasData || snapshot.data == null || snapshot.data!.isEmpty) {
-                return Column(
-                  children: [
-                    const SizedBox(height: 16),
-                    Text('No meals logged for this day.', style: TextStyle(color: Colors.grey)),
-                    const SizedBox(height: 16),
-                  ],
-                );
-              }
-              final meals = snapshot.data!;
-              // Filter by selected meal types
-              final filteredMeals = meals.where((m) => _selectedMealTypes.contains(m.mealType)).toList();
-              // Group meals by type
-              final breakfastMeals = filteredMeals.where((m) => m.mealType == 'breakfast').toList();
-              final lunchMeals = filteredMeals.where((m) => m.mealType == 'lunch').toList();
-              final dinnerMeals = filteredMeals.where((m) => m.mealType == 'dinner').toList();
-              final snackMeals = filteredMeals.where((m) => m.mealType == 'snack').toList();
-
-              return Column(
-                children: [
-                  if (breakfastMeals.isNotEmpty)
-                    _LogMealCard(
-                      meal: 'Breakfast',
-                      time: breakfastMeals.first.timestamp.toString().split(' ')[1].substring(0, 5),
-                      calories: breakfastMeals.fold(0, (sum, m) => sum + m.calories),
-                      macros: 'P: ${breakfastMeals.fold(0, (sum, m) => sum + m.protein)}g • C: ${breakfastMeals.fold(0, (sum, m) => sum + m.carbs)}g • F: ${breakfastMeals.fold(0, (sum, m) => sum + m.fat)}g',
-                      foods: breakfastMeals.map((m) => _LogFoodItem(
-                        name: m.name,
-                        calories: m.calories,
-                        macros: 'P: ${m.protein}g • C: ${m.carbs}g • F: ${m.fat}g',
-                      )).toList(),
-                    ),
-                  if (lunchMeals.isNotEmpty)
-                    _LogMealCard(
-                      meal: 'Lunch',
-                      time: lunchMeals.first.timestamp.toString().split(' ')[1].substring(0, 5),
-                      calories: lunchMeals.fold(0, (sum, m) => sum + m.calories),
-                      macros: 'P: ${lunchMeals.fold(0, (sum, m) => sum + m.protein)}g • C: ${lunchMeals.fold(0, (sum, m) => sum + m.carbs)}g • F: ${lunchMeals.fold(0, (sum, m) => sum + m.fat)}g',
-                      foods: lunchMeals.map((m) => _LogFoodItem(
-                        name: m.name,
-                        calories: m.calories,
-                        macros: 'P: ${m.protein}g • C: ${m.carbs}g • F: ${m.fat}g',
-                      )).toList(),
-                    ),
-                  if (dinnerMeals.isNotEmpty)
-                    _LogMealCard(
-                      meal: 'Dinner',
-                      time: dinnerMeals.first.timestamp.toString().split(' ')[1].substring(0, 5),
-                      calories: dinnerMeals.fold(0, (sum, m) => sum + m.calories),
-                      macros: 'P: ${dinnerMeals.fold(0, (sum, m) => sum + m.protein)}g • C: ${dinnerMeals.fold(0, (sum, m) => sum + m.carbs)}g • F: ${dinnerMeals.fold(0, (sum, m) => sum + m.fat)}g',
-                      foods: dinnerMeals.map((m) => _LogFoodItem(
-                        name: m.name,
-                        calories: m.calories,
-                        macros: 'P: ${m.protein}g • C: ${m.carbs}g • F: ${m.fat}g',
-                      )).toList(),
-                    ),
-                  if (snackMeals.isNotEmpty)
-                    _LogMealCard(
-                      meal: 'Snack',
-                      time: snackMeals.first.timestamp.toString().split(' ')[1].substring(0, 5),
-                      calories: snackMeals.fold(0, (sum, m) => sum + m.calories),
-                      macros: 'P: ${snackMeals.fold(0, (sum, m) => sum + m.protein)}g • C: ${snackMeals.fold(0, (sum, m) => sum + m.carbs)}g • F: ${snackMeals.fold(0, (sum, m) => sum + m.fat)}g',
-                      foods: snackMeals.map((m) => _LogFoodItem(
-                        name: m.name,
-                        calories: m.calories,
-                        macros: 'P: ${m.protein}g • C: ${m.carbs}g • F: ${m.fat}g',
-                      )).toList(),
-                    ),
-                ],
-              );
-            },
-          ),
-          const SizedBox(height: 16),
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              onPressed: _showAddMealDialog,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: kPrimaryGreen,
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                padding: const EdgeInsets.symmetric(vertical: 16),
-              ),
-              child: const Text('+ Add Meal', style: TextStyle(fontSize: 16)),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class AddMealDialog extends StatefulWidget {
-  final VoidCallback onMealAdded;
-
-  const AddMealDialog({super.key, required this.onMealAdded});
-
-  @override
-  State<AddMealDialog> createState() => _AddMealDialogState();
-}
-
-class _AddMealDialogState extends State<AddMealDialog> {
-  final _formKey = GlobalKey<FormState>();
-  final MealService _mealService = MealService();
-  String _selectedMealType = 'breakfast';
-  final TextEditingController _nameController = TextEditingController();
-  final TextEditingController _caloriesController = TextEditingController();
-  final TextEditingController _proteinController = TextEditingController();
-  final TextEditingController _carbsController = TextEditingController();
-  final TextEditingController _fatController = TextEditingController();
-
-  Future<void> _addMeal() async {
-    if (!_formKey.currentState!.validate()) return;
-
-    try {
-      final meal = Meal(
-        id: '', // Will be set by Firestore
-        name: _nameController.text,
-        calories: int.parse(_caloriesController.text),
-        protein: int.parse(_proteinController.text),
-        carbs: int.parse(_carbsController.text),
-        fat: int.parse(_fatController.text),
-        timestamp: DateTime.now(),
-        mealType: _selectedMealType,
-        userId: FirebaseAuth.instance.currentUser!.uid,
-      );
-
-      await _mealService.addMeal(meal);
-      widget.onMealAdded();
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error adding meal: $e')),
-      );
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AlertDialog(
-      title: const Text('Add Meal'),
-      content: Form(
-        key: _formKey,
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              DropdownButtonFormField<String>(
-                value: _selectedMealType,
-                decoration: const InputDecoration(labelText: 'Meal Type'),
-                items: ['breakfast', 'lunch', 'dinner', 'snack']
-                    .map((type) => DropdownMenuItem(
-                          value: type,
-                          child: Text(type[0].toUpperCase() + type.substring(1)),
-                        ))
-                    .toList(),
-                onChanged: (value) {
-                  if (value != null) {
-                    setState(() => _selectedMealType = value);
-                  }
-                },
-              ),
-              TextFormField(
-                controller: _nameController,
-                decoration: const InputDecoration(labelText: 'Food Name'),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter a food name';
-                  }
-                  return null;
-                },
-              ),
-              TextFormField(
-                controller: _caloriesController,
-                decoration: const InputDecoration(labelText: 'Calories'),
-                keyboardType: TextInputType.number,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter calories';
-                  }
-                  if (int.tryParse(value) == null) {
-                    return 'Please enter a valid number';
-                  }
-                  return null;
-                },
-              ),
-              TextFormField(
-                controller: _proteinController,
-                decoration: const InputDecoration(labelText: 'Protein (g)'),
-                keyboardType: TextInputType.number,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter protein';
-                  }
-                  if (int.tryParse(value) == null) {
-                    return 'Please enter a valid number';
-                  }
-                  return null;
-                },
-              ),
-              TextFormField(
-                controller: _carbsController,
-                decoration: const InputDecoration(labelText: 'Carbs (g)'),
-                keyboardType: TextInputType.number,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter carbs';
-                  }
-                  if (int.tryParse(value) == null) {
-                    return 'Please enter a valid number';
-                  }
-                  return null;
-                },
-              ),
-              TextFormField(
-                controller: _fatController,
-                decoration: const InputDecoration(labelText: 'Fat (g)'),
-                keyboardType: TextInputType.number,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter fat';
-                  }
-                  if (int.tryParse(value) == null) {
-                    return 'Please enter a valid number';
-                  }
-                  return null;
-                },
-              ),
-            ],
-          ),
-        ),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: const Text('Cancel'),
-        ),
-        ElevatedButton(
-          onPressed: _addMeal,
-          child: const Text('Add'),
-        ),
-      ],
-    );
-  }
-}
-
-class _LogMealCard extends StatelessWidget {
-  final String meal;
-  final String time;
-  final int calories;
-  final String macros;
-  final List<_LogFoodItem> foods;
-  const _LogMealCard({required this.meal, required this.time, required this.calories, required this.macros, required this.foods});
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Container(
-      margin: const EdgeInsets.symmetric(vertical: 8),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: theme.cardColor,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.04),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(meal, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-              Text('$calories cal', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-            ],
-          ),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(time, style: TextStyle(color: Colors.grey[600], fontSize: 13)),
-              Text(macros, style: TextStyle(color: Colors.grey[600], fontSize: 13)),
-            ],
-          ),
-          const Divider(height: 18),
-          ...foods,
-        ],
-      ),
-    );
-  }
-}
-
-class _LogFoodItem extends StatelessWidget {
-  final String name;
-  final int calories;
-  final String macros;
-  const _LogFoodItem({required this.name, required this.calories, required this.macros});
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 2.0),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            width: 10,
-            height: 10,
-            margin: const EdgeInsets.only(top: 6),
-            decoration: BoxDecoration(
-              color: kPrimaryGreen,
-              shape: BoxShape.circle,
-            ),
-          ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(name, style: const TextStyle(fontWeight: FontWeight.w500)),
-                Text(macros, style: TextStyle(color: Colors.grey[600], fontSize: 12)),
-              ],
-            ),
-          ),
-          Text('$calories cal', style: const TextStyle(fontWeight: FontWeight.w500)),
-        ],
-      ),
-    );
-  }
 }
 
 class ProfileScreen extends StatefulWidget {
@@ -3165,4 +2881,656 @@ class _PreferencesScreenState extends State<PreferencesScreen> {
       ),
     );
   }
+}
+
+// Helper widget for tap scale animation
+class _AnimatedScaleOnTap extends StatefulWidget {
+  final Widget child;
+  const _AnimatedScaleOnTap({required this.child});
+  @override
+  State<_AnimatedScaleOnTap> createState() => _AnimatedScaleOnTapState();
+}
+class _AnimatedScaleOnTapState extends State<_AnimatedScaleOnTap> with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(vsync: this, duration: const Duration(milliseconds: 100), lowerBound: 0.95, upperBound: 1.0)..value = 1.0;
+  }
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+  void _onTapDown(TapDownDetails details) => _controller.reverse();
+  void _onTapUp(TapUpDetails details) => _controller.forward();
+  void _onTapCancel() => _controller.forward();
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTapDown: _onTapDown,
+      onTapUp: _onTapUp,
+      onTapCancel: _onTapCancel,
+      child: ScaleTransition(
+        scale: _controller,
+        child: widget.child,
+      ),
+    );
+  }
+}
+
+class _FabActionButton extends StatelessWidget {
+  final String label;
+  final IconData icon;
+  final VoidCallback onTap;
+  const _FabActionButton({required this.label, required this.icon, required this.onTap});
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedScale(
+        scale: 1.0,
+        duration: Duration(milliseconds: 200),
+        child: Container(
+          width: 80,
+          height: 80,
+          margin: const EdgeInsets.symmetric(horizontal: 8),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            shape: BoxShape.circle,
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.10),
+                blurRadius: 16,
+                offset: Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(icon, color: Colors.grey[800], size: 32),
+              const SizedBox(height: 6),
+              Text(label, style: TextStyle(fontWeight: FontWeight.w600, color: Colors.grey[800], fontSize: 16)),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class CoachScreen extends StatefulWidget {
+  const CoachScreen({Key? key}) : super(key: key);
+  @override
+  State<CoachScreen> createState() => _CoachScreenState();
+}
+
+class _CoachScreenState extends State<CoachScreen> with TickerProviderStateMixin {
+  int _tabIndex = 0;
+  final TextEditingController _controller = TextEditingController();
+  final ScrollController _scrollController = ScrollController();
+  late AnimationController _tabController;
+  late AnimationController _chatController;
+  late AnimationController _insightsController;
+  static bool _hasAnimatedEntrance = false;
+
+  final List<_ChatMessage> _messages = [
+    _ChatMessage(
+      text: "Hello! I'm your nutrition coach. How can I help you today?",
+      isUser: false,
+      quickReplies: [
+        'What should I eat today?',
+        'Analyze my last meal',
+        'Help me plan my week',
+      ],
+    ),
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    _tabController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 300),
+    );
+    _chatController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 600),
+    );
+    _insightsController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 600),
+    );
+    _playEntranceAnimationsIfNeeded();
+  }
+
+  void _playEntranceAnimationsIfNeeded() {
+    if (!_hasAnimatedEntrance) {
+      _chatController.forward();
+      _insightsController.forward();
+      _hasAnimatedEntrance = true;
+    } else {
+      _chatController.value = 1.0;
+      _insightsController.value = 1.0;
+    }
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    _chatController.dispose();
+    _insightsController.dispose();
+    _controller.dispose();
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _sendMessage(String text) {
+    if (text.trim().isEmpty) return;
+    setState(() {
+      _messages.add(_ChatMessage(text: text, isUser: true));
+    });
+    _controller.clear();
+    _scrollToBottom();
+    Future.delayed(Duration(milliseconds: 400), () => _botReply(text));
+  }
+
+  void _botReply(String userText) {
+    String reply = '';
+    List<String> quickReplies = [];
+    if (userText.toLowerCase().contains('plan my week')) {
+      reply = "I'm here to help with your nutrition and wellness questions. Would you like me to analyze your recent meals, suggest recipes based on your goals, or provide general nutrition advice?";
+      quickReplies = [
+        'Analyze my recent meals',
+        'Suggest healthy recipes',
+        'Give me nutrition tips',
+      ];
+    } else if (userText.toLowerCase().contains('analyze my last meal')) {
+      reply = "Your last meal was well balanced! Would you like more details or suggestions?";
+      quickReplies = [
+        'More details',
+        'Suggest healthy recipes',
+      ];
+    } else if (userText.toLowerCase().contains('what should i eat')) {
+      reply = "Based on your goals, I recommend a balanced meal with protein, veggies, and whole grains.";
+      quickReplies = [
+        'Suggest a recipe',
+        'Help me plan my week',
+      ];
+    } else {
+      reply = "I'm here to help! Please select an option or ask a question.";
+      quickReplies = [
+        'What should I eat today?',
+        'Analyze my last meal',
+        'Help me plan my week',
+      ];
+    }
+    setState(() {
+      _messages.add(_ChatMessage(text: reply, isUser: false, quickReplies: quickReplies));
+    });
+    _scrollToBottom();
+  }
+
+  void _scrollToBottom() {
+    Future.delayed(Duration(milliseconds: 100), () {
+      if (_scrollController.hasClients) {
+        _scrollController.animateTo(
+          _scrollController.position.maxScrollExtent,
+          duration: Duration(milliseconds: 300),
+          curve: Curves.easeOut,
+        );
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Color(0xFFF9FAFB),
+      appBar: PreferredSize(
+        preferredSize: Size.fromHeight(80),
+        child: AppBar(
+          backgroundColor: Colors.white,
+          elevation: 0,
+          leading: IconButton(
+            icon: Icon(Icons.arrow_back, color: Colors.black),
+            onPressed: () => Navigator.of(context).maybePop(),
+          ),
+          title: Row(
+            children: [
+              Container(
+                decoration: BoxDecoration(
+                  color: kPrimaryGreen.withOpacity(0.12),
+                  shape: BoxShape.circle,
+                ),
+                padding: EdgeInsets.all(8),
+                child: Icon(Icons.chat_bubble_outline, color: kPrimaryGreen, size: 28),
+              ),
+              SizedBox(width: 10),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Nutrition Coach', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black, fontSize: 22)),
+                  SizedBox(height: 2),
+                  Text('Ask about meals, nutrition, or get personalized advice', style: TextStyle(fontSize: 13, color: Colors.grey[500])),
+                ],
+              ),
+            ],
+          ),
+          titleSpacing: 0,
+        ),
+      ),
+      body: Column(
+        children: [
+          // TabBar
+          Container(
+            color: Colors.transparent,
+            child: Row(
+              children: [
+                Expanded(
+                  child: GestureDetector(
+                    onTap: () {
+                      setState(() => _tabIndex = 0);
+                      _tabController.forward(from: 0.0);
+                    },
+                    child: Container(
+                      padding: EdgeInsets.symmetric(vertical: 12),
+                      decoration: BoxDecoration(
+                        color: _tabIndex == 0 ? Colors.white : Colors.transparent,
+                        borderRadius: BorderRadius.circular(18),
+                      ),
+                      child: Center(
+                        child: Text('Chat', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16, color: _tabIndex == 0 ? Colors.black : Colors.grey[500])),
+                      ),
+                    ),
+                  ),
+                ),
+                Expanded(
+                  child: GestureDetector(
+                    onTap: () {
+                      setState(() => _tabIndex = 1);
+                      _tabController.forward(from: 0.0);
+                    },
+                    child: Container(
+                      padding: EdgeInsets.symmetric(vertical: 12),
+                      decoration: BoxDecoration(
+                        color: _tabIndex == 1 ? Colors.white : Colors.transparent,
+                        borderRadius: BorderRadius.circular(18),
+                      ),
+                      child: Center(
+                        child: Text('Insights', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16, color: _tabIndex == 1 ? Colors.black : Colors.grey[500])),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          // Content
+          Expanded(
+            child: AnimatedSwitcher(
+              duration: Duration(milliseconds: 300),
+              child: _tabIndex == 0
+                ? FadeTransition(
+                    opacity: _chatController,
+                    child: SlideTransition(
+                      position: Tween<Offset>(begin: Offset(0, 0.1), end: Offset.zero).animate(_chatController),
+                      child: ListView.builder(
+                        key: ValueKey('chat'),
+                        controller: _scrollController,
+                        padding: EdgeInsets.symmetric(vertical: 16, horizontal: 8),
+                        itemCount: _messages.length,
+                        itemBuilder: (context, i) {
+                          final msg = _messages[i];
+                          return TweenAnimationBuilder<double>(
+                            tween: Tween<double>(begin: 0, end: 1),
+                            duration: Duration(milliseconds: 400),
+                            builder: (context, value, child) => Opacity(
+                              opacity: value,
+                              child: Transform.translate(
+                                offset: Offset(0, (1 - value) * 20),
+                                child: Column(
+                                  crossAxisAlignment: msg.isUser ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+                                  children: [
+                                    if (!msg.isUser)
+                                      Container(
+                                        margin: EdgeInsets.only(bottom: 8, left: 8, right: 48),
+                                        padding: EdgeInsets.all(18),
+                                        decoration: BoxDecoration(
+                                          color: Colors.white,
+                                          borderRadius: BorderRadius.circular(18),
+                                          border: Border.all(color: Color(0xFFE5E7EB)),
+                                        ),
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            Text(msg.text, style: TextStyle(fontSize: 17, color: Colors.black)),
+                                            if (msg.quickReplies.isNotEmpty) ...[
+                                              SizedBox(height: 14),
+                                              Wrap(
+                                                spacing: 10,
+                                                runSpacing: 10,
+                                                children: msg.quickReplies.map((qr) => _QuickReplyButton(
+                                                  text: qr,
+                                                  onTap: () => _sendMessage(qr),
+                                                )).toList(),
+                                              ),
+                                            ],
+                                          ],
+                                        ),
+                                      ),
+                                    if (msg.isUser)
+                                      Container(
+                                        margin: EdgeInsets.only(bottom: 8, right: 8, left: 48),
+                                        padding: EdgeInsets.symmetric(vertical: 14, horizontal: 18),
+                                        decoration: BoxDecoration(
+                                          color: kPrimaryGreen,
+                                          borderRadius: BorderRadius.circular(18),
+                                        ),
+                                        child: Text(msg.text, style: TextStyle(fontSize: 17, color: Colors.white)),
+                                      ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                  )
+                : FadeTransition(
+                    opacity: _insightsController,
+                    child: SlideTransition(
+                      position: Tween<Offset>(begin: Offset(0, 0.1), end: Offset.zero).animate(_insightsController),
+                      child: SingleChildScrollView(
+                        key: ValueKey('insights'),
+                        padding: EdgeInsets.symmetric(vertical: 18, horizontal: 0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            // Nutrition Summary
+                            Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 16),
+                              child: StreamBuilder<UserProfile?>(
+                                stream: UserService().getCurrentUserProfile(),
+                                builder: (context, userSnap) {
+                                  if (!userSnap.hasData) return _insightCard(child: Center(child: CircularProgressIndicator()));
+                                  final userProfile = userSnap.data!;
+                                  final dailyCalorieGoal = userProfile.dailyCalorieGoal;
+                                  return StreamBuilder<List<Meal>>(
+                                    stream: MealService().getTodayMeals(),
+                                    builder: (context, mealSnap) {
+                                      if (!mealSnap.hasData) return _insightCard(child: Center(child: CircularProgressIndicator()));
+                                      final meals = mealSnap.data!;
+                                      final totalCalories = meals.fold(0, (sum, m) => sum + m.calories);
+                                      return TweenAnimationBuilder<double>(
+                                        tween: Tween<double>(begin: 0, end: totalCalories / dailyCalorieGoal),
+                                        duration: Duration(milliseconds: 900),
+                                        builder: (context, value, child) => _insightCard(
+                                          child: Column(
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            children: [
+                                              Text('Nutrition Summary', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20)),
+                                              SizedBox(height: 18),
+                                              Row(
+                                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                                children: [
+                                                  Text('Calories', style: TextStyle(fontSize: 16)),
+                                                  Text('$totalCalories / $dailyCalorieGoal', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16)),
+                                                ],
+                                              ),
+                                              SizedBox(height: 10),
+                                              LinearProgressIndicator(
+                                                value: value.clamp(0.0, 1.0),
+                                                backgroundColor: kContainerGrey,
+                                                color: kAccentOrange,
+                                                minHeight: 8,
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      );
+                                    },
+                                  );
+                                },
+                              ),
+                            ),
+                            SizedBox(height: 18),
+                            // Health Insights
+                            Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 16),
+                              child: StreamBuilder<UserProfile?>(
+                                stream: UserService().getCurrentUserProfile(),
+                                builder: (context, userSnap) {
+                                  if (!userSnap.hasData) return _insightCard(child: Center(child: CircularProgressIndicator()));
+                                  final userProfile = userSnap.data!;
+                                  return StreamBuilder<List<Meal>>(
+                                    stream: MealService().getTodayMeals(),
+                                    builder: (context, mealSnap) {
+                                      if (!mealSnap.hasData) return _insightCard(child: Center(child: CircularProgressIndicator()));
+                                      final meals = mealSnap.data!;
+                                      final proteinGoal = userProfile.proteinGoal;
+                                      final proteinToday = meals.fold(0, (sum, m) => sum + m.protein);
+                                      final proteinLow = proteinToday < (proteinGoal * 0.7);
+                                      final balancedMeals = meals.where((m) => m.protein > 10 && m.carbs > 10 && m.fat > 5).length;
+                                      final energyInsight = proteinToday > 30 ? 'Your energy levels are highest after morning protein intake' : null;
+                                      final insights = <String>[
+                                        if (proteinLow) 'Your protein intake has been lower than recommended today',
+                                        if (balancedMeals > 0) 'You tend to eat more balanced meals on weekdays',
+                                        if (energyInsight != null) energyInsight,
+                                      ];
+                                      return TweenAnimationBuilder<double>(
+                                        tween: Tween<double>(begin: 0, end: 1),
+                                        duration: Duration(milliseconds: 600),
+                                        builder: (context, value, child) => _insightCard(
+                                          child: Column(
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            children: [
+                                              Text('Health Insights', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20)),
+                                              SizedBox(height: 14),
+                                              ...insights.map((insight) => TweenAnimationBuilder<double>(
+                                                tween: Tween<double>(begin: 0, end: 1),
+                                                duration: Duration(milliseconds: 400),
+                                                builder: (context, value, child) => Opacity(
+                                                  opacity: value,
+                                                  child: Transform.translate(
+                                                    offset: Offset(0, (1 - value) * 20),
+                                                    child: Padding(
+                                                      padding: const EdgeInsets.only(bottom: 8),
+                                                      child: Row(
+                                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                                        children: [
+                                                          Container(width: 8, height: 8, margin: EdgeInsets.only(top: 7), decoration: BoxDecoration(color: kPrimaryGreen, shape: BoxShape.circle)),
+                                                          SizedBox(width: 10),
+                                                          Expanded(child: Text(insight, style: TextStyle(fontSize: 16, color: Colors.grey[800]))),
+                                                        ],
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ),
+                                              )),
+                                              SizedBox(height: 10),
+                                              OutlinedButton(
+                                                onPressed: () {
+                                                  showDialog(
+                                                    context: context,
+                                                    builder: (context) => AlertDialog(
+                                                      title: Text('Detailed Analytics'),
+                                                      content: Text('Analytics coming soon!'),
+                                                      actions: [TextButton(onPressed: () => Navigator.pop(context), child: Text('Close'))],
+                                                    ),
+                                                  );
+                                                },
+                                                style: OutlinedButton.styleFrom(
+                                                  foregroundColor: kPrimaryGreen,
+                                                  side: BorderSide(color: kPrimaryGreen),
+                                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                                                  padding: EdgeInsets.symmetric(vertical: 14),
+                                                ),
+                                                child: Row(
+                                                  mainAxisAlignment: MainAxisAlignment.center,
+                                                  children: [
+                                                    Text('View Detailed Analytics', style: TextStyle(fontWeight: FontWeight.w600)),
+                                                    SizedBox(width: 8),
+                                                    Icon(Icons.chevron_right, size: 20),
+                                                  ],
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      );
+                                    },
+                                  );
+                                },
+                              ),
+                            ),
+                            SizedBox(height: 18),
+                            // Common Questions
+                            Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 0),
+                              child: TweenAnimationBuilder<double>(
+                                tween: Tween<double>(begin: 0, end: 1),
+                                duration: Duration(milliseconds: 600),
+                                builder: (context, value, child) => _insightCard(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Container(
+                                        width: double.infinity,
+                                        padding: EdgeInsets.symmetric(vertical: 12, horizontal: 18),
+                                        decoration: BoxDecoration(
+                                          color: kPrimaryGreen.withOpacity(0.08),
+                                          borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+                                        ),
+                                        child: Text('Common Questions', style: TextStyle(fontWeight: FontWeight.w600, color: kPrimaryGreen, fontSize: 18)),
+                                      ),
+                                      ...['Dinner ideas', 'Calorie check', 'Protein snacks', 'Diet tips'].map((q) => TweenAnimationBuilder<double>(
+                                        tween: Tween<double>(begin: 0, end: 1),
+                                        duration: Duration(milliseconds: 400),
+                                        builder: (context, value, child) => Opacity(
+                                          opacity: value,
+                                          child: Transform.translate(
+                                            offset: Offset(0, (1 - value) * 20),
+                                            child: ListTile(
+                                              leading: Container(
+                                                decoration: BoxDecoration(
+                                                  color: kPrimaryGreen.withOpacity(0.10),
+                                                  shape: BoxShape.circle,
+                                                ),
+                                                padding: EdgeInsets.all(8),
+                                                child: Icon(Icons.search, color: Colors.black54, size: 22),
+                                              ),
+                                              title: Text(q, style: TextStyle(fontWeight: FontWeight.w500)),
+                                              onTap: () {
+                                                ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('AI response coming soon!')));
+                                              },
+                                            ),
+                                          ),
+                                        ),
+                                      )),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+            ),
+          ),
+          // Input
+          if (_tabIndex == 0)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: Color(0xFFE5E7EB)),
+                      ),
+                      child: TextField(
+                        controller: _controller,
+                        decoration: InputDecoration(
+                          hintText: 'Type your message...',
+                          border: InputBorder.none,
+                          contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                        ),
+                        onSubmitted: _sendMessage,
+                      ),
+                    ),
+                  ),
+                  SizedBox(width: 10),
+                  GestureDetector(
+                    onTap: () => _sendMessage(_controller.text),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: kPrimaryGreen,
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      padding: EdgeInsets.all(12),
+                      child: Icon(Icons.send, color: Colors.white, size: 22),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ChatMessage {
+  final String text;
+  final bool isUser;
+  final List<String> quickReplies;
+  _ChatMessage({required this.text, required this.isUser, this.quickReplies = const []});
+}
+
+class _QuickReplyButton extends StatelessWidget {
+  final String text;
+  final VoidCallback onTap;
+  const _QuickReplyButton({required this.text, required this.onTap});
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: Color(0xFFE5E7EB)),
+        ),
+        child: Text(text, style: TextStyle(fontWeight: FontWeight.w500, color: Colors.black)),
+      ),
+    );
+  }
+}
+
+// Helper for card UI
+Widget _insightCard({required Widget child}) {
+  return Container(
+    margin: EdgeInsets.only(bottom: 18),
+    padding: EdgeInsets.all(20),
+    decoration: BoxDecoration(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(20),
+      boxShadow: [
+        BoxShadow(
+          color: Colors.black.withOpacity(0.03),
+          blurRadius: 8,
+          offset: Offset(0, 2),
+        ),
+      ],
+    ),
+    child: child,
+  );
 }
