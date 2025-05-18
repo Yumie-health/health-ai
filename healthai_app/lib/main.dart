@@ -137,7 +137,7 @@ class MyApp extends StatelessWidget {
         scaffoldBackgroundColor: Colors.black,
         cardColor: Colors.black,
         appBarTheme: AppBarTheme(
-          backgroundColor: Colors.black,
+          backgroundColor: kPrimaryGreen, // Always green
           foregroundColor: Colors.white,
         ),
         elevatedButtonTheme: ElevatedButtonThemeData(
@@ -573,7 +573,7 @@ class _MyHomePageState extends State<MyHomePage> {
         // TRY THIS: Try changing the color here to a specific color (to
         // Colors.amber, perhaps?) and trigger a hot reload to see the AppBar
         // change color while the other colors stay the same.
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+        backgroundColor: kPrimaryGreen,
         // Here we take the value from the MyHomePage object that was created by
         // the App.build method, and use it to set our appbar title.
         title: Text(widget.title),
@@ -831,7 +831,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text('Dashboard', style: TextStyle(color: theme.textTheme.bodyLarge?.color)),
-        backgroundColor: theme.scaffoldBackgroundColor,
+        backgroundColor: kPrimaryGreen,
         elevation: 0,
         automaticallyImplyLeading: false,
         actions: [
@@ -984,17 +984,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             _ProgressRow(
                               label: 'Daily Goal',
                               value: '$totalCalories / $dailyCalorieGoal cal',
-                              percent: dailyCalorieGoal > 0 ? totalCalories / dailyCalorieGoal : 0,
+                              percent: totalCalories / dailyCalorieGoal,
                             ),
                             _ProgressRow(
                               label: 'Protein',
                               value: '$totalProtein / $proteinGoal g',
-                              percent: proteinGoal > 0 ? totalProtein / proteinGoal : 0,
+                              percent: totalProtein / proteinGoal,
                             ),
                             _ProgressRow(
                               label: 'Carbs',
                               value: '$totalCarbs / $carbsGoal g',
-                              percent: carbsGoal > 0 ? totalCarbs / carbsGoal : 0,
+                              percent: totalCarbs / carbsGoal,
                             ),
                           ],
                         ),
@@ -1227,11 +1227,12 @@ class _MealCard extends StatelessWidget {
   const _MealCard({required this.meal, required this.calories, required this.foods, required this.iconColor, required this.icon});
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 8),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: theme.cardColor,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
@@ -1260,7 +1261,7 @@ class _MealCard extends StatelessWidget {
                 Text(meal, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
                 ...foods.map((f) => Padding(
                   padding: const EdgeInsets.only(top: 4.0),
-                  child: Text(f, style: const TextStyle(color: Colors.black87)),
+                  child: Text(f, style: TextStyle(color: theme.textTheme.bodyLarge?.color)),
                 )),
               ],
             ),
@@ -1280,7 +1281,6 @@ class ScanScreen extends StatefulWidget {
 }
 
 class _ScanScreenState extends State<ScanScreen> {
-  final MealService _mealService = MealService();
   bool _isScanning = false;
 
   Future<void> _startScanning() async {
@@ -1300,7 +1300,7 @@ class _ScanScreenState extends State<ScanScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text('Scan Food', style: TextStyle(color: theme.textTheme.bodyLarge?.color)),
-        backgroundColor: theme.scaffoldBackgroundColor,
+        backgroundColor: kPrimaryGreen,
         elevation: 0,
         automaticallyImplyLeading: false,
         actions: [
@@ -1440,6 +1440,7 @@ class _ScanTip extends StatelessWidget {
   const _ScanTip({required this.number, required this.text});
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 2.0),
       child: Row(
@@ -1457,7 +1458,7 @@ class _ScanTip extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 8),
-          Expanded(child: Text(text, style: const TextStyle(color: Colors.black87))),
+          Expanded(child: Text(text, style: TextStyle(color: theme.textTheme.bodyLarge?.color))),
         ],
       ),
     );
@@ -1536,7 +1537,7 @@ class _LogScreenState extends State<LogScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text('Food Log', style: TextStyle(color: Colors.black)),
-        backgroundColor: kBackgroundWhite,
+        backgroundColor: kPrimaryGreen,
         elevation: 0,
         automaticallyImplyLeading: false,
         actions: [
@@ -1896,11 +1897,12 @@ class _LogMealCard extends StatelessWidget {
   const _LogMealCard({required this.meal, required this.time, required this.calories, required this.macros, required this.foods});
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 8),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: theme.cardColor,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
@@ -2201,7 +2203,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text('Profile', style: TextStyle(color: theme.textTheme.bodyLarge?.color)),
-        backgroundColor: theme.scaffoldBackgroundColor,
+        backgroundColor: kPrimaryGreen,
         elevation: 0,
         automaticallyImplyLeading: false,
         actions: [
