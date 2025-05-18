@@ -1175,13 +1175,7 @@ class _MainNavScreenState extends State<MainNavScreen> with TickerProviderStateM
   static bool _footerEntrancePlayed = false;
   late AnimationController _footerController;
 
-  final List<Widget> _screens = [
-    DashboardScreen(),
-    FoodScreen(), // <-- Replace Center(child: Text('Food'))
-    SizedBox.shrink(), // Placeholder for FAB
-    CoachScreen(), // Placeholder for Coach
-    ProfileScreen(),
-  ];
+  late final List<Widget> _screens;
 
   @override
   void initState() {
@@ -1196,6 +1190,13 @@ class _MainNavScreenState extends State<MainNavScreen> with TickerProviderStateM
     } else {
       _footerController.value = 1.0;
     }
+    _screens = [
+      DashboardScreen(onViewAllMeals: () => _onItemTapped(1)),
+      FoodScreen(),
+      SizedBox.shrink(),
+      CoachScreen(),
+      ProfileScreen(),
+    ];
   }
 
   @override
@@ -1256,7 +1257,17 @@ class _MainNavScreenState extends State<MainNavScreen> with TickerProviderStateM
       clipBehavior: Clip.none,
       children: [
         Scaffold(
-          body: _screens[_selectedIndex],
+          body: AnimatedSwitcher(
+            duration: Duration(milliseconds: 400),
+            transitionBuilder: (child, animation) => FadeTransition(
+              opacity: animation,
+              child: child,
+            ),
+            child: KeyedSubtree(
+              key: ValueKey(_selectedIndex),
+              child: _screens[_selectedIndex],
+            ),
+          ),
           bottomNavigationBar: SlideTransition(
             position: Tween<Offset>(begin: Offset(0, 1), end: Offset.zero).animate(CurvedAnimation(parent: _footerController, curve: Curves.easeOutCubic)),
             child: Container(
@@ -1474,8 +1485,8 @@ class _AnimatedFabState extends State<_AnimatedFab> with SingleTickerProviderSta
 }
 
 class DashboardScreen extends StatefulWidget {
-  const DashboardScreen({super.key});
-
+  final VoidCallback? onViewAllMeals;
+  const DashboardScreen({Key? key, this.onViewAllMeals}) : super(key: key);
   @override
   State<DashboardScreen> createState() => _DashboardScreenState();
 }
@@ -1791,7 +1802,7 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
                     children: [
                       Text("Today's Meals", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
                       TextButton(
-                        onPressed: () {},
+                        onPressed: widget.onViewAllMeals,
                         child: Text('View All', style: TextStyle(color: kPrimaryGreen)),
                       ),
                     ],
