@@ -1177,7 +1177,7 @@ class _MainNavScreenState extends State<MainNavScreen> with TickerProviderStateM
 
   final List<Widget> _screens = [
     DashboardScreen(),
-    Center(child: Text('Food')), // Placeholder for Food
+    FoodScreen(), // <-- Replace Center(child: Text('Food'))
     SizedBox.shrink(), // Placeholder for FAB
     CoachScreen(), // Placeholder for Coach
     ProfileScreen(),
@@ -2025,7 +2025,7 @@ class _MealCardModern extends StatelessWidget {
                   children: [
                     Text(meal.mealType.capitalize(), style: TextStyle(color: kPrimaryGreen, fontWeight: FontWeight.w600)),
                     const SizedBox(width: 8),
-                    Text(_formatTime(meal.timestamp), style: TextStyle(color: Colors.grey[500], fontSize: 13)),
+                    Text(formatTime(meal.timestamp), style: TextStyle(color: Colors.grey[500], fontSize: 13)),
                   ],
                 ),
                 const SizedBox(height: 2),
@@ -2055,7 +2055,7 @@ class _MealCardModern extends StatelessWidget {
     );
   }
 
-  String _formatTime(DateTime dt) {
+  String formatTime(DateTime dt) {
     final h = dt.hour.toString().padLeft(2, '0');
     final m = dt.minute.toString().padLeft(2, '0');
     return '$h:$m';
@@ -3533,4 +3533,547 @@ Widget _insightCard({required Widget child}) {
     ),
     child: child,
   );
+}
+
+class FoodScreen extends StatefulWidget {
+  const FoodScreen({Key? key}) : super(key: key);
+  @override
+  State<FoodScreen> createState() => _FoodScreenState();
+}
+
+class _FoodScreenState extends State<FoodScreen> with TickerProviderStateMixin {
+  DateTime _focusedDay = DateTime.now();
+  DateTime? _selectedDay;
+  int _tabIndex = 0; // 0: My Meals, 1: Suggested Meals
+  final MealService _mealService = MealService();
+
+  // Sample recipe data
+  final List<Map<String, dynamic>> _allRecipes = [
+    {
+      'image': 'https://images.unsplash.com/photo-1504674900247-0877df9cc836',
+      'title': 'Grilled Salmon Bowl',
+      'time': '25 mins',
+      'calories': 420,
+      'tags': ['High Protein', 'Omega-3'],
+    },
+    {
+      'image': 'https://images.unsplash.com/photo-1464306076886-debca5e8a6b0',
+      'title': 'Vegetable Stir Fry',
+      'time': '20 mins',
+      'calories': 350,
+      'tags': ['Vegetarian', 'Quick'],
+    },
+    {
+      'image': 'https://images.unsplash.com/photo-1502741338009-cac2772e18bc',
+      'title': 'Mediterranean Quinoa Bowl',
+      'time': '30 mins',
+      'calories': 380,
+      'tags': ['Vegetarian', 'Fiber'],
+    },
+    {
+      'image': 'https://images.unsplash.com/photo-1519864600265-abb23847ef2c',
+      'title': 'Chicken Avocado Wrap',
+      'time': '15 mins',
+      'calories': 410,
+      'tags': ['High Protein', 'Quick'],
+    },
+    {
+      'image': 'https://images.unsplash.com/photo-1506089676908-3592f7389d4d',
+      'title': 'Berry Yogurt Parfait',
+      'time': '10 mins',
+      'calories': 220,
+      'tags': ['Vegetarian', 'Breakfast'],
+    },
+    {
+      'image': 'https://images.unsplash.com/photo-1467003909585-2f8a72700288',
+      'title': 'Tofu Buddha Bowl',
+      'time': '28 mins',
+      'calories': 340,
+      'tags': ['Vegan', 'High Protein'],
+    },
+    {
+      'image': 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd',
+      'title': 'Egg & Avocado Toast',
+      'time': '12 mins',
+      'calories': 260,
+      'tags': ['Vegetarian', 'Breakfast'],
+    },
+  ];
+
+  List<Map<String, dynamic>> _shuffledRecipes = [];
+
+  late AnimationController _tabController;
+  late AnimationController _calendarController;
+  late AnimationController _myMealsController;
+  late AnimationController _suggestedController;
+
+  @override
+  void initState() {
+    super.initState();
+    _tabController = AnimationController(vsync: this, duration: Duration(milliseconds: 350));
+    _calendarController = AnimationController(vsync: this, duration: Duration(milliseconds: 400));
+    _myMealsController = AnimationController(vsync: this, duration: Duration(milliseconds: 500));
+    _suggestedController = AnimationController(vsync: this, duration: Duration(milliseconds: 500));
+    _selectedDay = DateTime.now();
+    _shuffleRecipes();
+    _calendarController.forward();
+    _myMealsController.forward();
+    _suggestedController.forward();
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    _calendarController.dispose();
+    _myMealsController.dispose();
+    _suggestedController.dispose();
+    super.dispose();
+  }
+
+  void _shuffleRecipes() {
+    setState(() {
+      _shuffledRecipes = List<Map<String, dynamic>>.from(_allRecipes)..shuffle();
+    });
+    _suggestedController.reset();
+    _suggestedController.forward();
+  }
+
+  Future<void> _onRefresh() async {
+    _shuffleRecipes();
+    await Future.delayed(const Duration(milliseconds: 400));
+  }
+
+  void _onTabChanged(int index) {
+    setState(() => _tabIndex = index);
+    _tabController.forward(from: 0.0);
+    if (index == 0) {
+      _myMealsController.forward(from: 0.0);
+    } else {
+      _suggestedController.forward(from: 0.0);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFFF9FAFB),
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.black),
+          onPressed: () => Navigator.of(context).maybePop(),
+        ),
+        title: const Text('Food', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
+        centerTitle: false,
+      ),
+      body: Column(
+        children: [
+          // Tabs
+          Container(
+            color: Colors.transparent,
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            child: Row(
+              children: [
+                Expanded(
+                  child: GestureDetector(
+                    onTap: () => _onTabChanged(0),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      decoration: BoxDecoration(
+                        color: _tabIndex == 0 ? Colors.white : Colors.transparent,
+                        borderRadius: BorderRadius.circular(18),
+                      ),
+                      child: Center(
+                        child: Text('My Meals', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16, color: _tabIndex == 0 ? Colors.black : Colors.grey[500])),
+                      ),
+                    ),
+                  ),
+                ),
+                Expanded(
+                  child: GestureDetector(
+                    onTap: () => _onTabChanged(1),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      decoration: BoxDecoration(
+                        color: _tabIndex == 1 ? Colors.white : Colors.transparent,
+                        borderRadius: BorderRadius.circular(18),
+                      ),
+                      child: Center(
+                        child: Text('Suggested Meals', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16, color: _tabIndex == 1 ? Colors.black : Colors.grey[500])),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          // Animated tab content
+          Expanded(
+            child: AnimatedSwitcher(
+              duration: Duration(milliseconds: 350),
+              switchInCurve: Curves.easeOutCubic,
+              switchOutCurve: Curves.easeInCubic,
+              child: _tabIndex == 0
+                  ? Column(
+                      key: ValueKey('mymeals'),
+                      children: [
+                        FadeTransition(
+                          opacity: _calendarController,
+                          child: SlideTransition(
+                            position: Tween<Offset>(begin: Offset(0, 0.08), end: Offset.zero).animate(_calendarController),
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                              child: TableCalendar(
+                                firstDay: DateTime.utc(2020, 1, 1),
+                                lastDay: DateTime.utc(2100, 12, 31),
+                                focusedDay: _focusedDay,
+                                selectedDayPredicate: (day) => _selectedDay != null && day.year == _selectedDay!.year && day.month == _selectedDay!.month && day.day == _selectedDay!.day,
+                                onDaySelected: (selectedDay, focusedDay) {
+                                  setState(() {
+                                    _selectedDay = selectedDay;
+                                    _focusedDay = focusedDay;
+                                  });
+                                  _myMealsController.forward(from: 0.0);
+                                },
+                                calendarStyle: CalendarStyle(
+                                  todayDecoration: BoxDecoration(color: kPrimaryGreen.withOpacity(0.18), shape: BoxShape.circle),
+                                  selectedDecoration: BoxDecoration(color: kPrimaryGreen, shape: BoxShape.circle),
+                                  selectedTextStyle: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                                  todayTextStyle: const TextStyle(color: kPrimaryGreen, fontWeight: FontWeight.bold),
+                                ),
+                                headerStyle: HeaderStyle(
+                                  formatButtonVisible: false,
+                                  titleCentered: true,
+                                  leftChevronIcon: Icon(Icons.chevron_left, color: Colors.black),
+                                  rightChevronIcon: Icon(Icons.chevron_right, color: Colors.black),
+                                  titleTextStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Colors.black),
+                                ),
+                                daysOfWeekStyle: DaysOfWeekStyle(
+                                  weekdayStyle: TextStyle(color: Colors.grey[600]),
+                                  weekendStyle: TextStyle(color: Colors.grey[600]),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                        Expanded(
+                          child: StreamBuilder<List<Meal>>(
+                            stream: _mealService.getMealsForDate(_selectedDay ?? DateTime.now()),
+                            builder: (context, snapshot) {
+                              if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
+                              final meals = snapshot.data!;
+                              if (meals.isEmpty) {
+                                return const Center(child: Text('No meals logged for this day.', style: TextStyle(color: Colors.grey)));
+                              }
+                              return ListView.builder(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                                itemCount: meals.length,
+                                itemBuilder: (context, i) {
+                                  return TweenAnimationBuilder<double>(
+                                    tween: Tween<double>(begin: 0, end: 1),
+                                    duration: Duration(milliseconds: 400 + i * 80),
+                                    builder: (context, value, child) => Opacity(
+                                      opacity: value,
+                                      child: Transform.translate(
+                                        offset: Offset(0, (1 - value) * 24),
+                                        child: _FoodMealCard(meal: meals[i]),
+                                      ),
+                                    ),
+                                  );
+                                },
+                              );
+                            },
+                          ),
+                        ),
+                      ],
+                    )
+                  : FadeTransition(
+                      key: ValueKey('suggested'),
+                      opacity: _suggestedController,
+                      child: SlideTransition(
+                        position: Tween<Offset>(begin: Offset(0, 0.06), end: Offset.zero).animate(_suggestedController),
+                        child: RefreshIndicator(
+                          onRefresh: _onRefresh,
+                          child: ListView(
+                            padding: const EdgeInsets.only(left: 0, right: 0, top: 0, bottom: 24),
+                            children: [
+                              Padding(
+                                padding: const EdgeInsets.fromLTRB(20, 18, 20, 0),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    const Text('Recipe Suggestions', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20)),
+                                    IconButton(
+                                      icon: const Icon(Icons.shuffle, color: kPrimaryGreen),
+                                      tooltip: 'Shuffle Recipes',
+                                      onPressed: _shuffleRecipes,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              // Big cards (first 3)
+                              ..._shuffledRecipes.take(3).map((recipe) {
+                                final idx = _shuffledRecipes.indexOf(recipe);
+                                return TweenAnimationBuilder<double>(
+                                  tween: Tween<double>(begin: 0, end: 1),
+                                  duration: Duration(milliseconds: 400 + idx * 100),
+                                  builder: (context, value, child) => Opacity(
+                                    opacity: value,
+                                    child: Transform.translate(
+                                      offset: Offset(0, (1 - value) * 32),
+                                      child: _RecipeCardBig(recipe: recipe),
+                                    ),
+                                  ),
+                                );
+                              }).toList(),
+                              // Grid of smaller cards
+                              if (_shuffledRecipes.length > 3)
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                                  child: GridView.count(
+                                    crossAxisCount: 2,
+                                    shrinkWrap: true,
+                                    physics: NeverScrollableScrollPhysics(),
+                                    mainAxisSpacing: 12,
+                                    crossAxisSpacing: 12,
+                                    childAspectRatio: 1.5,
+                                    children: [
+                                      for (final recipe in _shuffledRecipes.skip(3))
+                                        TweenAnimationBuilder<double>(
+                                          tween: Tween<double>(begin: 0, end: 1),
+                                          duration: Duration(milliseconds: 400 + (_shuffledRecipes.indexOf(recipe) - 3) * 80),
+                                          builder: (context, value, child) => Opacity(
+                                            opacity: value,
+                                            child: Transform.translate(
+                                              offset: Offset(0, (1 - value) * 20),
+                                              child: _RecipeCardSmall(recipe: recipe),
+                                            ),
+                                          ),
+                                        ),
+                                    ],
+                                  ),
+                                ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _FoodMealCard extends StatelessWidget {
+  final Meal meal;
+  const _FoodMealCard({required this.meal});
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 8),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.03),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Placeholder for meal image
+          ClipRRect(
+            borderRadius: BorderRadius.circular(12),
+            child: Container(
+              width: 70,
+              height: 70,
+              color: kContainerGrey,
+              child: Icon(Icons.fastfood, color: kPrimaryGreen, size: 36),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Text(meal.mealType.capitalize(), style: TextStyle(color: kPrimaryGreen, fontWeight: FontWeight.w600)),
+                    const SizedBox(width: 8),
+                    Text(formatTime(meal.timestamp), style: TextStyle(color: Colors.grey[500], fontSize: 13)),
+                  ],
+                ),
+                const SizedBox(height: 2),
+                Text(meal.name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                const SizedBox(height: 6),
+                Row(
+                  children: [
+                    _MacroTag(label: 'P', value: '${meal.protein}g', color: kSecondaryBlue),
+                    const SizedBox(width: 6),
+                    _MacroTag(label: 'C', value: '${meal.carbs}g', color: kAccentOrange),
+                    const SizedBox(width: 6),
+                    _MacroTag(label: 'F', value: '${meal.fat}g', color: kWarningRed),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text('${meal.calories}', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+              Text('cal', style: TextStyle(color: Colors.grey[600], fontSize: 13)),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+String formatTime(DateTime dt) {
+  final h = dt.hour.toString().padLeft(2, '0');
+  final m = dt.minute.toString().padLeft(2, '0');
+  return '$h:$m';
+}
+
+class _RecipeCardBig extends StatelessWidget {
+  final Map<String, dynamic> recipe;
+  const _RecipeCardBig({required this.recipe});
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          ClipRRect(
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+            child: Image.network(
+              recipe['image'],
+              height: 140,
+              width: double.infinity,
+              fit: BoxFit.cover,
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(recipe['title'], style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+                Text('${recipe['calories']} cal', style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16)),
+              ],
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Row(
+              children: [
+                Text(recipe['time'], style: TextStyle(color: Colors.grey[600], fontSize: 15)),
+                const SizedBox(width: 12),
+                ...List.generate(recipe['tags'].length, (i) {
+                  final tag = recipe['tags'][i];
+                  final color = tag == 'High Protein' ? kSecondaryBlue : tag == 'Vegetarian' ? Colors.green : Colors.blue[200];
+                  return Container(
+                    margin: const EdgeInsets.only(right: 6),
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: color?.withOpacity(0.12) ?? Colors.blue[50],
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Text(tag, style: TextStyle(color: color ?? Colors.blue, fontWeight: FontWeight.w500, fontSize: 13)),
+                  );
+                }),
+              ],
+            ),
+          ),
+          const SizedBox(height: 12),
+        ],
+      ),
+    );
+  }
+}
+
+class _RecipeCardSmall extends StatelessWidget {
+  final Map<String, dynamic> recipe;
+  const _RecipeCardSmall({required this.recipe});
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      height: 110,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          ClipRRect(
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+            child: Image.network(
+              recipe['image'],
+              height: 54,
+              width: double.infinity,
+              fit: BoxFit.cover,
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(10, 8, 10, 4),
+            child: Text(recipe['title'], style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15), maxLines: 1, overflow: TextOverflow.ellipsis),
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 10),
+            child: Row(
+              children: [
+                Text(recipe['time'], style: TextStyle(color: Colors.grey[600], fontSize: 13)),
+                const SizedBox(width: 6),
+                ...List.generate(recipe['tags'].length > 0 ? 1 : 0, (i) {
+                  final tag = recipe['tags'][i];
+                  final color = tag == 'High Protein' ? kSecondaryBlue : tag == 'Vegetarian' ? Colors.green : Colors.blue[200];
+                  return Container(
+                    margin: const EdgeInsets.only(right: 4),
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: color?.withOpacity(0.12) ?? Colors.blue[50],
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(tag, style: TextStyle(color: color ?? Colors.blue, fontWeight: FontWeight.w500, fontSize: 11)),
+                  );
+                }),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
