@@ -7,4 +7,12 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  flutter_native_splash: ^2.4.6
   table_calendar: ^3.0.9 
+
+flutter_native_splash:
+  color: "#4CAF50"
+  # image: assets/logo.png
+  android: true
+  ios: true
+  web: false 

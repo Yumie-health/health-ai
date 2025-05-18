@@ -55,13 +55,251 @@ class PreferencesProvider extends ChangeNotifier {
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp();
   runApp(
     ChangeNotifierProvider(
       create: (_) => PreferencesProvider(),
-      child: const MyApp(),
+      child: const HealthAIApp(),
     ),
   );
+}
+
+class HealthAIApp extends StatelessWidget {
+  const HealthAIApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final prefs = Provider.of<PreferencesProvider>(context);
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      title: 'HealthAI App',
+      theme: ThemeData(
+        colorScheme: ColorScheme(
+          brightness: Brightness.light,
+          primary: kPrimaryGreen,
+          onPrimary: Colors.white,
+          secondary: kSecondaryBlue,
+          onSecondary: Colors.white,
+          error: kWarningRed,
+          onError: Colors.white,
+          surface: kContainerGrey,
+          onSurface: Colors.black,
+        ),
+        scaffoldBackgroundColor: kBackgroundWhite,
+        appBarTheme: AppBarTheme(
+          backgroundColor: kPrimaryGreen,
+          foregroundColor: Colors.white,
+        ),
+        elevatedButtonTheme: ElevatedButtonThemeData(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: kPrimaryGreen,
+            foregroundColor: Colors.white,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            textStyle: TextStyle(fontWeight: FontWeight.bold),
+          ),
+        ),
+        outlinedButtonTheme: OutlinedButtonThemeData(
+          style: OutlinedButton.styleFrom(
+            foregroundColor: kSecondaryBlue,
+            side: BorderSide(color: kSecondaryBlue, width: 2),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            textStyle: TextStyle(fontWeight: FontWeight.bold),
+          ),
+        ),
+        inputDecorationTheme: InputDecorationTheme(
+          filled: true,
+          fillColor: kContainerGrey,
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide.none,
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(color: kPrimaryGreen, width: 2),
+          ),
+          labelStyle: TextStyle(color: kPrimaryGreen),
+        ),
+      ),
+      darkTheme: ThemeData(
+        brightness: Brightness.dark,
+        colorScheme: ColorScheme.dark(
+          primary: kPrimaryGreen,
+          secondary: kSecondaryBlue,
+          error: kWarningRed,
+          background: Colors.black,
+          surface: Colors.black,
+          onBackground: Colors.white,
+          onSurface: Colors.white,
+        ),
+        scaffoldBackgroundColor: Colors.black,
+        cardColor: Colors.black,
+        appBarTheme: AppBarTheme(
+          backgroundColor: kPrimaryGreen, // Always green
+          foregroundColor: Colors.white,
+        ),
+        elevatedButtonTheme: ElevatedButtonThemeData(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: kPrimaryGreen,
+            foregroundColor: Colors.white,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            textStyle: TextStyle(fontWeight: FontWeight.bold),
+          ),
+        ),
+        outlinedButtonTheme: OutlinedButtonThemeData(
+          style: OutlinedButton.styleFrom(
+            foregroundColor: kSecondaryBlue,
+            side: BorderSide(color: kSecondaryBlue, width: 2),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            textStyle: TextStyle(fontWeight: FontWeight.bold),
+          ),
+        ),
+        inputDecorationTheme: InputDecorationTheme(
+          filled: true,
+          fillColor: Colors.black,
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide.none,
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(color: kPrimaryGreen, width: 2),
+          ),
+          labelStyle: TextStyle(color: Colors.white),
+        ),
+        textTheme: const TextTheme(
+          bodyLarge: TextStyle(color: Colors.white),
+          bodyMedium: TextStyle(color: Colors.white),
+          bodySmall: TextStyle(color: Colors.white),
+          displayLarge: TextStyle(color: Colors.white),
+          displayMedium: TextStyle(color: Colors.white),
+          displaySmall: TextStyle(color: Colors.white),
+          headlineLarge: TextStyle(color: Colors.white),
+          headlineMedium: TextStyle(color: Colors.white),
+          headlineSmall: TextStyle(color: Colors.white),
+          titleLarge: TextStyle(color: Colors.white),
+          titleMedium: TextStyle(color: Colors.white),
+          titleSmall: TextStyle(color: Colors.white),
+          labelLarge: TextStyle(color: Colors.white),
+          labelMedium: TextStyle(color: Colors.white),
+          labelSmall: TextStyle(color: Colors.white),
+        ),
+        iconTheme: const IconThemeData(color: Colors.white),
+        dividerColor: Colors.white24,
+      ),
+      themeMode: prefs.darkMode ? ThemeMode.dark : ThemeMode.light,
+      home: const SplashOrApp(),
+    );
+  }
+}
+
+class SplashOrApp extends StatefulWidget {
+  const SplashOrApp({super.key});
+  @override
+  State<SplashOrApp> createState() => _SplashOrAppState();
+}
+
+class _SplashOrAppState extends State<SplashOrApp> with SingleTickerProviderStateMixin {
+  bool _ready = false;
+  late AnimationController _controller;
+  late Animation<double> _animation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(vsync: this, duration: const Duration(milliseconds: 350));
+    _animation = CurvedAnimation(parent: _controller, curve: Curves.easeInOut);
+    _waitForAppReady();
+  }
+
+  Future<void> _waitForAppReady() async {
+    final minSplash = Future.delayed(const Duration(milliseconds: 350));
+    await Firebase.initializeApp();
+    User? user;
+    await for (final u in FirebaseAuth.instance.authStateChanges()) {
+      user = u;
+      break;
+    }
+    if (user != null) {
+      final doc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
+    }
+    await minSplash;
+    if (mounted) {
+      setState(() => _ready = true);
+      _controller.forward();
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      color: kPrimaryGreen,
+      child: Stack(
+        children: [
+          // Home page (always present, but under splash content)
+          if (_ready) const MyApp(),
+          // Splash content with fade-out transition
+          FadeTransition(
+            opacity: ReverseAnimation(_animation),
+            child: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Container(
+                    width: 90,
+                    height: 90,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.08),
+                          blurRadius: 16,
+                          offset: const Offset(0, 6),
+                        ),
+                      ],
+                    ),
+                    child: Center(
+                      child: Icon(Icons.eco, color: kPrimaryGreen, size: 54),
+                    ),
+                  ),
+                  const SizedBox(height: 28),
+                  Text(
+                    'HealthAI',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 36,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 2,
+                      shadows: [
+                        Shadow(
+                          color: Colors.black.withOpacity(0.18),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 class MyApp extends StatelessWidget {
@@ -198,7 +436,7 @@ class MyApp extends StatelessWidget {
         stream: FirebaseAuth.instance.authStateChanges(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
+            return const SizedBox.shrink(); // Show nothing, splash will cover this
           }
           if (snapshot.hasData) {
             final user = snapshot.data!;
@@ -206,7 +444,7 @@ class MyApp extends StatelessWidget {
               stream: FirebaseFirestore.instance.collection('users').doc(user.uid).snapshots(),
               builder: (context, userSnap) {
                 if (userSnap.connectionState == ConnectionState.waiting) {
-                  return const Center(child: CircularProgressIndicator());
+                  return const SizedBox.shrink(); // Show nothing, splash will cover this
                 }
                 if (!userSnap.hasData || !userSnap.data!.exists) {
                   // No profile, show startup page
@@ -243,6 +481,9 @@ class _AuthScreenState extends State<AuthScreen> {
   final TextEditingController passwordController = TextEditingController();
   String message = '';
   bool isLoading = false;
+  bool showSignUp = false;
+  final TextEditingController nameController = TextEditingController();
+  bool acceptTerms = false;
 
   Future<void> signIn() async {
     setState(() {
@@ -285,7 +526,7 @@ class _AuthScreenState extends State<AuthScreen> {
       final userService = UserService();
       await userService.createInitialUserProfile(
         emailController.text.trim(),
-        '', // You can prompt for name or leave blank
+        nameController.text.trim(),
       );
       setState(() => message = 'Sign up successful!');
     } catch (e) {
@@ -298,93 +539,254 @@ class _AuthScreenState extends State<AuthScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Scaffold(
-      body: Center(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(32.0),
-          child: Container(
-            padding: const EdgeInsets.all(24),
-            decoration: BoxDecoration(
-              color: kContainerGrey,
-              borderRadius: BorderRadius.circular(24),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
-                  blurRadius: 12,
-                  offset: const Offset(0, 4),
-                ),
-              ],
-            ),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                // App logo or title
-                Icon(Icons.health_and_safety, size: 72, color: kPrimaryGreen),
-                const SizedBox(height: 16),
-                Text(
-                  'Welcome to HealthAI',
-                  style: theme.textTheme.headlineSmall?.copyWith(
-                    color: kPrimaryGreen,
-                    fontWeight: FontWeight.bold,
+    return Theme(
+      data: ThemeData.light().copyWith(
+        primaryColor: kPrimaryGreen,
+        colorScheme: ThemeData.light().colorScheme.copyWith(primary: kPrimaryGreen),
+        elevatedButtonTheme: ElevatedButtonThemeData(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: kPrimaryGreen,
+            foregroundColor: Colors.white,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            padding: const EdgeInsets.symmetric(vertical: 16),
+            textStyle: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          ),
+        ),
+        checkboxTheme: CheckboxThemeData(
+          fillColor: MaterialStateProperty.all(kPrimaryGreen),
+        ),
+      ),
+      child: Scaffold(
+        backgroundColor: const Color(0xFFF8F9FA),
+        body: Center(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(24.0),
+            child: Container(
+              width: 400,
+              padding: const EdgeInsets.symmetric(vertical: 36, horizontal: 28),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: const Color(0xFFE5E7EB)),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.grey.withOpacity(0.06),
+                    blurRadius: 16,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: AnimatedSwitcher(
+                duration: const Duration(milliseconds: 300),
+                transitionBuilder: (child, animation) => FadeTransition(
+                  opacity: animation,
+                  child: ScaleTransition(
+                    scale: animation,
+                    child: child,
                   ),
                 ),
-                const SizedBox(height: 32),
-                // Email field
-                TextField(
-                  controller: emailController,
-                  decoration: const InputDecoration(
-                    labelText: 'Email',
-                    prefixIcon: Icon(Icons.email, color: kPrimaryGreen),
-                  ),
-                  keyboardType: TextInputType.emailAddress,
-                ),
-                const SizedBox(height: 16),
-                // Password field
-                TextField(
-                  controller: passwordController,
-                  decoration: const InputDecoration(
-                    labelText: 'Password',
-                    prefixIcon: Icon(Icons.lock, color: kPrimaryGreen),
-                  ),
-                  obscureText: true,
-                ),
-                const SizedBox(height: 24),
-                // Buttons
-                isLoading
-                    ? const CircularProgressIndicator(color: kPrimaryGreen)
-                    : Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                child: Column(
+                  key: ValueKey(showSignUp),
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Top icon
+                    Container(
+                      decoration: const BoxDecoration(
+                        color: Color(0xFFEFF6FF),
+                        shape: BoxShape.circle,
+                      ),
+                      padding: const EdgeInsets.all(24),
+                      child: Icon(Icons.code, size: 48, color: Colors.deepPurple),
+                    ),
+                    const SizedBox(height: 24),
+                    Text(
+                      showSignUp ? 'Create Account' : 'Sign In',
+                      style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      showSignUp
+                          ? 'Sign up to get started with HealthAI'
+                          : 'Sign in to access your account',
+                      style: TextStyle(
+                        color: Colors.grey[600],
+                        fontSize: 16,
+                        fontWeight: FontWeight.w400,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 28),
+                    if (showSignUp)
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          ElevatedButton(
-                            onPressed: signIn,
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: kSecondaryBlue,
+                          const Text('Full Name', style: TextStyle(fontWeight: FontWeight.w500)),
+                          const SizedBox(height: 8),
+                          TextField(
+                            controller: nameController,
+                            decoration: InputDecoration(
+                              hintText: 'John Doe',
+                              prefixIcon: Icon(Icons.person, color: Colors.grey[400]),
+                              filled: true,
+                              fillColor: Colors.white,
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: BorderSide(color: Colors.grey[300]!),
+                              ),
+                              enabledBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: BorderSide(color: Colors.grey[300]!),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: BorderSide(color: kPrimaryGreen, width: 2),
+                              ),
                             ),
-                            child: const Text('Sign In'),
                           ),
-                          OutlinedButton(
-                            onPressed: signUp,
-                            style: OutlinedButton.styleFrom(
-                              foregroundColor: kAccentOrange,
-                              side: const BorderSide(color: kAccentOrange, width: 2),
+                          const SizedBox(height: 18),
+                        ],
+                      ),
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: const Text('Email', style: TextStyle(fontWeight: FontWeight.w500)),
+                    ),
+                    const SizedBox(height: 8),
+                    TextField(
+                      controller: emailController,
+                      decoration: InputDecoration(
+                        hintText: 'your.email@example.com',
+                        prefixIcon: Icon(Icons.email_outlined, color: Colors.grey[400]),
+                        filled: true,
+                        fillColor: Colors.white,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(color: Colors.grey[300]!),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(color: Colors.grey[300]!),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(color: kPrimaryGreen, width: 2),
+                        ),
+                      ),
+                      keyboardType: TextInputType.emailAddress,
+                    ),
+                    const SizedBox(height: 18),
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: const Text('Password', style: TextStyle(fontWeight: FontWeight.w500)),
+                    ),
+                    const SizedBox(height: 8),
+                    TextField(
+                      controller: passwordController,
+                      decoration: InputDecoration(
+                        hintText: '••••••••',
+                        prefixIcon: Icon(Icons.vpn_key_outlined, color: Colors.grey[400]),
+                        filled: true,
+                        fillColor: Colors.white,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(color: Colors.grey[300]!),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(color: Colors.grey[300]!),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(color: kPrimaryGreen, width: 2),
+                        ),
+                      ),
+                      obscureText: true,
+                    ),
+                    const SizedBox(height: 18),
+                    if (showSignUp)
+                      Row(
+                        children: [
+                          Checkbox(
+                            value: acceptTerms,
+                            onChanged: (v) => setState(() => acceptTerms = v ?? false),
+                            activeColor: kPrimaryGreen,
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+                          ),
+                          Expanded(
+                            child: RichText(
+                              text: TextSpan(
+                                style: TextStyle(color: Colors.grey[800], fontSize: 14),
+                                children: [
+                                  const TextSpan(text: 'I accept the '),
+                                  TextSpan(
+                                    text: 'Terms of Service',
+                                    style: TextStyle(color: kPrimaryGreen, fontWeight: FontWeight.w500),
+                                  ),
+                                  const TextSpan(text: ' and '),
+                                  TextSpan(
+                                    text: 'Privacy Policy',
+                                    style: TextStyle(color: kPrimaryGreen, fontWeight: FontWeight.w500),
+                                  ),
+                                ],
+                              ),
                             ),
-                            child: const Text('Sign Up'),
                           ),
                         ],
                       ),
-                const SizedBox(height: 24),
-                // Message area
-                if (message.isNotEmpty)
-                  Text(
-                    message,
-                    style: TextStyle(
-                      color: message.startsWith('Error')
-                          ? kWarningRed
-                          : kPrimaryGreen,
-                      fontWeight: FontWeight.bold,
+                    const SizedBox(height: 18),
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: isLoading
+                            ? null
+                            : showSignUp
+                                ? (acceptTerms ? signUp : null)
+                                : signIn,
+                        child: isLoading
+                            ? const SizedBox(
+                                width: 24,
+                                height: 24,
+                                child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                              )
+                            : Text(showSignUp ? 'Create Account' : 'Sign In'),
+                      ),
                     ),
-                  ),
-              ],
+                    const SizedBox(height: 18),
+                    if (!showSignUp)
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Text("Don't have an account? ", style: TextStyle(color: Colors.black54)),
+                          GestureDetector(
+                            onTap: () => setState(() => showSignUp = true),
+                            child: Text('Sign up', style: TextStyle(color: kPrimaryGreen, fontWeight: FontWeight.w500)),
+                          ),
+                        ],
+                      ),
+                    if (showSignUp)
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Text('Already have an account? ', style: TextStyle(color: Colors.black54)),
+                          GestureDetector(
+                            onTap: () => setState(() => showSignUp = false),
+                            child: Text('Sign in', style: TextStyle(color: kPrimaryGreen, fontWeight: FontWeight.w500)),
+                          ),
+                        ],
+                      ),
+                    if (message.isNotEmpty) ...[
+                      const SizedBox(height: 16),
+                      Text(
+                        message,
+                        style: TextStyle(
+                          color: message.startsWith('Error') ? kWarningRed : kPrimaryGreen,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
             ),
           ),
         ),
@@ -828,385 +1230,249 @@ class _DashboardScreenState extends State<DashboardScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final user = FirebaseAuth.instance.currentUser;
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Dashboard', style: TextStyle(color: theme.textTheme.bodyLarge?.color)),
-        backgroundColor: kPrimaryGreen,
-        elevation: 0,
-        automaticallyImplyLeading: false,
-        actions: [
-          IconButton(
-            icon: Stack(
-              children: [
-                Icon(Icons.notifications_none, color: theme.iconTheme.color),
-                Positioned(
-                  right: 0,
-                  top: 0,
-                  child: Container(
-                    width: 8,
-                    height: 8,
-                    decoration: BoxDecoration(
-                      color: Colors.red,
-                      shape: BoxShape.circle,
+      backgroundColor: kBackgroundWhite,
+      body: SafeArea(
+        child: ListView(
+          padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 0),
+          children: [
+            // Header
+            Padding(
+              padding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('Welcome back!', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 26, color: Colors.black)),
+                        const SizedBox(height: 4),
+                        Text("Let's track your nutrition today", style: TextStyle(color: Colors.grey[500], fontSize: 16)),
+                      ],
                     ),
                   ),
-                ),
-              ],
-            ),
-            onPressed: () {},
-          ),
-          Padding(
-            padding: const EdgeInsets.only(right: 16.0),
-            child: CircleAvatar(
-              backgroundColor: theme.cardColor,
-              child: Icon(Icons.person, color: theme.iconTheme.color?.withOpacity(0.5)),
-            ),
-          ),
-        ],
-      ),
-      body: StreamBuilder<UserProfile?>(
-        stream: _userService.getCurrentUserProfile(),
-        builder: (context, userSnapshot) {
-          if (!userSnapshot.hasData) {
-            return const Center(child: CircularProgressIndicator());
-          }
-
-          final userProfile = userSnapshot.data;
-          if (userProfile == null) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text('No profile found.', style: TextStyle(color: theme.textTheme.bodyLarge?.color)),
-                  ElevatedButton(
-                    onPressed: () async {
-                      final user = FirebaseAuth.instance.currentUser;
-                      if (user != null) {
-                        final userService = UserService();
-                        await userService.createInitialUserProfile(user.email ?? '', '');
-                      }
-                    },
-                    child: Text('Create Profile'),
-                  ),
+                  if (user != null && user.photoURL != null)
+                    CircleAvatar(radius: 24, backgroundImage: NetworkImage(user.photoURL!)),
+                  if (user == null || user.photoURL == null)
+                    CircleAvatar(radius: 24, backgroundColor: kPrimaryGreen.withOpacity(0.15), child: Icon(Icons.person, color: kPrimaryGreen)),
                 ],
               ),
-            );
-          }
-
-          final dailyCalorieGoal = userProfile.dailyCalorieGoal ?? 2000;
-          final proteinGoal = userProfile.proteinGoal ?? 120;
-          final carbsGoal = userProfile.carbsGoal ?? 250;
-
-          return ListView(
-            padding: const EdgeInsets.all(16),
-            children: [
-              // Today's Summary Card and Meals
-              StreamBuilder<List<Meal>>(
-                stream: _mealService.getTodayMeals(),
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return const Center(child: CircularProgressIndicator());
-                  }
-                  final meals = snapshot.data ?? [];
-                  // Calculate totals
-                  final totalCalories = meals.fold(0, (sum, m) => sum + m.calories);
-                  final totalProtein = meals.fold(0, (sum, m) => sum + m.protein);
-                  final totalCarbs = meals.fold(0, (sum, m) => sum + m.carbs);
-                  final totalFat = meals.fold(0, (sum, m) => sum + m.fat);
-
-                  return Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Today's Summary Card
-                      Container(
+            ),
+            const SizedBox(height: 18),
+            // Nutrition Summary Card
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: StreamBuilder<UserProfile?>(
+                stream: _userService.getCurrentUserProfile(),
+                builder: (context, userSnap) {
+                  if (!userSnap.hasData) return const SizedBox(height: 220, child: Center(child: CircularProgressIndicator()));
+                  final userProfile = userSnap.data!;
+                  final dailyCalorieGoal = userProfile.dailyCalorieGoal ?? 2000;
+                  final proteinGoal = userProfile.proteinGoal ?? 120;
+                  final carbsGoal = userProfile.carbsGoal ?? 250;
+                  final fatGoal = userProfile.fatGoal ?? 50;
+                  return StreamBuilder<List<Meal>>(
+                    stream: _mealService.getTodayMeals(),
+                    builder: (context, snapshot) {
+                      if (!snapshot.hasData) return const SizedBox(height: 220, child: Center(child: CircularProgressIndicator()));
+                      final meals = snapshot.data!;
+                      final totalCalories = meals.fold(0, (sum, m) => sum + m.calories);
+                      final totalProtein = meals.fold(0, (sum, m) => sum + m.protein);
+                      final totalCarbs = meals.fold(0, (sum, m) => sum + m.carbs);
+                      final totalFat = meals.fold(0, (sum, m) => sum + m.fat);
+                      return Container(
                         padding: const EdgeInsets.all(20),
                         decoration: BoxDecoration(
-                          color: theme.cardColor,
-                          borderRadius: BorderRadius.circular(20),
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(color: const Color(0xFFE5E7EB)),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withOpacity(0.04),
-                              blurRadius: 12,
+                              color: Colors.grey.withOpacity(0.06),
+                              blurRadius: 16,
                               offset: const Offset(0, 4),
                             ),
                           ],
                         ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(
-                                  "Today's Summary",
-                                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: theme.textTheme.bodyLarge?.color),
-                                ),
-                                Row(
-                                  children: [
-                                    Text(
-                                      DateTime.now().toString().split(' ')[0],
-                                      style: TextStyle(color: theme.textTheme.bodyMedium?.color?.withOpacity(0.7)),
-                                    ),
-                                    const SizedBox(width: 4),
-                                    Icon(Icons.calendar_today, size: 18, color: theme.iconTheme.color?.withOpacity(0.7)),
-                                  ],
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 20),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                _SummaryBox(
-                                  icon: Icons.restaurant,
-                                  color: kPrimaryGreen.withOpacity(0.12),
-                                  label: 'Food',
-                                  value: '$totalCalories',
-                                  valueColor: kPrimaryGreen,
-                                ),
-                                _SummaryBox(
-                                  icon: Icons.favorite_border,
-                                  color: kSecondaryBlue.withOpacity(0.12),
-                                  label: 'Activity',
-                                  value: '320',
-                                  valueColor: kSecondaryBlue,
-                                ),
-                                _SummaryBox(
-                                  icon: Icons.cookie,
-                                  color: kAccentOrange.withOpacity(0.12),
-                                  label: 'Remaining',
-                                  value: '${dailyCalorieGoal - totalCalories}',
-                                  valueColor: kAccentOrange,
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 20),
-                            _ProgressRow(
-                              label: 'Daily Goal',
-                              value: '$totalCalories / $dailyCalorieGoal cal',
-                              percent: totalCalories / dailyCalorieGoal,
-                            ),
-                            _ProgressRow(
-                              label: 'Protein',
-                              value: '$totalProtein / $proteinGoal g',
-                              percent: totalProtein / proteinGoal,
-                            ),
-                            _ProgressRow(
-                              label: 'Carbs',
-                              value: '$totalCarbs / $carbsGoal g',
-                              percent: totalCarbs / carbsGoal,
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 20),
-                      // AI Insight Card
-                      Container(
-                        padding: const EdgeInsets.all(18),
-                        decoration: BoxDecoration(
-                          color: theme.cardColor,
-                          borderRadius: BorderRadius.circular(16),
-                        ),
                         child: Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Icon(Icons.insights, color: kSecondaryBlue, size: 32),
-                            const SizedBox(width: 12),
+                            // Macro Progress
                             Expanded(
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Text('AI Insight', style: TextStyle(fontWeight: FontWeight.bold, color: kSecondaryBlue)),
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    _getAIInsight({
-                                      'calories': totalCalories,
-                                      'protein': totalProtein,
-                                      'carbs': totalCarbs,
-                                      'fat': totalFat,
-                                    }, userProfile),
-                                    style: TextStyle(color: theme.textTheme.bodyLarge?.color),
+                                  Text('Nutrition Summary', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20)),
+                                  const SizedBox(height: 16),
+                                  _MacroProgressRow(
+                                    color: kSecondaryBlue,
+                                    label: 'Protein',
+                                    value: '$totalProtein g',
+                                    percent: totalProtein / proteinGoal,
+                                  ),
+                                  _MacroProgressRow(
+                                    color: kAccentOrange,
+                                    label: 'Carbs',
+                                    value: '$totalCarbs g',
+                                    percent: totalCarbs / carbsGoal,
+                                  ),
+                                  _MacroProgressRow(
+                                    color: kWarningRed,
+                                    label: 'Fat',
+                                    value: '$totalFat g',
+                                    percent: totalFat / fatGoal,
                                   ),
                                 ],
                               ),
                             ),
+                            const SizedBox(width: 16),
+                            // Circular Calories
+                            Column(
+                              children: [
+                                Text('Calories', style: TextStyle(color: Colors.grey[600], fontWeight: FontWeight.w500)),
+                                const SizedBox(height: 8),
+                                _CircularCalories(
+                                  calories: totalCalories,
+                                  goal: dailyCalorieGoal,
+                                ),
+                              ],
+                            ),
                           ],
                         ),
-                      ),
-                      const SizedBox(height: 24),
-                      // Today's Meals
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text("Today's Meals", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: theme.textTheme.bodyLarge?.color)),
-                          TextButton(
-                            onPressed: () {},
-                            child: Text('See All', style: TextStyle(color: kPrimaryGreen)),
-                          ),
-                        ],
-                      ),
-                      if (meals.isEmpty)
-                        Column(
-                          children: [
-                            const SizedBox(height: 16),
-                            Text('No meals logged for this day.', style: TextStyle(color: theme.textTheme.bodyLarge?.color?.withOpacity(0.7))),
-                            const SizedBox(height: 16),
-                          ],
-                        ),
-                      if (meals.isNotEmpty)
-                        ..._buildMealCards(meals),
-                      const SizedBox(height: 16),
-                      SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton(
-                          onPressed: () {
-                            // Navigate to add meal screen
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: kPrimaryGreen,
-                            foregroundColor: Colors.white,
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                            padding: const EdgeInsets.symmetric(vertical: 16),
-                          ),
-                          child: const Text('+ Add Meal', style: TextStyle(fontSize: 16)),
-                        ),
-                      ),
-                    ],
+                      );
+                    },
                   );
                 },
               ),
-            ],
-          );
-        },
+            ),
+            const SizedBox(height: 24),
+            // Quick Actions
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Quick Actions', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+                  const SizedBox(height: 12),
+                  GridView.count(
+                    crossAxisCount: 2,
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    mainAxisSpacing: 16,
+                    crossAxisSpacing: 16,
+                    childAspectRatio: 1.9,
+                    children: [
+                      _QuickActionCard(
+                        icon: Icons.camera_alt,
+                        label: 'Snap Meal',
+                        subtitle: 'Analyze your food',
+                        color: kPrimaryGreen,
+                        onTap: () {
+                          // TODO: Implement navigation
+                        },
+                      ),
+                      _QuickActionCard(
+                        icon: Icons.qr_code_scanner,
+                        label: 'Scan Fridge',
+                        subtitle: 'Check inventory',
+                        color: kSecondaryBlue,
+                        onTap: () {
+                          // TODO: Implement navigation
+                        },
+                      ),
+                      _QuickActionCard(
+                        icon: Icons.chat_bubble_outline,
+                        label: 'AI Coach',
+                        subtitle: 'Get advice',
+                        color: kAccentOrange,
+                        onTap: () {
+                          // TODO: Implement navigation
+                        },
+                      ),
+                      _QuickActionCard(
+                        icon: Icons.calendar_month,
+                        label: 'Meal Plan',
+                        subtitle: 'Plan your week',
+                        color: kWarningRed,
+                        onTap: () {
+                          // TODO: Implement navigation
+                        },
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 24),
+            // Today's Meals
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text("Today's Meals", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+                  TextButton(
+                    onPressed: () {},
+                    child: Text('View All', style: TextStyle(color: kPrimaryGreen)),
+                  ),
+                ],
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: StreamBuilder<List<Meal>>(
+                stream: _mealService.getTodayMeals(),
+                builder: (context, snapshot) {
+                  if (!snapshot.hasData) return const SizedBox(height: 120, child: Center(child: CircularProgressIndicator()));
+                  final meals = snapshot.data!;
+                  if (meals.isEmpty) {
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 24),
+                      child: Center(child: Text('No meals logged for this day.', style: TextStyle(color: Colors.grey[600]))),
+                    );
+                  }
+                  return Column(
+                    children: meals.take(2).map((meal) => _MealCardModern(meal: meal)).toList(),
+                  );
+                },
+              ),
+            ),
+            const SizedBox(height: 12),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: SizedBox.shrink(),
+            ),
+            const SizedBox(height: 24),
+          ],
+        ),
       ),
     );
   }
-
-  // Helper to build meal cards grouped by type
-  List<Widget> _buildMealCards(List<Meal> meals) {
-    final breakfastMeals = meals.where((m) => m.mealType == 'breakfast').toList();
-    final lunchMeals = meals.where((m) => m.mealType == 'lunch').toList();
-    final dinnerMeals = meals.where((m) => m.mealType == 'dinner').toList();
-    final snackMeals = meals.where((m) => m.mealType == 'snack').toList();
-    return [
-      if (breakfastMeals.isNotEmpty)
-        _LogMealCard(
-          meal: 'Breakfast',
-          time: breakfastMeals.first.timestamp.toString().split(' ')[1].substring(0, 5),
-          calories: breakfastMeals.fold(0, (sum, m) => sum + m.calories),
-          macros: 'P: ${breakfastMeals.fold(0, (sum, m) => sum + m.protein)}g • C: ${breakfastMeals.fold(0, (sum, m) => sum + m.carbs)}g • F: ${breakfastMeals.fold(0, (sum, m) => sum + m.fat)}g',
-          foods: breakfastMeals.map((m) => _LogFoodItem(
-            name: m.name,
-            calories: m.calories,
-            macros: 'P: ${m.protein}g • C: ${m.carbs}g • F: ${m.fat}g',
-          )).toList(),
-        ),
-      if (lunchMeals.isNotEmpty)
-        _LogMealCard(
-          meal: 'Lunch',
-          time: lunchMeals.first.timestamp.toString().split(' ')[1].substring(0, 5),
-          calories: lunchMeals.fold(0, (sum, m) => sum + m.calories),
-          macros: 'P: ${lunchMeals.fold(0, (sum, m) => sum + m.protein)}g • C: ${lunchMeals.fold(0, (sum, m) => sum + m.carbs)}g • F: ${lunchMeals.fold(0, (sum, m) => sum + m.fat)}g',
-          foods: lunchMeals.map((m) => _LogFoodItem(
-            name: m.name,
-            calories: m.calories,
-            macros: 'P: ${m.protein}g • C: ${m.carbs}g • F: ${m.fat}g',
-          )).toList(),
-        ),
-      if (dinnerMeals.isNotEmpty)
-        _LogMealCard(
-          meal: 'Dinner',
-          time: dinnerMeals.first.timestamp.toString().split(' ')[1].substring(0, 5),
-          calories: dinnerMeals.fold(0, (sum, m) => sum + m.calories),
-          macros: 'P: ${dinnerMeals.fold(0, (sum, m) => sum + m.protein)}g • C: ${dinnerMeals.fold(0, (sum, m) => sum + m.carbs)}g • F: ${dinnerMeals.fold(0, (sum, m) => sum + m.fat)}g',
-          foods: dinnerMeals.map((m) => _LogFoodItem(
-            name: m.name,
-            calories: m.calories,
-            macros: 'P: ${m.protein}g • C: ${m.carbs}g • F: ${m.fat}g',
-          )).toList(),
-        ),
-      if (snackMeals.isNotEmpty)
-        _LogMealCard(
-          meal: 'Snack',
-          time: snackMeals.first.timestamp.toString().split(' ')[1].substring(0, 5),
-          calories: snackMeals.fold(0, (sum, m) => sum + m.calories),
-          macros: 'P: ${snackMeals.fold(0, (sum, m) => sum + m.protein)}g • C: ${snackMeals.fold(0, (sum, m) => sum + m.carbs)}g • F: ${snackMeals.fold(0, (sum, m) => sum + m.fat)}g',
-          foods: snackMeals.map((m) => _LogFoodItem(
-            name: m.name,
-            calories: m.calories,
-            macros: 'P: ${m.protein}g • C: ${m.carbs}g • F: ${m.fat}g',
-          )).toList(),
-        ),
-    ];
-  }
-
-  String _getAIInsight(Map<String, int> nutrition, UserProfile? userProfile) {
-    if (userProfile == null) return 'Complete your profile to get personalized insights.';
-
-    final proteinPercentage = nutrition['protein']! / userProfile.proteinGoal;
-    final carbsPercentage = nutrition['carbs']! / userProfile.carbsGoal;
-    final caloriesPercentage = nutrition['calories']! / userProfile.dailyCalorieGoal;
-
-    if (proteinPercentage < 0.7) {
-      return "You're ${((1 - proteinPercentage) * 100).round()}% under your protein goal this week. Adding Greek yogurt or lean chicken to your next meal would help balance your macros.";
-    } else if (carbsPercentage < 0.7) {
-      return "You're ${((1 - carbsPercentage) * 100).round()}% under your carbs goal. Consider adding whole grains or fruits to your next meal.";
-    } else if (caloriesPercentage < 0.7) {
-      return "You're ${((1 - caloriesPercentage) * 100).round()}% under your daily calorie goal. Make sure to eat enough to maintain your energy levels.";
-    } else if (caloriesPercentage > 1.1) {
-      return "You're ${((caloriesPercentage - 1) * 100).round()}% over your daily calorie goal. Consider lighter options for your next meal.";
-    }
-
-    return "Great job! Your nutrition is well-balanced today. Keep up the good work!";
-  }
 }
 
-class _SummaryBox extends StatelessWidget {
-  final IconData icon;
+// Macro progress row for Nutrition Summary
+class _MacroProgressRow extends StatelessWidget {
   final Color color;
   final String label;
   final String value;
-  final Color valueColor;
-  const _SummaryBox({required this.icon, required this.color, required this.label, required this.value, required this.valueColor});
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 90,
-      padding: const EdgeInsets.symmetric(vertical: 16),
-      decoration: BoxDecoration(
-        color: color,
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Column(
-        children: [
-          Icon(icon, color: valueColor, size: 28),
-          const SizedBox(height: 8),
-          Text(label, style: TextStyle(color: valueColor, fontWeight: FontWeight.w600)),
-          const SizedBox(height: 4),
-          Text(value, style: TextStyle(color: valueColor, fontWeight: FontWeight.bold, fontSize: 18)),
-        ],
-      ),
-    );
-  }
-}
-
-class _ProgressRow extends StatelessWidget {
-  final String label;
-  final String value;
   final double percent;
-  const _ProgressRow({required this.label, required this.value, required this.percent});
+  const _MacroProgressRow({required this.color, required this.label, required this.value, required this.percent});
   @override
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4.0),
       child: Row(
         children: [
-          SizedBox(width: 80, child: Text(label)),
+          Container(width: 10, height: 10, decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
+          const SizedBox(width: 8),
+          SizedBox(width: 60, child: Text(label, style: TextStyle(fontWeight: FontWeight.w500))),
           Expanded(
             child: LinearProgressIndicator(
               value: percent.clamp(0.0, 1.0),
               backgroundColor: kContainerGrey,
-              color: kPrimaryGreen,
+              color: color,
               minHeight: 8,
             ),
           ),
@@ -1218,13 +1484,89 @@ class _ProgressRow extends StatelessWidget {
   }
 }
 
-class _MealCard extends StatelessWidget {
-  final String meal;
+// Circular calories indicator
+class _CircularCalories extends StatelessWidget {
   final int calories;
-  final List<String> foods;
-  final Color iconColor;
+  final int goal;
+  const _CircularCalories({required this.calories, required this.goal});
+  @override
+  Widget build(BuildContext context) {
+    final percent = calories / goal;
+    return Stack(
+      alignment: Alignment.center,
+      children: [
+        SizedBox(
+          width: 80,
+          height: 80,
+          child: CircularProgressIndicator(
+            value: percent.clamp(0.0, 1.0),
+            backgroundColor: kContainerGrey,
+            color: kPrimaryGreen,
+            strokeWidth: 7,
+          ),
+        ),
+        Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text('$calories', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 20)),
+            Text('/ $goal', style: TextStyle(color: Colors.grey[600], fontSize: 14)),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+// Quick Action Card
+class _QuickActionCard extends StatelessWidget {
   final IconData icon;
-  const _MealCard({required this.meal, required this.calories, required this.foods, required this.iconColor, required this.icon});
+  final String label;
+  final String subtitle;
+  final Color color;
+  final VoidCallback onTap;
+  const _QuickActionCard({required this.icon, required this.label, required this.subtitle, required this.color, required this.onTap});
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        decoration: BoxDecoration(
+          color: color.withOpacity(0.08),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: color.withOpacity(0.15)),
+        ),
+        padding: const EdgeInsets.all(16),
+        child: Row(
+          children: [
+            Container(
+              decoration: BoxDecoration(
+                color: color.withOpacity(0.15),
+                shape: BoxShape.circle,
+              ),
+              padding: const EdgeInsets.all(10),
+              child: Icon(icon, color: color, size: 28),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(label, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                  Text(subtitle, style: TextStyle(color: Colors.grey[500], fontSize: 13)),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// Modern Meal Card
+class _MealCardModern extends StatelessWidget {
+  final Meal meal;
+  const _MealCardModern({required this.meal});
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -1232,45 +1574,103 @@ class _MealCard extends StatelessWidget {
       margin: const EdgeInsets.symmetric(vertical: 8),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: theme.cardColor,
+        color: Colors.white,
         borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
+            color: Colors.grey.withOpacity(0.06),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
           ),
         ],
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Meal image placeholder (no imageUrl in model)
           Container(
+            width: 60,
+            height: 60,
             decoration: BoxDecoration(
-              color: iconColor,
+              color: kContainerGrey,
               borderRadius: BorderRadius.circular(12),
             ),
-            padding: const EdgeInsets.all(8),
-            child: Icon(icon, color: kPrimaryGreen, size: 28),
+            child: Icon(Icons.fastfood, color: kPrimaryGreen, size: 32),
           ),
-          const SizedBox(width: 16),
+          const SizedBox(width: 14),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(meal, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                ...foods.map((f) => Padding(
-                  padding: const EdgeInsets.only(top: 4.0),
-                  child: Text(f, style: TextStyle(color: theme.textTheme.bodyLarge?.color)),
-                )),
+                Row(
+                  children: [
+                    Text(meal.mealType.capitalize(), style: TextStyle(color: kPrimaryGreen, fontWeight: FontWeight.w600)),
+                    const SizedBox(width: 8),
+                    Text(_formatTime(meal.timestamp), style: TextStyle(color: Colors.grey[500], fontSize: 13)),
+                  ],
+                ),
+                const SizedBox(height: 2),
+                Text(meal.name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                const SizedBox(height: 6),
+                Row(
+                  children: [
+                    _MacroTag(label: 'P', value: '${meal.protein}g', color: kSecondaryBlue),
+                    const SizedBox(width: 6),
+                    _MacroTag(label: 'C', value: '${meal.carbs}g', color: kAccentOrange),
+                    const SizedBox(width: 6),
+                    _MacroTag(label: 'F', value: '${meal.fat}g', color: kWarningRed),
+                  ],
+                ),
               ],
             ),
           ),
-          Text('$calories cal', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text('${meal.calories}', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+              Text('cal', style: TextStyle(color: Colors.grey[600], fontSize: 13)),
+            ],
+          ),
         ],
       ),
     );
   }
+
+  String _formatTime(DateTime dt) {
+    final h = dt.hour.toString().padLeft(2, '0');
+    final m = dt.minute.toString().padLeft(2, '0');
+    return '$h:$m';
+  }
+}
+
+// Macro Tag
+class _MacroTag extends StatelessWidget {
+  final String label;
+  final String value;
+  final Color color;
+  const _MacroTag({required this.label, required this.value, required this.color});
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.12),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        children: [
+          Text(label, style: TextStyle(color: color, fontWeight: FontWeight.bold, fontSize: 13)),
+          const SizedBox(width: 2),
+          Text(value, style: TextStyle(color: color, fontWeight: FontWeight.w500, fontSize: 13)),
+        ],
+      ),
+    );
+  }
+}
+
+extension StringCasingExtension on String {
+  String capitalize() => isEmpty ? this : '${this[0].toUpperCase()}${substring(1)}';
 }
 
 class ScanScreen extends StatefulWidget {
