@@ -1192,7 +1192,10 @@ class _MainNavScreenState extends State<MainNavScreen> with TickerProviderStateM
       _footerController.value = 1.0;
     }
     _screens = [
-      DashboardScreen(onViewAllMeals: () => _onItemTapped(1)),
+      DashboardScreen(
+        onViewAllMeals: () => _onItemTapped(1),
+        onProfileTap: () => _onItemTapped(4),
+      ),
       FoodScreen(),
       SizedBox.shrink(),
       CoachScreen(),
@@ -1487,7 +1490,8 @@ class _AnimatedFabState extends State<_AnimatedFab> with SingleTickerProviderSta
 
 class DashboardScreen extends StatefulWidget {
   final VoidCallback? onViewAllMeals;
-  const DashboardScreen({Key? key, this.onViewAllMeals}) : super(key: key);
+  final VoidCallback? onProfileTap;
+  const DashboardScreen({Key? key, this.onViewAllMeals, this.onProfileTap}) : super(key: key);
   @override
   State<DashboardScreen> createState() => _DashboardScreenState();
 }
@@ -1576,9 +1580,12 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
                       AnimatedScale(
                         scale: _headerController.value,
                         duration: const Duration(milliseconds: 600),
-                        child: user != null && user.photoURL != null
-                          ? CircleAvatar(radius: 24, backgroundImage: NetworkImage(user.photoURL!))
-                          : CircleAvatar(radius: 24, backgroundColor: kPrimaryGreen.withOpacity(0.15), child: Icon(Icons.person, color: kPrimaryGreen)),
+                        child: GestureDetector(
+                          onTap: widget.onProfileTap,
+                          child: user != null && user.photoURL != null
+                            ? CircleAvatar(radius: 24, backgroundImage: NetworkImage(user.photoURL!))
+                            : CircleAvatar(radius: 24, backgroundColor: kPrimaryGreen.withOpacity(0.15), child: Icon(Icons.person, color: kPrimaryGreen)),
+                        ),
                       ),
                     ],
                   ),
@@ -3105,10 +3112,7 @@ class _CoachScreenState extends State<CoachScreen> with TickerProviderStateMixin
         child: AppBar(
           backgroundColor: Colors.white,
           elevation: 0,
-          leading: IconButton(
-            icon: Icon(Icons.arrow_back, color: Colors.black),
-            onPressed: () => Navigator.of(context).maybePop(),
-          ),
+          leading: null,
           title: Row(
             children: [
               Container(
@@ -3567,6 +3571,7 @@ class _FoodScreenState extends State<FoodScreen> with TickerProviderStateMixin {
       'time': '25 mins',
       'calories': 420,
       'tags': ['High Protein', 'Omega-3'],
+      'mealType': 'Breakfast',
     },
     {
       'image': 'https://images.unsplash.com/photo-1464306076886-debca5e8a6b0',
@@ -3574,6 +3579,7 @@ class _FoodScreenState extends State<FoodScreen> with TickerProviderStateMixin {
       'time': '20 mins',
       'calories': 350,
       'tags': ['Vegetarian', 'Quick'],
+      'mealType': 'Lunch',
     },
     {
       'image': 'https://images.unsplash.com/photo-1502741338009-cac2772e18bc',
@@ -3581,6 +3587,7 @@ class _FoodScreenState extends State<FoodScreen> with TickerProviderStateMixin {
       'time': '30 mins',
       'calories': 380,
       'tags': ['Vegetarian', 'Fiber'],
+      'mealType': 'Dinner',
     },
     {
       'image': 'https://images.unsplash.com/photo-1519864600265-abb23847ef2c',
@@ -3588,6 +3595,7 @@ class _FoodScreenState extends State<FoodScreen> with TickerProviderStateMixin {
       'time': '15 mins',
       'calories': 410,
       'tags': ['High Protein', 'Quick'],
+      'mealType': 'Lunch',
     },
     {
       'image': 'https://images.unsplash.com/photo-1506089676908-3592f7389d4d',
@@ -3595,6 +3603,7 @@ class _FoodScreenState extends State<FoodScreen> with TickerProviderStateMixin {
       'time': '10 mins',
       'calories': 220,
       'tags': ['Vegetarian', 'Breakfast'],
+      'mealType': 'Breakfast',
     },
     {
       'image': 'https://images.unsplash.com/photo-1467003909585-2f8a72700288',
@@ -3602,6 +3611,7 @@ class _FoodScreenState extends State<FoodScreen> with TickerProviderStateMixin {
       'time': '28 mins',
       'calories': 340,
       'tags': ['Vegan', 'High Protein'],
+      'mealType': 'Dinner',
     },
     {
       'image': 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd',
@@ -3609,15 +3619,28 @@ class _FoodScreenState extends State<FoodScreen> with TickerProviderStateMixin {
       'time': '12 mins',
       'calories': 260,
       'tags': ['Vegetarian', 'Breakfast'],
+      'mealType': 'Breakfast',
     },
   ];
 
   List<Map<String, dynamic>> _shuffledRecipes = [];
 
+  // Add meal type bar state
+  final List<String> _mealTypes = ['Breakfast', 'Lunch', 'Dinner', 'Snack'];
+  int _selectedMealTypeIndex = 0;
+
   late AnimationController _tabController;
   late AnimationController _calendarController;
   late AnimationController _myMealsController;
   late AnimationController _suggestedController;
+
+  // Add state for calendar view mode
+  String _calendarView = 'month'; // 'week' or 'month'
+  CalendarFormat _calendarFormat = CalendarFormat.month;
+
+  // Add state for meal type filter in Food page
+  int _selectedFoodMealTypeIndex = 0;
+  final List<String> _foodMealTypes = ['Breakfast', 'Lunch', 'Dinner', 'Snack'];
 
   @override
   void initState() {
@@ -3650,6 +3673,12 @@ class _FoodScreenState extends State<FoodScreen> with TickerProviderStateMixin {
     _suggestedController.forward();
   }
 
+  // Filter recipes by selected meal type
+  List<Map<String, dynamic>> get _filteredRecipes {
+    final type = _mealTypes[_selectedMealTypeIndex];
+    return _shuffledRecipes.where((r) => (r['mealType'] ?? '').toLowerCase() == type.toLowerCase()).toList();
+  }
+
   Future<void> _onRefresh() async {
     _shuffleRecipes();
     await Future.delayed(const Duration(milliseconds: 400));
@@ -3672,10 +3701,7 @@ class _FoodScreenState extends State<FoodScreen> with TickerProviderStateMixin {
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black),
-          onPressed: () => Navigator.of(context).maybePop(),
-        ),
+        leading: null,
         title: const Text('Food', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
         centerTitle: false,
       ),
@@ -3720,6 +3746,47 @@ class _FoodScreenState extends State<FoodScreen> with TickerProviderStateMixin {
               ],
             ),
           ),
+          // Add Weekly/Monthly toggle above calendar
+          if (_tabIndex == 0)
+            Padding(
+              padding: const EdgeInsets.only(top: 8, bottom: 0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  GestureDetector(
+                    onTap: () => setState(() {
+                      _calendarView = 'week';
+                      _calendarFormat = CalendarFormat.week;
+                    }),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: _calendarView == 'week' ? kPrimaryGreen : Colors.white,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: kPrimaryGreen, width: 1.5),
+                      ),
+                      child: Text('Weekly', style: TextStyle(fontWeight: FontWeight.bold, color: _calendarView == 'week' ? Colors.white : kPrimaryGreen)),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  GestureDetector(
+                    onTap: () => setState(() {
+                      _calendarView = 'month';
+                      _calendarFormat = CalendarFormat.month;
+                    }),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: _calendarView == 'month' ? kPrimaryGreen : Colors.white,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: kPrimaryGreen, width: 1.5),
+                      ),
+                      child: Text('Monthly', style: TextStyle(fontWeight: FontWeight.bold, color: _calendarView == 'month' ? Colors.white : kPrimaryGreen)),
+                    ),
+                  ),
+                ],
+              ),
+            ),
           // Animated tab content
           Expanded(
             child: AnimatedSwitcher(
@@ -3748,6 +3815,13 @@ class _FoodScreenState extends State<FoodScreen> with TickerProviderStateMixin {
                                   });
                                   _myMealsController.forward(from: 0.0);
                                 },
+                                calendarFormat: _calendarFormat,
+                                onFormatChanged: (format) {
+                                  setState(() {
+                                    _calendarFormat = format;
+                                    _calendarView = format == CalendarFormat.week ? 'week' : 'month';
+                                  });
+                                },
                                 calendarStyle: CalendarStyle(
                                   todayDecoration: BoxDecoration(color: kPrimaryGreen.withOpacity(0.18), shape: BoxShape.circle),
                                   selectedDecoration: BoxDecoration(color: kPrimaryGreen, shape: BoxShape.circle),
@@ -3769,18 +3843,54 @@ class _FoodScreenState extends State<FoodScreen> with TickerProviderStateMixin {
                             ),
                           ),
                         ),
+                        // Meal type bar for filtering meals
+                        Padding(
+                          padding: const EdgeInsets.only(top: 8, bottom: 8),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                            children: List.generate(_foodMealTypes.length, (i) {
+                              final selected = i == _selectedFoodMealTypeIndex;
+                              return Expanded(
+                                child: GestureDetector(
+                                  onTap: () => setState(() => _selectedFoodMealTypeIndex = i),
+                                  child: AnimatedContainer(
+                                    duration: Duration(milliseconds: 180),
+                                    margin: EdgeInsets.symmetric(horizontal: 4),
+                                    padding: EdgeInsets.symmetric(vertical: 12),
+                                    decoration: BoxDecoration(
+                                      color: selected ? kPrimaryGreen : Color(0xFFF1F1F1),
+                                      borderRadius: BorderRadius.circular(22),
+                                    ),
+                                    child: Center(
+                                      child: Text(
+                                        _foodMealTypes[i],
+                                        style: TextStyle(
+                                          color: selected ? Colors.white : Colors.grey[700],
+                                          fontWeight: FontWeight.w600,
+                                          fontSize: 17,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              );
+                            }),
+                          ),
+                        ),
+                        // Filtered meal list
                         Expanded(
                           child: StreamBuilder<List<Meal>>(
                             stream: _mealService.getMealsForDate(_selectedDay ?? DateTime.now()),
                             builder: (context, snapshot) {
                               if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
                               final meals = snapshot.data!;
-                              if (meals.isEmpty) {
+                              final filteredMeals = meals.where((m) => m.mealType.toLowerCase() == _foodMealTypes[_selectedFoodMealTypeIndex].toLowerCase()).toList();
+                              if (filteredMeals.isEmpty) {
                                 return const Center(child: Text('No meals logged for this day.', style: TextStyle(color: Colors.grey)));
                               }
                               return ListView.builder(
                                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-                                itemCount: meals.length,
+                                itemCount: filteredMeals.length,
                                 itemBuilder: (context, i) {
                                   return TweenAnimationBuilder<double>(
                                     tween: Tween<double>(begin: 0, end: 1),
@@ -3789,7 +3899,7 @@ class _FoodScreenState extends State<FoodScreen> with TickerProviderStateMixin {
                                       opacity: value,
                                       child: Transform.translate(
                                         offset: Offset(0, (1 - value) * 24),
-                                        child: _FoodMealCard(meal: meals[i]),
+                                        child: _FoodMealCard(meal: filteredMeals[i]),
                                       ),
                                     ),
                                   );
@@ -3810,12 +3920,47 @@ class _FoodScreenState extends State<FoodScreen> with TickerProviderStateMixin {
                           child: ListView(
                             padding: const EdgeInsets.only(left: 0, right: 0, top: 0, bottom: 24),
                             children: [
+                              // Meal type bar + shuffle icon
+                              Padding(
+                                padding: const EdgeInsets.fromLTRB(16, 18, 16, 0),
+                                child: SingleChildScrollView(
+                                  scrollDirection: Axis.horizontal,
+                                  child: Row(
+                                    children: List.generate(_mealTypes.length, (i) {
+                                      final selected = i == _selectedMealTypeIndex;
+                                      return Padding(
+                                        padding: EdgeInsets.only(right: i < _mealTypes.length - 1 ? 10 : 0),
+                                        child: GestureDetector(
+                                          onTap: () => setState(() => _selectedMealTypeIndex = i),
+                                          child: AnimatedContainer(
+                                            duration: Duration(milliseconds: 180),
+                                            padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                                            decoration: BoxDecoration(
+                                              color: selected ? kPrimaryGreen : Color(0xFFF1F1F1),
+                                              borderRadius: BorderRadius.circular(22),
+                                            ),
+                                            child: Text(
+                                              _mealTypes[i],
+                                              style: TextStyle(
+                                                color: selected ? Colors.white : Colors.grey[700],
+                                                fontWeight: FontWeight.w600,
+                                                fontSize: 17,
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                      );
+                                    }),
+                                  ),
+                                ),
+                              ),
+                              // Recipe Suggestions title + shuffle icon
                               Padding(
                                 padding: const EdgeInsets.fromLTRB(20, 18, 20, 0),
                                 child: Row(
                                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                   children: [
-                                    const Text('Recipe Suggestions', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20)),
+                                    Text('Recipe Suggestions', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20)),
                                     IconButton(
                                       icon: const Icon(Icons.shuffle, color: kPrimaryGreen),
                                       tooltip: 'Shuffle Recipes',
@@ -3825,8 +3970,8 @@ class _FoodScreenState extends State<FoodScreen> with TickerProviderStateMixin {
                                 ),
                               ),
                               // Big cards (first 3)
-                              ..._shuffledRecipes.take(3).map((recipe) {
-                                final idx = _shuffledRecipes.indexOf(recipe);
+                              ..._filteredRecipes.take(3).map((recipe) {
+                                final idx = _filteredRecipes.indexOf(recipe);
                                 return TweenAnimationBuilder<double>(
                                   tween: Tween<double>(begin: 0, end: 1),
                                   duration: Duration(milliseconds: 400 + idx * 100),
@@ -3840,7 +3985,7 @@ class _FoodScreenState extends State<FoodScreen> with TickerProviderStateMixin {
                                 );
                               }).toList(),
                               // Grid of smaller cards
-                              if (_shuffledRecipes.length > 3)
+                              if (_filteredRecipes.length > 3)
                                 Padding(
                                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
                                   child: GridView.count(
@@ -3851,10 +3996,10 @@ class _FoodScreenState extends State<FoodScreen> with TickerProviderStateMixin {
                                     crossAxisSpacing: 12,
                                     childAspectRatio: 1.5,
                                     children: [
-                                      for (final recipe in _shuffledRecipes.skip(3))
+                                      for (final recipe in _filteredRecipes.skip(3))
                                         TweenAnimationBuilder<double>(
                                           tween: Tween<double>(begin: 0, end: 1),
-                                          duration: Duration(milliseconds: 400 + (_shuffledRecipes.indexOf(recipe) - 3) * 80),
+                                          duration: Duration(milliseconds: 400 + (_filteredRecipes.indexOf(recipe) - 3) * 80),
                                           builder: (context, value, child) => Opacity(
                                             opacity: value,
                                             child: Transform.translate(

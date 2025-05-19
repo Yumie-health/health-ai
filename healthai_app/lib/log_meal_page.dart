@@ -85,10 +85,10 @@ class _LogMealPageState extends State<LogMealPage> with TickerProviderStateMixin
       final meal = Meal(
         id: '',
         name: _foodNameController.text.trim(),
-        calories: int.tryParse(_caloriesController.text) ?? 0,
-        protein: int.tryParse(_proteinController.text) ?? 0,
-        carbs: int.tryParse(_carbsController.text) ?? 0,
-        fat: int.tryParse(_fatController.text) ?? 0,
+        calories: int.tryParse(_caloriesController.text.trim().isEmpty ? '0' : _caloriesController.text.trim()) ?? 0,
+        protein: int.tryParse(_proteinController.text.trim().isEmpty ? '0' : _proteinController.text.trim()) ?? 0,
+        carbs: int.tryParse(_carbsController.text.trim().isEmpty ? '0' : _carbsController.text.trim()) ?? 0,
+        fat: int.tryParse(_fatController.text.trim().isEmpty ? '0' : _fatController.text.trim()) ?? 0,
         timestamp: DateTime.now(),
         mealType: _selectedMealType,
         userId: user.uid,
@@ -433,45 +433,61 @@ class _LogMealPageState extends State<LogMealPage> with TickerProviderStateMixin
   }
 
   Widget _buildFoodTabs() {
-    return Container(
-      decoration: BoxDecoration(
-        color: kContainerGrey,
-        borderRadius: BorderRadius.circular(22),
-      ),
-      margin: const EdgeInsets.only(bottom: 18),
-      child: Row(
-        children: [
-          Expanded(
-            child: GestureDetector(
-              onTap: () => setState(() => _foodTabIndex = 0),
-              child: Container(
-                padding: const EdgeInsets.symmetric(vertical: 14),
-                decoration: BoxDecoration(
-                  color: _foodTabIndex == 0 ? kContainerGrey : Colors.transparent,
-                  borderRadius: BorderRadius.circular(18),
-                ),
-                child: Center(
-                  child: Text('Recent', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 18, color: _foodTabIndex == 0 ? kPrimaryGreen : Colors.grey[500])),
-                ),
-              ),
-            ),
-          ),
-          Expanded(
-            child: GestureDetector(
-              onTap: () => setState(() => _foodTabIndex = 1),
-              child: Container(
-                padding: const EdgeInsets.symmetric(vertical: 14),
-                decoration: BoxDecoration(
-                  color: _foodTabIndex == 1 ? Colors.white : Colors.transparent,
-                  borderRadius: BorderRadius.circular(18),
-                ),
-                child: Center(
-                  child: Text('My Foods', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 18, color: _foodTabIndex == 1 ? Colors.black : Colors.grey[500])),
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 12),
+      child: Container(
+        decoration: BoxDecoration(
+          color: const Color(0xFFF3F3F3),
+          borderRadius: BorderRadius.circular(28),
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: GestureDetector(
+                onTap: () => setState(() => _foodTabIndex = 0),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  decoration: BoxDecoration(
+                    color: Colors.transparent,
+                    borderRadius: BorderRadius.circular(28),
+                  ),
+                  child: Center(
+                    child: Text(
+                      'Recent',
+                      style: TextStyle(
+                        color: _foodTabIndex == 0 ? kPrimaryGreen : Colors.grey[500],
+                        fontWeight: FontWeight.w600,
+                        fontSize: 17,
+                      ),
+                    ),
+                  ),
                 ),
               ),
             ),
-          ),
-        ],
+            Expanded(
+              child: GestureDetector(
+                onTap: () => setState(() => _foodTabIndex = 1),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  decoration: BoxDecoration(
+                    color: Colors.transparent,
+                    borderRadius: BorderRadius.circular(28),
+                  ),
+                  child: Center(
+                    child: Text(
+                      'My Foods',
+                      style: TextStyle(
+                        color: _foodTabIndex == 1 ? kPrimaryGreen : Colors.grey[500],
+                        fontWeight: FontWeight.w600,
+                        fontSize: 17,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
