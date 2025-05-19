@@ -10,6 +10,7 @@ import 'package:table_calendar/table_calendar.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:provider/provider.dart';
 import 'dart:async';
+import 'log_meal_page.dart';
 
 // Define the color palette
 const Color kPrimaryGreen = Color(0xFF4CAF50); // Soft green
@@ -1240,7 +1241,7 @@ class _MainNavScreenState extends State<MainNavScreen> with TickerProviderStateM
       _fabExpanded = false;
       _showFabActions = false;
     });
-    Navigator.of(context).push(MaterialPageRoute(builder: (_) => Center(child: Text('Log Page'))));
+    Navigator.of(context).push(MaterialPageRoute(builder: (_) => const LogMealPage()));
   }
 
   void _navigateToScan() {

@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:logging/logging.dart';
 import '../models/meal.dart';
+import '../models/custom_meal.dart';
 
 class MealService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -105,5 +106,31 @@ class MealService {
       'carbs': totalCarbs,
       'fat': totalFat,
     };
+  }
+
+  // Get custom meals for the current user
+  Stream<List<CustomMeal>> getCustomMeals() {
+    final user = _auth.currentUser;
+    if (user == null) {
+      _logger.warning('No authenticated user!');
+      return Stream.value([]);
+    }
+    return _firestore
+        .collection('custom_meals')
+        .where('userId', isEqualTo: user.uid)
+        .snapshots()
+        .map((snapshot) => snapshot.docs.map((doc) => CustomMeal.fromFirestore(doc)).toList());
+  }
+
+  // Add a new custom meal
+  Future<void> addCustomMeal(CustomMeal meal) async {
+    final user = _auth.currentUser;
+    if (user == null) throw Exception('User not authenticated');
+    await _firestore.collection('custom_meals').add(meal.toMap());
+  }
+
+  // Delete a custom meal
+  Future<void> deleteCustomMeal(String customMealId) async {
+    await _firestore.collection('custom_meals').doc(customMealId).delete();
   }
 } 
