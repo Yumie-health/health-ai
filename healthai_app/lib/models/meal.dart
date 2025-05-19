@@ -10,6 +10,7 @@ class Meal {
   final DateTime timestamp;
   final String mealType; // breakfast, lunch, dinner, snack
   final String userId;
+  final List<String> ingredients;
 
   Meal({
     required this.id,
@@ -21,6 +22,7 @@ class Meal {
     required this.timestamp,
     required this.mealType,
     required this.userId,
+    this.ingredients = const [],
   });
 
   Map<String, dynamic> toMap() {
@@ -33,11 +35,18 @@ class Meal {
       'timestamp': Timestamp.fromDate(timestamp),
       'mealType': mealType,
       'userId': userId,
+      'ingredients': ingredients,
     };
   }
 
   factory Meal.fromFirestore(DocumentSnapshot doc) {
     Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
+    // Defensive: skip meals with missing or empty required fields
+    if (data['name'] == null || data['name'].toString().trim().isEmpty ||
+        data['userId'] == null || data['userId'].toString().trim().isEmpty ||
+        data['timestamp'] == null) {
+      throw Exception('Invalid meal data: missing required fields');
+    }
     return Meal(
       id: doc.id,
       name: data['name'] ?? '',
@@ -48,6 +57,7 @@ class Meal {
       timestamp: (data['timestamp'] as Timestamp).toDate(),
       mealType: data['mealType'] ?? '',
       userId: data['userId'] ?? '',
+      ingredients: (data['ingredients'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? [],
     );
   }
 } 

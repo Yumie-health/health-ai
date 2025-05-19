@@ -133,4 +133,11 @@ class MealService {
   Future<void> deleteCustomMeal(String customMealId) async {
     await _firestore.collection('custom_meals').doc(customMealId).delete();
   }
+
+  // Update a custom meal
+  Future<void> updateCustomMeal(CustomMeal meal) async {
+    final user = _auth.currentUser;
+    if (user == null) throw Exception('User not authenticated');
+    await _firestore.collection('custom_meals').doc(meal.id).update(meal.toMap());
+  }
 } 

@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'models/meal.dart';
 import 'services/meal_service.dart';
-import 'main.dart'; // For color constants
+import 'main.dart'; // For color constants and _MacroTag
 import 'models/custom_meal.dart';
 
 class LogMealPage extends StatefulWidget {
@@ -19,6 +19,8 @@ class _LogMealPageState extends State<LogMealPage> with TickerProviderStateMixin
   final TextEditingController _proteinController = TextEditingController(text: '0');
   final TextEditingController _carbsController = TextEditingController(text: '0');
   final TextEditingController _fatController = TextEditingController(text: '0');
+  final TextEditingController _ingredientController = TextEditingController();
+  List<String> _ingredients = [];
 
   String _selectedMealType = 'breakfast';
   bool _isSaving = false;
@@ -67,6 +69,7 @@ class _LogMealPageState extends State<LogMealPage> with TickerProviderStateMixin
     _proteinController.dispose();
     _carbsController.dispose();
     _fatController.dispose();
+    _ingredientController.dispose();
     _tabsController.dispose();
     _foodNameControllerAnim.dispose();
     _macrosController.dispose();
@@ -92,8 +95,10 @@ class _LogMealPageState extends State<LogMealPage> with TickerProviderStateMixin
         timestamp: DateTime.now(),
         mealType: _selectedMealType,
         userId: user.uid,
+        ingredients: List<String>.from(_ingredients),
       );
       await MealService().addMeal(meal);
+      setState(() { _ingredients.clear(); });
       if (mounted) Navigator.of(context).pop();
     } catch (e) {
       setState(() => _error = e.toString());
@@ -268,40 +273,26 @@ class _LogMealPageState extends State<LogMealPage> with TickerProviderStateMixin
   }
 
   Widget _recentFoodTile(Meal meal) {
-    return Container(
-      margin: const EdgeInsets.symmetric(vertical: 6),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: kPrimaryGreen.withOpacity(0.18)),
-        boxShadow: [
-          BoxShadow(
-            color: kPrimaryGreen.withOpacity(0.06),
-            blurRadius: 8,
-            offset: Offset(0, 2),
-          ),
-        ],
-      ),
-      child: ListTile(
-        leading: CircleAvatar(
-          backgroundColor: kPrimaryGreen.withOpacity(0.13),
-          child: Icon(Icons.restaurant_menu, color: kPrimaryGreen),
-        ),
-        title: Text(meal.name, style: const TextStyle(fontWeight: FontWeight.w600)),
-        subtitle: Text('${meal.calories} cal • ${meal.protein}g protein'),
-        trailing: IconButton(
-          icon: Icon(Icons.add_circle, color: kPrimaryGreen, size: 28),
-          onPressed: () {
-            setState(() {
-              _foodNameController.text = meal.name;
-              _caloriesController.text = meal.calories.toString();
-              _proteinController.text = meal.protein.toString();
-              _carbsController.text = meal.carbs.toString();
-              _fatController.text = meal.fat.toString();
-            });
-          },
-        ),
-      ),
+    return _ExpandableMealTile(
+      name: meal.name,
+      protein: meal.protein,
+      carbs: meal.carbs,
+      fat: meal.fat,
+      calories: meal.calories,
+      ingredients: meal.ingredients,
+      icon: Icons.restaurant_menu,
+      iconColor: kPrimaryGreen,
+      onAdd: () {
+        setState(() {
+          _foodNameController.text = meal.name;
+          _caloriesController.text = meal.calories.toString();
+          _proteinController.text = meal.protein.toString();
+          _carbsController.text = meal.carbs.toString();
+          _fatController.text = meal.fat.toString();
+          _ingredients = List<String>.from(meal.ingredients);
+        });
+      },
+      isCustomMeal: false,
     );
   }
 
@@ -316,12 +307,21 @@ class _LogMealPageState extends State<LogMealPage> with TickerProviderStateMixin
     List<String> ingredients = [];
     bool isSaving = false;
     String? error;
-    await showDialog(
+
+    await showGeneralDialog(
       context: context,
-      builder: (context) {
-        return StatefulBuilder(
-          builder: (context, setState) {
-            return AlertDialog(
+      barrierDismissible: true,
+      barrierLabel: MaterialLocalizations.of(context).modalBarrierDismissLabel,
+      transitionDuration: const Duration(milliseconds: 320),
+      pageBuilder: (context, anim1, anim2) {
+        return const SizedBox.shrink();
+      },
+      transitionBuilder: (context, anim1, anim2, child) {
+        return Transform.scale(
+          scale: Curves.easeOutBack.transform(anim1.value),
+          child: Opacity(
+            opacity: anim1.value,
+            child: AlertDialog(
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
               title: Text('Build a Custom Meal', style: TextStyle(fontWeight: FontWeight.bold, color: kPrimaryGreen)),
               content: SingleChildScrollView(
@@ -329,34 +329,52 @@ class _LogMealPageState extends State<LogMealPage> with TickerProviderStateMixin
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    Text('Meal Name', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 18, color: kPrimaryGreen)),
+                    const SizedBox(height: 8),
                     TextField(
                       controller: nameController,
-                      decoration: InputDecoration(labelText: 'Meal Name'),
+                      decoration: InputDecoration(
+                        hintText: 'Search or enter food name',
+                        filled: true,
+                        fillColor: const Color(0xFFF5F5F5),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(14),
+                          borderSide: BorderSide.none,
+                        ),
+                      ),
                     ),
-                    const SizedBox(height: 10),
+                    const SizedBox(height: 18),
                     Row(
                       children: [
-                        Expanded(child: TextField(controller: caloriesController, keyboardType: TextInputType.number, decoration: InputDecoration(labelText: 'Calories'))),
-                        const SizedBox(width: 8),
-                        Expanded(child: TextField(controller: proteinController, keyboardType: TextInputType.number, decoration: InputDecoration(labelText: 'Protein (g)'))),
+                        Expanded(child: _macroField('Calories', caloriesController)),
+                        const SizedBox(width: 16),
+                        Expanded(child: _macroField('Protein (g)', proteinController)),
                       ],
                     ),
-                    const SizedBox(height: 10),
+                    const SizedBox(height: 12),
                     Row(
                       children: [
-                        Expanded(child: TextField(controller: carbsController, keyboardType: TextInputType.number, decoration: InputDecoration(labelText: 'Carbs (g)'))),
-                        const SizedBox(width: 8),
-                        Expanded(child: TextField(controller: fatController, keyboardType: TextInputType.number, decoration: InputDecoration(labelText: 'Fat (g)'))),
+                        Expanded(child: _macroField('Carbs (g)', carbsController)),
+                        const SizedBox(width: 16),
+                        Expanded(child: _macroField('Fat (g)', fatController)),
                       ],
                     ),
-                    const SizedBox(height: 16),
-                    Text('Ingredients', style: TextStyle(fontWeight: FontWeight.w600)),
+                    const SizedBox(height: 18),
+                    Text('Ingredients', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 17, color: kPrimaryGreen)),
                     Row(
                       children: [
                         Expanded(
                           child: TextField(
                             controller: ingredientController,
-                            decoration: InputDecoration(hintText: 'Add ingredient'),
+                            decoration: InputDecoration(
+                              hintText: 'Add ingredient',
+                              filled: true,
+                              fillColor: const Color(0xFFF5F5F5),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(14),
+                                borderSide: BorderSide.none,
+                              ),
+                            ),
                           ),
                         ),
                         IconButton(
@@ -392,7 +410,7 @@ class _LogMealPageState extends State<LogMealPage> with TickerProviderStateMixin
               actions: [
                 TextButton(
                   onPressed: () => Navigator.pop(context),
-                  child: Text('Cancel'),
+                  child: Text('Cancel', style: TextStyle(color: kPrimaryGreen)),
                 ),
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(backgroundColor: kPrimaryGreen),
@@ -425,8 +443,8 @@ class _LogMealPageState extends State<LogMealPage> with TickerProviderStateMixin
                   child: isSaving ? SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)) : Text('Save'),
                 ),
               ],
-            );
-          },
+            ),
+          ),
         );
       },
     );
@@ -523,15 +541,20 @@ class _LogMealPageState extends State<LogMealPage> with TickerProviderStateMixin
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const SizedBox(height: 8),
-            OutlinedButton(
-              onPressed: _showCustomMealDialog,
-              style: OutlinedButton.styleFrom(
-                foregroundColor: kPrimaryGreen,
-                side: BorderSide(color: kPrimaryGreen.withOpacity(0.18)),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
-              ),
-              child: const Text('Build a Custom Meal', style: TextStyle(fontSize: 18)),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                OutlinedButton(
+                  onPressed: _showCustomMealDialog,
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: kPrimaryGreen,
+                    side: BorderSide(color: kPrimaryGreen.withOpacity(0.18)),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                  ),
+                  child: const Text('Build a Custom Meal', style: TextStyle(fontSize: 18)),
+                ),
+              ],
             ),
             const SizedBox(height: 12),
             ...customMeals.map((meal) => _customMealTile(meal)).toList(),
@@ -542,76 +565,178 @@ class _LogMealPageState extends State<LogMealPage> with TickerProviderStateMixin
   }
 
   Widget _customMealTile(CustomMeal meal) {
-    return Container(
-      margin: const EdgeInsets.symmetric(vertical: 6),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: kPrimaryGreen.withOpacity(0.18)),
-        boxShadow: [
-          BoxShadow(
-            color: kPrimaryGreen.withOpacity(0.06),
-            blurRadius: 8,
-            offset: Offset(0, 2),
-          ),
-        ],
-      ),
-      child: ListTile(
-        leading: CircleAvatar(
-          backgroundColor: kPrimaryGreen.withOpacity(0.13),
-          child: Icon(Icons.star, color: kPrimaryGreen),
-        ),
-        title: Text(meal.name, style: const TextStyle(fontWeight: FontWeight.w600)),
-        subtitle: Text('${meal.calories} cal • ${meal.protein}g protein'),
-        trailing: IconButton(
-          icon: Icon(Icons.add_circle, color: kPrimaryGreen, size: 28),
-          onPressed: () {
-            setState(() {
-              _foodNameController.text = meal.name;
-              _caloriesController.text = meal.calories.toString();
-              _proteinController.text = meal.protein.toString();
-              _carbsController.text = meal.carbs.toString();
-              _fatController.text = meal.fat.toString();
-            });
+    return _ExpandableMealTile(
+      name: meal.name,
+      protein: meal.protein,
+      carbs: meal.carbs,
+      fat: meal.fat,
+      calories: meal.calories,
+      ingredients: meal.ingredients,
+      icon: Icons.star,
+      iconColor: kPrimaryGreen,
+      onAdd: () {
+        setState(() {
+          _foodNameController.text = meal.name;
+          _caloriesController.text = meal.calories.toString();
+          _proteinController.text = meal.protein.toString();
+          _carbsController.text = meal.carbs.toString();
+          _fatController.text = meal.fat.toString();
+          _ingredients = List<String>.from(meal.ingredients);
+        });
+      },
+      onCustomize: () async {
+        final nameController = TextEditingController(text: meal.name);
+        final caloriesController = TextEditingController(text: meal.calories.toString());
+        final proteinController = TextEditingController(text: meal.protein.toString());
+        final carbsController = TextEditingController(text: meal.carbs.toString());
+        final fatController = TextEditingController(text: meal.fat.toString());
+        final ingredientController = TextEditingController();
+        List<String> ingredients = List<String>.from(meal.ingredients);
+        bool isSaving = false;
+        String? error;
+
+        await showGeneralDialog(
+          context: context,
+          barrierDismissible: true,
+          barrierLabel: MaterialLocalizations.of(context).modalBarrierDismissLabel,
+          transitionDuration: const Duration(milliseconds: 320),
+          pageBuilder: (context, anim1, anim2) {
+            return const SizedBox.shrink();
           },
-        ),
-        onTap: () {
-          showDialog(
-            context: context,
-            builder: (context) => AlertDialog(
-              title: Text(meal.name, style: TextStyle(color: kPrimaryGreen, fontWeight: FontWeight.bold)),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('Ingredients:', style: TextStyle(fontWeight: FontWeight.w600)),
-                  ...meal.ingredients.map((ing) => Text('• $ing')).toList(),
-                  const SizedBox(height: 12),
-                  Text('Macros:', style: TextStyle(fontWeight: FontWeight.w600)),
-                  Text('Calories: ${meal.calories}'),
-                  Text('Protein: ${meal.protein}g'),
-                  Text('Carbs: ${meal.carbs}g'),
-                  Text('Fat: ${meal.fat}g'),
-                ],
+          transitionBuilder: (context, anim1, anim2, child) {
+            return Transform.scale(
+              scale: Curves.easeOutBack.transform(anim1.value),
+              child: Opacity(
+                opacity: anim1.value,
+                child: AlertDialog(
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                  title: Text('Edit Custom Meal', style: TextStyle(fontWeight: FontWeight.bold, color: kPrimaryGreen)),
+                  content: SingleChildScrollView(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('Meal Name', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 18, color: kPrimaryGreen)),
+                        const SizedBox(height: 8),
+                        TextField(
+                          controller: nameController,
+                          decoration: InputDecoration(
+                            hintText: 'Search or enter food name',
+                            filled: true,
+                            fillColor: const Color(0xFFF5F5F5),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(14),
+                              borderSide: BorderSide.none,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 18),
+                        Row(
+                          children: [
+                            Expanded(child: _macroField('Calories', caloriesController)),
+                            const SizedBox(width: 16),
+                            Expanded(child: _macroField('Protein (g)', proteinController)),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                        Row(
+                          children: [
+                            Expanded(child: _macroField('Carbs (g)', carbsController)),
+                            const SizedBox(width: 16),
+                            Expanded(child: _macroField('Fat (g)', fatController)),
+                          ],
+                        ),
+                        const SizedBox(height: 16),
+                        Text('Ingredients', style: TextStyle(fontWeight: FontWeight.w600)),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: TextField(
+                                controller: ingredientController,
+                                decoration: InputDecoration(
+                                  hintText: 'Add ingredient',
+                                  filled: true,
+                                  fillColor: const Color(0xFFF5F5F5),
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(14),
+                                    borderSide: BorderSide.none,
+                                  ),
+                                ),
+                              ),
+                            ),
+                            IconButton(
+                              icon: Icon(Icons.add, color: kPrimaryGreen),
+                              onPressed: () {
+                                if (ingredientController.text.trim().isNotEmpty) {
+                                  setState(() {
+                                    ingredients.add(ingredientController.text.trim());
+                                    ingredientController.clear();
+                                  });
+                                }
+                              },
+                            ),
+                          ],
+                        ),
+                        Wrap(
+                          spacing: 6,
+                          children: ingredients.map((ing) => Chip(
+                            label: Text(ing),
+                            onDeleted: () => setState(() => ingredients.remove(ing)),
+                            backgroundColor: kPrimaryGreen.withOpacity(0.13),
+                            labelStyle: TextStyle(color: kPrimaryGreen),
+                          )).toList(),
+                        ),
+                        if (error != null)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 8),
+                            child: Text(error!, style: TextStyle(color: Colors.red)),
+                          ),
+                      ],
+                    ),
+                  ),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: Text('Cancel', style: TextStyle(color: kPrimaryGreen)),
+                    ),
+                    ElevatedButton(
+                      style: ElevatedButton.styleFrom(backgroundColor: kPrimaryGreen),
+                      onPressed: isSaving
+                          ? null
+                          : () async {
+                              setState(() => isSaving = true);
+                              try {
+                                final user = FirebaseAuth.instance.currentUser;
+                                if (user == null) throw Exception('Not signed in');
+                                final updatedMeal = CustomMeal(
+                                  id: meal.id,
+                                  name: nameController.text.trim(),
+                                  calories: int.tryParse(caloriesController.text) ?? 0,
+                                  protein: int.tryParse(proteinController.text) ?? 0,
+                                  carbs: int.tryParse(carbsController.text) ?? 0,
+                                  fat: int.tryParse(fatController.text) ?? 0,
+                                  ingredients: ingredients,
+                                  userId: user.uid,
+                                );
+                                await MealService().updateCustomMeal(updatedMeal);
+                                Navigator.pop(context);
+                              } catch (e) {
+                                setState(() {
+                                  error = e.toString();
+                                  isSaving = false;
+                                });
+                              }
+                            },
+                      child: isSaving ? SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)) : Text('Save'),
+                    ),
+                  ],
+                ),
               ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: Text('Close'),
-                ),
-                TextButton(
-                  onPressed: () async {
-                    await MealService().deleteCustomMeal(meal.id);
-                    Navigator.pop(context);
-                  },
-                  style: TextButton.styleFrom(foregroundColor: Colors.red),
-                  child: Text('Delete'),
-                ),
-              ],
-            ),
-          );
-        },
-      ),
+            );
+          },
+        );
+      },
+      isCustomMeal: true,
     );
   }
 
@@ -620,10 +745,27 @@ class _LogMealPageState extends State<LogMealPage> with TickerProviderStateMixin
     final theme = Theme.of(context);
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Log Meal', style: TextStyle(fontWeight: FontWeight.bold, color: kPrimaryGreen)),
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: kPrimaryGreen),
-          onPressed: () => Navigator.of(context).pop(),
+        title: const Text('Log Meal', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black, fontSize: 22)),
+        leading: Padding(
+          padding: const EdgeInsets.only(left: 10),
+          child: GestureDetector(
+            onTap: () => Navigator.of(context).pop(),
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.07),
+                    blurRadius: 6,
+                    offset: Offset(0, 2),
+                  ),
+                ],
+              ),
+              padding: const EdgeInsets.all(8),
+              child: Icon(Icons.arrow_back, color: kPrimaryGreen, size: 28, weight: 800),
+            ),
+          ),
         ),
         backgroundColor: Colors.white,
         foregroundColor: kPrimaryGreen,
@@ -646,7 +788,35 @@ class _LogMealPageState extends State<LogMealPage> with TickerProviderStateMixin
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
                     const Text('Food Name', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 18)),
+                        OutlinedButton.icon(
+                          onPressed: () {
+                            _foodNameController.clear();
+                            _caloriesController.text = '0';
+                            _proteinController.text = '0';
+                            _carbsController.text = '0';
+                            _fatController.text = '0';
+                            setState(() {
+                              _ingredients.clear();
+                            });
+                          },
+                          icon: Icon(Icons.delete_outline, color: kPrimaryGreen, size: 18),
+                          label: const Text('Clear All', style: TextStyle(fontWeight: FontWeight.w500, fontSize: 15, color: kPrimaryGreen)),
+                          style: OutlinedButton.styleFrom(
+                            side: BorderSide(color: kPrimaryGreen, width: 1.4),
+                            shape: StadiumBorder(),
+                            foregroundColor: kPrimaryGreen,
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 0),
+                            minimumSize: Size(0, 36),
+                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                            backgroundColor: Colors.white,
+                          ),
+                        ),
+                      ],
+                    ),
                     const SizedBox(height: 8),
                     TextField(
                       controller: _foodNameController,
@@ -666,6 +836,48 @@ class _LogMealPageState extends State<LogMealPage> with TickerProviderStateMixin
             ),
             const SizedBox(height: 24),
             _buildMacrosInputs(),
+            const SizedBox(height: 24),
+            // Ingredient input section
+            Text('Ingredients', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 17, color: kPrimaryGreen)),
+            Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _ingredientController,
+                    decoration: InputDecoration(
+                      hintText: 'Add ingredient',
+                      filled: true,
+                      fillColor: const Color(0xFFF5F5F5),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(14),
+                        borderSide: BorderSide.none,
+                      ),
+                    ),
+                  ),
+                ),
+                IconButton(
+                  icon: Icon(Icons.add, color: kPrimaryGreen),
+                  onPressed: () {
+                    final text = _ingredientController.text.trim();
+                    if (text.isNotEmpty) {
+                      setState(() {
+                        _ingredients.add(text);
+                        _ingredientController.clear();
+                      });
+                    }
+                  },
+                ),
+              ],
+            ),
+            Wrap(
+              spacing: 6,
+              children: _ingredients.map((ing) => Chip(
+                label: Text(ing),
+                onDeleted: () => setState(() => _ingredients.remove(ing)),
+                backgroundColor: kPrimaryGreen.withOpacity(0.13),
+                labelStyle: TextStyle(color: kPrimaryGreen),
+              )).toList(),
+            ),
             const SizedBox(height: 24),
             // --- ONLY ONE FOOD PICKER TAB (TOP) ---
             _buildFoodTabs(),
@@ -697,6 +909,157 @@ class _LogMealPageState extends State<LogMealPage> with TickerProviderStateMixin
               ? const SizedBox(height: 24, width: 24, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
               : const Text('Save Meal', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600)),
         ),
+      ),
+    );
+  }
+}
+
+// Macro Tag widget for macros display
+class _MacroTag extends StatelessWidget {
+  final String label;
+  final String value;
+  final Color color;
+  const _MacroTag({required this.label, required this.value, required this.color});
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.12),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        children: [
+          Text(label, style: TextStyle(color: color, fontWeight: FontWeight.bold, fontSize: 13)),
+          const SizedBox(width: 2),
+          Text(value, style: TextStyle(color: color, fontWeight: FontWeight.w500, fontSize: 13)),
+        ],
+      ),
+    );
+  }
+}
+
+class _ExpandableMealTile extends StatefulWidget {
+  final String name;
+  final int protein;
+  final int carbs;
+  final int fat;
+  final int calories;
+  final List<String> ingredients;
+  final IconData icon;
+  final Color iconColor;
+  final VoidCallback onAdd;
+  final VoidCallback? onCustomize;
+  final bool isCustomMeal;
+  const _ExpandableMealTile({
+    required this.name,
+    required this.protein,
+    required this.carbs,
+    required this.fat,
+    required this.calories,
+    required this.ingredients,
+    required this.icon,
+    required this.iconColor,
+    required this.onAdd,
+    this.onCustomize,
+    this.isCustomMeal = false,
+    Key? key,
+  }) : super(key: key);
+  @override
+  State<_ExpandableMealTile> createState() => _ExpandableMealTileState();
+}
+
+class _ExpandableMealTileState extends State<_ExpandableMealTile> {
+  bool _expanded = false;
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 6),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: kPrimaryGreen.withOpacity(0.18)),
+        boxShadow: [
+          BoxShadow(
+            color: kPrimaryGreen.withOpacity(0.06),
+            blurRadius: 8,
+            offset: Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          ListTile(
+            leading: CircleAvatar(
+              backgroundColor: kPrimaryGreen.withOpacity(0.13),
+              child: Icon(widget.icon, color: widget.iconColor),
+            ),
+            title: Text(widget.name, style: const TextStyle(fontWeight: FontWeight.w600)),
+            subtitle: widget.isCustomMeal ? null : Row(
+              children: [
+                _MacroTag(label: 'P', value: '${widget.protein}g', color: kSecondaryBlue),
+                const SizedBox(width: 6),
+                _MacroTag(label: 'C', value: '${widget.carbs}g', color: kAccentOrange),
+                const SizedBox(width: 6),
+                _MacroTag(label: 'F', value: '${widget.fat}g', color: kWarningRed),
+              ],
+            ),
+            trailing: Flexible(
+              child: Wrap(
+                spacing: 4,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                children: [
+                  if (!widget.isCustomMeal)
+                    Text('${widget.calories} cal', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: Colors.black87)),
+                  IconButton(
+                    icon: Icon(Icons.add_circle, color: kPrimaryGreen, size: 26),
+                    onPressed: widget.onAdd,
+                    constraints: BoxConstraints(),
+                    padding: EdgeInsets.zero,
+                  ),
+                  if (widget.onCustomize != null)
+                    IconButton(
+                      icon: Icon(Icons.edit, color: kPrimaryGreen, size: 22),
+                      tooltip: 'Customize meal',
+                      onPressed: widget.onCustomize,
+                      constraints: BoxConstraints(),
+                      padding: EdgeInsets.zero,
+                    ),
+                  IconButton(
+                    icon: Icon(_expanded ? Icons.expand_less : Icons.expand_more, color: kPrimaryGreen, size: 24),
+                    tooltip: _expanded ? 'Hide ingredients' : 'Show ingredients',
+                    onPressed: () => setState(() => _expanded = !_expanded),
+                    constraints: BoxConstraints(),
+                    padding: EdgeInsets.zero,
+                  ),
+                ],
+              ),
+            ),
+          ),
+          if (_expanded)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 10, left: 18, right: 18),
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: Builder(
+                  builder: (context) {
+                    final ingredients = widget.ingredients;
+                    if (ingredients.isNotEmpty) {
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('Ingredients:', style: TextStyle(fontWeight: FontWeight.w600, color: kPrimaryGreen)),
+                          ...ingredients.map((ing) => Text('• $ing', style: TextStyle(color: Colors.black87))).toList(),
+                        ],
+                      );
+                    } else {
+                      return Text('No ingredients listed.', style: TextStyle(color: Colors.grey[600], fontStyle: FontStyle.italic));
+                    }
+                  },
+                ),
+              ),
+            ),
+        ],
       ),
     );
   }

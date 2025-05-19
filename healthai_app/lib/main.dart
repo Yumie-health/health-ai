@@ -11,6 +11,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:provider/provider.dart';
 import 'dart:async';
 import 'log_meal_page.dart';
+import 'models/custom_meal.dart';
 
 // Define the color palette
 const Color kPrimaryGreen = Color(0xFF4CAF50); // Soft green
@@ -1709,31 +1710,12 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
                                       const SizedBox(height: 24),
                                       Text('Calories', style: TextStyle(color: Colors.grey[600], fontWeight: FontWeight.w600, fontSize: 16)),
                                       const SizedBox(height: 8),
-                                      Stack(
-                                        alignment: Alignment.center,
-                                        children: [
-                                          SizedBox(
-                                            width: 90,
-                                            height: 90,
-                                            child: CircularProgressIndicator(
-                                              value: value.clamp(0.0, 1.0),
-                                              backgroundColor: kContainerGrey,
-                                              color: kPrimaryGreen,
-                                              strokeWidth: 8,
-                                            ),
-                                          ),
-                                          Column(
-                                            mainAxisAlignment: MainAxisAlignment.center,
-                                            children: [
-                                              TweenAnimationBuilder<int>(
-                                                tween: IntTween(begin: 0, end: totalCalories),
-                                                duration: const Duration(milliseconds: 900),
-                                                builder: (context, val, child) => Text('$val', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 26)),
-                                              ),
-                                              Text('/ $dailyCalorieGoal', style: TextStyle(color: Colors.grey[600], fontSize: 15)),
-                                            ],
-                                          ),
-                                        ],
+                                      _CircularCalories(
+                                        calories: totalCalories,
+                                        goal: dailyCalorieGoal,
+                                        size: 90,
+                                        fontSize: 26,
+                                        subFontSize: 15,
                                       ),
                                     ],
                                   ),
@@ -1771,7 +1753,9 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
                                 subtitle: 'Track your food',
                                 color: kPrimaryGreen,
                                 onTap: () {
-                                  // TODO: Implement navigation
+                                  Navigator.of(context).push(
+                                    MaterialPageRoute(builder: (_) => const LogMealPage()),
+                                  );
                                 },
                               ),
                             ),
@@ -1785,7 +1769,9 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
                                 subtitle: 'Analyze your food',
                                 color: kSecondaryBlue,
                                 onTap: () {
-                                  // TODO: Implement navigation
+                                  Navigator.of(context).push(
+                                    MaterialPageRoute(builder: (_) => Center(child: Text('Scan Page'))),
+                                  );
                                 },
                               ),
                             ),
@@ -1918,6 +1904,23 @@ class _MacroProgressRow extends StatelessWidget {
   }
 }
 
+// Helper to interpolate between two colors
+Color _lerpColor(Color a, Color b, double t) {
+  return Color.lerp(a, b, t)!;
+}
+
+Color getCalorieProgressColor(int calories, int goal) {
+  final percent = calories / goal;
+  if (percent < 1.0) {
+    // Interpolate from yellow (kAccentOrange) to green (kPrimaryGreen)
+    return _lerpColor(kAccentOrange, kPrimaryGreen, percent.clamp(0.0, 1.0));
+  } else if (percent == 1.0) {
+    return kPrimaryGreen;
+  } else {
+    return kWarningRed;
+  }
+}
+
 // Circular calories indicator
 class _CircularCalories extends StatelessWidget {
   final int calories;
@@ -1929,6 +1932,7 @@ class _CircularCalories extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final percent = calories / goal;
+    final color = getCalorieProgressColor(calories, goal);
     return Stack(
       alignment: Alignment.center,
       children: [
@@ -1938,7 +1942,7 @@ class _CircularCalories extends StatelessWidget {
           child: CircularProgressIndicator(
             value: percent.clamp(0.0, 1.0),
             backgroundColor: kContainerGrey,
-            color: kPrimaryGreen,
+            color: color,
             strokeWidth: 8,
           ),
         ),
@@ -1955,7 +1959,7 @@ class _CircularCalories extends StatelessWidget {
 }
 
 // Quick Action Card
-class _QuickActionCard extends StatelessWidget {
+class _QuickActionCard extends StatefulWidget {
   final IconData icon;
   final String label;
   final String subtitle;
@@ -1963,37 +1967,77 @@ class _QuickActionCard extends StatelessWidget {
   final VoidCallback onTap;
   const _QuickActionCard({required this.icon, required this.label, required this.subtitle, required this.color, required this.onTap});
   @override
+  State<_QuickActionCard> createState() => _QuickActionCardState();
+}
+
+class _QuickActionCardState extends State<_QuickActionCard> with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _scale;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 120),
+    );
+    _scale = Tween<double>(begin: 1.0, end: 0.93).animate(CurvedAnimation(
+      parent: _controller,
+      curve: Curves.easeInOut,
+    ));
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  Future<void> _handleTap() async {
+    await _controller.forward();
+    await _controller.reverse();
+    widget.onTap();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        decoration: BoxDecoration(
-          color: color.withOpacity(0.08),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: color.withOpacity(0.15)),
+      onTap: _handleTap,
+      child: AnimatedBuilder(
+        animation: _scale,
+        builder: (context, child) => Transform.scale(
+          scale: _scale.value,
+          child: child,
         ),
-        padding: const EdgeInsets.all(16),
-        child: Row(
-          children: [
-            Container(
-              decoration: BoxDecoration(
-                color: color.withOpacity(0.15),
-                shape: BoxShape.circle,
+        child: Container(
+          decoration: BoxDecoration(
+            color: widget.color.withOpacity(0.08),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: widget.color.withOpacity(0.15)),
+          ),
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            children: [
+              Container(
+                decoration: BoxDecoration(
+                  color: widget.color.withOpacity(0.15),
+                  shape: BoxShape.circle,
+                ),
+                padding: const EdgeInsets.all(10),
+                child: Icon(widget.icon, color: widget.color, size: 28),
               ),
-              padding: const EdgeInsets.all(10),
-              child: Icon(icon, color: color, size: 28),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(label, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                  Text(subtitle, style: TextStyle(color: Colors.grey[500], fontSize: 13)),
-                ],
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(widget.label, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                    Text(widget.subtitle, style: TextStyle(color: Colors.grey[500], fontSize: 13)),
+                  ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -2001,15 +2045,21 @@ class _QuickActionCard extends StatelessWidget {
 }
 
 // Modern Meal Card
-class _MealCardModern extends StatelessWidget {
+class _MealCardModern extends StatefulWidget {
   final Meal meal;
   const _MealCardModern({required this.meal});
   @override
+  State<_MealCardModern> createState() => _MealCardModernState();
+}
+
+class _MealCardModernState extends State<_MealCardModern> {
+  bool _expanded = false;
+  @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    final meal = widget.meal;
     return Container(
-      margin: const EdgeInsets.symmetric(vertical: 8),
-      padding: const EdgeInsets.all(16),
+      margin: const EdgeInsets.symmetric(vertical: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
@@ -2022,63 +2072,133 @@ class _MealCardModern extends StatelessWidget {
           ),
         ],
       ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Column(
         children: [
-          // Meal image placeholder (no imageUrl in model)
-          Container(
-            width: 60,
-            height: 60,
-            decoration: BoxDecoration(
-              color: kContainerGrey,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(Icons.fastfood, color: kPrimaryGreen, size: 32),
-          ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Text(meal.mealType.capitalize(), style: TextStyle(color: kPrimaryGreen, fontWeight: FontWeight.w600)),
-                    const SizedBox(width: 8),
-                    Text(formatTime(meal.timestamp), style: TextStyle(color: Colors.grey[500], fontSize: 13)),
-                  ],
-                ),
-                const SizedBox(height: 2),
-                Text(meal.name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                const SizedBox(height: 6),
-                Row(
-                  children: [
-                    _MacroTag(label: 'P', value: '${meal.protein}g', color: kSecondaryBlue),
-                    const SizedBox(width: 6),
-                    _MacroTag(label: 'C', value: '${meal.carbs}g', color: kAccentOrange),
-                    const SizedBox(width: 6),
-                    _MacroTag(label: 'F', value: '${meal.fat}g', color: kWarningRed),
-                  ],
-                ),
-              ],
-            ),
-          ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('${meal.calories}', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
-              Text('cal', style: TextStyle(color: Colors.grey[600], fontSize: 13)),
+              // Meal image placeholder
+              Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  color: kContainerGrey,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(Icons.fastfood, color: kPrimaryGreen, size: 28),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Text(meal.mealType.capitalize(), style: TextStyle(color: kPrimaryGreen, fontWeight: FontWeight.w600)),
+                        const SizedBox(width: 8),
+                        Text(formatTime(meal.timestamp), style: TextStyle(color: Colors.grey[500], fontSize: 13)),
+                      ],
+                    ),
+                    const SizedBox(height: 2),
+                    Text(meal.name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                    const SizedBox(height: 6),
+                    Row(
+                      children: [
+                        _MacroTag(label: 'P', value: '${meal.protein}g', color: kSecondaryBlue),
+                        const SizedBox(width: 6),
+                        _MacroTag(label: 'C', value: '${meal.carbs}g', color: kAccentOrange),
+                        const SizedBox(width: 6),
+                        _MacroTag(label: 'F', value: '${meal.fat}g', color: kWarningRed),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              // Calories, delete, and dropdown in a vertical column
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text('${meal.calories}', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+                      const SizedBox(width: 2),
+                      Text('cal', style: TextStyle(color: Colors.grey[600], fontSize: 13)),
+                      IconButton(
+                        icon: Icon(Icons.delete, color: Colors.redAccent, size: 22),
+                        tooltip: 'Delete meal',
+                        padding: EdgeInsets.zero,
+                        constraints: BoxConstraints(),
+                        onPressed: () async {
+                          final confirm = await showDialog<bool>(
+                            context: context,
+                            builder: (context) => AlertDialog(
+                              title: Text('Delete Meal'),
+                              content: Text('Are you sure you want to delete this meal?'),
+                              actions: [
+                                TextButton(
+                                  onPressed: () => Navigator.pop(context, false),
+                                  child: Text('Cancel'),
+                                ),
+                                TextButton(
+                                  onPressed: () => Navigator.pop(context, true),
+                                  style: TextButton.styleFrom(foregroundColor: Colors.red),
+                                  child: Text('Delete'),
+                                ),
+                              ],
+                            ),
+                          );
+                          if (confirm == true) {
+                            await MealService().deleteMeal(meal.id);
+                          }
+                        },
+                      ),
+                      IconButton(
+                        icon: Icon(_expanded ? Icons.expand_less : Icons.expand_more, color: kPrimaryGreen, size: 22),
+                        tooltip: _expanded ? 'Hide ingredients' : 'Show ingredients',
+                        padding: EdgeInsets.zero,
+                        constraints: BoxConstraints(),
+                        onPressed: () => setState(() => _expanded = !_expanded),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ],
           ),
+          if (_expanded)
+            Padding(
+              padding: const EdgeInsets.only(top: 8, left: 4, right: 4),
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: Builder(
+                  builder: (context) {
+                    final ingredients = meal.ingredients;
+                    if (ingredients.isNotEmpty) {
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('Ingredients:', style: TextStyle(fontWeight: FontWeight.w600, color: kPrimaryGreen)),
+                          ...ingredients.map((ing) => Text('• $ing', style: TextStyle(color: Colors.black87))).toList(),
+                        ],
+                      );
+                    } else {
+                      return Text('No ingredients listed.', style: TextStyle(color: Colors.grey[600], fontStyle: FontStyle.italic));
+                    }
+                  },
+                ),
+              ),
+            ),
         ],
       ),
     );
   }
+}
 
-  String formatTime(DateTime dt) {
-    final h = dt.hour.toString().padLeft(2, '0');
-    final m = dt.minute.toString().padLeft(2, '0');
-    return '$h:$m';
-  }
+String formatTime(DateTime dt) {
+  final h = dt.hour.toString().padLeft(2, '0');
+  final m = dt.minute.toString().padLeft(2, '0');
+  return '$h:$m';
 }
 
 // Macro Tag
@@ -3185,8 +3305,8 @@ class _FoodScreenState extends State<FoodScreen> with TickerProviderStateMixin {
   late AnimationController _suggestedController;
 
   // Add state for calendar view mode
-  String _calendarView = 'month'; // 'week' or 'month'
-  CalendarFormat _calendarFormat = CalendarFormat.month;
+  String _calendarView = 'week'; // 'week' or 'month'
+  CalendarFormat _calendarFormat = CalendarFormat.week;
 
   // Add state for meal type filter in Food page
   int _selectedFoodMealTypeIndex = 0;
@@ -3574,17 +3694,24 @@ class _FoodScreenState extends State<FoodScreen> with TickerProviderStateMixin {
   }
 }
 
-class _FoodMealCard extends StatelessWidget {
+class _FoodMealCard extends StatefulWidget {
   final Meal meal;
   const _FoodMealCard({required this.meal});
   @override
+  State<_FoodMealCard> createState() => _FoodMealCardState();
+}
+
+class _FoodMealCardState extends State<_FoodMealCard> {
+  bool _expanded = false;
+  @override
   Widget build(BuildContext context) {
+    final meal = widget.meal;
     return Container(
-      margin: const EdgeInsets.symmetric(vertical: 8),
-      padding: const EdgeInsets.all(12),
+      margin: const EdgeInsets.symmetric(vertical: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(16),
         border: Border.all(color: const Color(0xFFE5E7EB)),
         boxShadow: [
           BoxShadow(
@@ -3594,64 +3721,129 @@ class _FoodMealCard extends StatelessWidget {
           ),
         ],
       ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Column(
         children: [
-          // Placeholder for meal image
-          ClipRRect(
-            borderRadius: BorderRadius.circular(12),
-            child: Container(
-              width: 70,
-              height: 70,
-              color: kContainerGrey,
-              child: Icon(Icons.fastfood, color: kPrimaryGreen, size: 36),
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Text(meal.mealType.capitalize(), style: TextStyle(color: kPrimaryGreen, fontWeight: FontWeight.w600)),
-                    const SizedBox(width: 8),
-                    Text(formatTime(meal.timestamp), style: TextStyle(color: Colors.grey[500], fontSize: 13)),
-                  ],
-                ),
-                const SizedBox(height: 2),
-                Text(meal.name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                const SizedBox(height: 6),
-                Row(
-                  children: [
-                    _MacroTag(label: 'P', value: '${meal.protein}g', color: kSecondaryBlue),
-                    const SizedBox(width: 6),
-                    _MacroTag(label: 'C', value: '${meal.carbs}g', color: kAccentOrange),
-                    const SizedBox(width: 6),
-                    _MacroTag(label: 'F', value: '${meal.fat}g', color: kWarningRed),
-                  ],
-                ),
-              ],
-            ),
-          ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('${meal.calories}', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
-              Text('cal', style: TextStyle(color: Colors.grey[600], fontSize: 13)),
+              // Meal image placeholder
+              ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: Container(
+                  width: 48,
+                  height: 48,
+                  color: kContainerGrey,
+                  child: Icon(Icons.fastfood, color: kPrimaryGreen, size: 28),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Text(meal.mealType.capitalize(), style: TextStyle(color: kPrimaryGreen, fontWeight: FontWeight.w600)),
+                        const SizedBox(width: 8),
+                        Text(formatTime(meal.timestamp), style: TextStyle(color: Colors.grey[500], fontSize: 13)),
+                      ],
+                    ),
+                    const SizedBox(height: 2),
+                    Text(meal.name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                    const SizedBox(height: 6),
+                    Row(
+                      children: [
+                        _MacroTag(label: 'P', value: '${meal.protein}g', color: kSecondaryBlue),
+                        const SizedBox(width: 6),
+                        _MacroTag(label: 'C', value: '${meal.carbs}g', color: kAccentOrange),
+                        const SizedBox(width: 6),
+                        _MacroTag(label: 'F', value: '${meal.fat}g', color: kWarningRed),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              // Calories, delete, and dropdown in a single row
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text('${meal.calories}', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+                      const SizedBox(width: 2),
+                      Text('cal', style: TextStyle(color: Colors.grey[600], fontSize: 13)),
+                      IconButton(
+                        icon: Icon(Icons.delete, color: Colors.redAccent, size: 22),
+                        tooltip: 'Delete meal',
+                        padding: EdgeInsets.zero,
+                        constraints: BoxConstraints(),
+                        onPressed: () async {
+                          final confirm = await showDialog<bool>(
+                            context: context,
+                            builder: (context) => AlertDialog(
+                              title: Text('Delete Meal'),
+                              content: Text('Are you sure you want to delete this meal?'),
+                              actions: [
+                                TextButton(
+                                  onPressed: () => Navigator.pop(context, false),
+                                  child: Text('Cancel'),
+                                ),
+                                TextButton(
+                                  onPressed: () => Navigator.pop(context, true),
+                                  style: TextButton.styleFrom(foregroundColor: Colors.red),
+                                  child: Text('Delete'),
+                                ),
+                              ],
+                            ),
+                          );
+                          if (confirm == true) {
+                            await MealService().deleteMeal(meal.id);
+                          }
+                        },
+                      ),
+                      IconButton(
+                        icon: Icon(_expanded ? Icons.expand_less : Icons.expand_more, color: kPrimaryGreen, size: 22),
+                        tooltip: _expanded ? 'Hide ingredients' : 'Show ingredients',
+                        padding: EdgeInsets.zero,
+                        constraints: BoxConstraints(),
+                        onPressed: () => setState(() => _expanded = !_expanded),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ],
           ),
+          if (_expanded)
+            Padding(
+              padding: const EdgeInsets.only(top: 8, left: 4, right: 4),
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: Builder(
+                  builder: (context) {
+                    final ingredients = meal.ingredients;
+                    if (ingredients.isNotEmpty) {
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('Ingredients:', style: TextStyle(fontWeight: FontWeight.w600, color: kPrimaryGreen)),
+                          ...ingredients.map((ing) => Text('• $ing', style: TextStyle(color: Colors.black87))).toList(),
+                        ],
+                      );
+                    } else {
+                      return Text('No ingredients listed.', style: TextStyle(color: Colors.grey[600], fontStyle: FontStyle.italic));
+                    }
+                  },
+                ),
+              ),
+            ),
         ],
       ),
     );
   }
 }
 
-String formatTime(DateTime dt) {
-  final h = dt.hour.toString().padLeft(2, '0');
-  final m = dt.minute.toString().padLeft(2, '0');
-  return '$h:$m';
-}
 
 class _RecipeCardBig extends StatelessWidget {
   final Map<String, dynamic> recipe;
@@ -3783,7 +3975,7 @@ class _RecipeCardSmall extends StatelessWidget {
       ),
     );
   }
-}
+  }
 
 // FAB Action Button
 class _FabActionButton extends StatelessWidget {
