@@ -69,4 +69,14 @@ class UserService {
       'lastUpdated': DateTime.now(),
     });
   }
+
+  // Update user profile photo URL
+  Future<void> updateUserPhotoUrl(String photoUrl) async {
+    final user = _auth.currentUser;
+    if (user == null) throw Exception('User not authenticated');
+    await _firestore.collection('users').doc(user.uid).update({
+      'photoUrl': photoUrl,
+      'lastUpdated': DateTime.now(),
+    });
+  }
 } 

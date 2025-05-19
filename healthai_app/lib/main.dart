@@ -1582,9 +1582,9 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
                         duration: const Duration(milliseconds: 600),
                         child: GestureDetector(
                           onTap: widget.onProfileTap,
-                          child: user != null && user.photoURL != null
-                            ? CircleAvatar(radius: 24, backgroundImage: NetworkImage(user.photoURL!))
-                            : CircleAvatar(radius: 24, backgroundColor: kPrimaryGreen.withOpacity(0.15), child: Icon(Icons.person, color: kPrimaryGreen)),
+                        child: user != null && user.photoURL != null
+                          ? CircleAvatar(radius: 24, backgroundImage: NetworkImage(user.photoURL!))
+                          : CircleAvatar(radius: 24, backgroundColor: kPrimaryGreen.withOpacity(0.15), child: Icon(Icons.person, color: kPrimaryGreen)),
                         ),
                       ),
                     ],
@@ -2335,68 +2335,37 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    // Dummy user data for illustration
+    final String userName = 'Jane Doe';
+    final String userAvatar = '';
+    final bool isPremium = true;
+    final int userLevel = 8;
+
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Profile', style: TextStyle(color: theme.textTheme.bodyLarge?.color)),
-        backgroundColor: kPrimaryGreen,
-        elevation: 0,
-        automaticallyImplyLeading: false,
-        actions: [
-          IconButton(
-            icon: Stack(
+      backgroundColor: const Color(0xFFF9FAFB),
+      body: SafeArea(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Icon(Icons.notifications_none, color: theme.iconTheme.color),
-                Positioned(
-                  right: 0,
-                  top: 0,
-                  child: Container(
-                    width: 8,
-                    height: 8,
-                    decoration: BoxDecoration(
-                      color: Colors.red,
-                      shape: BoxShape.circle,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            onPressed: () {},
-          ),
+            // Header
           Padding(
-            padding: const EdgeInsets.only(right: 16.0),
-            child: CircleAvatar(
-              backgroundColor: theme.cardColor,
-              child: Icon(Icons.person, color: theme.iconTheme.color?.withOpacity(0.5)),
+              padding: const EdgeInsets.fromLTRB(24, 24, 24, 8),
+              child: Text('Your Profile', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 28)),
             ),
-          ),
-        ],
-      ),
-      body: StreamBuilder<UserProfile?>(
-        stream: _userService.getCurrentUserProfile(),
-        builder: (context, userSnapshot) {
-          if (!userSnapshot.hasData) {
-            return const Center(child: CircularProgressIndicator());
-          }
-
-          final profile = userSnapshot.data;
-          if (profile == null) {
-            return Center(child: Text('No profile data available', style: TextStyle(color: theme.textTheme.bodyLarge?.color)));
-          }
-
-          return ListView(
-            padding: const EdgeInsets.all(16),
-            children: [
-              // User info card
-              Container(
-                padding: const EdgeInsets.all(20),
+            Divider(height: 1, thickness: 1, color: Colors.grey[200]),
+            // Profile Card
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 18, 16, 0),
+              child: Container(
+                padding: const EdgeInsets.all(18),
                 decoration: BoxDecoration(
-                  color: theme.cardColor,
-                  borderRadius: BorderRadius.circular(20),
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(18),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.04),
-                      blurRadius: 12,
-                      offset: const Offset(0, 4),
+                      color: Colors.black.withOpacity(0.03),
+                      blurRadius: 8,
+                      offset: Offset(0, 2),
                     ),
                   ],
                 ),
@@ -2405,576 +2374,157 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   children: [
                     Row(
                       children: [
-                        CircleAvatar(
-                          radius: 32,
-                          backgroundColor: theme.cardColor,
-                          child: Icon(Icons.person, color: kSecondaryBlue, size: 36),
+                        Container(
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            border: Border.all(color: kPrimaryGreen, width: 3),
+                          ),
+                          child: CircleAvatar(
+                            radius: 34,
+                            backgroundImage: userAvatar.isNotEmpty ? NetworkImage(userAvatar) : null,
+                            backgroundColor: kPrimaryGreen.withOpacity(0.08),
+                            child: userAvatar.isEmpty ? Icon(Icons.person, color: kPrimaryGreen, size: 38) : null,
+                          ),
                         ),
-                        const SizedBox(width: 16),
+                        const SizedBox(width: 18),
                         Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
+                          child: Row(
                             children: [
-                              Text(profile.name, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: theme.textTheme.bodyLarge?.color)),
-                              Text(profile.email, style: TextStyle(color: theme.textTheme.bodyLarge?.color?.withOpacity(0.7))),
+                              Text(userName, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 22)),
+                              const SizedBox(width: 10),
+                              if (isPremium)
+                                Container(
+                                  padding: EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                  decoration: BoxDecoration(
+                                    color: kPrimaryGreen.withOpacity(0.10),
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: Text('Premium', style: TextStyle(color: kPrimaryGreen, fontWeight: FontWeight.w600)),
+                                ),
                             ],
                           ),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 14),
+                    // Add three pill-shaped buttons horizontally
                     Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: [
-                        _ProfileStatBox(
-                          label: profile.age.toString(),
-                          sublabel: 'Age',
-                          color: kPrimaryGreen.withOpacity(0.12),
-                          valueColor: kPrimaryGreen,
+                        _ProfileActionButton(
+                          icon: Icons.camera_alt,
+                          label: 'Change Profile Picture',
+                          onTap: () {},
                         ),
-                        _ProfileStatBox(
-                          label: '${profile.height}cm',
-                          sublabel: 'Height',
-                          color: kSecondaryBlue.withOpacity(0.12),
-                          valueColor: kSecondaryBlue,
+                        _ProfileActionButton(
+                          icon: Icons.edit,
+                          label: 'Change Profile Name',
+                          onTap: () {},
                         ),
-                        _ProfileStatBox(
-                          label: '${profile.weight}kg',
-                          sublabel: 'Weight',
-                          color: kAccentOrange.withOpacity(0.12),
-                          valueColor: kAccentOrange,
-                        ),
+                        // Removed Plan Settings button
                       ],
-                    ),
-                    const SizedBox(height: 16),
-                    SizedBox(
-                      width: double.infinity,
-                      child: OutlinedButton(
-                        onPressed: () => _showEditProfileDialog(profile),
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: kSecondaryBlue,
-                          side: BorderSide(color: kSecondaryBlue, width: 2),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                        ),
-                        child: const Text('Edit Profile'),
-                      ),
                     ),
                   ],
                 ),
               ),
-              const SizedBox(height: 20),
-              // Weekly Progress
-              Container(
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: theme.cardColor,
-                  borderRadius: BorderRadius.circular(20),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.04),
-                      blurRadius: 12,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    InkWell(
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => EditGoalsScreen(profile: profile, userService: _userService),
-                          ),
-                        );
-                      },
-                      borderRadius: BorderRadius.circular(20),
+            ),
+            const SizedBox(height: 18),
+            // Menu List
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12),
                       child: Container(
-                        padding: const EdgeInsets.all(20),
                         decoration: BoxDecoration(
-                          color: theme.cardColor,
-                          borderRadius: BorderRadius.circular(20),
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(18),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withOpacity(0.04),
-                              blurRadius: 12,
-                              offset: const Offset(0, 4),
+                      color: Colors.black.withOpacity(0.03),
+                      blurRadius: 8,
+                      offset: Offset(0, 2),
                             ),
                           ],
                         ),
                         child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text('Nutrition & Health Goals', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: theme.textTheme.bodyLarge?.color)),
-                                Icon(Icons.edit, color: kPrimaryGreen),
-                              ],
-                            ),
-                            const SizedBox(height: 16),
-                            _ProfileProgressRow(
-                              icon: Icons.bar_chart,
-                              label: 'Calories',
-                              value: '${profile.dailyCalorieGoal} cal/day',
-                              percent: 0.85,
-                              color: kPrimaryGreen,
-                              barColor: kPrimaryGreen,
-                              secondaryBarColor: kSecondaryBlue,
-                            ),
-                            _ProfileProgressRow(
-                              icon: Icons.favorite_border,
-                              label: 'Protein',
-                              value: '${profile.proteinGoal}g',
-                              percent: 0.6,
-                              color: kSecondaryBlue,
-                              barColor: kSecondaryBlue,
-                              secondaryBarColor: kPrimaryGreen,
-                            ),
-                            _ProfileProgressRow(
+                    _ProfileMenuTile(
                               icon: Icons.show_chart,
-                              label: 'Carbs',
-                              value: '${profile.carbsGoal}g',
-                              percent: 0.79,
-                              color: kAccentOrange,
-                              barColor: kPrimaryGreen,
-                              secondaryBarColor: kSecondaryBlue,
+                      label: 'Nutritional Plan',
+                      onTap: () {},
                             ),
-                            _ProfileProgressRow(
-                              icon: Icons.show_chart,
-                              label: 'Fat',
-                              value: '${profile.fatGoal}g',
-                              percent: 0.65,
-                              color: kAccentOrange,
-                              barColor: kPrimaryGreen,
-                              secondaryBarColor: kSecondaryBlue,
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 20),
-              // Settings
-              Container(
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: theme.cardColor,
-                  borderRadius: BorderRadius.circular(20),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.04),
-                      blurRadius: 12,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('Settings', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: theme.textTheme.bodyLarge?.color)),
-                    const SizedBox(height: 12),
-                    _ProfileSettingTile(
-                      icon: Icons.settings,
+                    Divider(height: 1, color: Colors.grey[200]),
+                    _ProfileMenuTile(
+                      icon: Icons.chat_bubble_outline,
                       label: 'Preferences',
+                      onTap: () {},
+                    ),
+                    Divider(height: 1, color: Colors.grey[200]),
+                    _ProfileMenuTile(
+                      icon: Icons.settings,
+                      label: 'Settings',
+                      iconColor: kPrimaryGreen,
+                      onTap: () {},
+                    ),
+                    Divider(height: 1, color: Colors.grey[200]),
+                    _ProfileMenuTile(
+                      icon: Icons.tune,
+                      label: 'Plan Settings',
                       onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (_) => const PreferencesScreen()),
-                        );
+                        // TODO: Implement Plan Settings
                       },
                     ),
-                    _ProfileSettingTile(icon: Icons.person, label: 'Account', onTap: () {}),
-                  ],
+                    Divider(height: 1, color: Colors.grey[200]),
+                    _ProfileMenuTile(
+                      icon: Icons.lock_reset,
+                      label: 'Reset password',
+                      onTap: () {
+                        // TODO: Implement Reset password
+                      },
+                    ),
+                    Divider(height: 1, color: Colors.grey[200]),
+                    _ProfileMenuTile(
+                      icon: Icons.help_outline,
+                      label: 'Help & Support',
+                      iconColor: Colors.red,
+                      onTap: () {},
                 ),
-              ),
-              const SizedBox(height: 24),
-              Center(child: Text('Version 1.0.0', style: TextStyle(color: theme.textTheme.bodyLarge?.color?.withOpacity(0.7)))),
-              const SizedBox(height: 8),
-              Center(
-                child: TextButton(
-                  onPressed: () async {
+                    Divider(height: 1, color: Colors.grey[200]),
+                    _ProfileMenuTile(
+                      icon: Icons.logout,
+                      label: 'Log Out',
+                      iconColor: Colors.red,
+                      labelColor: Colors.red,
+                      onTap: () async {
                     await FirebaseAuth.instance.signOut();
                   },
-                  style: TextButton.styleFrom(foregroundColor: kWarningRed),
-                  child: const Text('Log Out'),
-                ),
-              ),
+                    ),
             ],
-          );
-        },
-      ),
-    );
-  }
-}
-
-class _ProfileStatBox extends StatelessWidget {
-  final String label;
-  final String sublabel;
-  final Color color;
-  final Color valueColor;
-  const _ProfileStatBox({required this.label, required this.sublabel, required this.color, required this.valueColor});
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 80,
-      padding: const EdgeInsets.symmetric(vertical: 12),
-      decoration: BoxDecoration(
-        color: color,
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Column(
-        children: [
-          Text(label, style: TextStyle(color: valueColor, fontWeight: FontWeight.bold, fontSize: 18)),
-          const SizedBox(height: 4),
-          Text(sublabel, style: TextStyle(color: valueColor, fontWeight: FontWeight.w500)),
-        ],
-      ),
-    );
-  }
-}
-
-class _ProfileProgressRow extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final String value;
-  final double percent;
-  final Color color;
-  final Color barColor;
-  final Color secondaryBarColor;
-  const _ProfileProgressRow({required this.icon, required this.label, required this.value, required this.percent, required this.color, required this.barColor, required this.secondaryBarColor});
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6.0),
-      child: Row(
-        children: [
-          Icon(icon, color: color, size: 22),
-          const SizedBox(width: 8),
-          SizedBox(width: 90, child: Text(label)),
-          Expanded(
-            child: Stack(
-              children: [
-                Container(
-                  height: 10,
-                  decoration: BoxDecoration(
-                    color: secondaryBarColor.withOpacity(0.18),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
                 ),
-                Container(
-                  height: 10,
-                  width: percent.clamp(0.0, 1.0) * MediaQuery.of(context).size.width * 0.35,
-                  decoration: BoxDecoration(
-                    color: barColor,
-                    borderRadius: BorderRadius.circular(8),
                   ),
                 ),
               ],
             ),
-          ),
-          const SizedBox(width: 12),
-          Text(value, style: const TextStyle(fontWeight: FontWeight.w500)),
-        ],
       ),
     );
   }
 }
 
-class _ProfileSettingTile extends StatelessWidget {
+// Helper widget for menu tiles
+class _ProfileMenuTile extends StatelessWidget {
   final IconData icon;
   final String label;
   final VoidCallback onTap;
-  const _ProfileSettingTile({required this.icon, required this.label, required this.onTap});
+  final Color? iconColor;
+  final Color? labelColor;
+  const _ProfileMenuTile({required this.icon, required this.label, required this.onTap, this.iconColor, this.labelColor});
   @override
   Widget build(BuildContext context) {
     return ListTile(
-      contentPadding: EdgeInsets.zero,
-      leading: Icon(icon, color: kSecondaryBlue),
-      title: Text(label, style: const TextStyle(fontWeight: FontWeight.w500)),
-      trailing: const Icon(Icons.chevron_right, color: Colors.grey),
+      leading: Icon(icon, color: iconColor ?? Colors.grey[600]),
+      title: Text(label, style: TextStyle(fontWeight: FontWeight.w500, color: labelColor ?? Colors.black)),
+      trailing: Icon(Icons.chevron_right, color: Colors.grey[400]),
       onTap: onTap,
-    );
-  }
-}
-
-// Add this new screen for editing goals
-class EditGoalsScreen extends StatefulWidget {
-  final UserProfile profile;
-  final UserService userService;
-  const EditGoalsScreen({required this.profile, required this.userService, Key? key}) : super(key: key);
-
-  @override
-  State<EditGoalsScreen> createState() => _EditGoalsScreenState();
-}
-
-class _EditGoalsScreenState extends State<EditGoalsScreen> {
-  late TextEditingController _caloriesController;
-  late TextEditingController _proteinController;
-  late TextEditingController _carbsController;
-  late TextEditingController _fatController;
-  late TextEditingController _targetWeightController;
-  bool _isSaving = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _caloriesController = TextEditingController(text: widget.profile.dailyCalorieGoal.toString());
-    _proteinController = TextEditingController(text: widget.profile.proteinGoal.toString());
-    _carbsController = TextEditingController(text: widget.profile.carbsGoal.toString());
-    _fatController = TextEditingController(text: widget.profile.fatGoal.toString());
-    _targetWeightController = TextEditingController(text: widget.profile.targetWeight > 0 ? widget.profile.targetWeight.toString() : '');
-  }
-
-  @override
-  void dispose() {
-    _caloriesController.dispose();
-    _proteinController.dispose();
-    _carbsController.dispose();
-    _fatController.dispose();
-    _targetWeightController.dispose();
-    super.dispose();
-  }
-
-  Future<void> _saveGoals() async {
-    setState(() => _isSaving = true);
-    try {
-      final updatedProfile = UserProfile(
-        id: widget.profile.id,
-        email: widget.profile.email,
-        name: widget.profile.name,
-        age: widget.profile.age,
-        height: widget.profile.height,
-        weight: widget.profile.weight,
-        dailyCalorieGoal: int.tryParse(_caloriesController.text) ?? widget.profile.dailyCalorieGoal,
-        proteinGoal: int.tryParse(_proteinController.text) ?? widget.profile.proteinGoal,
-        carbsGoal: int.tryParse(_carbsController.text) ?? widget.profile.carbsGoal,
-        fatGoal: int.tryParse(_fatController.text) ?? widget.profile.fatGoal,
-        targetWeight: double.tryParse(_targetWeightController.text) ?? widget.profile.targetWeight,
-        createdAt: widget.profile.createdAt,
-        lastUpdated: DateTime.now(),
-      );
-      await widget.userService.updateUserProfile(updatedProfile);
-      if (mounted) {
-        Navigator.pop(context);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Goals updated successfully')),
-        );
-      }
-    } catch (e) {
-      setState(() => _isSaving = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error updating goals: $e')),
-      );
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Edit Nutrition & Health Goals')),
-      body: Padding(
-        padding: const EdgeInsets.all(24.0),
-        child: ListView(
-          children: [
-            const SizedBox(height: 12),
-            Text('Current Weight', style: Theme.of(context).textTheme.titleMedium),
-            const SizedBox(height: 8),
-            TextFormField(
-              initialValue: widget.profile.weight.toString(),
-              enabled: false,
-              decoration: const InputDecoration(
-                labelText: 'Current Weight (kg)',
-                filled: true,
-                fillColor: Color(0xFFF5F5F5),
-                border: OutlineInputBorder(),
-              ),
-            ),
-            const SizedBox(height: 20),
-            Text('Target Weight', style: Theme.of(context).textTheme.titleMedium),
-            const SizedBox(height: 8),
-            TextFormField(
-              controller: _targetWeightController,
-              keyboardType: TextInputType.number,
-              decoration: const InputDecoration(
-                labelText: 'Target Weight (kg)',
-                border: OutlineInputBorder(),
-              ),
-            ),
-            const SizedBox(height: 28),
-            Text('Nutrition Goals', style: Theme.of(context).textTheme.titleMedium),
-            const SizedBox(height: 8),
-            TextFormField(
-              controller: _caloriesController,
-              keyboardType: TextInputType.number,
-              decoration: const InputDecoration(
-                labelText: 'Daily Calorie Goal',
-                border: OutlineInputBorder(),
-              ),
-            ),
-            const SizedBox(height: 12),
-            TextFormField(
-              controller: _proteinController,
-              keyboardType: TextInputType.number,
-              decoration: const InputDecoration(
-                labelText: 'Protein Goal (g)',
-                border: OutlineInputBorder(),
-              ),
-            ),
-            const SizedBox(height: 12),
-            TextFormField(
-              controller: _carbsController,
-              keyboardType: TextInputType.number,
-              decoration: const InputDecoration(
-                labelText: 'Carbs Goal (g)',
-                border: OutlineInputBorder(),
-              ),
-            ),
-            const SizedBox(height: 12),
-            TextFormField(
-              controller: _fatController,
-              keyboardType: TextInputType.number,
-              decoration: const InputDecoration(
-                labelText: 'Fat Goal (g)',
-                border: OutlineInputBorder(),
-              ),
-            ),
-            const SizedBox(height: 28),
-            _isSaving
-                ? const Center(child: CircularProgressIndicator())
-                : ElevatedButton(
-                    onPressed: _saveGoals,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: kPrimaryGreen,
-                      foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                    ),
-                    child: const Text('Save', style: TextStyle(fontSize: 16)),
-                  ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-// Preferences Screen
-class PreferencesScreen extends StatefulWidget {
-  const PreferencesScreen({Key? key}) : super(key: key);
-  @override
-  State<PreferencesScreen> createState() => _PreferencesScreenState();
-}
-
-class _PreferencesScreenState extends State<PreferencesScreen> {
-  @override
-  Widget build(BuildContext context) {
-    final prefs = Provider.of<PreferencesProvider>(context);
-    return Scaffold(
-      appBar: AppBar(title: const Text('Preferences')),
-      body: ListView(
-        padding: const EdgeInsets.all(24),
-        children: [
-          ListTile(
-            title: const Text('Dark Mode', style: TextStyle(fontWeight: FontWeight.w500)),
-            trailing: Switch(
-              value: prefs.darkMode,
-              onChanged: prefs.setDarkMode,
-              activeColor: kPrimaryGreen,
-            ),
-          ),
-          const Divider(),
-          ListTile(
-            title: const Text('Units', style: TextStyle(fontWeight: FontWeight.w500)),
-            subtitle: Text(prefs.useMetric ? 'Metric (cm, kg)' : 'Imperial (in, lb)'),
-            trailing: Switch(
-              value: prefs.useMetric,
-              onChanged: prefs.setUnits,
-              activeColor: kPrimaryGreen,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// Helper widget for tap scale animation
-class _AnimatedScaleOnTap extends StatefulWidget {
-  final Widget child;
-  const _AnimatedScaleOnTap({required this.child});
-  @override
-  State<_AnimatedScaleOnTap> createState() => _AnimatedScaleOnTapState();
-}
-class _AnimatedScaleOnTapState extends State<_AnimatedScaleOnTap> with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(vsync: this, duration: const Duration(milliseconds: 100), lowerBound: 0.95, upperBound: 1.0)..value = 1.0;
-  }
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-  void _onTapDown(TapDownDetails details) => _controller.reverse();
-  void _onTapUp(TapUpDetails details) => _controller.forward();
-  void _onTapCancel() => _controller.forward();
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTapDown: _onTapDown,
-      onTapUp: _onTapUp,
-      onTapCancel: _onTapCancel,
-      child: ScaleTransition(
-        scale: _controller,
-        child: widget.child,
-      ),
-    );
-  }
-}
-
-class _FabActionButton extends StatelessWidget {
-  final String label;
-  final IconData icon;
-  final VoidCallback onTap;
-  const _FabActionButton({required this.label, required this.icon, required this.onTap});
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedScale(
-        scale: 1.0,
-        duration: Duration(milliseconds: 200),
-        child: Container(
-          width: 80,
-          height: 80,
-          margin: const EdgeInsets.symmetric(horizontal: 8),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            shape: BoxShape.circle,
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.10),
-                blurRadius: 16,
-                offset: Offset(0, 4),
-              ),
-            ],
-          ),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(icon, color: Colors.grey[800], size: 32),
-              const SizedBox(height: 6),
-              Text(label, style: TextStyle(fontWeight: FontWeight.w600, color: Colors.grey[800], fontSize: 16)),
-            ],
-          ),
-        ),
-      ),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 2),
+      minLeadingWidth: 0,
     );
   }
 }
@@ -3782,11 +3332,11 @@ class _FoodScreenState extends State<FoodScreen> with TickerProviderStateMixin {
                         border: Border.all(color: kPrimaryGreen, width: 1.5),
                       ),
                       child: Text('Monthly', style: TextStyle(fontWeight: FontWeight.bold, color: _calendarView == 'month' ? Colors.white : kPrimaryGreen)),
-                    ),
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
+          ),
           // Animated tab content
           Expanded(
             child: AnimatedSwitcher(
@@ -4230,6 +3780,133 @@ class _RecipeCardSmall extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+// FAB Action Button
+class _FabActionButton extends StatelessWidget {
+  final String label;
+  final IconData icon;
+  final VoidCallback onTap;
+  const _FabActionButton({required this.label, required this.icon, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.08),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, color: kPrimaryGreen, size: 20),
+            const SizedBox(width: 8),
+            Text(label, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15)),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// Animated Scale on Tap
+class _AnimatedScaleOnTap extends StatefulWidget {
+  final Widget child;
+  const _AnimatedScaleOnTap({required this.child});
+
+  @override
+  State<_AnimatedScaleOnTap> createState() => _AnimatedScaleOnTapState();
+}
+
+class _AnimatedScaleOnTapState extends State<_AnimatedScaleOnTap> with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _scale;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 150),
+    );
+    _scale = Tween<double>(begin: 1.0, end: 0.95).animate(CurvedAnimation(
+      parent: _controller,
+      curve: Curves.easeInOut,
+    ));
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTapDown: (_) => _controller.forward(),
+      onTapUp: (_) => _controller.reverse(),
+      onTapCancel: () => _controller.reverse(),
+      child: AnimatedBuilder(
+        animation: _scale,
+        builder: (context, child) => Transform.scale(
+          scale: _scale.value,
+          child: child,
+        ),
+        child: widget.child,
+      ),
+    );
+  }
+}
+
+// Add this widget before ProfileScreen
+class _ProfileActionButton extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+  const _ProfileActionButton({required this.icon, required this.label, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 4),
+        child: GestureDetector(
+          onTap: onTap,
+          child: Container(
+            padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
+            decoration: BoxDecoration(
+              color: kPrimaryGreen.withOpacity(0.08),
+              borderRadius: BorderRadius.circular(22),
+              border: Border.all(color: kPrimaryGreen.withOpacity(0.18)),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(icon, color: kPrimaryGreen, size: 20),
+                const SizedBox(height: 4),
+                Text(
+                  label,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: Colors.black),
+                ),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }

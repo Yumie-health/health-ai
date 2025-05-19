@@ -14,6 +14,7 @@ class UserProfile {
   final double targetWeight; // in kg
   final DateTime createdAt;
   final DateTime lastUpdated;
+  final String photoUrl;
 
   UserProfile({
     required this.id,
@@ -29,6 +30,7 @@ class UserProfile {
     required this.targetWeight,
     required this.createdAt,
     required this.lastUpdated,
+    this.photoUrl = '',
   });
 
   Map<String, dynamic> toMap() {
@@ -45,6 +47,7 @@ class UserProfile {
       'targetWeight': targetWeight,
       'createdAt': createdAt,
       'lastUpdated': lastUpdated,
+      'photoUrl': photoUrl,
     };
   }
 
@@ -64,6 +67,7 @@ class UserProfile {
       targetWeight: (data['targetWeight'] ?? 0).toDouble(),
       createdAt: (data['createdAt'] as Timestamp).toDate(),
       lastUpdated: (data['lastUpdated'] as Timestamp).toDate(),
+      photoUrl: data['photoUrl'] ?? '',
     );
   }
 } 
