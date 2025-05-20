@@ -15,10 +15,10 @@ class LogMealPage extends StatefulWidget {
 
 class _LogMealPageState extends State<LogMealPage> with TickerProviderStateMixin {
   final TextEditingController _foodNameController = TextEditingController();
-  final TextEditingController _caloriesController = TextEditingController(text: '0');
-  final TextEditingController _proteinController = TextEditingController(text: '0');
-  final TextEditingController _carbsController = TextEditingController(text: '0');
-  final TextEditingController _fatController = TextEditingController(text: '0');
+  final TextEditingController _caloriesController = TextEditingController();
+  final TextEditingController _proteinController = TextEditingController();
+  final TextEditingController _carbsController = TextEditingController();
+  final TextEditingController _fatController = TextEditingController();
   final TextEditingController _ingredientController = TextEditingController();
   List<String> _ingredients = [];
 
@@ -49,6 +49,7 @@ class _LogMealPageState extends State<LogMealPage> with TickerProviderStateMixin
     _macrosController = AnimationController(vsync: this, duration: Duration(milliseconds: 400));
     _recentController = AnimationController(vsync: this, duration: Duration(milliseconds: 400));
     _playEntranceAnimations();
+    _foodNameController.addListener(() => setState(() {}));
   }
 
   void _playEntranceAnimations() async {
@@ -88,10 +89,10 @@ class _LogMealPageState extends State<LogMealPage> with TickerProviderStateMixin
       final meal = Meal(
         id: '',
         name: _foodNameController.text.trim(),
-        calories: int.tryParse(_caloriesController.text.trim().isEmpty ? '0' : _caloriesController.text.trim()) ?? 0,
-        protein: int.tryParse(_proteinController.text.trim().isEmpty ? '0' : _proteinController.text.trim()) ?? 0,
-        carbs: int.tryParse(_carbsController.text.trim().isEmpty ? '0' : _carbsController.text.trim()) ?? 0,
-        fat: int.tryParse(_fatController.text.trim().isEmpty ? '0' : _fatController.text.trim()) ?? 0,
+        calories: int.tryParse(_caloriesController.text.trim()) ?? 0,
+        protein: int.tryParse(_proteinController.text.trim()) ?? 0,
+        carbs: int.tryParse(_carbsController.text.trim()) ?? 0,
+        fat: int.tryParse(_fatController.text.trim()) ?? 0,
         timestamp: DateTime.now(),
         mealType: _selectedMealType,
         userId: user.uid,
@@ -283,16 +284,17 @@ class _LogMealPageState extends State<LogMealPage> with TickerProviderStateMixin
       icon: Icons.restaurant_menu,
       iconColor: kPrimaryGreen,
       onAdd: () {
-        setState(() {
-          _foodNameController.text = meal.name;
-          _caloriesController.text = meal.calories.toString();
-          _proteinController.text = meal.protein.toString();
-          _carbsController.text = meal.carbs.toString();
-          _fatController.text = meal.fat.toString();
+            setState(() {
+              _foodNameController.text = meal.name;
+              _caloriesController.text = meal.calories.toString();
+              _proteinController.text = meal.protein.toString();
+              _carbsController.text = meal.carbs.toString();
+              _fatController.text = meal.fat.toString();
           _ingredients = List<String>.from(meal.ingredients);
-        });
-      },
+            });
+          },
       isCustomMeal: false,
+      imageUrl: meal.imageUrl,
     );
   }
 
@@ -544,15 +546,15 @@ class _LogMealPageState extends State<LogMealPage> with TickerProviderStateMixin
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                OutlinedButton(
-                  onPressed: _showCustomMealDialog,
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: kPrimaryGreen,
-                    side: BorderSide(color: kPrimaryGreen.withOpacity(0.18)),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                    padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
-                  ),
-                  child: const Text('Build a Custom Meal', style: TextStyle(fontSize: 18)),
+            OutlinedButton(
+              onPressed: _showCustomMealDialog,
+              style: OutlinedButton.styleFrom(
+                foregroundColor: kPrimaryGreen,
+                side: BorderSide(color: kPrimaryGreen.withOpacity(0.18)),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+              ),
+              child: const Text('Build a Custom Meal', style: TextStyle(fontSize: 18)),
                 ),
               ],
             ),
@@ -575,15 +577,15 @@ class _LogMealPageState extends State<LogMealPage> with TickerProviderStateMixin
       icon: Icons.star,
       iconColor: kPrimaryGreen,
       onAdd: () {
-        setState(() {
-          _foodNameController.text = meal.name;
-          _caloriesController.text = meal.calories.toString();
-          _proteinController.text = meal.protein.toString();
-          _carbsController.text = meal.carbs.toString();
-          _fatController.text = meal.fat.toString();
+            setState(() {
+              _foodNameController.text = meal.name;
+              _caloriesController.text = meal.calories.toString();
+              _proteinController.text = meal.protein.toString();
+              _carbsController.text = meal.carbs.toString();
+              _fatController.text = meal.fat.toString();
           _ingredients = List<String>.from(meal.ingredients);
-        });
-      },
+            });
+          },
       onCustomize: () async {
         final nameController = TextEditingController(text: meal.name);
         final caloriesController = TextEditingController(text: meal.calories.toString());
@@ -596,7 +598,7 @@ class _LogMealPageState extends State<LogMealPage> with TickerProviderStateMixin
         String? error;
 
         await showGeneralDialog(
-          context: context,
+            context: context,
           barrierDismissible: true,
           barrierLabel: MaterialLocalizations.of(context).modalBarrierDismissLabel,
           transitionDuration: const Duration(milliseconds: 320),
@@ -613,9 +615,9 @@ class _LogMealPageState extends State<LogMealPage> with TickerProviderStateMixin
                   title: Text('Edit Custom Meal', style: TextStyle(fontWeight: FontWeight.bold, color: kPrimaryGreen)),
                   content: SingleChildScrollView(
                     child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
                         Text('Meal Name', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 18, color: kPrimaryGreen)),
                         const SizedBox(height: 8),
                         TextField(
@@ -638,7 +640,7 @@ class _LogMealPageState extends State<LogMealPage> with TickerProviderStateMixin
                             Expanded(child: _macroField('Protein (g)', proteinController)),
                           ],
                         ),
-                        const SizedBox(height: 12),
+                  const SizedBox(height: 12),
                         Row(
                           children: [
                             Expanded(child: _macroField('Carbs (g)', carbsController)),
@@ -691,14 +693,14 @@ class _LogMealPageState extends State<LogMealPage> with TickerProviderStateMixin
                             padding: const EdgeInsets.only(top: 8),
                             child: Text(error!, style: TextStyle(color: Colors.red)),
                           ),
-                      ],
+                ],
                     ),
-                  ),
-                  actions: [
-                    TextButton(
-                      onPressed: () => Navigator.pop(context),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
                       child: Text('Cancel', style: TextStyle(color: kPrimaryGreen)),
-                    ),
+                ),
                     ElevatedButton(
                       style: ElevatedButton.styleFrom(backgroundColor: kPrimaryGreen),
                       onPressed: isSaving
@@ -719,7 +721,7 @@ class _LogMealPageState extends State<LogMealPage> with TickerProviderStateMixin
                                   userId: user.uid,
                                 );
                                 await MealService().updateCustomMeal(updatedMeal);
-                                Navigator.pop(context);
+                    Navigator.pop(context);
                               } catch (e) {
                                 setState(() {
                                   error = e.toString();
@@ -728,12 +730,12 @@ class _LogMealPageState extends State<LogMealPage> with TickerProviderStateMixin
                               }
                             },
                       child: isSaving ? SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)) : Text('Save'),
-                    ),
-                  ],
                 ),
-              ),
-            );
-          },
+              ],
+                ),
+            ),
+          );
+        },
         );
       },
       isCustomMeal: true,
@@ -951,6 +953,7 @@ class _ExpandableMealTile extends StatefulWidget {
   final VoidCallback onAdd;
   final VoidCallback? onCustomize;
   final bool isCustomMeal;
+  final String? imageUrl;
   const _ExpandableMealTile({
     required this.name,
     required this.protein,
@@ -963,6 +966,7 @@ class _ExpandableMealTile extends StatefulWidget {
     required this.onAdd,
     this.onCustomize,
     this.isCustomMeal = false,
+    this.imageUrl,
     Key? key,
   }) : super(key: key);
   @override
@@ -990,10 +994,15 @@ class _ExpandableMealTileState extends State<_ExpandableMealTile> {
       child: Column(
         children: [
           ListTile(
-            leading: CircleAvatar(
-              backgroundColor: kPrimaryGreen.withOpacity(0.13),
-              child: Icon(widget.icon, color: widget.iconColor),
-            ),
+            leading: widget.imageUrl != null && widget.imageUrl!.isNotEmpty
+                ? CircleAvatar(
+                    backgroundColor: kPrimaryGreen.withOpacity(0.13),
+                    backgroundImage: NetworkImage(widget.imageUrl!),
+                  )
+                : CircleAvatar(
+                    backgroundColor: kPrimaryGreen.withOpacity(0.13),
+                    child: Icon(widget.icon, color: widget.iconColor),
+                  ),
             title: Text(widget.name, style: const TextStyle(fontWeight: FontWeight.w600)),
             subtitle: widget.isCustomMeal ? null : Row(
               children: [

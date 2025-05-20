@@ -12,6 +12,10 @@ import 'package:provider/provider.dart';
 import 'dart:async';
 import 'log_meal_page.dart';
 import 'models/custom_meal.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+import 'dart:io';
+import 'scan_page.dart';
 
 // Define the color palette
 const Color kPrimaryGreen = Color(0xFF4CAF50); // Soft green
@@ -1253,7 +1257,7 @@ class _MainNavScreenState extends State<MainNavScreen> with TickerProviderStateM
       _fabExpanded = false;
       _showFabActions = false;
     });
-    Navigator.of(context).push(MaterialPageRoute(builder: (_) => Center(child: Text('Scan Page'))));
+    Navigator.of(context).push(MaterialPageRoute(builder: (_) => const ScanPage()));
   }
 
   @override
@@ -1770,7 +1774,7 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
                                 color: kSecondaryBlue,
                                 onTap: () {
                                   Navigator.of(context).push(
-                                    MaterialPageRoute(builder: (_) => Center(child: Text('Scan Page'))),
+                                    MaterialPageRoute(builder: (_) => const ScanPage()),
                                   );
                                 },
                               ),
@@ -2085,7 +2089,18 @@ class _MealCardModernState extends State<_MealCardModern> {
                   color: kContainerGrey,
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: Icon(Icons.fastfood, color: kPrimaryGreen, size: 28),
+                child: meal.imageUrl != null && meal.imageUrl!.isNotEmpty
+                    ? ClipRRect(
+                        borderRadius: BorderRadius.circular(12),
+                        child: Image.network(
+                          meal.imageUrl!,
+                          fit: BoxFit.cover,
+                          width: 48,
+                          height: 48,
+                          errorBuilder: (context, error, stackTrace) => Icon(Icons.fastfood, color: kPrimaryGreen, size: 28),
+                        ),
+                      )
+                    : Icon(Icons.fastfood, color: kPrimaryGreen, size: 28),
               ),
               const SizedBox(width: 10),
               Expanded(
@@ -2239,6 +2254,107 @@ class ProfileScreen extends StatefulWidget {
 
 class _ProfileScreenState extends State<ProfileScreen> {
   final UserService _userService = UserService();
+
+  Future<void> _changeProfilePicture() async {
+    final picker = ImagePicker();
+    final picked = await picker.pickImage(source: ImageSource.gallery, imageQuality: 80);
+    if (picked == null) return;
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+    print('[DEBUG] Picked file path: \'${picked.path}\'');
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => const Center(child: CircularProgressIndicator()),
+    );
+    try {
+      final ref = FirebaseStorage.instance.ref().child('profile_pics/${user.uid}.jpg');
+      final file = File(picked.path);
+      print('[DEBUG] Uploading file to: profile_pics/${user.uid}.jpg');
+      final uploadTask = await ref.putFile(file);
+      print('[DEBUG] UploadTask state: \'${uploadTask.state}\'');
+      if (uploadTask.state != TaskState.success) {
+        throw Exception('Upload failed: \'${uploadTask.state}\'');
+      }
+      print('[DEBUG] Upload successful, fetching download URL...');
+      final url = await ref.getDownloadURL();
+      print('[DEBUG] Download URL: $url');
+      await _userService.updateUserPhotoUrl(url);
+      await user.updatePhotoURL(url);
+      setState(() {}); // Refresh UI
+    } catch (e, stack) {
+      print('[DEBUG] Error during profile picture upload: $e');
+      print('[DEBUG] Stack trace: $stack');
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to update photo: $e')));
+    } finally {
+      Navigator.of(context, rootNavigator: true).pop();
+    }
+  }
+
+  Future<void> _changeProfileName(String currentName) async {
+    final controller = TextEditingController(text: currentName);
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+    String? error;
+    final parentContext = context;
+    bool didUpdate = false;
+    await showDialog(
+      context: parentContext,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (context, setState) => AlertDialog(
+          title: const Text('Change Profile Name'),
+          content: TextField(
+            controller: controller,
+            decoration: InputDecoration(hintText: 'Enter new name', errorText: error),
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(dialogContext), child: const Text('Cancel')),
+            ElevatedButton(
+              onPressed: () async {
+                final newName = controller.text.trim();
+                if (newName.isEmpty) {
+                  setState(() { error = 'Name cannot be empty'; });
+                  print('[DEBUG] Name is empty, aborting save.');
+                  return;
+                }
+                Navigator.pop(dialogContext); // Close the input dialog
+                print('[DEBUG] Opening loading dialog...');
+                showDialog(
+                  context: parentContext,
+                  barrierDismissible: false,
+                  builder: (context) => const Center(child: CircularProgressIndicator()),
+                );
+                try {
+                  print('[DEBUG] Attempting to update Firestore name...');
+                  // Update Firestore
+                  final snap = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
+                  final data = snap.data();
+                  if (data != null) {
+                    await FirebaseFirestore.instance.collection('users').doc(user.uid).update({'name': newName, 'lastUpdated': DateTime.now()});
+                  }
+                  print('[DEBUG] Firestore name updated. Attempting to update Firebase Auth displayName...');
+                  // Update Auth
+                  await user.updateDisplayName(newName);
+                  print('[DEBUG] Firebase Auth displayName updated.');
+                  didUpdate = true;
+                } catch (e, stack) {
+                  print('[DEBUG] Error updating profile name: $e');
+                  print('[DEBUG] Stack trace: $stack');
+                  if (mounted) ScaffoldMessenger.of(parentContext).showSnackBar(SnackBar(content: Text('Failed to update name: $e')));
+                } finally {
+                  print('[DEBUG] Closing loading dialog.');
+                  await Future.delayed(const Duration(milliseconds: 100));
+                  Navigator.of(parentContext, rootNavigator: true).maybePop();
+                  if (didUpdate && mounted) setState(() {}); // Only refresh parent if needed
+                }
+              },
+              child: const Text('Save'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 
   void _showEditProfileDialog(UserProfile profile) {
     final nameController = TextEditingController(text: profile.name);
@@ -2455,105 +2571,108 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    // Dummy user data for illustration
-    final String userName = 'Jane Doe';
-    final String userAvatar = '';
     final bool isPremium = true;
     final int userLevel = 8;
 
     return Scaffold(
       backgroundColor: const Color(0xFFF9FAFB),
       body: SafeArea(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        child: StreamBuilder<UserProfile?>(
+          stream: _userService.getCurrentUserProfile(),
+          builder: (context, snapshot) {
+            final profile = snapshot.data;
+            final userName = profile?.name ?? '';
+            final userAvatar = profile?.photoUrl ?? '';
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-            // Header
-          Padding(
-              padding: const EdgeInsets.fromLTRB(24, 24, 24, 8),
-              child: Text('Your Profile', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 28)),
-            ),
-            Divider(height: 1, thickness: 1, color: Colors.grey[200]),
-            // Profile Card
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 18, 16, 0),
-              child: Container(
-                padding: const EdgeInsets.all(18),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(18),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.03),
-                      blurRadius: 8,
-                      offset: Offset(0, 2),
-                    ),
-                  ],
+                // Header
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(24, 24, 24, 8),
+                  child: Text('Your Profile', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 28)),
                 ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Container(
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            border: Border.all(color: kPrimaryGreen, width: 3),
-                          ),
-                          child: CircleAvatar(
-                            radius: 34,
-                            backgroundImage: userAvatar.isNotEmpty ? NetworkImage(userAvatar) : null,
-                            backgroundColor: kPrimaryGreen.withOpacity(0.08),
-                            child: userAvatar.isEmpty ? Icon(Icons.person, color: kPrimaryGreen, size: 38) : null,
-                          ),
-                        ),
-                        const SizedBox(width: 18),
-                        Expanded(
-                          child: Row(
-                            children: [
-                              Text(userName, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 22)),
-                              const SizedBox(width: 10),
-                              if (isPremium)
-                                Container(
-                                  padding: EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                                  decoration: BoxDecoration(
-                                    color: kPrimaryGreen.withOpacity(0.10),
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  child: Text('Premium', style: TextStyle(color: kPrimaryGreen, fontWeight: FontWeight.w600)),
-                                ),
-                            ],
-                          ),
+                Divider(height: 1, thickness: 1, color: Colors.grey[200]),
+                // Profile Card
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 18, 16, 0),
+                  child: Container(
+                    padding: const EdgeInsets.all(18),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(18),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.03),
+                          blurRadius: 8,
+                          offset: Offset(0, 2),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 14),
-                    // Add three pill-shaped buttons horizontally
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        _ProfileActionButton(
-                          icon: Icons.camera_alt,
-                          label: 'Change Profile Picture',
-                          onTap: () {},
+                        Row(
+                          children: [
+                            Container(
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                border: Border.all(color: kPrimaryGreen, width: 3),
+                              ),
+                              child: CircleAvatar(
+                                radius: 34,
+                                backgroundImage: userAvatar.isNotEmpty ? NetworkImage(userAvatar) : null,
+                                backgroundColor: kPrimaryGreen.withOpacity(0.08),
+                                child: userAvatar.isEmpty ? Icon(Icons.person, color: kPrimaryGreen, size: 38) : null,
+                              ),
+                            ),
+                            const SizedBox(width: 18),
+                            Expanded(
+                              child: Row(
+                                children: [
+                                  Text(userName, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 22)),
+                                  const SizedBox(width: 10),
+                                  if (isPremium)
+                                    Container(
+                                      padding: EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                      decoration: BoxDecoration(
+                                        color: kPrimaryGreen.withOpacity(0.10),
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                      child: Text('Premium', style: TextStyle(color: kPrimaryGreen, fontWeight: FontWeight.w600)),
+                                    ),
+                                ],
+                              ),
+                            ),
+                          ],
                         ),
-                        _ProfileActionButton(
-                          icon: Icons.edit,
-                          label: 'Change Profile Name',
-                          onTap: () {},
+                        const SizedBox(height: 14),
+                        // Add three pill-shaped buttons horizontally
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                          children: [
+                            _ProfileActionButton(
+                              icon: Icons.camera_alt,
+                              label: 'Change Profile Picture',
+                              onTap: _changeProfilePicture,
+                            ),
+                            _ProfileActionButton(
+                              icon: Icons.edit,
+                              label: 'Change Profile Name',
+                              onTap: () => _changeProfileName(userName),
+                            ),
+                            // Removed Plan Settings button
+                          ],
                         ),
-                        // Removed Plan Settings button
                       ],
                     ),
-                  ],
+                  ),
                 ),
-              ),
-            ),
-            const SizedBox(height: 18),
-            // Menu List
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 12),
-                      child: Container(
-                        decoration: BoxDecoration(
+                const SizedBox(height: 18),
+                // Menu List
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                          child: Container(
+                            decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(18),
                           boxShadow: [
@@ -2622,7 +2741,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
                 ),
               ],
-            ),
+            );
+          },
+        ),
       ),
     );
   }
@@ -3733,7 +3854,15 @@ class _FoodMealCardState extends State<_FoodMealCard> {
                   width: 48,
                   height: 48,
                   color: kContainerGrey,
-                  child: Icon(Icons.fastfood, color: kPrimaryGreen, size: 28),
+                  child: meal.imageUrl != null && meal.imageUrl!.isNotEmpty
+                      ? Image.network(
+                          meal.imageUrl!,
+                          fit: BoxFit.cover,
+                          width: 48,
+                          height: 48,
+                          errorBuilder: (context, error, stackTrace) => Icon(Icons.fastfood, color: kPrimaryGreen, size: 28),
+                        )
+                      : Icon(Icons.fastfood, color: kPrimaryGreen, size: 28),
                 ),
               ),
               const SizedBox(width: 10),
@@ -3986,6 +4115,8 @@ class _FabActionButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Both Log and Scan use kPrimaryGreen
+    Color color = kPrimaryGreen;
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -4004,9 +4135,24 @@ class _FabActionButton extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, color: kPrimaryGreen, size: 20),
+            Icon(icon, color: color, size: 20),
             const SizedBox(width: 8),
-            Text(label, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15)),
+            Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(label, style: TextStyle(fontWeight: FontWeight.w600, fontSize: 15, color: color)),
+                Container(
+                  margin: const EdgeInsets.only(top: 2),
+                  height: 4,
+                  width: 32,
+                  decoration: BoxDecoration(
+                    color: Color(0xFFFFF176), // Light yellow
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ],
+            ),
           ],
         ),
       ),
