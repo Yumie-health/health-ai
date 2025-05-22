@@ -32,23 +32,20 @@ class UserService {
     if (user == null) throw Exception('User not authenticated');
 
     final now = DateTime.now();
-    final profile = UserProfile(
-      id: user.uid,
-      email: email,
-      name: name,
-      age: 0,
-      height: 0,
-      weight: 0,
-      targetWeight: 0,
-      dailyCalorieGoal: 2000,
-      proteinGoal: 120,
-      carbsGoal: 250,
-      fatGoal: 70,
-      createdAt: now,
-      lastUpdated: now,
-    );
+    final profile = {
+      'email': email,
+      'name': name,
+      // Do NOT set age, height, weight, targetWeight so onboarding is triggered
+      'dailyCalorieGoal': 2000,
+      'proteinGoal': 120,
+      'carbsGoal': 250,
+      'fatGoal': 70,
+      'createdAt': now,
+      'lastUpdated': now,
+      'photoUrl': '',
+    };
 
-    await _firestore.collection('users').doc(user.uid).set(profile.toMap());
+    await _firestore.collection('users').doc(user.uid).set(profile);
   }
 
   // Update user goals

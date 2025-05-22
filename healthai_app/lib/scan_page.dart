@@ -7,6 +7,9 @@ import 'package:path/path.dart' as path;
 import 'scan_result_page.dart';
 import 'package:image/image.dart' as img;
 import 'dart:math';
+import 'scanner_overlay.dart';
+import 'scan_result_fridge_page.dart';
+import 'scan_paywall_page.dart';
 
 class ScanPage extends StatefulWidget {
   const ScanPage({Key? key}) : super(key: key);
@@ -23,11 +26,18 @@ class _ScanPageState extends State<ScanPage> {
   final ImagePicker _picker = ImagePicker();
   Rect? _frameRect;
   double _frameBorderRadius = 32;
+  bool _isFridgeMode = false;
 
   @override
   void initState() {
     super.initState();
     _initCamera();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
   }
 
   Future<void> _initCamera() async {
@@ -39,14 +49,8 @@ class _ScanPageState extends State<ScanPage> {
     });
   }
 
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
   Future<void> _captureImage() async {
-    if (!_controller.value.isInitialized || _frameRect == null) return;
+    if (!_controller.value.isInitialized) return;
     final file = await _controller.takePicture();
     final imgBytes = await File(file.path).readAsBytes();
     final original = img.decodeImage(imgBytes);
@@ -57,28 +61,78 @@ class _ScanPageState extends State<ScanPage> {
     final screen = MediaQuery.of(context).size;
     final scaleX = original.width / screen.width;
     final scaleY = original.height / screen.height;
-    final cropX = (_frameRect!.left * scaleX).round();
-    final cropY = (_frameRect!.top * scaleY).round();
-    final cropW = (_frameRect!.width * scaleX).round();
-    final cropH = (_frameRect!.height * scaleY).round();
-    final safeCropX = max(0, min(cropX, original.width - 1));
-    final safeCropY = max(0, min(cropY, original.height - 1));
-    final safeCropW = min(cropW, original.width - safeCropX);
-    final safeCropH = min(cropH, original.height - safeCropY);
+    double frameWidth, frameHeight;
+    if (_isFridgeMode) {
+      frameWidth = screen.width * 0.92;
+      frameHeight = screen.height * 0.6;
+    } else {
+      frameWidth = screen.width * 0.7;
+      frameHeight = frameWidth;
+    }
+    final frameLeft = (screen.width - frameWidth) / 2;
+    final frameTop = (screen.height - frameHeight) / 2;
+    final cropX = (frameLeft * scaleX).round();
+    final cropY = (frameTop * scaleY).round();
+    final cropW = (frameWidth * scaleX).round();
+    final cropH = (frameHeight * scaleY).round();
     final cropped = img.copyCrop(
       original,
-      x: safeCropX,
-      y: safeCropY,
-      width: safeCropW,
-      height: safeCropH,
+      x: cropX,
+      y: cropY,
+      width: cropW,
+      height: cropH,
     );
-    final dir = await getTemporaryDirectory();
-    final croppedPath = '${dir.path}/cropped_${DateTime.now().millisecondsSinceEpoch}.jpg';
-    await File(croppedPath).writeAsBytes(img.encodeJpg(cropped, quality: 95));
-    if (mounted) {
+    final tempPath = file.path;
+    final croppedFile = await File(tempPath).writeAsBytes(img.encodeJpg(cropped));
+
+    // --- Paywall logic ---
+    // TODO: Replace with your real premium and scan count logic
+    final bool isPremium = false; // Replace with real check
+    final int scansToday = 1; // Replace with real check
+    final int freeScansPerDay = 1;
+    if (!isPremium && scansToday >= freeScansPerDay) {
+      if (!mounted) return;
+      await Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) => ScanPaywallPage(
+            onUpgrade: () {
+              // TODO: Implement upgrade logic
+              Navigator.of(context).pop();
+            },
+            onWatchAd: (paywallContext) {
+              if (_isFridgeMode) {
+                Navigator.of(paywallContext).pushReplacement(
+                  MaterialPageRoute(
+                    builder: (_) => ScanResultFridgePage(imagePath: croppedFile.path),
+                  ),
+                );
+              } else {
+                Navigator.of(paywallContext).pushReplacement(
+                  MaterialPageRoute(
+                    builder: (_) => ScanResultPage(imagePath: croppedFile.path),
+                  ),
+                );
+              }
+            },
+            onDiscard: () {
+              Navigator.of(context).popUntil((route) => route.isFirst);
+            },
+          ),
+        ),
+      );
+      return;
+    }
+
+    if (_isFridgeMode) {
       Navigator.of(context).push(
         MaterialPageRoute(
-          builder: (_) => ScanResultPage(imagePath: croppedPath),
+          builder: (_) => ScanResultFridgePage(imagePath: croppedFile.path),
+        ),
+      );
+    } else {
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) => ScanResultPage(imagePath: croppedFile.path),
         ),
       );
     }
@@ -108,55 +162,90 @@ class _ScanPageState extends State<ScanPage> {
       body: _isCameraInitialized
           ? LayoutBuilder(
               builder: (context, constraints) {
-                final double frameSize = constraints.maxWidth * 0.7;
-                final double frameLeft = (constraints.maxWidth - frameSize) / 2;
-                final double frameTop = (constraints.maxHeight - frameSize) / 2;
-                _frameRect = Rect.fromLTWH(frameLeft, frameTop, frameSize, frameSize);
+                double frameWidth, frameHeight;
+                if (_isFridgeMode) {
+                  frameWidth = constraints.maxWidth * 0.92;
+                  frameHeight = constraints.maxHeight * 0.60;
+                } else {
+                  frameWidth = constraints.maxWidth * 0.7;
+                  frameHeight = frameWidth;
+                }
+                final double frameLeft = (constraints.maxWidth - frameWidth) / 2;
+                final double frameTop = (constraints.maxHeight - frameHeight) / 2;
+                final frameRect = Rect.fromLTWH(frameLeft, frameTop, frameWidth, frameHeight);
                 return Stack(
                   children: [
                     Positioned.fill(child: CameraPreview(_controller)),
                     Positioned.fill(
-                      child: CustomPaint(
-                        painter: _ScanOverlayPainter(
-                          frameRect: _frameRect!,
-                          borderRadius: _frameBorderRadius,
+                      child: ScannerOverlay(
+                        borderRadius: _frameBorderRadius,
+                        frameRect: frameRect,
+                        borderColor: Colors.greenAccent,
+                        overlayOpacity: 0.7,
+                      ),
+                    ),
+                    // X button at top left
+                    Positioned(
+                      top: 0,
+                      left: 0,
+                      child: SafeArea(
+                        child: IconButton(
+                          icon: Icon(Icons.close, color: Colors.white, size: 32),
+                          onPressed: () => Navigator.of(context).pop(),
                         ),
                       ),
                     ),
-                    _buildTopText(),
+                    // Meal/Fridge toggle buttons
+                    Positioned(
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      child: SafeArea(
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            _buildModeButton('Meal', !_isFridgeMode, () {
+                              setState(() { _isFridgeMode = false; });
+                            }),
+                            const SizedBox(width: 12),
+                            _buildModeButton('Fridge', _isFridgeMode, () {
+                              setState(() { _isFridgeMode = true; });
+                            }),
+                          ],
+                        ),
+                      ),
+                    ),
+                    // Instruction overlay just above the frame
+                    Positioned(
+                      top: frameRect.top - 64,
+                      left: 0,
+                      right: 0,
+                      child: Center(
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
+                          decoration: BoxDecoration(
+                            color: Colors.black.withOpacity(0.55),
+                            borderRadius: BorderRadius.circular(22),
+                          ),
+                          child: const Text(
+                            "Place the food inside of the frame",
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 18,
+                              fontWeight: FontWeight.w700,
+                              letterSpacing: 0.1,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
+                      ),
+                    ),
                     _buildBottomButtons(),
                   ],
                 );
               },
             )
           : const Center(child: CircularProgressIndicator()),
-    );
-  }
-
-  Widget _buildTopText() {
-    return Positioned(
-      top: 60,
-      left: 0,
-      right: 0,
-      child: Center(
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
-          decoration: BoxDecoration(
-            color: Colors.black.withOpacity(0.55),
-            borderRadius: BorderRadius.circular(22),
-          ),
-          child: const Text(
-            "Place the food inside of the frame",
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 18,
-              fontWeight: FontWeight.w700,
-              letterSpacing: 0.1,
-            ),
-            textAlign: TextAlign.center,
-          ),
-        ),
-      ),
     );
   }
 
@@ -193,47 +282,25 @@ class _ScanPageState extends State<ScanPage> {
       ),
     );
   }
-}
 
-class _ScanOverlayPainter extends CustomPainter {
-  final Rect frameRect;
-  final double borderRadius;
-
-  _ScanOverlayPainter({required this.frameRect, required this.borderRadius});
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final screenRect = Rect.fromLTWH(0, 0, size.width, size.height);
-
-    // Draw full black overlay
-    final overlayPaint = Paint()
-      ..color = Colors.black
-      ..style = PaintingStyle.fill;
-    canvas.drawRect(screenRect, overlayPaint);
-
-    // Cut out the frame area (make it transparent)
-    final clearPaint = Paint()..blendMode = BlendMode.clear;
-    final frameRRect = RRect.fromRectAndRadius(frameRect, Radius.circular(borderRadius));
-    canvas.saveLayer(screenRect, Paint());
-    canvas.drawRRect(frameRRect, clearPaint);
-    canvas.restore();
-
-    // Draw white border
-    final borderPaint = Paint()
-      ..color = Colors.white
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 3.2;
-    canvas.drawRRect(frameRRect, borderPaint);
-
-    // Draw green glow
-    final glowPaint = Paint()
-      ..color = const Color(0x884CAF50)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 10
-      ..maskFilter = MaskFilter.blur(BlurStyle.normal, 8);
-    canvas.drawRRect(frameRRect, glowPaint);
+  Widget _buildModeButton(String label, bool selected, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+        decoration: BoxDecoration(
+          color: selected ? Colors.greenAccent : Colors.black.withOpacity(0.4),
+          borderRadius: BorderRadius.circular(18),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            color: selected ? Colors.black : Colors.white,
+            fontWeight: FontWeight.bold,
+            fontSize: 16,
+          ),
+        ),
+      ),
+    );
   }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 } 

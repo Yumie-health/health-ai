@@ -19,6 +19,8 @@ android {
     kotlinOptions {
         jvmTarget = "17"
         freeCompilerArgs += listOf("-Xjvm-default=all")
+        apiVersion = "1.8"
+        languageVersion = "1.8"
     }
 
     defaultConfig {
@@ -42,7 +44,5 @@ android {
 }
 
 dependencies {
-    implementation(platform("com.google.firebase:firebase-bom:33.0.0"))
-    implementation("com.google.firebase:firebase-analytics")
     // Add other Firebase dependencies as needed
 }

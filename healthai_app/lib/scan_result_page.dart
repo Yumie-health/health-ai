@@ -150,10 +150,44 @@ class _ScanResultPageState extends State<ScanResultPage> {
           Container(
             width: double.infinity,
             color: Colors.black,
-            child: Image.file(
-              File(widget.imagePath),
-              fit: BoxFit.cover,
-              height: 220,
+            height: 220,
+            child: Stack(
+              children: [
+                Positioned.fill(
+                  child: Image.file(
+                    File(widget.imagePath),
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) => Center(child: Text('Failed to load image', style: TextStyle(color: Colors.white))),
+                  ),
+                ),
+                Positioned.fill(
+                  child: Container(
+                    color: Colors.black.withOpacity(0.25),
+                  ),
+                ),
+                Center(
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.white.withOpacity(0.85),
+                      foregroundColor: Colors.black,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
+                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                    ),
+                    onPressed: () {
+                      showDialog(
+                        context: context,
+                        builder: (_) => Dialog(
+                          backgroundColor: Colors.black,
+                          child: InteractiveViewer(
+                            child: Image.file(File(widget.imagePath)),
+                          ),
+                        ),
+                      );
+                    },
+                    child: const Text('Preview Full Image', style: TextStyle(fontWeight: FontWeight.bold)),
+                  ),
+                ),
+              ],
             ),
           ),
           Expanded(

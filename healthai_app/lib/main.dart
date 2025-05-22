@@ -16,6 +16,10 @@ import 'package:image_picker/image_picker.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'dart:io';
 import 'scan_page.dart';
+import 'nutritional_plan_page.dart';
+import 'settings_page.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'onboarding_flow.dart';
 
 // Define the color palette
 const Color kPrimaryGreen = Color(0xFF4CAF50); // Soft green
@@ -439,36 +443,48 @@ class MyApp extends StatelessWidget {
         dividerColor: Colors.white24,
       ),
       themeMode: prefs.darkMode ? ThemeMode.dark : ThemeMode.light,
-      home: StreamBuilder<User?> (
+      home: StreamBuilder<User?>(
         stream: FirebaseAuth.instance.authStateChanges(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return const SizedBox.shrink(); // Show nothing, splash will cover this
+            return Center(child: CircularProgressIndicator());
           }
+          
           if (snapshot.hasData) {
-            final user = snapshot.data!;
-            return StreamBuilder<DocumentSnapshot>(
-              stream: FirebaseFirestore.instance.collection('users').doc(user.uid).snapshots(),
-              builder: (context, userSnap) {
-                if (userSnap.connectionState == ConnectionState.waiting) {
-                  return const SizedBox.shrink(); // Show nothing, splash will cover this
+            // User is logged in, check if onboarding is completed
+            return FutureBuilder<DocumentSnapshot>(
+              future: FirebaseFirestore.instance
+                  .collection('users')
+                  .doc(snapshot.data!.uid)
+                  .get(),
+              builder: (context, userSnapshot) {
+                if (userSnapshot.connectionState == ConnectionState.waiting) {
+                  return Center(child: CircularProgressIndicator());
                 }
-                if (!userSnap.hasData || !userSnap.data!.exists) {
-                  // No profile, show startup page
-                  return StartupProfileScreen(user: user);
+
+                if (!userSnapshot.hasData || !userSnapshot.data!.exists) {
+                  return OnboardingFlowPage();
                 }
-                final data = userSnap.data!.data() as Map<String, dynamic>?;
-                // Check for required fields
-                if (data == null ||
-                    data['name'] == null || data['name'] == '' ||
-                    data['age'] == null || data['height'] == null || data['weight'] == null ||
-                    data['dailyCalorieGoal'] == null || data['proteinGoal'] == null || data['carbsGoal'] == null || data['fatGoal'] == null) {
-                  return StartupProfileScreen(user: user);
+
+                final userData = userSnapshot.data!.data() as Map<String, dynamic>?;
+                // Check if all required fields are present and non-zero
+                final hasCompletedOnboarding = userData != null &&
+                    userData['age'] != null &&
+                    userData['height'] != null &&
+                    userData['weight'] != null &&
+                    userData['targetWeight'] != null &&
+                    userData['activityLevel'] != null &&
+                    userData['dailyCalorieGoal'] != null;
+
+                if (!hasCompletedOnboarding) {
+                  return OnboardingFlowPage();
                 }
+
                 return MainNavScreen();
               },
             );
           }
+          
           return AuthScreen();
         },
       ),
@@ -524,10 +540,20 @@ class _AuthScreenState extends State<AuthScreen> {
       isLoading = true;
       message = '';
     });
+    final password = passwordController.text;
+    final hasUppercase = password.contains(RegExp(r'[A-Z]'));
+    final hasSpecial = password.contains(RegExp(r'[!@#\$%^&*(),.?":{}|<>]'));
+    if (!hasUppercase || !hasSpecial) {
+      setState(() {
+        isLoading = false;
+        message = 'Password must contain at least one uppercase letter and one special character.';
+      });
+      return;
+    }
     try {
       await FirebaseAuth.instance.createUserWithEmailAndPassword(
         email: emailController.text.trim(),
-        password: passwordController.text,
+        password: password,
       );
       // Create a full user profile
       final userService = UserService();
@@ -536,6 +562,11 @@ class _AuthScreenState extends State<AuthScreen> {
         nameController.text.trim(),
       );
       setState(() => message = 'Sign up successful!');
+      // Show onboarding after sign up
+      final user = FirebaseAuth.instance.currentUser;
+      if (user != null && mounted) {
+        Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => OnboardingFlowPage()));
+      }
     } catch (e) {
       setState(() => message = 'Error: $e');
     } finally {
@@ -2013,34 +2044,34 @@ class _QuickActionCardState extends State<_QuickActionCard> with SingleTickerPro
           scale: _scale.value,
           child: child,
         ),
-        child: Container(
-          decoration: BoxDecoration(
+      child: Container(
+        decoration: BoxDecoration(
             color: widget.color.withOpacity(0.08),
-            borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(16),
             border: Border.all(color: widget.color.withOpacity(0.15)),
-          ),
-          padding: const EdgeInsets.all(16),
-          child: Row(
-            children: [
-              Container(
-                decoration: BoxDecoration(
+        ),
+        padding: const EdgeInsets.all(16),
+        child: Row(
+          children: [
+            Container(
+              decoration: BoxDecoration(
                   color: widget.color.withOpacity(0.15),
-                  shape: BoxShape.circle,
-                ),
-                padding: const EdgeInsets.all(10),
-                child: Icon(widget.icon, color: widget.color, size: 28),
+                shape: BoxShape.circle,
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
+              padding: const EdgeInsets.all(10),
+                child: Icon(widget.icon, color: widget.color, size: 28),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
                     Text(widget.label, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
                     Text(widget.subtitle, style: TextStyle(color: Colors.grey[500], fontSize: 13)),
-                  ],
-                ),
+                ],
               ),
-            ],
+            ),
+          ],
           ),
         ),
       ),
@@ -2079,16 +2110,16 @@ class _MealCardModernState extends State<_MealCardModern> {
       child: Column(
         children: [
           Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
               // Meal image placeholder
-              Container(
+          Container(
                 width: 48,
                 height: 48,
-                decoration: BoxDecoration(
-                  color: kContainerGrey,
-                  borderRadius: BorderRadius.circular(12),
-                ),
+            decoration: BoxDecoration(
+              color: kContainerGrey,
+              borderRadius: BorderRadius.circular(12),
+            ),
                 child: meal.imageUrl != null && meal.imageUrl!.isNotEmpty
                     ? ClipRRect(
                         borderRadius: BorderRadius.circular(12),
@@ -2101,44 +2132,44 @@ class _MealCardModernState extends State<_MealCardModern> {
                         ),
                       )
                     : Icon(Icons.fastfood, color: kPrimaryGreen, size: 28),
-              ),
+          ),
               const SizedBox(width: 10),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
                   children: [
-                    Row(
-                      children: [
-                        Text(meal.mealType.capitalize(), style: TextStyle(color: kPrimaryGreen, fontWeight: FontWeight.w600)),
-                        const SizedBox(width: 8),
-                        Text(formatTime(meal.timestamp), style: TextStyle(color: Colors.grey[500], fontSize: 13)),
-                      ],
-                    ),
-                    const SizedBox(height: 2),
-                    Text(meal.name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                    const SizedBox(height: 6),
-                    Row(
-                      children: [
-                        _MacroTag(label: 'P', value: '${meal.protein}g', color: kSecondaryBlue),
-                        const SizedBox(width: 6),
-                        _MacroTag(label: 'C', value: '${meal.carbs}g', color: kAccentOrange),
-                        const SizedBox(width: 6),
-                        _MacroTag(label: 'F', value: '${meal.fat}g', color: kWarningRed),
-                      ],
-                    ),
+                    Text(meal.mealType.capitalize(), style: TextStyle(color: kPrimaryGreen, fontWeight: FontWeight.w600)),
+                    const SizedBox(width: 8),
+                    Text(formatTime(meal.timestamp), style: TextStyle(color: Colors.grey[500], fontSize: 13)),
                   ],
                 ),
-              ),
+                const SizedBox(height: 2),
+                Text(meal.name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                const SizedBox(height: 6),
+                Row(
+                  children: [
+                    _MacroTag(label: 'P', value: '${meal.protein}g', color: kSecondaryBlue),
+                    const SizedBox(width: 6),
+                    _MacroTag(label: 'C', value: '${meal.carbs}g', color: kAccentOrange),
+                    const SizedBox(width: 6),
+                    _MacroTag(label: 'F', value: '${meal.fat}g', color: kWarningRed),
+                  ],
+                ),
+              ],
+            ),
+          ),
               // Calories, delete, and dropdown in a vertical column
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
                   Row(
                     mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text('${meal.calories}', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+            children: [
+              Text('${meal.calories}', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
                       const SizedBox(width: 2),
-                      Text('cal', style: TextStyle(color: Colors.grey[600], fontSize: 13)),
+              Text('cal', style: TextStyle(color: Colors.grey[600], fontSize: 13)),
                       IconButton(
                         icon: Icon(Icons.delete, color: Colors.redAccent, size: 22),
                         tooltip: 'Delete meal',
@@ -2174,9 +2205,9 @@ class _MealCardModernState extends State<_MealCardModern> {
                         padding: EdgeInsets.zero,
                         constraints: BoxConstraints(),
                         onPressed: () => setState(() => _expanded = !_expanded),
-                      ),
-                    ],
-                  ),
+          ),
+        ],
+      ),
                 ],
               ),
             ],
@@ -2208,12 +2239,12 @@ class _MealCardModernState extends State<_MealCardModern> {
       ),
     );
   }
-}
+  }
 
-String formatTime(DateTime dt) {
-  final h = dt.hour.toString().padLeft(2, '0');
-  final m = dt.minute.toString().padLeft(2, '0');
-  return '$h:$m';
+  String formatTime(DateTime dt) {
+    final h = dt.hour.toString().padLeft(2, '0');
+    final m = dt.minute.toString().padLeft(2, '0');
+    return '$h:$m';
 }
 
 // Macro Tag
@@ -2584,95 +2615,270 @@ class _ProfileScreenState extends State<ProfileScreen> {
             final userName = profile?.name ?? '';
             final userAvatar = profile?.photoUrl ?? '';
             return Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Header
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(24, 24, 24, 8),
-                  child: Text('Your Profile', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 28)),
-                ),
-                Divider(height: 1, thickness: 1, color: Colors.grey[200]),
-                // Profile Card
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 18, 16, 0),
-                  child: Container(
-                    padding: const EdgeInsets.all(18),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(18),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.03),
-                          blurRadius: 8,
-                          offset: Offset(0, 2),
-                        ),
-                      ],
+            // Header
+          Padding(
+              padding: const EdgeInsets.fromLTRB(24, 24, 24, 8),
+              child: Text('Your Profile', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 28)),
+            ),
+            Divider(height: 1, thickness: 1, color: Colors.grey[200]),
+            // Profile Card
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 18, 16, 0),
+              child: Container(
+                padding: const EdgeInsets.all(18),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(18),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.03),
+                      blurRadius: 8,
+                      offset: Offset(0, 2),
                     ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                  ],
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
                       children: [
-                        Row(
-                          children: [
-                            Container(
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                border: Border.all(color: kPrimaryGreen, width: 3),
-                              ),
-                              child: CircleAvatar(
-                                radius: 34,
-                                backgroundImage: userAvatar.isNotEmpty ? NetworkImage(userAvatar) : null,
-                                backgroundColor: kPrimaryGreen.withOpacity(0.08),
-                                child: userAvatar.isEmpty ? Icon(Icons.person, color: kPrimaryGreen, size: 38) : null,
-                              ),
-                            ),
-                            const SizedBox(width: 18),
-                            Expanded(
-                              child: Row(
-                                children: [
-                                  Text(userName, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 22)),
-                                  const SizedBox(width: 10),
-                                  if (isPremium)
-                                    Container(
-                                      padding: EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                                      decoration: BoxDecoration(
-                                        color: kPrimaryGreen.withOpacity(0.10),
-                                        borderRadius: BorderRadius.circular(12),
-                                      ),
-                                      child: Text('Premium', style: TextStyle(color: kPrimaryGreen, fontWeight: FontWeight.w600)),
+                        GestureDetector(
+                          onTap: () {
+                            showDialog(
+                              context: context,
+                              builder: (context) {
+                                return Dialog(
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(24.0),
+                                    child: Column(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Stack(
+                                          children: [
+                                            CircleAvatar(
+                                              radius: 60,
+                                              backgroundImage: profile != null && profile.photoUrl.isNotEmpty
+                                                ? NetworkImage(profile.photoUrl)
+                                                : null,
+                                              backgroundColor: kPrimaryGreen.withOpacity(0.08),
+                                              child: profile == null || profile.photoUrl.isEmpty
+                                                ? Icon(Icons.person, color: kPrimaryGreen, size: 60)
+                                                : null,
+                                            ),
+                                            Positioned(
+                                              top: 0,
+                                              right: 0,
+                                              child: IconButton(
+                                                icon: Icon(Icons.close, color: Colors.grey[700]),
+                                                onPressed: () => Navigator.pop(context),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                        SizedBox(height: 18),
+                                        Row(
+                                          mainAxisAlignment: MainAxisAlignment.center,
+                                          children: [
+                                            ElevatedButton.icon(
+                                              icon: Icon(Icons.upload),
+                                              label: Text('Upload New'),
+                                              onPressed: () async {
+                                                Navigator.pop(context);
+                                                await _changeProfilePicture();
+                                              },
+                                            ),
+                                            if (profile != null && profile.photoUrl.isNotEmpty) ...[
+                                              SizedBox(width: 12),
+                                              OutlinedButton.icon(
+                                                icon: Icon(Icons.delete),
+                                                label: Text('Delete'),
+                                                onPressed: () async {
+                                                  Navigator.pop(context);
+                                                  final user = FirebaseAuth.instance.currentUser;
+                                                  if (user != null) {
+                                                    await FirebaseFirestore.instance.collection('users').doc(user.uid).update({'photoUrl': ''});
+                                                    await user.updatePhotoURL('');
+                                                    setState(() {});
+                                                  }
+                                                },
+                                              ),
+                                            ],
+                                          ],
+                                        ),
+                                      ],
                                     ),
-                                ],
+                                  ),
+                                );
+                              },
+                            );
+                          },
+                          child: Stack(
+                      children: [
+                        Container(
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            border: Border.all(color: kPrimaryGreen, width: 3),
+                          ),
+                          child: CircleAvatar(
+                            radius: 34,
+                            backgroundImage: profile != null && profile.photoUrl.isNotEmpty
+                              ? NetworkImage(profile.photoUrl)
+                              : null,
+                            backgroundColor: kPrimaryGreen.withOpacity(0.08),
+                                  child: profile == null || profile.photoUrl.isEmpty ? Icon(Icons.person, color: kPrimaryGreen, size: 38) : null,
+                                ),
                               ),
-                            ),
-                          ],
+                              if (profile == null || profile.photoUrl.isEmpty)
+                                Positioned(
+                                  bottom: 0,
+                                  right: 0,
+                                  child: Container(
+                                    decoration: BoxDecoration(
+                                      color: Colors.white,
+                                      shape: BoxShape.circle,
+                                      boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 2)],
+                                    ),
+                                    padding: EdgeInsets.all(4),
+                                    child: Icon(Icons.edit, color: kPrimaryGreen, size: 18),
+                                  ),
+                                ),
+                            ],
+                          ),
                         ),
-                        const SizedBox(height: 14),
-                        // Add three pill-shaped buttons horizontally
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                          children: [
-                            _ProfileActionButton(
-                              icon: Icons.camera_alt,
-                              label: 'Change Profile Picture',
-                              onTap: _changeProfilePicture,
-                            ),
-                            _ProfileActionButton(
-                              icon: Icons.edit,
-                              label: 'Change Profile Name',
-                              onTap: () => _changeProfileName(userName),
-                            ),
-                            // Removed Plan Settings button
-                          ],
+                        const SizedBox(width: 18),
+                        Expanded(
+                          child: Row(
+                            children: [
+                              Text(userName, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 22)),
+                              IconButton(
+                                icon: Icon(Icons.edit, color: kPrimaryGreen, size: 20),
+                                tooltip: 'Edit name',
+                                onPressed: () => _changeProfileName(userName),
+                              ),
+                              const SizedBox(width: 10),
+                              if (isPremium)
+                                Container(
+                                  padding: EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                  decoration: BoxDecoration(
+                                    color: kPrimaryGreen.withOpacity(0.10),
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: Text('Premium', style: TextStyle(color: kPrimaryGreen, fontWeight: FontWeight.w600)),
+                                ),
+                            ],
+                          ),
                         ),
                       ],
                     ),
-                  ),
-                ),
-                const SizedBox(height: 18),
-                // Menu List
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 12),
-                          child: Container(
+                    const SizedBox(height: 14),
+                    // Add three pill-shaped buttons horizontally
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        // Removed Plan Settings button
+                      ],
+                    ),
+                    const SizedBox(height: 14),
+                    if (profile != null) ...[
+                      Builder(
+                        builder: (context) {
+                          final prefs = Provider.of<PreferencesProvider>(context);
+                          final useMetric = prefs.useMetric;
+                          final weight = useMetric ? profile.weight : (profile.weight * 2.20462);
+                          final weightUnit = useMetric ? 'kg' : 'lb';
+                          final height = useMetric ? profile.height : (profile.height * 0.393701);
+                          final heightUnit = useMetric ? 'cm' : 'ft';
+                          String heightDisplay;
+                          if (useMetric) {
+                            heightDisplay = '${height.toStringAsFixed(1)} cm';
+                          } else {
+                            int totalInches = height.round();
+                            int feet = totalInches ~/ 12;
+                            int inches = totalInches % 12;
+                            heightDisplay = "${feet}'${inches}\" ft";
+                          }
+                          return Container(
+                            width: double.infinity,
+                            padding: EdgeInsets.symmetric(vertical: 18, horizontal: 12),
                             decoration: BoxDecoration(
+                              color: kPrimaryGreen.withOpacity(0.07),
+                              borderRadius: BorderRadius.circular(18),
+                              border: Border.all(color: kPrimaryGreen.withOpacity(0.13)),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.03),
+                                  blurRadius: 8,
+                                  offset: Offset(0, 2),
+                                ),
+                              ],
+                            ),
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  child: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Icon(Icons.cake, color: kPrimaryGreen, size: 26),
+                                      SizedBox(height: 6),
+                                      Text('Age', style: TextStyle(color: kPrimaryGreen, fontWeight: FontWeight.w600, fontSize: 15)),
+                                      SizedBox(height: 2),
+                                      Text('${profile.age}', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Colors.black)),
+                                    ],
+                                  ),
+                                ),
+                                Container(
+                                  height: 48,
+                                  width: 1.2,
+                                  color: kPrimaryGreen.withOpacity(0.13),
+                                ),
+                                Expanded(
+                                  child: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Icon(Icons.monitor_weight, color: kPrimaryGreen, size: 26),
+                                      SizedBox(height: 6),
+                                      Text('Weight', style: TextStyle(color: kPrimaryGreen, fontWeight: FontWeight.w600, fontSize: 15)),
+                                      SizedBox(height: 2),
+                                      Text('${weight.toStringAsFixed(1)} $weightUnit', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Colors.black)),
+                                    ],
+                                  ),
+                                ),
+                                Container(
+                                  height: 48,
+                                  width: 1.2,
+                                  color: kPrimaryGreen.withOpacity(0.13),
+                                ),
+                                Expanded(
+                                  child: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Icon(Icons.height, color: kPrimaryGreen, size: 26),
+                                      SizedBox(height: 6),
+                                      Text('Height', style: TextStyle(color: kPrimaryGreen, fontWeight: FontWeight.w600, fontSize: 15)),
+                                      SizedBox(height: 2),
+                                      Text(heightDisplay, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Colors.black)),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
+                        },
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 18),
+            // Menu List
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+                      child: Container(
+                        decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(18),
                           boxShadow: [
@@ -2688,27 +2894,47 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     _ProfileMenuTile(
                               icon: Icons.show_chart,
                       label: 'Nutritional Plan',
-                      onTap: () {},
+                      onTap: () {
+                        Navigator.of(context).push(MaterialPageRoute(builder: (_) => NutritionalPlanPage()));
+                      },
                             ),
                     Divider(height: 1, color: Colors.grey[200]),
                     _ProfileMenuTile(
                       icon: Icons.chat_bubble_outline,
                       label: 'Preferences',
-                      onTap: () {},
+                      onTap: () {
+                        showDialog(
+                          context: context,
+                          builder: (context) => AlertDialog(
+                            title: Text('Preferences'),
+                            content: Text('This feature is coming soon!'),
+                            actions: [TextButton(onPressed: () => Navigator.pop(context), child: Text('OK'))],
+                          ),
+                        );
+                      },
                     ),
                     Divider(height: 1, color: Colors.grey[200]),
                     _ProfileMenuTile(
                       icon: Icons.settings,
                       label: 'Settings',
                       iconColor: kPrimaryGreen,
-                      onTap: () {},
+                      onTap: () {
+                        Navigator.of(context).push(MaterialPageRoute(builder: (_) => SettingsPage()));
+                      },
                     ),
                     Divider(height: 1, color: Colors.grey[200]),
                     _ProfileMenuTile(
                       icon: Icons.tune,
                       label: 'Plan Settings',
                       onTap: () {
-                        // TODO: Implement Plan Settings
+                        showDialog(
+                          context: context,
+                          builder: (context) => AlertDialog(
+                            title: Text('Plan Settings'),
+                            content: Text('This feature is coming soon!'),
+                            actions: [TextButton(onPressed: () => Navigator.pop(context), child: Text('OK'))],
+                          ),
+                        );
                       },
                     ),
                     Divider(height: 1, color: Colors.grey[200]),
@@ -2716,7 +2942,113 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       icon: Icons.lock_reset,
                       label: 'Reset password',
                       onTap: () {
-                        // TODO: Implement Reset password
+                        showDialog(
+                          context: context,
+                          builder: (context) {
+                            final user = FirebaseAuth.instance.currentUser;
+                            final String? email = user?.email;
+                            bool isLoading = false;
+                            String message = '';
+                            return StatefulBuilder(
+                              builder: (context, setState) => Dialog(
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                child: Container(
+                                  padding: EdgeInsets.all(24),
+                                  child: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Icon(Icons.lock_reset, size: 48, color: kPrimaryGreen),
+                                      SizedBox(height: 16),
+                                      Text('Reset Password', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+                                      SizedBox(height: 8),
+                                      Text('A password reset link will be sent to your email:',
+                                        style: TextStyle(fontSize: 16, color: Colors.grey[600]),
+                                        textAlign: TextAlign.center,
+                                      ),
+                                      SizedBox(height: 16),
+                                      Container(
+                                        width: double.infinity,
+                                        padding: EdgeInsets.symmetric(vertical: 14, horizontal: 12),
+                                        decoration: BoxDecoration(
+                                          color: kPrimaryGreen.withOpacity(0.08),
+                                          borderRadius: BorderRadius.circular(12),
+                                          border: Border.all(color: kPrimaryGreen.withOpacity(0.18)),
+                                        ),
+                                        child: Row(
+                                          children: [
+                                            Icon(Icons.email, color: kPrimaryGreen),
+                                            SizedBox(width: 10),
+                                            Expanded(
+                                              child: Text(
+                                                email ?? 'No email found',
+                                                style: TextStyle(fontWeight: FontWeight.w600, color: kPrimaryGreen, fontSize: 16),
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      SizedBox(height: 16),
+                                      if (message.isNotEmpty)
+                                        Padding(
+                                          padding: const EdgeInsets.only(bottom: 8),
+                                          child: Text(
+                                            message,
+                                            style: TextStyle(
+                                              color: message.startsWith('Success') ? kPrimaryGreen : kWarningRed,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                            textAlign: TextAlign.center,
+                                          ),
+                                        ),
+                                      Row(
+                                        mainAxisAlignment: MainAxisAlignment.center,
+                                        children: [
+                                          OutlinedButton(
+                                            onPressed: () => Navigator.pop(context),
+                                            style: OutlinedButton.styleFrom(
+                                              foregroundColor: kPrimaryGreen,
+                                              side: BorderSide(color: kPrimaryGreen),
+                                              shape: RoundedRectangleBorder(
+                                                borderRadius: BorderRadius.circular(12),
+                                              ),
+                                            ),
+                                            child: Text('Close'),
+                                          ),
+                                          SizedBox(width: 12),
+                                          ElevatedButton(
+                                            onPressed: (isLoading || email == null)
+                                              ? null
+                                              : () async {
+                                                  setState(() { isLoading = true; message = ''; });
+                                                  try {
+                                                    await FirebaseAuth.instance.sendPasswordResetEmail(email: email);
+                                                    setState(() {
+                                                      message = 'Success! Check your email for a reset link.';
+                                                      isLoading = false;
+                                                    });
+                                                  } catch (e) {
+                                                    setState(() {
+                                                      message = 'Error: ${e.toString()}';
+                                                      isLoading = false;
+                                                    });
+                                                  }
+                                                },
+                                            child: isLoading
+                                              ? SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                                              : Text('Send Reset Link'),
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            );
+                          },
+                        );
                       },
                     ),
                     Divider(height: 1, color: Colors.grey[200]),
@@ -2724,17 +3056,255 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       icon: Icons.help_outline,
                       label: 'Help & Support',
                       iconColor: Colors.red,
-                      onTap: () {},
-                ),
+                      onTap: () {
+                        showDialog(
+                          context: context,
+                          builder: (context) => Dialog(
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: Container(
+                              padding: EdgeInsets.all(24),
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    Icons.support_agent,
+                                    size: 48,
+                                    color: kPrimaryGreen,
+                                  ),
+                                  SizedBox(height: 16),
+                                  Text(
+                                    'Help & Support',
+                                    style: TextStyle(
+                                      fontSize: 24,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  SizedBox(height: 8),
+                                  Text(
+                                    'Need assistance? Contact our support team:',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      color: Colors.grey[600],
+                                    ),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                  SizedBox(height: 16),
+                                  InkWell(
+                                    onTap: () async {
+                                      print('DEBUG: Email InkWell tapped');
+                                      final Uri emailLaunchUri = Uri(
+                                        scheme: 'mailto',
+                                        path: 'support@healthai.com',
+                                        queryParameters: {
+                                          'subject': 'HealthAI Support Request',
+                                        },
+                                      );
+                                      if (await canLaunchUrl(emailLaunchUri)) {
+                                        await launchUrl(emailLaunchUri);
+                                      } else {
+                                        print('DEBUG: Could not launch email client');
+                                        showDialog(
+                                          context: context,
+                                          builder: (context) => AlertDialog(
+                                            title: Text('Error'),
+                                            content: Text('Could not launch email client'),
+                                            actions: [
+                                              TextButton(
+                                                onPressed: () => Navigator.of(context).pop(),
+                                                child: Text('OK'),
+                                              ),
+                                            ],
+                                          ),
+                                        );
+                                      }
+                                    },
+                                    child: Container(
+                                      padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                                      decoration: BoxDecoration(
+                                        color: kPrimaryGreen.withOpacity(0.1),
+                                        borderRadius: BorderRadius.circular(12),
+                                        border: Border.all(color: kPrimaryGreen.withOpacity(0.3)),
+                                      ),
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Icon(Icons.email, color: kPrimaryGreen),
+                                          SizedBox(width: 8),
+                                          Text(
+                                            'support@healthai.com',
+                                            style: TextStyle(
+                                              color: kPrimaryGreen,
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                  SizedBox(height: 16),
+                                  ElevatedButton(
+                                    onPressed: () async {
+                                      print('DEBUG: Test web URL button tapped');
+                                      final Uri webUri = Uri.parse('https://google.com');
+                                      if (await canLaunchUrl(webUri)) {
+                                        await launchUrl(webUri);
+                                      } else {
+                                        print('DEBUG: Could not launch web URL');
+                                        showDialog(
+                                          context: context,
+                                          builder: (context) => AlertDialog(
+                                            title: Text('Error'),
+                                            content: Text('Could not launch web URL'),
+                                            actions: [
+                                              TextButton(
+                                                onPressed: () => Navigator.of(context).pop(),
+                                                child: Text('OK'),
+                                              ),
+                                            ],
+                                          ),
+                                        );
+                                      }
+                                    },
+                                    child: Text('Test Web URL'),
+                                  ),
+                                  SizedBox(height: 8),
+                                  ElevatedButton(
+                                    onPressed: () async {
+                                      print('DEBUG: Test simple mailto button tapped');
+                                      final Uri emailLaunchUri = Uri(
+                                        scheme: 'mailto',
+                                        path: 'support@healthai.com',
+                                      );
+                                      if (await canLaunchUrl(emailLaunchUri)) {
+                                        await launchUrl(emailLaunchUri);
+                                      } else {
+                                        print('DEBUG: Could not launch simple mailto');
+                                        showDialog(
+                                          context: context,
+                                          builder: (context) => AlertDialog(
+                                            title: Text('Error'),
+                                            content: Text('Could not launch simple mailto'),
+                                            actions: [
+                                              TextButton(
+                                                onPressed: () => Navigator.of(context).pop(),
+                                                child: Text('OK'),
+                                              ),
+                                            ],
+                                          ),
+                                        );
+                                      }
+                                    },
+                                    child: Text('Test Simple Mailto'),
+                                  ),
+                                  SizedBox(height: 24),
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      OutlinedButton(
+                                        onPressed: () => Navigator.pop(context),
+                                        style: OutlinedButton.styleFrom(
+                                          foregroundColor: kPrimaryGreen,
+                                          side: BorderSide(color: kPrimaryGreen),
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(12),
+                                          ),
+                                        ),
+                                        child: Text('Close'),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        );
+                      },
+                    ),
                     Divider(height: 1, color: Colors.grey[200]),
                     _ProfileMenuTile(
                       icon: Icons.logout,
                       label: 'Log Out',
                       iconColor: Colors.red,
                       labelColor: Colors.red,
-                      onTap: () async {
-                    await FirebaseAuth.instance.signOut();
-                  },
+                      onTap: () {
+                        showDialog(
+                          context: context,
+                          builder: (context) => Dialog(
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: Container(
+                              padding: EdgeInsets.all(24),
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    Icons.logout,
+                                    size: 48,
+                                    color: Colors.red,
+                                  ),
+                                  SizedBox(height: 16),
+                                  Text(
+                                    'Log Out',
+                                    style: TextStyle(
+                                      fontSize: 24,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  SizedBox(height: 8),
+                                  Text(
+                                    'Are you sure you want to log out?',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      color: Colors.grey[600],
+                                    ),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                  SizedBox(height: 24),
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                    children: [
+                                      OutlinedButton(
+                                        onPressed: () => Navigator.pop(context),
+                                        style: OutlinedButton.styleFrom(
+                                          foregroundColor: kPrimaryGreen,
+                                          side: BorderSide(color: kPrimaryGreen),
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(12),
+                                          ),
+                                          padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                                        ),
+                                        child: Text('No'),
+                                      ),
+                                      ElevatedButton(
+                                        onPressed: () async {
+                                          Navigator.pop(context);
+                                          await FirebaseAuth.instance.signOut();
+                                          Navigator.of(context).pushAndRemoveUntil(
+                                            MaterialPageRoute(builder: (_) => AuthScreen()),
+                                            (route) => false,
+                                          );
+                                        },
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: Colors.red,
+                                          foregroundColor: Colors.white,
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(12),
+                                          ),
+                                          padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                                        ),
+                                        child: Text('Yes'),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        );
+                      },
                     ),
             ],
                 ),
@@ -2743,7 +3313,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ],
             );
           },
-        ),
+            ),
       ),
     );
   }
@@ -3845,15 +4415,15 @@ class _FoodMealCardState extends State<_FoodMealCard> {
       child: Column(
         children: [
           Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
               // Meal image placeholder
-              ClipRRect(
-                borderRadius: BorderRadius.circular(12),
-                child: Container(
+          ClipRRect(
+            borderRadius: BorderRadius.circular(12),
+            child: Container(
                   width: 48,
                   height: 48,
-                  color: kContainerGrey,
+              color: kContainerGrey,
                   child: meal.imageUrl != null && meal.imageUrl!.isNotEmpty
                       ? Image.network(
                           meal.imageUrl!,
@@ -3863,45 +4433,45 @@ class _FoodMealCardState extends State<_FoodMealCard> {
                           errorBuilder: (context, error, stackTrace) => Icon(Icons.fastfood, color: kPrimaryGreen, size: 28),
                         )
                       : Icon(Icons.fastfood, color: kPrimaryGreen, size: 28),
-                ),
-              ),
+            ),
+          ),
               const SizedBox(width: 10),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
                   children: [
-                    Row(
-                      children: [
-                        Text(meal.mealType.capitalize(), style: TextStyle(color: kPrimaryGreen, fontWeight: FontWeight.w600)),
-                        const SizedBox(width: 8),
-                        Text(formatTime(meal.timestamp), style: TextStyle(color: Colors.grey[500], fontSize: 13)),
-                      ],
-                    ),
-                    const SizedBox(height: 2),
-                    Text(meal.name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                    const SizedBox(height: 6),
-                    Row(
-                      children: [
-                        _MacroTag(label: 'P', value: '${meal.protein}g', color: kSecondaryBlue),
-                        const SizedBox(width: 6),
-                        _MacroTag(label: 'C', value: '${meal.carbs}g', color: kAccentOrange),
-                        const SizedBox(width: 6),
-                        _MacroTag(label: 'F', value: '${meal.fat}g', color: kWarningRed),
-                      ],
-                    ),
+                    Text(meal.mealType.capitalize(), style: TextStyle(color: kPrimaryGreen, fontWeight: FontWeight.w600)),
+                    const SizedBox(width: 8),
+                    Text(formatTime(meal.timestamp), style: TextStyle(color: Colors.grey[500], fontSize: 13)),
                   ],
                 ),
-              ),
+                const SizedBox(height: 2),
+                Text(meal.name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                const SizedBox(height: 6),
+                Row(
+                  children: [
+                    _MacroTag(label: 'P', value: '${meal.protein}g', color: kSecondaryBlue),
+                    const SizedBox(width: 6),
+                    _MacroTag(label: 'C', value: '${meal.carbs}g', color: kAccentOrange),
+                    const SizedBox(width: 6),
+                    _MacroTag(label: 'F', value: '${meal.fat}g', color: kWarningRed),
+                  ],
+                ),
+              ],
+            ),
+          ),
               // Calories, delete, and dropdown in a single row
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
                   Row(
                     mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text('${meal.calories}', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+            children: [
+              Text('${meal.calories}', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
                       const SizedBox(width: 2),
-                      Text('cal', style: TextStyle(color: Colors.grey[600], fontSize: 13)),
+              Text('cal', style: TextStyle(color: Colors.grey[600], fontSize: 13)),
                       IconButton(
                         icon: Icon(Icons.delete, color: Colors.redAccent, size: 22),
                         tooltip: 'Delete meal',
@@ -3937,9 +4507,9 @@ class _FoodMealCardState extends State<_FoodMealCard> {
                         padding: EdgeInsets.zero,
                         constraints: BoxConstraints(),
                         onPressed: () => setState(() => _expanded = !_expanded),
-                      ),
-                    ],
-                  ),
+          ),
+        ],
+      ),
                 ],
               ),
             ],
@@ -3962,7 +4532,7 @@ class _FoodMealCardState extends State<_FoodMealCard> {
                       );
                     } else {
                       return Text('No ingredients listed.', style: TextStyle(color: Colors.grey[600], fontStyle: FontStyle.italic));
-                    }
+}
                   },
                 ),
               ),
@@ -4104,7 +4674,7 @@ class _RecipeCardSmall extends StatelessWidget {
       ),
     );
   }
-  }
+}
 
 // FAB Action Button
 class _FabActionButton extends StatelessWidget {
@@ -4245,6 +4815,34 @@ class _ProfileActionButton extends StatelessWidget {
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _ProfileInfoChip extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final String value;
+  const _ProfileInfoChip({required this.icon, required this.label, required this.value});
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: EdgeInsets.symmetric(horizontal: 2),
+      padding: EdgeInsets.symmetric(horizontal: 6, vertical: 8), // reduced horizontal padding
+      decoration: BoxDecoration(
+        color: kPrimaryGreen.withOpacity(0.08),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: kPrimaryGreen.withOpacity(0.15)),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(icon, color: kPrimaryGreen, size: 17),
+          SizedBox(width: 4),
+          Text('$label: ', style: TextStyle(fontWeight: FontWeight.w500, color: kPrimaryGreen, fontSize: 14)),
+          Text(value, style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black, fontSize: 15)),
+        ],
       ),
     );
   }
