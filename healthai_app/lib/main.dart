@@ -21,6 +21,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'onboarding_flow.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'services/ai_service.dart';
 
 // Define the color palette
 const Color kPrimaryGreen = Color(0xFF4CAF50); // Soft green
@@ -562,18 +563,35 @@ class _AuthScreenState extends State<AuthScreen> {
         idToken: googleAuth.idToken,
       );
       final userCredential = await FirebaseAuth.instance.signInWithCredential(credential);
-      // Optionally create user profile if new
       final userService = UserService();
       final user = FirebaseAuth.instance.currentUser;
       if (user != null) {
         final doc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
         if (!doc.exists) {
           await userService.createInitialUserProfile(user.email ?? '', user.displayName ?? '');
+          setState(() => isLoading = false);
+          if (mounted) {
+            Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => OnboardingFlowPage()));
+          }
+          return;
         }
-      }
-      setState(() => isLoading = false);
-      if (mounted) {
-        Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => OnboardingFlowPage()));
+        // Check if onboarding is complete
+        final data = doc.data() as Map<String, dynamic>?;
+        final hasCompletedOnboarding = data != null &&
+            data['age'] != null &&
+            data['height'] != null &&
+            data['weight'] != null &&
+            data['targetWeight'] != null &&
+            data['activityLevel'] != null &&
+            data['dailyCalorieGoal'] != null;
+        setState(() => isLoading = false);
+        if (mounted) {
+          if (!hasCompletedOnboarding) {
+            Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => OnboardingFlowPage()));
+          } else {
+            Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => MainNavScreen()));
+          }
+        }
       }
     } catch (e) {
       setState(() => isLoading = false);
@@ -718,8 +736,8 @@ class _AuthScreenState extends State<AuthScreen> {
                         color: Color(0xFFEFF6FF),
                         shape: BoxShape.circle,
                       ),
-                      padding: const EdgeInsets.all(24),
-                      child: Icon(Icons.code, size: 48, color: Colors.deepPurple),
+                      padding: const EdgeInsets.all(16),
+                      child: Image.asset('assets/logo.jpg', height: 56, width: 56, fit: BoxFit.contain),
                     ),
                     const SizedBox(height: 24),
                     Text(
@@ -3592,7 +3610,7 @@ class _CoachScreenState extends State<CoachScreen> with TickerProviderStateMixin
   late AnimationController _insightsController;
   static bool _hasAnimatedEntrance = false;
 
-  final List<_ChatMessage> _messages = [
+  static final List<_ChatMessage> _messages = [
     _ChatMessage(
       text: "Hello! I'm Yumie, your nutrition coach. How can I help you today?\n\nAsk Yumie about healthy recipes, meal plans, or nutrition tips!",
       isUser: false,
@@ -3603,6 +3621,9 @@ class _CoachScreenState extends State<CoachScreen> with TickerProviderStateMixin
       ],
     ),
   ];
+
+  String? _aiHealthInsight;
+  bool _loadingInsight = false;
 
   @override
   void initState() {
@@ -3633,6 +3654,59 @@ class _CoachScreenState extends State<CoachScreen> with TickerProviderStateMixin
     }
   }
 
+  void _fetchAIHealthInsight() async {
+    setState(() { _loadingInsight = true; });
+    final userProfile = await UserService().getCurrentUserProfile().first;
+    if (userProfile == null) {
+      setState(() { _aiHealthInsight = "Could not load profile."; _loadingInsight = false; });
+      return;
+    }
+    final user = FirebaseAuth.instance.currentUser;
+    String bloodType = '-';
+    bool isDiabetic = false;
+    if (user != null) {
+      final doc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
+      final data = doc.data() ?? {};
+      bloodType = data['bloodType'] ?? '-';
+      isDiabetic = data['isDiabetic'] ?? false;
+    }
+    final meals = await MealService().getTodayMeals().first;
+    int caloriesConsumed = meals.fold(0, (sum, m) => sum + m.calories);
+    int proteinG = meals.fold(0, (sum, m) => sum + m.protein);
+    int carbsG = meals.fold(0, (sum, m) => sum + m.carbs);
+    int fatG = meals.fold(0, (sum, m) => sum + m.fat);
+    double waterIntakeL = (userProfile.waterLoggedMl ?? 0) / 1000.0;
+    final chatHistory = [
+      {'role': 'user', 'content': "Give me a brief health insight or recommendation based on my nutrition summary today."},
+    ];
+    final aiResponse = await AIService().sendCoachMessage(
+      chatHistory: chatHistory,
+      name: userProfile.name,
+      age: userProfile.age,
+      heightCm: userProfile.height.round(),
+      weightKg: userProfile.weight,
+      calorieGoal: userProfile.dailyCalorieGoal,
+      caloriesConsumed: caloriesConsumed,
+      proteinG: proteinG,
+      carbsG: carbsG,
+      fatG: fatG,
+      waterIntakeL: waterIntakeL,
+      bloodType: bloodType,
+      isDiabetic: isDiabetic,
+      specialInstruction: 'For this health insight, respond as a concise list of 3-5 bullet points. Each point should be a short, actionable tip or observation. Do not use paragraphs.'
+    );
+    setState(() { _aiHealthInsight = aiResponse ?? "Could not get AI insight."; _loadingInsight = false; });
+  }
+
+  void _handleCommonQuestion(String question) {
+    setState(() {
+      _tabIndex = 0;
+    });
+    Future.delayed(Duration(milliseconds: 200), () {
+      _sendMessage(question);
+    });
+  }
+
   @override
   void dispose() {
     _tabController.dispose();
@@ -3653,38 +3727,77 @@ class _CoachScreenState extends State<CoachScreen> with TickerProviderStateMixin
     Future.delayed(Duration(milliseconds: 400), () => _botReply(text));
   }
 
-  void _botReply(String userText) {
-    String reply = '';
-    List<String> quickReplies = [];
-    if (userText.toLowerCase().contains('plan my week')) {
-      reply = "Yumie here! Would you like me to analyze your recent meals, suggest recipes, or help you plan a balanced week?";
-      quickReplies = [
-        'Analyze my recent meals',
-        'Suggest healthy recipes',
-        'Give me nutrition tips',
-      ];
-    } else if (userText.toLowerCase().contains('analyze my last meal')) {
-      reply = "Yumie thinks your last meal was well balanced! Want more details or healthy suggestions?";
-      quickReplies = [
-        'More details',
-        'Suggest healthy recipes',
-      ];
-    } else if (userText.toLowerCase().contains('what should i eat')) {
-      reply = "Yumie recommends a balanced meal with protein, veggies, and whole grains. Want a recipe or more tips?";
-      quickReplies = [
-        'Suggest a recipe',
-        'Help me plan my week',
-      ];
-    } else {
-      reply = "I'm Yumie! Ask me about healthy recipes, meal plans, or nutrition tips. How can I help you today?";
-      quickReplies = [
-        'What should I eat today?',
-        'Analyze my last meal',
-        'Help me plan my week',
-      ];
-    }
+  void _botReply(String userText) async {
     setState(() {
-      _messages.add(_ChatMessage(text: reply, isUser: false, quickReplies: quickReplies));
+      _messages.add(_ChatMessage(text: "Yumie is thinking...", isUser: false));
+    });
+
+    // 1. Get user profile
+    final userProfile = await UserService().getCurrentUserProfile().first;
+    if (userProfile == null) {
+      setState(() {
+        _messages.removeLast();
+        _messages.add(_ChatMessage(text: "Sorry, I couldn't find your profile.", isUser: false));
+      });
+      return;
+    }
+
+    // 2. Get bloodType and isDiabetic from Firestore (set by Health Awareness page)
+    final user = FirebaseAuth.instance.currentUser;
+    String bloodType = '-';
+    bool isDiabetic = false;
+    if (user != null) {
+      final doc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
+      final data = doc.data() ?? {};
+      bloodType = data['bloodType'] ?? '-';
+      isDiabetic = data['isDiabetic'] ?? false;
+    }
+
+    // 3. Fetch today's meals
+    final meals = await MealService().getTodayMeals().first;
+    String mealsSummary = meals.isEmpty
+        ? "No meals logged today."
+        : meals.map((m) =>
+            "${m.mealType.capitalize()}: ${m.name} (${m.calories} kcal, P:${m.protein}g C:${m.carbs}g F:${m.fat}g)").join("; ");
+
+    // 4. Nutrition log
+    int caloriesConsumed = meals.fold(0, (sum, m) => sum + m.calories);
+    int proteinG = meals.fold(0, (sum, m) => sum + m.protein);
+    int carbsG = meals.fold(0, (sum, m) => sum + m.carbs);
+    int fatG = meals.fold(0, (sum, m) => sum + m.fat);
+    double waterIntakeL = (userProfile.waterLoggedMl ?? 0) / 1000.0;
+
+    // 5. Build chat history for OpenAI
+    final chatHistory = _messages
+        .where((m) => m.text != "Yumie is thinking...")
+        .map((m) => {
+              'role': m.isUser ? 'user' : 'assistant',
+              'content': m.text,
+            })
+        .toList();
+    // Add the new user message
+    chatHistory.add({'role': 'user', 'content': userText + "\n\nToday's meals: $mealsSummary"});
+
+    // 6. Call the AI with full chat history
+    final aiResponse = await AIService().sendCoachMessage(
+      chatHistory: chatHistory,
+      name: userProfile.name,
+      age: userProfile.age,
+      heightCm: userProfile.height.round(),
+      weightKg: userProfile.weight,
+      calorieGoal: userProfile.dailyCalorieGoal,
+      caloriesConsumed: caloriesConsumed,
+      proteinG: proteinG,
+      carbsG: carbsG,
+      fatG: fatG,
+      waterIntakeL: waterIntakeL,
+      bloodType: bloodType,
+      isDiabetic: isDiabetic,
+    );
+
+    setState(() {
+      _messages.removeLast();
+      _messages.add(_ChatMessage(text: aiResponse ?? "Sorry, I couldn't get a response.", isUser: false));
     });
     _scrollToBottom();
   }
@@ -3773,6 +3886,7 @@ class _CoachScreenState extends State<CoachScreen> with TickerProviderStateMixin
                     onTap: () {
                       setState(() => _tabIndex = 1);
                       _tabController.forward(from: 0.0);
+                      _fetchAIHealthInsight();
                     },
                     child: Container(
                       padding: EdgeInsets.symmetric(vertical: 12),
@@ -3789,6 +3903,41 @@ class _CoachScreenState extends State<CoachScreen> with TickerProviderStateMixin
               ],
             ),
           ),
+          // Clear Chat Button
+          if (_tabIndex == 0)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  ElevatedButton.icon(
+                    onPressed: () {
+                      setState(() {
+                        _messages.clear();
+                        _messages.add(_ChatMessage(
+                          text: "Hello! I'm Yumie, your nutrition coach. How can I help you today?\n\nAsk Yumie about healthy recipes, meal plans, or nutrition tips!",
+                          isUser: false,
+                          quickReplies: [
+                            'What should I eat today?',
+                            'Analyze my last meal',
+                            'Help me plan my week',
+                          ],
+                        ));
+                      });
+                    },
+                    icon: Icon(Icons.refresh, size: 18),
+                    label: Text('Clear Chat'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: kPrimaryGreen,
+                      foregroundColor: Colors.white,
+                      padding: EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      textStyle: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                    ),
+                  ),
+                ],
+              ),
+            ),
           // Content
           Expanded(
             child: AnimatedSwitcher(
@@ -3828,7 +3977,7 @@ class _CoachScreenState extends State<CoachScreen> with TickerProviderStateMixin
                                         child: Column(
                                           crossAxisAlignment: CrossAxisAlignment.start,
                                           children: [
-                                            Text(msg.text, style: TextStyle(fontSize: 17, color: Colors.black)),
+                                            Text(removeMarkdown(msg.text), style: TextStyle(fontSize: 17, color: Colors.black)),
                                             if (msg.quickReplies.isNotEmpty) ...[
                                               SizedBox(height: 14),
                                               Wrap(
@@ -3852,7 +4001,7 @@ class _CoachScreenState extends State<CoachScreen> with TickerProviderStateMixin
                                           borderRadius: BorderRadius.circular(18),
                                           boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.08), blurRadius: 8, offset: Offset(0, 2))],
                                         ),
-                                        child: Text(msg.text, style: TextStyle(fontSize: 17, color: Colors.white)),
+                                        child: Text(removeMarkdown(msg.text), style: TextStyle(fontSize: 17, color: Colors.white)),
                                       ),
                                     SizedBox(height: 6),
                                   ],
@@ -3922,93 +4071,70 @@ class _CoachScreenState extends State<CoachScreen> with TickerProviderStateMixin
                               ),
                             ),
                             SizedBox(height: 18),
-                            // Health Insights
+                            // Health Insights (AI-powered)
                             Padding(
                               padding: const EdgeInsets.symmetric(horizontal: 16),
-                              child: StreamBuilder<UserProfile?>(
-                                stream: UserService().getCurrentUserProfile(),
-                                builder: (context, userSnap) {
-                                  if (!userSnap.hasData) return _insightCard(child: Center(child: CircularProgressIndicator()));
-                                  final userProfile = userSnap.data!;
-                                  return StreamBuilder<List<Meal>>(
-                                    stream: MealService().getTodayMeals(),
-                                    builder: (context, mealSnap) {
-                                      if (!mealSnap.hasData) return _insightCard(child: Center(child: CircularProgressIndicator()));
-                                      final meals = mealSnap.data!;
-                                      final proteinGoal = userProfile.proteinGoal;
-                                      final proteinToday = meals.fold(0, (sum, m) => sum + m.protein);
-                                      final proteinLow = proteinToday < (proteinGoal * 0.7);
-                                      final balancedMeals = meals.where((m) => m.protein > 10 && m.carbs > 10 && m.fat > 5).length;
-                                      final energyInsight = proteinToday > 30 ? 'Your energy levels are highest after morning protein intake' : null;
-                                      final insights = <String>[
-                                        if (proteinLow) 'Your protein intake has been lower than recommended today',
-                                        if (balancedMeals > 0) 'You tend to eat more balanced meals on weekdays',
-                                        if (energyInsight != null) energyInsight,
-                                      ];
-                                      return TweenAnimationBuilder<double>(
-                                        tween: Tween<double>(begin: 0, end: 1),
-                                        duration: Duration(milliseconds: 600),
-                                        builder: (context, value, child) => _insightCard(
-                                          child: Column(
+                              child: _insightCard(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text('Health Insights', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20)),
+                                    SizedBox(height: 14),
+                                    if (_loadingInsight)
+                                      Center(child: CircularProgressIndicator())
+                                    else if (_aiHealthInsight != null)
+                                      Builder(
+                                        builder: (context) {
+                                          // Remove intro/outro and split into up to 3 bullet points
+                                          final lines = _aiHealthInsight!
+                                            .replaceAll(RegExp(r'^(hey|hi|hello)[^\n]*\n*', caseSensitive: false), '')
+                                            .replaceAll(RegExp(r"you're doing great.*", caseSensitive: false), '')
+                                            .split(RegExp(r'\n+|- '))
+                                            .map((l) => l.trim())
+                                            .where((l) => l.isNotEmpty)
+                                            .take(3)
+                                            .toList();
+                                          return Column(
                                             crossAxisAlignment: CrossAxisAlignment.start,
                                             children: [
-                                              Text('Health Insights', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20)),
-                                              SizedBox(height: 14),
-                                              ...insights.map((insight) => TweenAnimationBuilder<double>(
-                                                tween: Tween<double>(begin: 0, end: 1),
-                                                duration: Duration(milliseconds: 400),
-                                                builder: (context, value, child) => Opacity(
-                                                  opacity: value,
-                                                  child: Transform.translate(
-                                                    offset: Offset(0, (1 - value) * 20),
-                                                    child: Padding(
-                                                      padding: const EdgeInsets.only(bottom: 8),
-                                                      child: Row(
-                                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                                        children: [
-                                                          Container(width: 8, height: 8, margin: EdgeInsets.only(top: 7), decoration: BoxDecoration(color: kPrimaryGreen, shape: BoxShape.circle)),
-                                                          SizedBox(width: 10),
-                                                          Expanded(child: Text(insight, style: TextStyle(fontSize: 16, color: Colors.grey[800]))),
-                                                        ],
-                                                      ),
-                                                    ),
+                                              for (final line in lines)
+                                                Padding(
+                                                  padding: const EdgeInsets.only(bottom: 8),
+                                                  child: Row(
+                                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                                    children: [
+                                                      Container(width: 8, height: 8, margin: EdgeInsets.only(top: 7), decoration: BoxDecoration(color: kPrimaryGreen, shape: BoxShape.circle)),
+                                                      SizedBox(width: 10),
+                                                      Expanded(child: Text(line, style: TextStyle(fontSize: 16, color: kPrimaryGreen, fontWeight: FontWeight.w600))),
+                                                    ],
                                                   ),
                                                 ),
-                                              )),
-                                              SizedBox(height: 10),
-                                              OutlinedButton(
-                                                onPressed: () {
-                                                  showDialog(
-                                                    context: context,
-                                                    builder: (context) => AlertDialog(
-                                                      title: Text('Detailed Analytics'),
-                                                      content: Text('Analytics coming soon!'),
-                                                      actions: [TextButton(onPressed: () => Navigator.pop(context), child: Text('Close'))],
-                                                    ),
-                                                  );
-                                                },
-                                                style: OutlinedButton.styleFrom(
-                                                  foregroundColor: kPrimaryGreen,
-                                                  side: BorderSide(color: kPrimaryGreen),
-                                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                                                  padding: EdgeInsets.symmetric(vertical: 14),
-                                                ),
-                                                child: Row(
-                                                  mainAxisAlignment: MainAxisAlignment.center,
-                                                  children: [
-                                                    Text('View Detailed Analytics', style: TextStyle(fontWeight: FontWeight.w600)),
-                                                    SizedBox(width: 8),
-                                                    Icon(Icons.chevron_right, size: 20),
-                                                  ],
-                                                ),
-                                              ),
                                             ],
-                                          ),
-                                        ),
-                                      );
-                                    },
-                                  );
-                                },
+                                          );
+                                        },
+                                      )
+                                    else
+                                      Text('No insight available.', style: TextStyle(fontSize: 16, color: Colors.grey[800])),
+                                    SizedBox(height: 10),
+                                    OutlinedButton(
+                                      onPressed: _fetchAIHealthInsight,
+                                      style: OutlinedButton.styleFrom(
+                                        foregroundColor: kPrimaryGreen,
+                                        side: BorderSide(color: kPrimaryGreen),
+                                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                                        padding: EdgeInsets.symmetric(vertical: 14),
+                                      ),
+                                      child: Row(
+                                        mainAxisAlignment: MainAxisAlignment.center,
+                                        children: [
+                                          Text('Refresh Insight', style: TextStyle(fontWeight: FontWeight.w600)),
+                                          SizedBox(width: 8),
+                                          Icon(Icons.refresh, size: 20),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
                               ),
                             ),
                             SizedBox(height: 18),
@@ -4048,9 +4174,7 @@ class _CoachScreenState extends State<CoachScreen> with TickerProviderStateMixin
                                                 child: Icon(Icons.search, color: Colors.black54, size: 22),
                                               ),
                                               title: Text(q, style: TextStyle(fontWeight: FontWeight.w500)),
-                                              onTap: () {
-                                                ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('AI response coming soon!')));
-                                              },
+                                              onTap: () => _handleCommonQuestion(q),
                                             ),
                                           ),
                                         ),
@@ -5349,4 +5473,13 @@ class _WaterLogSliderDialogState extends State<_WaterLogSliderDialog> {
       ],
     );
   }
+}
+
+// Helper to remove Markdown formatting from AI responses
+String removeMarkdown(String text) {
+  return text
+      .replaceAll(RegExp(r'\*\*(.*?)\*\*'), r'')
+      .replaceAll(RegExp(r'__(.*?)__'), r'')
+      .replaceAll(RegExp(r'\*(.*?)\*'), r'')
+      .replaceAll(RegExp(r'_(.*?)_'), r'');
 }

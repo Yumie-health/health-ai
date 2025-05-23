@@ -574,7 +574,7 @@ class _MotivationStep extends StatelessWidget {
 
   final List<Map<String, dynamic>> motivations = const [
     {'icon': Icons.wb_sunny_outlined, 'label': 'Feel energetic every day', 'color': Color(0xFFFFB74D)},
-    {'icon': Icons.favorite_border, 'label': 'Improve my health', 'color': Color(0xFF81C784)},
+    {'icon': Icons.emoji_events, 'label': 'Achieve a personal milestone', 'color': Color(0xFFBA68C8)},
     {'icon': Icons.self_improvement, 'label': 'Boost my confidence', 'color': Color(0xFF64B5F6)},
   ];
 
