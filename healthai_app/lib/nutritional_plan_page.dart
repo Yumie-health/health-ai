@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'main.dart';
+import 'services/user_service.dart';
 
 class NutritionalPlanPage extends StatefulWidget {
   @override
@@ -290,6 +291,21 @@ class _NutritionalPlanPageState extends State<NutritionalPlanPage> {
                 tooltip: 'AI Suggest',
                 onPressed: _aiSuggestMacros,
               ),
+            ),
+            _EditableCard(
+              label: 'Water Intake',
+              value: userData!['waterIntake'] ?? '-',
+              isEditing: editingField == 'waterIntake',
+              onTap: () => _startEdit('waterIntake'),
+              editor: editingField == 'waterIntake'
+                  ? _SliderEditor(
+                      initial: double.tryParse((userData!['waterIntake'] ?? '2.0').toString().replaceAll('L', '').replaceAll('+', '')) ?? 2.0,
+                      min: 0.5,
+                      max: 5.0,
+                      unit: 'L',
+                      onChanged: (v) => _updateField('waterIntake', v.toStringAsFixed(1) + 'L'),
+                    )
+                  : null,
             ),
             SizedBox(height: 28),
             Row(

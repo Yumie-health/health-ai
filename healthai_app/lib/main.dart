@@ -17,7 +17,6 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'dart:io';
 import 'scan_page.dart';
 import 'nutritional_plan_page.dart';
-import 'settings_page.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'onboarding_flow.dart';
 
@@ -265,45 +264,65 @@ class _SplashOrAppState extends State<SplashOrApp> with SingleTickerProviderStat
           FadeTransition(
             opacity: ReverseAnimation(_animation),
             child: Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Container(
-                    width: 90,
-                    height: 90,
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      shape: BoxShape.circle,
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.08),
-                          blurRadius: 16,
-                          offset: const Offset(0, 6),
+              child: TweenAnimationBuilder<double>(
+                tween: Tween<double>(begin: 0.7, end: 1.0),
+                duration: Duration(milliseconds: 700),
+                curve: Curves.easeOutBack,
+                builder: (context, scale, child) => Transform.scale(
+                  scale: scale,
+                  child: child,
+                ),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Container(
+                      width: 110,
+                      height: 110,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.08),
+                            blurRadius: 16,
+                            offset: const Offset(0, 6),
+                          ),
+                        ],
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Image.asset('assets/logo.jpg', fit: BoxFit.contain),
+                      ),
+                    ),
+                    const SizedBox(height: 28),
+                    TweenAnimationBuilder<double>(
+                      tween: Tween<double>(begin: 0, end: 1),
+                      duration: Duration(milliseconds: 900),
+                      curve: Curves.easeIn,
+                      builder: (context, value, child) => Opacity(
+                        opacity: value,
+                        child: child,
+                      ),
+                      child: Text(
+                        'Yumie',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 38,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 2,
+                          fontFamily: 'Montserrat',
+                          shadows: [
+                            Shadow(
+                              color: Colors.black.withOpacity(0.18),
+                              blurRadius: 8,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
                         ),
-                      ],
+                      ),
                     ),
-                    child: Center(
-                      child: Icon(Icons.eco, color: kPrimaryGreen, size: 54),
-                    ),
-                  ),
-                  const SizedBox(height: 28),
-                  Text(
-                    'HealthAI',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 36,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 2,
-                      shadows: [
-                        Shadow(
-                          color: Colors.black.withOpacity(0.18),
-                          blurRadius: 8,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),
@@ -1730,6 +1749,60 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
                                           dotSize: 12,
                                         ),
                                       ),
+                                      // Water Intake Tracker
+                                      StreamBuilder<UserProfile?>(
+                                        stream: _userService.getCurrentUserProfile(),
+                                        builder: (context, userSnap) {
+                                          if (!userSnap.hasData) return SizedBox.shrink();
+                                          final userProfile = userSnap.data!;
+                                          final String waterGoalStr = userProfile.waterIntake ?? '2L';
+                                          final double waterGoal = double.tryParse(waterGoalStr.replaceAll('L', '').replaceAll('+', '')) ?? 2.0;
+                                          final int waterGoalMl = (waterGoal * 1000).round();
+                                          final int waterLoggedMl = userProfile.waterLoggedMl ?? 0;
+                                          final double percent = (waterLoggedMl / waterGoalMl).clamp(0.0, 1.0);
+                                          return Padding(
+                                            padding: const EdgeInsets.only(top: 12.0),
+                                            child: Row(
+                                              children: [
+                                                Icon(Icons.water_drop, color: Colors.blue[400]),
+                                                SizedBox(width: 10),
+                                                Expanded(
+                                                  child: LinearProgressIndicator(
+                                                    value: percent,
+                                                    backgroundColor: Colors.blue[50],
+                                                    color: Colors.blue[400],
+                                                    minHeight: 8,
+                                                  ),
+                                                ),
+                                                SizedBox(width: 12),
+                                                Text('${(waterLoggedMl / 1000).toStringAsFixed(1)} / $waterGoalStr', style: TextStyle(fontWeight: FontWeight.bold)),
+                                                IconButton(
+                                                  icon: Icon(Icons.add_circle, color: Colors.blue[400]),
+                                                  tooltip: 'Log water',
+                                                  onPressed: () async {
+                                                    int? amount = await showDialog<int>(
+                                                      context: context,
+                                                      builder: (context) => _WaterLogSliderDialog(),
+                                                    );
+                                                    if (amount != null && amount > 0) {
+                                                      final user = FirebaseAuth.instance.currentUser;
+                                                      if (user != null) {
+                                                        final doc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
+                                                        final data = doc.data() ?? {};
+                                                        final int prev = (data['waterLoggedMl'] ?? 0) as int;
+                                                        await FirebaseFirestore.instance.collection('users').doc(user.uid).update({
+                                                          'waterLoggedMl': prev + amount,
+                                                          'lastUpdated': DateTime.now(),
+                                                        });
+                                                      }
+                                                    }
+                                                  },
+                                                ),
+                                              ],
+                                            ),
+                                          );
+                                        },
+                                      ),
                                     ],
                                   ),
                                 ),
@@ -2900,17 +2973,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             ),
                     Divider(height: 1, color: Colors.grey[200]),
                     _ProfileMenuTile(
-                      icon: Icons.chat_bubble_outline,
-                      label: 'Preferences',
+                      icon: Icons.health_and_safety,
+                      label: 'Health Awareness',
                       onTap: () {
-                        showDialog(
-                          context: context,
-                          builder: (context) => AlertDialog(
-                            title: Text('Preferences'),
-                            content: Text('This feature is coming soon!'),
-                            actions: [TextButton(onPressed: () => Navigator.pop(context), child: Text('OK'))],
-                          ),
-                        );
+                        Navigator.of(context).push(MaterialPageRoute(builder: (_) => HealthAwarenessPage()));
                       },
                     ),
                     Divider(height: 1, color: Colors.grey[200]),
@@ -3357,7 +3423,7 @@ class _CoachScreenState extends State<CoachScreen> with TickerProviderStateMixin
 
   final List<_ChatMessage> _messages = [
     _ChatMessage(
-      text: "Hello! I'm your nutrition coach. How can I help you today?",
+      text: "Hello! I'm Yumie, your nutrition coach. How can I help you today?\n\nAsk Yumie about healthy recipes, meal plans, or nutrition tips!",
       isUser: false,
       quickReplies: [
         'What should I eat today?',
@@ -3420,26 +3486,26 @@ class _CoachScreenState extends State<CoachScreen> with TickerProviderStateMixin
     String reply = '';
     List<String> quickReplies = [];
     if (userText.toLowerCase().contains('plan my week')) {
-      reply = "I'm here to help with your nutrition and wellness questions. Would you like me to analyze your recent meals, suggest recipes based on your goals, or provide general nutrition advice?";
+      reply = "Yumie here! Would you like me to analyze your recent meals, suggest recipes, or help you plan a balanced week?";
       quickReplies = [
         'Analyze my recent meals',
         'Suggest healthy recipes',
         'Give me nutrition tips',
       ];
     } else if (userText.toLowerCase().contains('analyze my last meal')) {
-      reply = "Your last meal was well balanced! Would you like more details or suggestions?";
+      reply = "Yumie thinks your last meal was well balanced! Want more details or healthy suggestions?";
       quickReplies = [
         'More details',
         'Suggest healthy recipes',
       ];
     } else if (userText.toLowerCase().contains('what should i eat')) {
-      reply = "Based on your goals, I recommend a balanced meal with protein, veggies, and whole grains.";
+      reply = "Yumie recommends a balanced meal with protein, veggies, and whole grains. Want a recipe or more tips?";
       quickReplies = [
         'Suggest a recipe',
         'Help me plan my week',
       ];
     } else {
-      reply = "I'm here to help! Please select an option or ask a question.";
+      reply = "I'm Yumie! Ask me about healthy recipes, meal plans, or nutrition tips. How can I help you today?";
       quickReplies = [
         'What should I eat today?',
         'Analyze my last meal',
@@ -3474,26 +3540,34 @@ class _CoachScreenState extends State<CoachScreen> with TickerProviderStateMixin
           backgroundColor: Colors.white,
           elevation: 0,
           leading: null,
-          title: Row(
-            children: [
-              Container(
-                decoration: BoxDecoration(
-                  color: kPrimaryGreen.withOpacity(0.12),
-                  shape: BoxShape.circle,
+          title: Padding(
+            padding: EdgeInsets.only(left: 16, right: 0),
+            child: Row(
+              children: [
+                Container(
+                  decoration: BoxDecoration(
+                    color: kPrimaryGreen.withOpacity(0.12),
+                    shape: BoxShape.circle,
+                  ),
+                  padding: EdgeInsets.all(4),
+                  child: Image.asset(
+                    'assets/logo.jpg',
+                    width: 48,
+                    height: 48,
+                    fit: BoxFit.contain,
+                  ),
                 ),
-                padding: EdgeInsets.all(8),
-                child: Icon(Icons.chat_bubble_outline, color: kPrimaryGreen, size: 28),
-              ),
-              SizedBox(width: 10),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('Nutrition Coach', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black, fontSize: 22)),
-                  SizedBox(height: 2),
-                  Text('Ask about meals, nutrition, or get personalized advice', style: TextStyle(fontSize: 13, color: Colors.grey[500])),
-                ],
-              ),
-            ],
+                SizedBox(width: 10),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('yumie', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black, fontSize: 22)),
+                    SizedBox(height: 2),
+                    Text('Ask about meals, nutrition, or get personalized advice', style: TextStyle(fontSize: 13, color: Colors.grey[500])),
+                  ],
+                ),
+              ],
+            ),
           ),
           titleSpacing: 0,
         ),
@@ -3560,6 +3634,7 @@ class _CoachScreenState extends State<CoachScreen> with TickerProviderStateMixin
                         itemCount: _messages.length,
                         itemBuilder: (context, i) {
                           final msg = _messages[i];
+                          final isUser = msg.isUser;
                           return TweenAnimationBuilder<double>(
                             tween: Tween<double>(begin: 0, end: 1),
                             duration: Duration(milliseconds: 400),
@@ -3568,16 +3643,16 @@ class _CoachScreenState extends State<CoachScreen> with TickerProviderStateMixin
                               child: Transform.translate(
                                 offset: Offset(0, (1 - value) * 20),
                                 child: Column(
-                                  crossAxisAlignment: msg.isUser ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+                                  crossAxisAlignment: isUser ? CrossAxisAlignment.end : CrossAxisAlignment.start,
                                   children: [
-                                    if (!msg.isUser)
+                                    if (!isUser)
                                       Container(
                                         margin: EdgeInsets.only(bottom: 8, left: 8, right: 48),
                                         padding: EdgeInsets.all(18),
                                         decoration: BoxDecoration(
                                           color: Colors.white,
                                           borderRadius: BorderRadius.circular(18),
-                                          border: Border.all(color: Color(0xFFE5E7EB)),
+                                          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 8, offset: Offset(0, 2))],
                                         ),
                                         child: Column(
                                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -3597,16 +3672,18 @@ class _CoachScreenState extends State<CoachScreen> with TickerProviderStateMixin
                                           ],
                                         ),
                                       ),
-                                    if (msg.isUser)
+                                    if (isUser)
                                       Container(
                                         margin: EdgeInsets.only(bottom: 8, right: 8, left: 48),
                                         padding: EdgeInsets.symmetric(vertical: 14, horizontal: 18),
                                         decoration: BoxDecoration(
                                           color: kPrimaryGreen,
                                           borderRadius: BorderRadius.circular(18),
+                                          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.08), blurRadius: 8, offset: Offset(0, 2))],
                                         ),
                                         child: Text(msg.text, style: TextStyle(fontSize: 17, color: Colors.white)),
                                       ),
+                                    SizedBox(height: 6),
                                   ],
                                 ),
                               ),
@@ -3882,11 +3959,11 @@ class _QuickReplyButton extends StatelessWidget {
       child: Container(
         padding: EdgeInsets.symmetric(horizontal: 18, vertical: 10),
         decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: Color(0xFFE5E7EB)),
+          color: kPrimaryGreen.withOpacity(0.08),
+          borderRadius: BorderRadius.circular(22),
+          border: Border.all(color: kPrimaryGreen.withOpacity(0.18)),
         ),
-        child: Text(text, style: TextStyle(fontWeight: FontWeight.w500, color: Colors.black)),
+        child: Text(text, style: TextStyle(fontWeight: FontWeight.w500, color: kPrimaryGreen)),
       ),
     );
   }
@@ -4143,11 +4220,11 @@ class _FoodScreenState extends State<FoodScreen> with TickerProviderStateMixin {
                         border: Border.all(color: kPrimaryGreen, width: 1.5),
                       ),
                       child: Text('Monthly', style: TextStyle(fontWeight: FontWeight.bold, color: _calendarView == 'month' ? Colors.white : kPrimaryGreen)),
-                  ),
-                ),
-              ],
-            ),
-          ),
+                    ), // Close Container for 'Monthly'
+                  ), // Close GestureDetector for 'Monthly'
+                ], // Close children of Row
+              ), // Close Row
+            ), // Close Padding
           // Animated tab content
           Expanded(
             child: AnimatedSwitcher(
@@ -4844,6 +4921,261 @@ class _ProfileInfoChip extends StatelessWidget {
           Text(value, style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black, fontSize: 15)),
         ],
       ),
+    );
+  }
+}
+
+class SettingsPage extends StatelessWidget {
+  Future<void> _launchEmail() async {
+    final Uri emailLaunchUri = Uri(
+      scheme: 'mailto',
+      path: 'support@healthai.com',
+      queryParameters: {
+        'subject': 'HealthAI Support',
+        'body': 'Hello, I need help with...',
+      },
+    );
+    if (await canLaunchUrl(emailLaunchUri)) {
+      await launchUrl(emailLaunchUri);
+    } else {
+      throw 'Could not launch email';
+    }
+  }
+  @override
+  Widget build(BuildContext context) {
+    final prefs = Provider.of<PreferencesProvider>(context);
+    return Scaffold(
+      appBar: AppBar(title: Text('Settings')),
+      body: ListView(
+        children: [
+          SwitchListTile(
+            title: Text('Dark Mode'),
+            subtitle: Text('Enable dark theme'),
+            value: prefs.darkMode,
+            onChanged: (v) => prefs.setDarkMode(v),
+            secondary: Icon(Icons.dark_mode),
+          ),
+          SwitchListTile(
+            title: Text('Use Metric Units'),
+            subtitle: Text('kg/cm or lb/ft'),
+            value: prefs.useMetric,
+            onChanged: (v) => prefs.setUnits(v),
+            secondary: Icon(Icons.straighten),
+          ),
+          Divider(),
+          ListTile(
+            leading: Icon(Icons.email),
+            title: Text('Contact Support'),
+            subtitle: Text('Email us for help'),
+            onTap: _launchEmail,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class HealthAwarenessPage extends StatefulWidget {
+  @override
+  _HealthAwarenessPageState createState() => _HealthAwarenessPageState();
+}
+
+class _HealthAwarenessPageState extends State<HealthAwarenessPage> {
+  String? _bloodType;
+  bool? _isDiabetic;
+  bool _saving = false;
+
+  final List<String> bloodTypes = [
+    'A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserData();
+  }
+
+  Future<void> _loadUserData() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      final doc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
+      final data = doc.data() ?? {};
+      setState(() {
+        _bloodType = data['bloodType'] as String?;
+        _isDiabetic = data['isDiabetic'] as bool?;
+      });
+    }
+  }
+
+  Future<void> _save() async {
+    setState(() => _saving = true);
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      await FirebaseFirestore.instance.collection('users').doc(user.uid).update({
+        'bloodType': _bloodType,
+        'isDiabetic': _isDiabetic,
+        'lastUpdated': DateTime.now(),
+      });
+      setState(() => _saving = false);
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Health awareness updated!')));
+      Navigator.pop(context);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Scaffold(
+      appBar: AppBar(title: Text('Health Awareness')),
+      body: _saving
+          ? Center(child: CircularProgressIndicator())
+          : Padding(
+              padding: const EdgeInsets.all(24.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Blood Type', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20)),
+                  SizedBox(height: 12),
+                  Wrap(
+                    spacing: 12,
+                    runSpacing: 12,
+                    children: bloodTypes.map((type) {
+                      final isSelected = _bloodType == type;
+                      return ChoiceChip(
+                        label: Text(type, style: TextStyle(fontWeight: FontWeight.bold)),
+                        selected: isSelected,
+                        selectedColor: theme.primaryColor.withOpacity(0.18),
+                        onSelected: (selected) => setState(() => _bloodType = type),
+                        labelStyle: TextStyle(color: isSelected ? theme.primaryColor : Colors.black),
+                        backgroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        side: BorderSide(color: isSelected ? theme.primaryColor : Colors.grey[300]!, width: 2),
+                      );
+                    }).toList(),
+                  ),
+                  SizedBox(height: 32),
+                  Text('Are you diabetic?', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20)),
+                  SizedBox(height: 12),
+                  Row(
+                    children: [
+                      ChoiceChip(
+                        label: Row(children: [Icon(Icons.check_circle, color: Colors.green), SizedBox(width: 6), Text('Yes')]),
+                        selected: _isDiabetic == true,
+                        selectedColor: Colors.green.withOpacity(0.18),
+                        onSelected: (selected) => setState(() => _isDiabetic = true),
+                        labelStyle: TextStyle(color: _isDiabetic == true ? Colors.green : Colors.black),
+                        backgroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        side: BorderSide(color: _isDiabetic == true ? Colors.green : Colors.grey[300]!, width: 2),
+                      ),
+                      SizedBox(width: 18),
+                      ChoiceChip(
+                        label: Row(children: [Icon(Icons.cancel, color: Colors.red), SizedBox(width: 6), Text('No')]),
+                        selected: _isDiabetic == false,
+                        selectedColor: Colors.red.withOpacity(0.18),
+                        onSelected: (selected) => setState(() => _isDiabetic = false),
+                        labelStyle: TextStyle(color: _isDiabetic == false ? Colors.red : Colors.black),
+                        backgroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        side: BorderSide(color: _isDiabetic == false ? Colors.red : Colors.grey[300]!, width: 2),
+                      ),
+                    ],
+                  ),
+                  Spacer(),
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: (_bloodType != null && _isDiabetic != null && !_saving) ? _save : null,
+                      child: Text('Save'),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+    );
+  }
+}
+
+// Add this widget at the end of the file or in a suitable place
+class _WaterLogSliderDialog extends StatefulWidget {
+  @override
+  State<_WaterLogSliderDialog> createState() => _WaterLogSliderDialogState();
+}
+
+class _WaterLogSliderDialogState extends State<_WaterLogSliderDialog> {
+  double _value = 0.25; // default 0.25L
+  final double _min = 0.1;
+  final double _max = 2.0;
+  final double _step = 0.1;
+  bool _isAdd = true;
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: Text('Log Water Intake'),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              ChoiceChip(
+                label: Text('Add'),
+                selected: _isAdd,
+                selectedColor: Colors.blue[100],
+                onSelected: (selected) => setState(() => _isAdd = true),
+                labelStyle: TextStyle(
+                  color: _isAdd ? Colors.blue[700] : Colors.black,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              SizedBox(width: 12),
+              ChoiceChip(
+                label: Text('Remove'),
+                selected: !_isAdd,
+                selectedColor: Colors.red[100],
+                onSelected: (selected) => setState(() => _isAdd = false),
+                labelStyle: TextStyle(
+                  color: !_isAdd ? Colors.red[700] : Colors.black,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: 18),
+          Text('${_value.toStringAsFixed(2)}L', style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: _isAdd ? Colors.blue[400] : Colors.red[400])),
+          SizedBox(height: 16),
+          Slider(
+            value: _value,
+            min: _min,
+            max: _max,
+            divisions: ((_max - _min) / _step).round(),
+            label: '${_value.toStringAsFixed(2)}L',
+            onChanged: (v) => setState(() => _value = double.parse(v.toStringAsFixed(2))),
+          ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text('${_min.toStringAsFixed(1)}L'),
+              Text('${_max.toStringAsFixed(1)}L'),
+            ],
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: Text('Cancel'),
+        ),
+        ElevatedButton(
+          onPressed: () => Navigator.of(context).pop(_isAdd ? (_value * 1000).round() : -(_value * 1000).round()),
+          child: Text(_isAdd ? 'Add' : 'Remove'),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: _isAdd ? Colors.green : Colors.red,
+            foregroundColor: Colors.white,
+          ),
+        ),
+      ],
     );
   }
 }

@@ -29,6 +29,9 @@ class _OnboardingFlowPageState extends State<OnboardingFlowPage> with SingleTick
   late Animation<Offset> _slideAnimation;
   List<String> selectedHabits = [];
   int? mealsPerDay;
+  String? bloodType;
+  bool? isDiabetic;
+  String? waterIntake;
 
   @override
   void initState() {
@@ -219,6 +222,33 @@ class _OnboardingFlowPageState extends State<OnboardingFlowPage> with SingleTick
                   onBack: prevStep,
                 );
               } else if (step == 8) {
+                return _BloodTypeStep(
+                  fadeAnimation: _fadeAnimation,
+                  slideAnimation: _slideAnimation,
+                  selectedBloodType: bloodType,
+                  onSelect: (type) => setState(() => bloodType = type),
+                  onContinue: bloodType == null ? null : nextStep,
+                  onBack: prevStep,
+                );
+              } else if (step == 9) {
+                return _DiabeticStep(
+                  fadeAnimation: _fadeAnimation,
+                  slideAnimation: _slideAnimation,
+                  isDiabetic: isDiabetic,
+                  onSelect: (value) => setState(() => isDiabetic = value),
+                  onContinue: isDiabetic == null ? null : nextStep,
+                  onBack: prevStep,
+                );
+              } else if (step == 10) {
+                return _WaterIntakeStep(
+                  fadeAnimation: _fadeAnimation,
+                  slideAnimation: _slideAnimation,
+                  selectedWaterIntake: waterIntake,
+                  onSelect: (value) => setState(() => waterIntake = value),
+                  onContinue: waterIntake == null ? null : nextStep,
+                  onBack: prevStep,
+                );
+              } else if (step == 11) {
                 return _ProfileSummaryStep(
                   fadeAnimation: _fadeAnimation,
                   slideAnimation: _slideAnimation,
@@ -244,6 +274,9 @@ class _OnboardingFlowPageState extends State<OnboardingFlowPage> with SingleTick
                               'weight': selectedWeightKg,
                               'targetWeight': targetWeightKg ?? selectedWeightKg,
                               'activityLevel': activityLevel ?? '',
+                              'bloodType': bloodType,
+                              'isDiabetic': isDiabetic,
+                              'waterIntake': waterIntake,
                               'createdAt': now,
                               'lastUpdated': now,
                             }, SetOptions(merge: true));
@@ -252,8 +285,11 @@ class _OnboardingFlowPageState extends State<OnboardingFlowPage> with SingleTick
                         }
                       : null,
                   onBack: prevStep,
+                  bloodType: bloodType,
+                  isDiabetic: isDiabetic,
+                  waterIntake: waterIntake,
                 );
-              } else if (step == 9) {
+              } else if (step == 12) {
                 return _EatingHabitsStep(
                   fadeAnimation: _fadeAnimation,
                   slideAnimation: _slideAnimation,
@@ -268,7 +304,7 @@ class _OnboardingFlowPageState extends State<OnboardingFlowPage> with SingleTick
                   onContinue: selectedHabits.isNotEmpty ? nextStep : null,
                   onBack: prevStep,
                 );
-              } else if (step == 10) {
+              } else if (step == 13) {
                 return _MealsPerDayStep(
                   fadeAnimation: _fadeAnimation,
                   slideAnimation: _slideAnimation,
@@ -277,7 +313,7 @@ class _OnboardingFlowPageState extends State<OnboardingFlowPage> with SingleTick
                   onContinue: mealsPerDay != null ? nextStep : null,
                   onBack: prevStep,
                 );
-              } else if (step == 11) {
+              } else if (step == 14) {
                 return _NutritionPlanSummaryStep(
                   fadeAnimation: _fadeAnimation,
                   slideAnimation: _slideAnimation,
@@ -1885,7 +1921,26 @@ class _ProfileSummaryStep extends StatelessWidget {
   final void Function(String) onActivityLevelChanged;
   final VoidCallback? onContinue;
   final VoidCallback onBack;
-  _ProfileSummaryStep({required this.fadeAnimation, required this.slideAnimation, required this.age, required this.weightKg, required this.useMetricWeight, required this.heightCm, required this.targetWeightKg, required this.onTargetWeightChanged, required this.activityLevel, required this.onActivityLevelChanged, required this.onContinue, required this.onBack});
+  final String? bloodType;
+  final bool? isDiabetic;
+  final String? waterIntake;
+  _ProfileSummaryStep({
+    required this.fadeAnimation,
+    required this.slideAnimation,
+    required this.age,
+    required this.weightKg,
+    required this.useMetricWeight,
+    required this.heightCm,
+    required this.targetWeightKg,
+    required this.onTargetWeightChanged,
+    required this.activityLevel,
+    required this.onActivityLevelChanged,
+    required this.onContinue,
+    required this.onBack,
+    this.bloodType,
+    this.isDiabetic,
+    this.waterIntake,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -2014,6 +2069,33 @@ class _ProfileSummaryStep extends StatelessWidget {
                           SizedBox(width: 6),
                           Text('Activity Level: ', style: TextStyle(fontWeight: FontWeight.w600)),
                           Text(activityLevel ?? '', style: TextStyle(fontWeight: FontWeight.bold)),
+                        ],
+                      ),
+                      SizedBox(height: 8),
+                      Row(
+                        children: [
+                          Icon(Icons.bloodtype, color: theme.primaryColor),
+                          SizedBox(width: 6),
+                          Text('Blood Type: ', style: TextStyle(fontWeight: FontWeight.w600)),
+                          Text(bloodType ?? '-', style: TextStyle(fontWeight: FontWeight.bold)),
+                        ],
+                      ),
+                      SizedBox(height: 8),
+                      Row(
+                        children: [
+                          Icon(Icons.check_circle, color: theme.primaryColor),
+                          SizedBox(width: 6),
+                          Text('Diabetic: ', style: TextStyle(fontWeight: FontWeight.w600)),
+                          Text(isDiabetic == null ? '-' : (isDiabetic! ? 'Yes' : 'No'), style: TextStyle(fontWeight: FontWeight.bold)),
+                        ],
+                      ),
+                      SizedBox(height: 8),
+                      Row(
+                        children: [
+                          Icon(Icons.water_drop, color: theme.primaryColor),
+                          SizedBox(width: 6),
+                          Text('Water Intake: ', style: TextStyle(fontWeight: FontWeight.w600)),
+                          Text(waterIntake ?? '-', style: TextStyle(fontWeight: FontWeight.bold)),
                         ],
                       ),
                     ],
@@ -2441,6 +2523,326 @@ class _NutritionPlanSummaryStep extends StatelessWidget {
     );
   }
 } 
+
+class _BloodTypeStep extends StatelessWidget {
+  final Animation<double> fadeAnimation;
+  final Animation<Offset> slideAnimation;
+  final String? selectedBloodType;
+  final void Function(String) onSelect;
+  final VoidCallback? onContinue;
+  final VoidCallback onBack;
+  _BloodTypeStep({required this.fadeAnimation, required this.slideAnimation, required this.selectedBloodType, required this.onSelect, required this.onContinue, required this.onBack});
+
+  final List<String> bloodTypes = const [
+    'A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'
+  ];
+  final Map<String, IconData> bloodIcons = const {
+    'A+': Icons.bloodtype,
+    'A-': Icons.bloodtype,
+    'B+': Icons.bloodtype,
+    'B-': Icons.bloodtype,
+    'AB+': Icons.bloodtype,
+    'AB-': Icons.bloodtype,
+    'O+': Icons.bloodtype,
+    'O-': Icons.bloodtype,
+  };
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        Align(
+          alignment: Alignment.centerLeft,
+          child: Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.05),
+                  blurRadius: 8,
+                  offset: Offset(0, 2),
+                ),
+              ],
+            ),
+            child: IconButton(
+              icon: Icon(Icons.arrow_back, color: theme.primaryColor, size: 24),
+              onPressed: onBack,
+            ),
+          ),
+        ),
+        SizedBox(height: 32),
+        Text('What is your blood type?', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 28)),
+        SizedBox(height: 18),
+        Text('This helps us personalize your health insights.', style: TextStyle(color: Colors.grey[600], fontSize: 16)),
+        SizedBox(height: 32),
+        Wrap(
+          spacing: 18,
+          runSpacing: 18,
+          children: bloodTypes.map((type) {
+            final isSelected = selectedBloodType == type;
+            return GestureDetector(
+              onTap: () => onSelect(type),
+              child: AnimatedContainer(
+                duration: Duration(milliseconds: 180),
+                padding: EdgeInsets.symmetric(vertical: 18, horizontal: 28),
+                decoration: BoxDecoration(
+                  color: isSelected ? theme.primaryColor.withOpacity(0.12) : Colors.white,
+                  borderRadius: BorderRadius.circular(18),
+                  border: Border.all(color: isSelected ? theme.primaryColor : Colors.grey[300]!, width: 2),
+                  boxShadow: isSelected
+                      ? [BoxShadow(color: theme.primaryColor.withOpacity(0.08), blurRadius: 12, offset: Offset(0, 4))]
+                      : [],
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      bloodIcons[type],
+                      color: isSelected ? theme.primaryColor : Color(0xFFFFCDD2), // faded red for unselected
+                      size: 36,
+                    ),
+                    SizedBox(height: 8),
+                    Text(type, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 22, color: isSelected ? theme.primaryColor : Colors.black)),
+                  ],
+                ),
+              ),
+            );
+          }).toList(),
+        ),
+        SizedBox(height: 36),
+        SizedBox(
+          width: double.infinity,
+          child: ElevatedButton(
+            onPressed: onContinue,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: theme.primaryColor,
+              foregroundColor: Colors.white,
+              padding: EdgeInsets.symmetric(vertical: 20),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              elevation: 0,
+              textStyle: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            child: Text('Continue'),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _DiabeticStep extends StatelessWidget {
+  final Animation<double> fadeAnimation;
+  final Animation<Offset> slideAnimation;
+  final bool? isDiabetic;
+  final void Function(bool) onSelect;
+  final VoidCallback? onContinue;
+  final VoidCallback onBack;
+  _DiabeticStep({required this.fadeAnimation, required this.slideAnimation, required this.isDiabetic, required this.onSelect, required this.onContinue, required this.onBack});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        Align(
+          alignment: Alignment.centerLeft,
+          child: Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.05),
+                  blurRadius: 8,
+                  offset: Offset(0, 2),
+                ),
+              ],
+            ),
+            child: IconButton(
+              icon: Icon(Icons.arrow_back, color: theme.primaryColor, size: 24),
+              onPressed: onBack,
+            ),
+          ),
+        ),
+        SizedBox(height: 32),
+        Text('Are you diabetic?', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 28)),
+        SizedBox(height: 18),
+        Text('This helps us personalize your health plan.', style: TextStyle(color: Colors.grey[600], fontSize: 16)),
+        SizedBox(height: 32),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            _DiabeticOption(
+              label: 'Yes',
+              icon: Icons.check_circle,
+              selected: isDiabetic == true,
+              color: Colors.green,
+              onTap: () => onSelect(true),
+            ),
+            SizedBox(width: 32),
+            _DiabeticOption(
+              label: 'No',
+              icon: Icons.cancel,
+              selected: isDiabetic == false,
+              color: Colors.red,
+              onTap: () => onSelect(false),
+            ),
+          ],
+        ),
+        SizedBox(height: 36),
+        SizedBox(
+          width: double.infinity,
+          child: ElevatedButton(
+            onPressed: onContinue,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: theme.primaryColor,
+              foregroundColor: Colors.white,
+              padding: EdgeInsets.symmetric(vertical: 20),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              elevation: 0,
+              textStyle: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            child: Text('Continue'),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _DiabeticOption extends StatelessWidget {
+  final String label;
+  final IconData icon;
+  final bool selected;
+  final Color color;
+  final VoidCallback onTap;
+  const _DiabeticOption({required this.label, required this.icon, required this.selected, required this.color, required this.onTap});
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: Duration(milliseconds: 180),
+        padding: EdgeInsets.symmetric(vertical: 24, horizontal: 36),
+        decoration: BoxDecoration(
+          color: selected ? color.withOpacity(0.12) : Colors.white,
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: selected ? color : Colors.grey[300]!, width: 2),
+          boxShadow: selected
+              ? [BoxShadow(color: color.withOpacity(0.08), blurRadius: 12, offset: Offset(0, 4))]
+              : [],
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, color: selected ? color : Colors.grey[500], size: 40),
+            SizedBox(height: 10),
+            Text(label, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 22, color: selected ? color : Colors.black)),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _WaterIntakeStep extends StatelessWidget {
+  final Animation<double> fadeAnimation;
+  final Animation<Offset> slideAnimation;
+  final String? selectedWaterIntake;
+  final void Function(String) onSelect;
+  final VoidCallback? onContinue;
+  final VoidCallback onBack;
+  _WaterIntakeStep({required this.fadeAnimation, required this.slideAnimation, required this.selectedWaterIntake, required this.onSelect, required this.onContinue, required this.onBack});
+
+  final List<String> options = const [
+    '0.5L', '1L', '1.5L', '2L', '2.5L', '3L+',
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        Align(
+          alignment: Alignment.centerLeft,
+          child: Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.05),
+                  blurRadius: 8,
+                  offset: Offset(0, 2),
+                ),
+              ],
+            ),
+            child: IconButton(
+              icon: Icon(Icons.arrow_back, color: theme.primaryColor, size: 24),
+              onPressed: onBack,
+            ),
+          ),
+        ),
+        SizedBox(height: 32),
+        Text('How much water do you drink per day?', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 28)),
+        SizedBox(height: 18),
+        Text('Staying hydrated is key to your health.', style: TextStyle(color: Colors.grey[600], fontSize: 16)),
+        SizedBox(height: 32),
+        Wrap(
+          spacing: 18,
+          runSpacing: 18,
+          children: options.map((opt) {
+            final isSelected = selectedWaterIntake == opt;
+            return GestureDetector(
+              onTap: () => onSelect(opt),
+              child: AnimatedContainer(
+                duration: Duration(milliseconds: 180),
+                padding: EdgeInsets.symmetric(vertical: 18, horizontal: 28),
+                decoration: BoxDecoration(
+                  color: isSelected ? theme.primaryColor.withOpacity(0.12) : Colors.white,
+                  borderRadius: BorderRadius.circular(18),
+                  border: Border.all(color: isSelected ? theme.primaryColor : Colors.grey[300]!, width: 2),
+                  boxShadow: isSelected
+                      ? [BoxShadow(color: theme.primaryColor.withOpacity(0.08), blurRadius: 12, offset: Offset(0, 4))]
+                      : [],
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.water_drop, color: isSelected ? theme.primaryColor : Colors.blue[200], size: 36),
+                    SizedBox(height: 8),
+                    Text(opt, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 22, color: isSelected ? theme.primaryColor : Colors.black)),
+                  ],
+                ),
+              ),
+            );
+          }).toList(),
+        ),
+        SizedBox(height: 36),
+        SizedBox(
+          width: double.infinity,
+          child: ElevatedButton(
+            onPressed: onContinue,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: theme.primaryColor,
+              foregroundColor: Colors.white,
+              padding: EdgeInsets.symmetric(vertical: 20),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              elevation: 0,
+              textStyle: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            child: Text('Continue'),
+          ),
+        ),
+      ],
+    );
+  }
+}
 
 // Helper to get current user
 Future<User?> getCurrentUser() async {

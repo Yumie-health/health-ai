@@ -10,6 +10,7 @@ import 'dart:math';
 import 'scanner_overlay.dart';
 import 'scan_result_fridge_page.dart';
 import 'scan_paywall_page.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class ScanPage extends StatefulWidget {
   const ScanPage({Key? key}) : super(key: key);
@@ -49,6 +50,26 @@ class _ScanPageState extends State<ScanPage> {
     });
   }
 
+  Future<bool> _shouldShowPaywall() async {
+    final prefs = await SharedPreferences.getInstance();
+    final today = DateTime.now();
+    final lastScanDate = prefs.getString('lastScanDate');
+    final scansToday = prefs.getInt('scansToday') ?? 0;
+    final todayStr = '${today.year}-${today.month}-${today.day}';
+    if (lastScanDate != todayStr) {
+      await prefs.setString('lastScanDate', todayStr);
+      await prefs.setInt('scansToday', 0);
+      return false; // first scan of the day
+    }
+    return scansToday >= 1;
+  }
+
+  Future<void> _incrementScanCount() async {
+    final prefs = await SharedPreferences.getInstance();
+    final scansToday = prefs.getInt('scansToday') ?? 0;
+    await prefs.setInt('scansToday', scansToday + 1);
+  }
+
   Future<void> _captureImage() async {
     if (!_controller.value.isInitialized) return;
     final file = await _controller.takePicture();
@@ -85,21 +106,17 @@ class _ScanPageState extends State<ScanPage> {
     final tempPath = file.path;
     final croppedFile = await File(tempPath).writeAsBytes(img.encodeJpg(cropped));
 
-    // --- Paywall logic ---
-    // TODO: Replace with your real premium and scan count logic
-    final bool isPremium = false; // Replace with real check
-    final int scansToday = 1; // Replace with real check
-    final int freeScansPerDay = 1;
-    if (!isPremium && scansToday >= freeScansPerDay) {
+    final bool showPaywall = await _shouldShowPaywall();
+    if (showPaywall) {
       if (!mounted) return;
       await Navigator.of(context).push(
         MaterialPageRoute(
           builder: (_) => ScanPaywallPage(
             onUpgrade: () {
-              // TODO: Implement upgrade logic
               Navigator.of(context).pop();
             },
-            onWatchAd: (paywallContext) {
+            onWatchAd: (paywallContext) async {
+              await _incrementScanCount();
               if (_isFridgeMode) {
                 Navigator.of(paywallContext).pushReplacement(
                   MaterialPageRoute(
@@ -123,6 +140,7 @@ class _ScanPageState extends State<ScanPage> {
       return;
     }
 
+    await _incrementScanCount();
     if (_isFridgeMode) {
       Navigator.of(context).push(
         MaterialPageRoute(

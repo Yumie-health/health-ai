@@ -1,4 +1,5 @@
 <resources>
     <color name="your_green">#00AA55</color>
     <!-- other colors ... -->
+	<color name="ic_launcher_background">#FFFFFF</color>
 </resources>

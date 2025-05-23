@@ -15,6 +15,8 @@ class UserProfile {
   final DateTime createdAt;
   final DateTime lastUpdated;
   final String photoUrl;
+  final String? waterIntake;
+  final int? waterLoggedMl;
 
   UserProfile({
     required this.id,
@@ -31,6 +33,8 @@ class UserProfile {
     required this.createdAt,
     required this.lastUpdated,
     this.photoUrl = '',
+    this.waterIntake,
+    this.waterLoggedMl,
   });
 
   Map<String, dynamic> toMap() {
@@ -48,6 +52,8 @@ class UserProfile {
       'createdAt': createdAt,
       'lastUpdated': lastUpdated,
       'photoUrl': photoUrl,
+      'waterIntake': waterIntake,
+      'waterLoggedMl': waterLoggedMl,
     };
   }
 
@@ -68,6 +74,8 @@ class UserProfile {
       createdAt: (data['createdAt'] as Timestamp).toDate(),
       lastUpdated: (data['lastUpdated'] as Timestamp).toDate(),
       photoUrl: data['photoUrl'] ?? '',
+      waterIntake: data['waterIntake'],
+      waterLoggedMl: data['waterLoggedMl'],
     );
   }
 } 
