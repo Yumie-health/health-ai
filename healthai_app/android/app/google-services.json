@@ -12,7 +12,20 @@
           "package_name": "com.example.healthai_app"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "389852437815-776ccdb9i0rmgbesmp6lhh3973r9vc58.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.healthai_app",
+            "certificate_hash": "80b0e235eb79ce446b244a941b455588b901aa9e"
+          }
+        },
+        {
+          "client_id": "389852437815-3e026b99jvv3g0n0bjlmvo33vfp085vi.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyAruFGOQ5D8HF_0bMOSS4ajw0Cicc7MBAI"
@@ -20,7 +33,19 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "389852437815-3e026b99jvv3g0n0bjlmvo33vfp085vi.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "389852437815-c2q4pgj30ubamsdho567bkfdnlvkvls4.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.healthaiapp"
+              }
+            }
+          ]
         }
       }
     }

@@ -42,7 +42,7 @@ class UserService {
       'fatGoal': 70,
       'createdAt': now,
       'lastUpdated': now,
-      'photoUrl': '',
+      'photoUrl': user.photoURL ?? '',
     };
 
     await _firestore.collection('users').doc(user.uid).set(profile);

@@ -19,6 +19,8 @@ import 'scan_page.dart';
 import 'nutritional_plan_page.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'onboarding_flow.dart';
+import 'package:device_info_plus/device_info_plus.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 
 // Define the color palette
 const Color kPrimaryGreen = Color(0xFF4CAF50); // Soft green
@@ -526,6 +528,70 @@ class _AuthScreenState extends State<AuthScreen> {
   bool showSignUp = false;
   final TextEditingController nameController = TextEditingController();
   bool acceptTerms = false;
+  bool isSamsung = false;
+  bool isIOS = Platform.isIOS;
+  bool isAndroid = Platform.isAndroid;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkSamsung();
+  }
+
+  Future<void> _checkSamsung() async {
+    if (Platform.isAndroid) {
+      final deviceInfo = DeviceInfoPlugin();
+      final androidInfo = await deviceInfo.androidInfo;
+      setState(() {
+        isSamsung = androidInfo.manufacturer?.toLowerCase().contains('samsung') ?? false;
+      });
+    }
+  }
+
+  void _handleGoogleSignIn() async {
+    setState(() => isLoading = true);
+    try {
+      final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
+      if (googleUser == null) {
+        setState(() => isLoading = false);
+        return; // User cancelled
+      }
+      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+      final credential = GoogleAuthProvider.credential(
+        accessToken: googleAuth.accessToken,
+        idToken: googleAuth.idToken,
+      );
+      final userCredential = await FirebaseAuth.instance.signInWithCredential(credential);
+      // Optionally create user profile if new
+      final userService = UserService();
+      final user = FirebaseAuth.instance.currentUser;
+      if (user != null) {
+        final doc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
+        if (!doc.exists) {
+          await userService.createInitialUserProfile(user.email ?? '', user.displayName ?? '');
+        }
+      }
+      setState(() => isLoading = false);
+      if (mounted) {
+        Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => OnboardingFlowPage()));
+      }
+    } catch (e) {
+      setState(() => isLoading = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Google sign-in failed: $e')),
+      );
+    }
+  }
+
+  void _handleAppleSignIn() {
+    // TODO: Implement Apple sign-in
+    print('Apple sign-in tapped');
+  }
+
+  void _handleSamsungSignIn() {
+    // TODO: Implement Samsung sign-in
+    print('Samsung sign-in tapped');
+  }
 
   Future<void> signIn() async {
     setState(() {
@@ -841,6 +907,19 @@ class _AuthScreenState extends State<AuthScreen> {
                         ),
                       ),
                     ],
+                    const SizedBox(height: 24),
+                    // Social sign-in buttons
+                    if (isIOS) ...[
+                      _GoogleSignInButton(onTap: _handleGoogleSignIn, isSignUp: showSignUp),
+                      SizedBox(height: 12),
+                      _AppleSignInButton(onTap: _handleAppleSignIn),
+                    ] else if (isSamsung) ...[
+                      _GoogleSignInButton(onTap: _handleGoogleSignIn, isSignUp: showSignUp),
+                      SizedBox(height: 12),
+                      _SamsungSignInButton(onTap: _handleSamsungSignIn),
+                    ] else if (isAndroid) ...[
+                      _GoogleSignInButton(onTap: _handleGoogleSignIn, isSignUp: showSignUp),
+                    ],
                   ],
                 ),
               ),
@@ -848,6 +927,64 @@ class _AuthScreenState extends State<AuthScreen> {
           ),
         ),
       ),
+    );
+  }
+}
+
+// Social sign-in button widgets (to be implemented below)
+class _GoogleSignInButton extends StatelessWidget {
+  final VoidCallback onTap;
+  final bool isSignUp;
+  const _GoogleSignInButton({required this.onTap, this.isSignUp = false});
+  @override
+  Widget build(BuildContext context) {
+    return ElevatedButton.icon(
+      style: ElevatedButton.styleFrom(
+        backgroundColor: Colors.white,
+        foregroundColor: Colors.black,
+        minimumSize: Size(double.infinity, 48),
+        side: BorderSide(color: Colors.grey[300]!),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      ),
+      icon: Image.asset('assets/google_logo.png', height: 24),
+      label: Text(isSignUp ? 'Sign up with Google' : 'Sign in with Google', style: TextStyle(fontWeight: FontWeight.w600)),
+      onPressed: onTap,
+    );
+  }
+}
+class _AppleSignInButton extends StatelessWidget {
+  final VoidCallback onTap;
+  const _AppleSignInButton({required this.onTap});
+  @override
+  Widget build(BuildContext context) {
+    return ElevatedButton.icon(
+      style: ElevatedButton.styleFrom(
+        backgroundColor: Colors.black,
+        foregroundColor: Colors.white,
+        minimumSize: Size(double.infinity, 48),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      ),
+      icon: Icon(Icons.apple, size: 26),
+      label: Text('Sign in with Apple', style: TextStyle(fontWeight: FontWeight.w600)),
+      onPressed: onTap,
+    );
+  }
+}
+class _SamsungSignInButton extends StatelessWidget {
+  final VoidCallback onTap;
+  const _SamsungSignInButton({required this.onTap});
+  @override
+  Widget build(BuildContext context) {
+    return ElevatedButton.icon(
+      style: ElevatedButton.styleFrom(
+        backgroundColor: Color(0xFF1428A0),
+        foregroundColor: Colors.white,
+        minimumSize: Size(double.infinity, 48),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      ),
+      icon: Icon(Icons.account_circle, size: 26),
+      label: Text('Sign in with Samsung', style: TextStyle(fontWeight: FontWeight.w600)),
+      onPressed: onTap,
     );
   }
 }
@@ -2687,699 +2824,733 @@ class _ProfileScreenState extends State<ProfileScreen> {
             final profile = snapshot.data;
             final userName = profile?.name ?? '';
             final userAvatar = profile?.photoUrl ?? '';
-            return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-            // Header
-          Padding(
-              padding: const EdgeInsets.fromLTRB(24, 24, 24, 8),
-              child: Text('Your Profile', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 28)),
-            ),
-            Divider(height: 1, thickness: 1, color: Colors.grey[200]),
-            // Profile Card
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 18, 16, 0),
-              child: Container(
-                padding: const EdgeInsets.all(18),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(18),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.03),
-                      blurRadius: 8,
-                      offset: Offset(0, 2),
-                    ),
-                  ],
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        GestureDetector(
-                          onTap: () {
-                            showDialog(
-                              context: context,
-                              builder: (context) {
-                                return Dialog(
-                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(24.0),
-                                    child: Column(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        Stack(
-                                          children: [
-                                            CircleAvatar(
-                                              radius: 60,
-                                              backgroundImage: profile != null && profile.photoUrl.isNotEmpty
-                                                ? NetworkImage(profile.photoUrl)
-                                                : null,
-                                              backgroundColor: kPrimaryGreen.withOpacity(0.08),
-                                              child: profile == null || profile.photoUrl.isEmpty
-                                                ? Icon(Icons.person, color: kPrimaryGreen, size: 60)
-                                                : null,
-                                            ),
-                                            Positioned(
-                                              top: 0,
-                                              right: 0,
-                                              child: IconButton(
-                                                icon: Icon(Icons.close, color: Colors.grey[700]),
-                                                onPressed: () => Navigator.pop(context),
+            return SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Header
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(24, 24, 24, 8),
+                    child: Text('Your Profile', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 28)),
+                  ),
+                  Divider(height: 1, thickness: 1, color: Colors.grey[200]),
+                  // Profile Card
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 18, 16, 0),
+                    child: Container(
+                      padding: const EdgeInsets.all(18),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(18),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.03),
+                            blurRadius: 8,
+                            offset: Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              GestureDetector(
+                                onTap: () {
+                                  showDialog(
+                                    context: context,
+                                    builder: (context) {
+                                      return Dialog(
+                                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+                                        child: Padding(
+                                          padding: const EdgeInsets.all(24.0),
+                                          child: Column(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              Stack(
+                                                children: [
+                                                  CircleAvatar(
+                                                    radius: 60,
+                                                    backgroundImage: profile != null && profile.photoUrl.isNotEmpty
+                                                      ? NetworkImage(profile.photoUrl)
+                                                      : null,
+                                                    backgroundColor: kPrimaryGreen.withOpacity(0.08),
+                                                    child: profile == null || profile.photoUrl.isEmpty
+                                                      ? Icon(Icons.person, color: kPrimaryGreen, size: 60)
+                                                      : null,
+                                                  ),
+                                                  Positioned(
+                                                    top: 0,
+                                                    right: 0,
+                                                    child: IconButton(
+                                                      icon: Icon(Icons.close, color: Colors.grey[700]),
+                                                      onPressed: () => Navigator.pop(context),
+                                                    ),
+                                                  ),
+                                                ],
                                               ),
+                                              SizedBox(height: 18),
+                                              Row(
+                                                mainAxisAlignment: MainAxisAlignment.center,
+                                                children: [
+                                                  ElevatedButton.icon(
+                                                    icon: Icon(Icons.upload),
+                                                    label: Text('Upload New'),
+                                                    onPressed: () async {
+                                                      Navigator.pop(context);
+                                                      await _changeProfilePicture();
+                                                    },
+                                                  ),
+                                                  if (profile != null && profile.photoUrl.isNotEmpty) ...[
+                                                    SizedBox(width: 12),
+                                                    OutlinedButton.icon(
+                                                      icon: Icon(Icons.delete),
+                                                      label: Text('Delete'),
+                                                      onPressed: () async {
+                                                        Navigator.pop(context);
+                                                        final user = FirebaseAuth.instance.currentUser;
+                                                        if (user != null) {
+                                                          await FirebaseFirestore.instance.collection('users').doc(user.uid).update({'photoUrl': ''});
+                                                          await user.updatePhotoURL('');
+                                                          setState(() {});
+                                                        }
+                                                      },
+                                                    ),
+                                                  ],
+                                                ],
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      );
+                                    },
+                                  );
+                                },
+                                child: Stack(
+                                  children: [
+                                    Container(
+                                      decoration: BoxDecoration(
+                                        shape: BoxShape.circle,
+                                        border: Border.all(color: kPrimaryGreen, width: 3),
+                                      ),
+                                      child: CircleAvatar(
+                                        radius: 34,
+                                        backgroundImage: profile != null && profile.photoUrl.isNotEmpty
+                                          ? NetworkImage(profile.photoUrl)
+                                          : null,
+                                        backgroundColor: kPrimaryGreen.withOpacity(0.08),
+                                        child: profile == null || profile.photoUrl.isEmpty ? Icon(Icons.person, color: kPrimaryGreen, size: 38) : null,
+                                      ),
+                                    ),
+                                    if (profile == null || profile.photoUrl.isEmpty)
+                                      Positioned(
+                                        bottom: 0,
+                                        right: 0,
+                                        child: Container(
+                                          decoration: BoxDecoration(
+                                            color: Colors.white,
+                                            shape: BoxShape.circle,
+                                            boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 2)],
+                                          ),
+                                          padding: EdgeInsets.all(4),
+                                          child: Icon(Icons.edit, color: kPrimaryGreen, size: 18),
+                                        ),
+                                      ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(width: 18),
+                              Expanded(
+                                child: Row(
+                                  children: [
+                                    Text(userName, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 22)),
+                                    IconButton(
+                                      icon: Icon(Icons.edit, color: kPrimaryGreen, size: 20),
+                                      tooltip: 'Edit name',
+                                      onPressed: () => _changeProfileName(userName),
+                                    ),
+                                    const SizedBox(width: 10),
+                                    if (isPremium)
+                                      Container(
+                                        padding: EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                        decoration: BoxDecoration(
+                                          color: kPrimaryGreen.withOpacity(0.10),
+                                          borderRadius: BorderRadius.circular(12),
+                                        ),
+                                        child: Text('Premium', style: TextStyle(color: kPrimaryGreen, fontWeight: FontWeight.w600)),
+                                      ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 14),
+                          // Add three pill-shaped buttons horizontally
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                            children: [
+                              // Removed Plan Settings button
+                            ],
+                          ),
+                          const SizedBox(height: 14),
+                          if (profile != null) ...[
+                            Builder(
+                              builder: (context) {
+                                final prefs = Provider.of<PreferencesProvider>(context);
+                                final useMetric = prefs.useMetric;
+                                final weight = useMetric ? profile.weight : (profile.weight * 2.20462);
+                                final weightUnit = useMetric ? 'kg' : 'lb';
+                                final height = useMetric ? profile.height : (profile.height * 0.393701);
+                                final heightUnit = useMetric ? 'cm' : 'ft';
+                                String heightDisplay;
+                                if (useMetric) {
+                                  heightDisplay = '${height.toStringAsFixed(1)} cm';
+                                } else {
+                                  int totalInches = height.round();
+                                  int feet = totalInches ~/ 12;
+                                  int inches = totalInches % 12;
+                                  heightDisplay = "${feet}'${inches}\" ft";
+                                }
+                                return Container(
+                                  width: double.infinity,
+                                  padding: EdgeInsets.symmetric(vertical: 18, horizontal: 12),
+                                  decoration: BoxDecoration(
+                                    color: kPrimaryGreen.withOpacity(0.07),
+                                    borderRadius: BorderRadius.circular(18),
+                                    border: Border.all(color: kPrimaryGreen.withOpacity(0.13)),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.black.withOpacity(0.03),
+                                        blurRadius: 8,
+                                        offset: Offset(0, 2),
+                                      ),
+                                    ],
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      Expanded(
+                                        child: Column(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Icon(Icons.cake, color: kPrimaryGreen, size: 26),
+                                            SizedBox(height: 6),
+                                            Text('Age', style: TextStyle(color: kPrimaryGreen, fontWeight: FontWeight.w600, fontSize: 15)),
+                                            SizedBox(height: 2),
+                                            Text('${profile.age}', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Colors.black)),
+                                          ],
+                                        ),
+                                      ),
+                                      Container(
+                                        height: 48,
+                                        width: 1.2,
+                                        color: kPrimaryGreen.withOpacity(0.13),
+                                      ),
+                                      Expanded(
+                                        child: Column(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Icon(Icons.monitor_weight, color: kPrimaryGreen, size: 26),
+                                            SizedBox(height: 6),
+                                            Text('Weight', style: TextStyle(color: kPrimaryGreen, fontWeight: FontWeight.w600, fontSize: 15)),
+                                            SizedBox(height: 2),
+                                            Text('${weight.toStringAsFixed(1)} $weightUnit', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Colors.black)),
+                                          ],
+                                        ),
+                                      ),
+                                      Container(
+                                        height: 48,
+                                        width: 1.2,
+                                        color: kPrimaryGreen.withOpacity(0.13),
+                                      ),
+                                      Expanded(
+                                        child: Column(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Icon(Icons.height, color: kPrimaryGreen, size: 26),
+                                            SizedBox(height: 6),
+                                            Text('Height', style: TextStyle(color: kPrimaryGreen, fontWeight: FontWeight.w600, fontSize: 15)),
+                                            SizedBox(height: 2),
+                                            Text(heightDisplay, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Colors.black)),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              },
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 18),
+                  // Menu List
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(18),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.03),
+                            blurRadius: 8,
+                            offset: Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: Column(
+                        children: [
+                          _ProfileMenuTile(
+                            icon: Icons.show_chart,
+                            label: 'Nutritional Plan',
+                            onTap: () {
+                              Navigator.of(context).push(MaterialPageRoute(builder: (_) => NutritionalPlanPage()));
+                            },
+                          ),
+                          Divider(height: 1, color: Colors.grey[200]),
+                          _ProfileMenuTile(
+                            icon: Icons.health_and_safety,
+                            label: 'Health Awareness',
+                            onTap: () {
+                              Navigator.of(context).push(MaterialPageRoute(builder: (_) => HealthAwarenessPage()));
+                            },
+                          ),
+                          Divider(height: 1, color: Colors.grey[200]),
+                          _ProfileMenuTile(
+                            icon: Icons.settings,
+                            label: 'Settings',
+                            iconColor: kPrimaryGreen,
+                            onTap: () {
+                              Navigator.of(context).push(MaterialPageRoute(builder: (_) => SettingsPage()));
+                            },
+                          ),
+                          Divider(height: 1, color: Colors.grey[200]),
+                          _ProfileMenuTile(
+                            icon: Icons.tune,
+                            label: 'Plan Settings',
+                            onTap: () {
+                              showDialog(
+                                context: context,
+                                builder: (context) => AlertDialog(
+                                  title: Text('Plan Settings'),
+                                  content: Text('This feature is coming soon!'),
+                                  actions: [TextButton(onPressed: () => Navigator.pop(context), child: Text('OK'))],
+                                ),
+                              );
+                            },
+                          ),
+                          Divider(height: 1, color: Colors.grey[200]),
+                          _ProfileMenuTile(
+                            icon: Icons.star_rate,
+                            label: 'Rate us on Google',
+                            iconColor: kAccentOrange,
+                            onTap: () {
+                              showDialog(
+                                context: context,
+                                builder: (context) => AlertDialog(
+                                  title: Text('Coming Soon!'),
+                                  content: Text('Rating on Google will be available after release.'),
+                                  actions: [TextButton(onPressed: () => Navigator.pop(context), child: Text('OK'))],
+                                ),
+                              );
+                            },
+                          ),
+                          Divider(height: 1, color: Colors.grey[200]),
+                          _ProfileMenuTile(
+                            icon: Icons.share,
+                            label: 'Share with Friends',
+                            iconColor: kSecondaryBlue,
+                            onTap: () {
+                              showDialog(
+                                context: context,
+                                builder: (context) => AlertDialog(
+                                  title: Text('Coming Soon!'),
+                                  content: Text('Sharing will be available after release.'),
+                                  actions: [TextButton(onPressed: () => Navigator.pop(context), child: Text('OK'))],
+                                ),
+                              );
+                            },
+                          ),
+                          Divider(height: 1, color: Colors.grey[200]),
+                          _ProfileMenuTile(
+                            icon: Icons.lock_reset,
+                            label: 'Reset password',
+                            onTap: () {
+                              showDialog(
+                                context: context,
+                                builder: (context) {
+                                  final user = FirebaseAuth.instance.currentUser;
+                                  final String? email = user?.email;
+                                  bool isLoading = false;
+                                  String message = '';
+                                  return StatefulBuilder(
+                                    builder: (context, setState) => Dialog(
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(20),
+                                      ),
+                                      child: Container(
+                                        padding: EdgeInsets.all(24),
+                                        child: Column(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Icon(Icons.lock_reset, size: 48, color: kPrimaryGreen),
+                                            SizedBox(height: 16),
+                                            Text('Reset Password', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+                                            SizedBox(height: 8),
+                                            Text('A password reset link will be sent to your email:',
+                                              style: TextStyle(fontSize: 16, color: Colors.grey[600]),
+                                              textAlign: TextAlign.center,
+                                            ),
+                                            SizedBox(height: 16),
+                                            Container(
+                                              width: double.infinity,
+                                              padding: EdgeInsets.symmetric(vertical: 14, horizontal: 12),
+                                              decoration: BoxDecoration(
+                                                color: kPrimaryGreen.withOpacity(0.08),
+                                                borderRadius: BorderRadius.circular(12),
+                                                border: Border.all(color: kPrimaryGreen.withOpacity(0.18)),
+                                              ),
+                                              child: Row(
+                                                children: [
+                                                  Icon(Icons.email, color: kPrimaryGreen),
+                                                  SizedBox(width: 10),
+                                                  Expanded(
+                                                    child: Text(
+                                                      email ?? 'No email found',
+                                                      style: TextStyle(fontWeight: FontWeight.w600, color: kPrimaryGreen, fontSize: 16),
+                                                      overflow: TextOverflow.ellipsis,
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                            SizedBox(height: 16),
+                                            if (message.isNotEmpty)
+                                              Padding(
+                                                padding: const EdgeInsets.only(bottom: 8),
+                                                child: Text(
+                                                  message,
+                                                  style: TextStyle(
+                                                    color: message.startsWith('Success') ? kPrimaryGreen : kWarningRed,
+                                                    fontWeight: FontWeight.bold,
+                                                  ),
+                                                  textAlign: TextAlign.center,
+                                                ),
+                                              ),
+                                            Row(
+                                              mainAxisAlignment: MainAxisAlignment.center,
+                                              children: [
+                                                OutlinedButton(
+                                                  onPressed: () => Navigator.pop(context),
+                                                  style: OutlinedButton.styleFrom(
+                                                    foregroundColor: kPrimaryGreen,
+                                                    side: BorderSide(color: kPrimaryGreen),
+                                                    shape: RoundedRectangleBorder(
+                                                      borderRadius: BorderRadius.circular(12),
+                                                    ),
+                                                  ),
+                                                  child: Text('Close'),
+                                                ),
+                                                SizedBox(width: 12),
+                                                ElevatedButton(
+                                                  onPressed: (isLoading || email == null)
+                                                    ? null
+                                                    : () async {
+                                                        setState(() { isLoading = true; message = ''; });
+                                                        try {
+                                                          await FirebaseAuth.instance.sendPasswordResetEmail(email: email);
+                                                          setState(() {
+                                                            message = 'Success! Check your email for a reset link.';
+                                                            isLoading = false;
+                                                          });
+                                                        } catch (e) {
+                                                          setState(() {
+                                                            message = 'Error: ${e.toString()}';
+                                                            isLoading = false;
+                                                          });
+                                                        }
+                                                      },
+                                                  child: isLoading
+                                                    ? SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                                                    : Text('Send Reset Link'),
+                                                ),
+                                              ],
                                             ),
                                           ],
                                         ),
-                                        SizedBox(height: 18),
+                                      ),
+                                    ),
+                                  );
+                                },
+                              );
+                            },
+                          ),
+                          Divider(height: 1, color: Colors.grey[200]),
+                          _ProfileMenuTile(
+                            icon: Icons.help_outline,
+                            label: 'Help & Support',
+                            iconColor: Colors.red,
+                            onTap: () {
+                              showDialog(
+                                context: context,
+                                builder: (context) => Dialog(
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(20),
+                                  ),
+                                  child: Container(
+                                    padding: EdgeInsets.all(24),
+                                    child: Column(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Icon(
+                                          Icons.support_agent,
+                                          size: 48,
+                                          color: kPrimaryGreen,
+                                        ),
+                                        SizedBox(height: 16),
+                                        Text(
+                                          'Help & Support',
+                                          style: TextStyle(
+                                            fontSize: 24,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                        SizedBox(height: 8),
+                                        Text(
+                                          'Need assistance? Contact our support team:',
+                                          style: TextStyle(
+                                            fontSize: 16,
+                                            color: Colors.grey[600],
+                                          ),
+                                          textAlign: TextAlign.center,
+                                        ),
+                                        SizedBox(height: 16),
+                                        InkWell(
+                                          onTap: () async {
+                                            print('DEBUG: Email InkWell tapped');
+                                            final Uri emailLaunchUri = Uri(
+                                              scheme: 'mailto',
+                                              path: 'support@healthai.com',
+                                              queryParameters: {
+                                                'subject': 'HealthAI Support Request',
+                                              },
+                                            );
+                                            if (await canLaunchUrl(emailLaunchUri)) {
+                                              await launchUrl(emailLaunchUri);
+                                            } else {
+                                              print('DEBUG: Could not launch email client');
+                                              showDialog(
+                                                context: context,
+                                                builder: (context) => AlertDialog(
+                                                  title: Text('Error'),
+                                                  content: Text('Could not launch email client'),
+                                                  actions: [
+                                                    TextButton(
+                                                      onPressed: () => Navigator.of(context).pop(),
+                                                      child: Text('OK'),
+                                                    ),
+                                                  ],
+                                                ),
+                                              );
+                                            }
+                                          },
+                                          child: Container(
+                                            padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                                            decoration: BoxDecoration(
+                                              color: kPrimaryGreen.withOpacity(0.1),
+                                              borderRadius: BorderRadius.circular(12),
+                                              border: Border.all(color: kPrimaryGreen.withOpacity(0.3)),
+                                            ),
+                                            child: Row(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                Icon(Icons.email, color: kPrimaryGreen),
+                                                SizedBox(width: 8),
+                                                Text(
+                                                  'support@healthai.com',
+                                                  style: TextStyle(
+                                                    color: kPrimaryGreen,
+                                                    fontWeight: FontWeight.w600,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ),
+                                        SizedBox(height: 16),
+                                        ElevatedButton(
+                                          onPressed: () async {
+                                            print('DEBUG: Test web URL button tapped');
+                                            final Uri webUri = Uri.parse('https://google.com');
+                                            if (await canLaunchUrl(webUri)) {
+                                              await launchUrl(webUri);
+                                            } else {
+                                              print('DEBUG: Could not launch web URL');
+                                              showDialog(
+                                                context: context,
+                                                builder: (context) => AlertDialog(
+                                                  title: Text('Error'),
+                                                  content: Text('Could not launch web URL'),
+                                                  actions: [
+                                                    TextButton(
+                                                      onPressed: () => Navigator.of(context).pop(),
+                                                      child: Text('OK'),
+                                                    ),
+                                                  ],
+                                                ),
+                                              );
+                                            }
+                                          },
+                                          child: Text('Test Web URL'),
+                                        ),
+                                        SizedBox(height: 8),
+                                        ElevatedButton(
+                                          onPressed: () async {
+                                            print('DEBUG: Test simple mailto button tapped');
+                                            final Uri emailLaunchUri = Uri(
+                                              scheme: 'mailto',
+                                              path: 'support@healthai.com',
+                                            );
+                                            if (await canLaunchUrl(emailLaunchUri)) {
+                                              await launchUrl(emailLaunchUri);
+                                            } else {
+                                              print('DEBUG: Could not launch simple mailto');
+                                              showDialog(
+                                                context: context,
+                                                builder: (context) => AlertDialog(
+                                                  title: Text('Error'),
+                                                  content: Text('Could not launch simple mailto'),
+                                                  actions: [
+                                                    TextButton(
+                                                      onPressed: () => Navigator.of(context).pop(),
+                                                      child: Text('OK'),
+                                                    ),
+                                                  ],
+                                                ),
+                                              );
+                                            }
+                                          },
+                                          child: Text('Test Simple Mailto'),
+                                        ),
+                                        SizedBox(height: 24),
                                         Row(
                                           mainAxisAlignment: MainAxisAlignment.center,
                                           children: [
-                                            ElevatedButton.icon(
-                                              icon: Icon(Icons.upload),
-                                              label: Text('Upload New'),
-                                              onPressed: () async {
-                                                Navigator.pop(context);
-                                                await _changeProfilePicture();
-                                              },
-                                            ),
-                                            if (profile != null && profile.photoUrl.isNotEmpty) ...[
-                                              SizedBox(width: 12),
-                                              OutlinedButton.icon(
-                                                icon: Icon(Icons.delete),
-                                                label: Text('Delete'),
-                                                onPressed: () async {
-                                                  Navigator.pop(context);
-                                                  final user = FirebaseAuth.instance.currentUser;
-                                                  if (user != null) {
-                                                    await FirebaseFirestore.instance.collection('users').doc(user.uid).update({'photoUrl': ''});
-                                                    await user.updatePhotoURL('');
-                                                    setState(() {});
-                                                  }
-                                                },
+                                            OutlinedButton(
+                                              onPressed: () => Navigator.pop(context),
+                                              style: OutlinedButton.styleFrom(
+                                                foregroundColor: kPrimaryGreen,
+                                                side: BorderSide(color: kPrimaryGreen),
+                                                shape: RoundedRectangleBorder(
+                                                  borderRadius: BorderRadius.circular(12),
+                                                ),
                                               ),
-                                            ],
+                                              child: Text('Close'),
+                                            ),
                                           ],
                                         ),
                                       ],
                                     ),
                                   ),
-                                );
-                              },
-                            );
-                          },
-                          child: Stack(
-                      children: [
-                        Container(
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            border: Border.all(color: kPrimaryGreen, width: 3),
-                          ),
-                          child: CircleAvatar(
-                            radius: 34,
-                            backgroundImage: profile != null && profile.photoUrl.isNotEmpty
-                              ? NetworkImage(profile.photoUrl)
-                              : null,
-                            backgroundColor: kPrimaryGreen.withOpacity(0.08),
-                                  child: profile == null || profile.photoUrl.isEmpty ? Icon(Icons.person, color: kPrimaryGreen, size: 38) : null,
                                 ),
-                              ),
-                              if (profile == null || profile.photoUrl.isEmpty)
-                                Positioned(
-                                  bottom: 0,
-                                  right: 0,
+                              );
+                            },
+                          ),
+                          Divider(height: 1, color: Colors.grey[200]),
+                          _ProfileMenuTile(
+                            icon: Icons.logout,
+                            label: 'Log Out',
+                            iconColor: Colors.red,
+                            labelColor: Colors.red,
+                            onTap: () {
+                              showDialog(
+                                context: context,
+                                builder: (context) => Dialog(
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(20),
+                                  ),
                                   child: Container(
-                                    decoration: BoxDecoration(
-                                      color: Colors.white,
-                                      shape: BoxShape.circle,
-                                      boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 2)],
-                                    ),
-                                    padding: EdgeInsets.all(4),
-                                    child: Icon(Icons.edit, color: kPrimaryGreen, size: 18),
-                                  ),
-                                ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(width: 18),
-                        Expanded(
-                          child: Row(
-                            children: [
-                              Text(userName, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 22)),
-                              IconButton(
-                                icon: Icon(Icons.edit, color: kPrimaryGreen, size: 20),
-                                tooltip: 'Edit name',
-                                onPressed: () => _changeProfileName(userName),
-                              ),
-                              const SizedBox(width: 10),
-                              if (isPremium)
-                                Container(
-                                  padding: EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                                  decoration: BoxDecoration(
-                                    color: kPrimaryGreen.withOpacity(0.10),
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  child: Text('Premium', style: TextStyle(color: kPrimaryGreen, fontWeight: FontWeight.w600)),
-                                ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 14),
-                    // Add three pill-shaped buttons horizontally
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: [
-                        // Removed Plan Settings button
-                      ],
-                    ),
-                    const SizedBox(height: 14),
-                    if (profile != null) ...[
-                      Builder(
-                        builder: (context) {
-                          final prefs = Provider.of<PreferencesProvider>(context);
-                          final useMetric = prefs.useMetric;
-                          final weight = useMetric ? profile.weight : (profile.weight * 2.20462);
-                          final weightUnit = useMetric ? 'kg' : 'lb';
-                          final height = useMetric ? profile.height : (profile.height * 0.393701);
-                          final heightUnit = useMetric ? 'cm' : 'ft';
-                          String heightDisplay;
-                          if (useMetric) {
-                            heightDisplay = '${height.toStringAsFixed(1)} cm';
-                          } else {
-                            int totalInches = height.round();
-                            int feet = totalInches ~/ 12;
-                            int inches = totalInches % 12;
-                            heightDisplay = "${feet}'${inches}\" ft";
-                          }
-                          return Container(
-                            width: double.infinity,
-                            padding: EdgeInsets.symmetric(vertical: 18, horizontal: 12),
-                            decoration: BoxDecoration(
-                              color: kPrimaryGreen.withOpacity(0.07),
-                              borderRadius: BorderRadius.circular(18),
-                              border: Border.all(color: kPrimaryGreen.withOpacity(0.13)),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withOpacity(0.03),
-                                  blurRadius: 8,
-                                  offset: Offset(0, 2),
-                                ),
-                              ],
-                            ),
-                            child: Row(
-                              children: [
-                                Expanded(
-                                  child: Column(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Icon(Icons.cake, color: kPrimaryGreen, size: 26),
-                                      SizedBox(height: 6),
-                                      Text('Age', style: TextStyle(color: kPrimaryGreen, fontWeight: FontWeight.w600, fontSize: 15)),
-                                      SizedBox(height: 2),
-                                      Text('${profile.age}', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Colors.black)),
-                                    ],
-                                  ),
-                                ),
-                                Container(
-                                  height: 48,
-                                  width: 1.2,
-                                  color: kPrimaryGreen.withOpacity(0.13),
-                                ),
-                                Expanded(
-                                  child: Column(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Icon(Icons.monitor_weight, color: kPrimaryGreen, size: 26),
-                                      SizedBox(height: 6),
-                                      Text('Weight', style: TextStyle(color: kPrimaryGreen, fontWeight: FontWeight.w600, fontSize: 15)),
-                                      SizedBox(height: 2),
-                                      Text('${weight.toStringAsFixed(1)} $weightUnit', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Colors.black)),
-                                    ],
-                                  ),
-                                ),
-                                Container(
-                                  height: 48,
-                                  width: 1.2,
-                                  color: kPrimaryGreen.withOpacity(0.13),
-                                ),
-                                Expanded(
-                                  child: Column(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Icon(Icons.height, color: kPrimaryGreen, size: 26),
-                                      SizedBox(height: 6),
-                                      Text('Height', style: TextStyle(color: kPrimaryGreen, fontWeight: FontWeight.w600, fontSize: 15)),
-                                      SizedBox(height: 2),
-                                      Text(heightDisplay, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Colors.black)),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            ),
-                          );
-                        },
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(height: 18),
-            // Menu List
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 12),
-                      child: Container(
-                        decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(18),
-                          boxShadow: [
-                            BoxShadow(
-                      color: Colors.black.withOpacity(0.03),
-                      blurRadius: 8,
-                      offset: Offset(0, 2),
-                            ),
-                          ],
-                        ),
-                        child: Column(
-                          children: [
-                    _ProfileMenuTile(
-                              icon: Icons.show_chart,
-                      label: 'Nutritional Plan',
-                      onTap: () {
-                        Navigator.of(context).push(MaterialPageRoute(builder: (_) => NutritionalPlanPage()));
-                      },
-                            ),
-                    Divider(height: 1, color: Colors.grey[200]),
-                    _ProfileMenuTile(
-                      icon: Icons.health_and_safety,
-                      label: 'Health Awareness',
-                      onTap: () {
-                        Navigator.of(context).push(MaterialPageRoute(builder: (_) => HealthAwarenessPage()));
-                      },
-                    ),
-                    Divider(height: 1, color: Colors.grey[200]),
-                    _ProfileMenuTile(
-                      icon: Icons.settings,
-                      label: 'Settings',
-                      iconColor: kPrimaryGreen,
-                      onTap: () {
-                        Navigator.of(context).push(MaterialPageRoute(builder: (_) => SettingsPage()));
-                      },
-                    ),
-                    Divider(height: 1, color: Colors.grey[200]),
-                    _ProfileMenuTile(
-                      icon: Icons.tune,
-                      label: 'Plan Settings',
-                      onTap: () {
-                        showDialog(
-                          context: context,
-                          builder: (context) => AlertDialog(
-                            title: Text('Plan Settings'),
-                            content: Text('This feature is coming soon!'),
-                            actions: [TextButton(onPressed: () => Navigator.pop(context), child: Text('OK'))],
-                          ),
-                        );
-                      },
-                    ),
-                    Divider(height: 1, color: Colors.grey[200]),
-                    _ProfileMenuTile(
-                      icon: Icons.lock_reset,
-                      label: 'Reset password',
-                      onTap: () {
-                        showDialog(
-                          context: context,
-                          builder: (context) {
-                            final user = FirebaseAuth.instance.currentUser;
-                            final String? email = user?.email;
-                            bool isLoading = false;
-                            String message = '';
-                            return StatefulBuilder(
-                              builder: (context, setState) => Dialog(
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(20),
-                                ),
-                                child: Container(
-                                  padding: EdgeInsets.all(24),
-                                  child: Column(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Icon(Icons.lock_reset, size: 48, color: kPrimaryGreen),
-                                      SizedBox(height: 16),
-                                      Text('Reset Password', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
-                                      SizedBox(height: 8),
-                                      Text('A password reset link will be sent to your email:',
-                                        style: TextStyle(fontSize: 16, color: Colors.grey[600]),
-                                        textAlign: TextAlign.center,
-                                      ),
-                                      SizedBox(height: 16),
-                                      Container(
-                                        width: double.infinity,
-                                        padding: EdgeInsets.symmetric(vertical: 14, horizontal: 12),
-                                        decoration: BoxDecoration(
-                                          color: kPrimaryGreen.withOpacity(0.08),
-                                          borderRadius: BorderRadius.circular(12),
-                                          border: Border.all(color: kPrimaryGreen.withOpacity(0.18)),
+                                    padding: EdgeInsets.all(24),
+                                    child: Column(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Icon(
+                                          Icons.logout,
+                                          size: 48,
+                                          color: Colors.red,
                                         ),
-                                        child: Row(
+                                        SizedBox(height: 16),
+                                        Text(
+                                          'Log Out',
+                                          style: TextStyle(
+                                            fontSize: 24,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                        SizedBox(height: 8),
+                                        Text(
+                                          'Are you sure you want to log out?',
+                                          style: TextStyle(
+                                            fontSize: 16,
+                                            color: Colors.grey[600],
+                                          ),
+                                          textAlign: TextAlign.center,
+                                        ),
+                                        SizedBox(height: 24),
+                                        Row(
+                                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                                           children: [
-                                            Icon(Icons.email, color: kPrimaryGreen),
-                                            SizedBox(width: 10),
-                                            Expanded(
-                                              child: Text(
-                                                email ?? 'No email found',
-                                                style: TextStyle(fontWeight: FontWeight.w600, color: kPrimaryGreen, fontSize: 16),
-                                                overflow: TextOverflow.ellipsis,
+                                            OutlinedButton(
+                                              onPressed: () => Navigator.pop(context),
+                                              style: OutlinedButton.styleFrom(
+                                                foregroundColor: kPrimaryGreen,
+                                                side: BorderSide(color: kPrimaryGreen),
+                                                shape: RoundedRectangleBorder(
+                                                  borderRadius: BorderRadius.circular(12),
+                                                ),
+                                                padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                                               ),
+                                              child: Text('No'),
+                                            ),
+                                            ElevatedButton(
+                                              onPressed: () async {
+                                                Navigator.pop(context);
+                                                await FirebaseAuth.instance.signOut();
+                                                Navigator.of(context).pushAndRemoveUntil(
+                                                  MaterialPageRoute(builder: (_) => AuthScreen()),
+                                                  (route) => false,
+                                                );
+                                              },
+                                              style: ElevatedButton.styleFrom(
+                                                backgroundColor: Colors.red,
+                                                foregroundColor: Colors.white,
+                                                shape: RoundedRectangleBorder(
+                                                  borderRadius: BorderRadius.circular(12),
+                                                ),
+                                                padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                                              ),
+                                              child: Text('Yes'),
                                             ),
                                           ],
                                         ),
-                                      ),
-                                      SizedBox(height: 16),
-                                      if (message.isNotEmpty)
-                                        Padding(
-                                          padding: const EdgeInsets.only(bottom: 8),
-                                          child: Text(
-                                            message,
-                                            style: TextStyle(
-                                              color: message.startsWith('Success') ? kPrimaryGreen : kWarningRed,
-                                              fontWeight: FontWeight.bold,
-                                            ),
-                                            textAlign: TextAlign.center,
-                                          ),
-                                        ),
-                                      Row(
-                                        mainAxisAlignment: MainAxisAlignment.center,
-                                        children: [
-                                          OutlinedButton(
-                                            onPressed: () => Navigator.pop(context),
-                                            style: OutlinedButton.styleFrom(
-                                              foregroundColor: kPrimaryGreen,
-                                              side: BorderSide(color: kPrimaryGreen),
-                                              shape: RoundedRectangleBorder(
-                                                borderRadius: BorderRadius.circular(12),
-                                              ),
-                                            ),
-                                            child: Text('Close'),
-                                          ),
-                                          SizedBox(width: 12),
-                                          ElevatedButton(
-                                            onPressed: (isLoading || email == null)
-                                              ? null
-                                              : () async {
-                                                  setState(() { isLoading = true; message = ''; });
-                                                  try {
-                                                    await FirebaseAuth.instance.sendPasswordResetEmail(email: email);
-                                                    setState(() {
-                                                      message = 'Success! Check your email for a reset link.';
-                                                      isLoading = false;
-                                                    });
-                                                  } catch (e) {
-                                                    setState(() {
-                                                      message = 'Error: ${e.toString()}';
-                                                      isLoading = false;
-                                                    });
-                                                  }
-                                                },
-                                            child: isLoading
-                                              ? SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                                              : Text('Send Reset Link'),
-                                          ),
-                                        ],
-                                      ),
-                                    ],
+                                      ],
+                                    ),
                                   ),
                                 ),
-                              ),
-                            );
-                          },
-                        );
-                      },
-                    ),
-                    Divider(height: 1, color: Colors.grey[200]),
-                    _ProfileMenuTile(
-                      icon: Icons.help_outline,
-                      label: 'Help & Support',
-                      iconColor: Colors.red,
-                      onTap: () {
-                        showDialog(
-                          context: context,
-                          builder: (context) => Dialog(
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                            child: Container(
-                              padding: EdgeInsets.all(24),
-                              child: Column(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Icon(
-                                    Icons.support_agent,
-                                    size: 48,
-                                    color: kPrimaryGreen,
-                                  ),
-                                  SizedBox(height: 16),
-                                  Text(
-                                    'Help & Support',
-                                    style: TextStyle(
-                                      fontSize: 24,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                  SizedBox(height: 8),
-                                  Text(
-                                    'Need assistance? Contact our support team:',
-                                    style: TextStyle(
-                                      fontSize: 16,
-                                      color: Colors.grey[600],
-                                    ),
-                                    textAlign: TextAlign.center,
-                                  ),
-                                  SizedBox(height: 16),
-                                  InkWell(
-                                    onTap: () async {
-                                      print('DEBUG: Email InkWell tapped');
-                                      final Uri emailLaunchUri = Uri(
-                                        scheme: 'mailto',
-                                        path: 'support@healthai.com',
-                                        queryParameters: {
-                                          'subject': 'HealthAI Support Request',
-                                        },
-                                      );
-                                      if (await canLaunchUrl(emailLaunchUri)) {
-                                        await launchUrl(emailLaunchUri);
-                                      } else {
-                                        print('DEBUG: Could not launch email client');
-                                        showDialog(
-                                          context: context,
-                                          builder: (context) => AlertDialog(
-                                            title: Text('Error'),
-                                            content: Text('Could not launch email client'),
-                                            actions: [
-                                              TextButton(
-                                                onPressed: () => Navigator.of(context).pop(),
-                                                child: Text('OK'),
-                                              ),
-                                            ],
-                                          ),
-                                        );
-                                      }
-                                    },
-                                    child: Container(
-                                      padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                                      decoration: BoxDecoration(
-                                        color: kPrimaryGreen.withOpacity(0.1),
-                                        borderRadius: BorderRadius.circular(12),
-                                        border: Border.all(color: kPrimaryGreen.withOpacity(0.3)),
-                                      ),
-                                      child: Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          Icon(Icons.email, color: kPrimaryGreen),
-                                          SizedBox(width: 8),
-                                          Text(
-                                            'support@healthai.com',
-                                            style: TextStyle(
-                                              color: kPrimaryGreen,
-                                              fontWeight: FontWeight.w600,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                  SizedBox(height: 16),
-                                  ElevatedButton(
-                                    onPressed: () async {
-                                      print('DEBUG: Test web URL button tapped');
-                                      final Uri webUri = Uri.parse('https://google.com');
-                                      if (await canLaunchUrl(webUri)) {
-                                        await launchUrl(webUri);
-                                      } else {
-                                        print('DEBUG: Could not launch web URL');
-                                        showDialog(
-                                          context: context,
-                                          builder: (context) => AlertDialog(
-                                            title: Text('Error'),
-                                            content: Text('Could not launch web URL'),
-                                            actions: [
-                                              TextButton(
-                                                onPressed: () => Navigator.of(context).pop(),
-                                                child: Text('OK'),
-                                              ),
-                                            ],
-                                          ),
-                                        );
-                                      }
-                                    },
-                                    child: Text('Test Web URL'),
-                                  ),
-                                  SizedBox(height: 8),
-                                  ElevatedButton(
-                                    onPressed: () async {
-                                      print('DEBUG: Test simple mailto button tapped');
-                                      final Uri emailLaunchUri = Uri(
-                                        scheme: 'mailto',
-                                        path: 'support@healthai.com',
-                                      );
-                                      if (await canLaunchUrl(emailLaunchUri)) {
-                                        await launchUrl(emailLaunchUri);
-                                      } else {
-                                        print('DEBUG: Could not launch simple mailto');
-                                        showDialog(
-                                          context: context,
-                                          builder: (context) => AlertDialog(
-                                            title: Text('Error'),
-                                            content: Text('Could not launch simple mailto'),
-                                            actions: [
-                                              TextButton(
-                                                onPressed: () => Navigator.of(context).pop(),
-                                                child: Text('OK'),
-                                              ),
-                                            ],
-                                          ),
-                                        );
-                                      }
-                                    },
-                                    child: Text('Test Simple Mailto'),
-                                  ),
-                                  SizedBox(height: 24),
-                                  Row(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      OutlinedButton(
-                                        onPressed: () => Navigator.pop(context),
-                                        style: OutlinedButton.styleFrom(
-                                          foregroundColor: kPrimaryGreen,
-                                          side: BorderSide(color: kPrimaryGreen),
-                                          shape: RoundedRectangleBorder(
-                                            borderRadius: BorderRadius.circular(12),
-                                          ),
-                                        ),
-                                        child: Text('Close'),
-                                      ),
-                                    ],
-                                  ),
-                                ],
-                              ),
-                            ),
+                              );
+                            },
                           ),
-                        );
-                      },
+                        ],
+                      ),
                     ),
-                    Divider(height: 1, color: Colors.grey[200]),
-                    _ProfileMenuTile(
-                      icon: Icons.logout,
-                      label: 'Log Out',
-                      iconColor: Colors.red,
-                      labelColor: Colors.red,
-                      onTap: () {
-                        showDialog(
-                          context: context,
-                          builder: (context) => Dialog(
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                            child: Container(
-                              padding: EdgeInsets.all(24),
-                              child: Column(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Icon(
-                                    Icons.logout,
-                                    size: 48,
-                                    color: Colors.red,
-                                  ),
-                                  SizedBox(height: 16),
-                                  Text(
-                                    'Log Out',
-                                    style: TextStyle(
-                                      fontSize: 24,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                  SizedBox(height: 8),
-                                  Text(
-                                    'Are you sure you want to log out?',
-                                    style: TextStyle(
-                                      fontSize: 16,
-                                      color: Colors.grey[600],
-                                    ),
-                                    textAlign: TextAlign.center,
-                                  ),
-                                  SizedBox(height: 24),
-                                  Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                                    children: [
-                                      OutlinedButton(
-                                        onPressed: () => Navigator.pop(context),
-                                        style: OutlinedButton.styleFrom(
-                                          foregroundColor: kPrimaryGreen,
-                                          side: BorderSide(color: kPrimaryGreen),
-                                          shape: RoundedRectangleBorder(
-                                            borderRadius: BorderRadius.circular(12),
-                                          ),
-                                          padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                                        ),
-                                        child: Text('No'),
-                                      ),
-                                      ElevatedButton(
-                                        onPressed: () async {
-                                          Navigator.pop(context);
-                                          await FirebaseAuth.instance.signOut();
-                                          Navigator.of(context).pushAndRemoveUntil(
-                                            MaterialPageRoute(builder: (_) => AuthScreen()),
-                                            (route) => false,
-                                          );
-                                        },
-                                        style: ElevatedButton.styleFrom(
-                                          backgroundColor: Colors.red,
-                                          foregroundColor: Colors.white,
-                                          shape: RoundedRectangleBorder(
-                                            borderRadius: BorderRadius.circular(12),
-                                          ),
-                                          padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                                        ),
-                                        child: Text('Yes'),
-                                      ),
-                                    ],
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-            ],
-                ),
                   ),
-                ),
-              ],
+                ],
+              ),
             );
           },
-            ),
+        ),
       ),
     );
   }
