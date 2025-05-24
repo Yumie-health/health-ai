@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'main.dart'; // For AuthScreen
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:lottie/lottie.dart';
+import 'services/ai_service.dart';
 
 class OnboardingFlowPage extends StatefulWidget {
   const OnboardingFlowPage({Key? key}) : super(key: key);
@@ -28,10 +30,13 @@ class _OnboardingFlowPageState extends State<OnboardingFlowPage> with SingleTick
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _slideAnimation;
   List<String> selectedHabits = [];
-  int? mealsPerDay;
   String? bloodType;
   bool? isDiabetic;
   String? waterIntake;
+  String? selectedSex;
+  bool isLoadingNutritionPlan = false;
+  Map<String, int>? aiNutritionPlan;
+  String? aiError;
 
   @override
   void initState() {
@@ -70,6 +75,11 @@ class _OnboardingFlowPageState extends State<OnboardingFlowPage> with SingleTick
         selectedWeightKg = 70;
         selectedWeightLb = selectedWeightKg! * 2.20462;
       }
+      // If goal is to maintain weight, set target weight to current weight and skip the target weight step
+      if (step == 7 && selectedGoal == 'Maintain body weight') {
+        targetWeightKg = selectedWeightKg;
+        step++; // Skip the target weight step
+      }
       _controller.reset();
       _controller.forward();
     });
@@ -77,9 +87,20 @@ class _OnboardingFlowPageState extends State<OnboardingFlowPage> with SingleTick
 
   void prevStep() {
     setState(() {
-      step--;
-      _controller.reset();
-      _controller.forward();
+      if (step == 15) {
+        step = 13;
+        _controller.reset();
+        _controller.forward();
+      } else if (step > 0) {
+        step--;
+        _controller.reset();
+        _controller.forward();
+      } else {
+        // If at the first step, exit onboarding (go to AuthScreen)
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (_) => AuthScreen()),
+        );
+      }
     });
   }
 
@@ -136,6 +157,15 @@ class _OnboardingFlowPageState extends State<OnboardingFlowPage> with SingleTick
                   onBack: prevStep,
                 );
               } else if (step == 3) {
+                return _SexStep(
+                  fadeAnimation: _fadeAnimation,
+                  slideAnimation: _slideAnimation,
+                  selectedSex: selectedSex,
+                  onSelect: (sex) => setState(() => selectedSex = sex),
+                  onContinue: selectedSex == null ? null : nextStep,
+                  onBack: prevStep,
+                );
+              } else if (step == 4) {
                 return _AgeStep(
                   fadeAnimation: _fadeAnimation,
                   slideAnimation: _slideAnimation,
@@ -144,7 +174,7 @@ class _OnboardingFlowPageState extends State<OnboardingFlowPage> with SingleTick
                   onContinue: selectedAge == null ? null : nextStep,
                   onBack: prevStep,
                 );
-              } else if (step == 4) {
+              } else if (step == 5) {
                 return _HeightStep(
                   fadeAnimation: _fadeAnimation,
                   slideAnimation: _slideAnimation,
@@ -173,7 +203,7 @@ class _OnboardingFlowPageState extends State<OnboardingFlowPage> with SingleTick
                   onContinue: selectedHeightCm == null ? null : nextStep,
                   onBack: prevStep,
                 );
-              } else if (step == 5) {
+              } else if (step == 6) {
                 return _WeightStep(
                   fadeAnimation: _fadeAnimation,
                   slideAnimation: _slideAnimation,
@@ -202,7 +232,7 @@ class _OnboardingFlowPageState extends State<OnboardingFlowPage> with SingleTick
                   onContinue: selectedWeightKg == null ? null : nextStep,
                   onBack: prevStep,
                 );
-              } else if (step == 6) {
+              } else if (step == 7) {
                 return _GoalWeightStep(
                   fadeAnimation: _fadeAnimation,
                   slideAnimation: _slideAnimation,
@@ -211,8 +241,10 @@ class _OnboardingFlowPageState extends State<OnboardingFlowPage> with SingleTick
                   onGoalWeightChanged: (v) => setState(() => targetWeightKg = v),
                   onContinue: (targetWeightKg != null) ? nextStep : null,
                   onBack: prevStep,
+                  selectedGoal: selectedGoal,
+                  currentWeightKg: selectedWeightKg ?? 70,
                 );
-              } else if (step == 7) {
+              } else if (step == 8) {
                 return _ActivityLevelStep(
                   fadeAnimation: _fadeAnimation,
                   slideAnimation: _slideAnimation,
@@ -221,7 +253,7 @@ class _OnboardingFlowPageState extends State<OnboardingFlowPage> with SingleTick
                   onContinue: (activityLevel != null) ? nextStep : null,
                   onBack: prevStep,
                 );
-              } else if (step == 8) {
+              } else if (step == 9) {
                 return _BloodTypeStep(
                   fadeAnimation: _fadeAnimation,
                   slideAnimation: _slideAnimation,
@@ -230,7 +262,7 @@ class _OnboardingFlowPageState extends State<OnboardingFlowPage> with SingleTick
                   onContinue: bloodType == null ? null : nextStep,
                   onBack: prevStep,
                 );
-              } else if (step == 9) {
+              } else if (step == 10) {
                 return _DiabeticStep(
                   fadeAnimation: _fadeAnimation,
                   slideAnimation: _slideAnimation,
@@ -239,7 +271,7 @@ class _OnboardingFlowPageState extends State<OnboardingFlowPage> with SingleTick
                   onContinue: isDiabetic == null ? null : nextStep,
                   onBack: prevStep,
                 );
-              } else if (step == 10) {
+              } else if (step == 11) {
                 return _WaterIntakeStep(
                   fadeAnimation: _fadeAnimation,
                   slideAnimation: _slideAnimation,
@@ -248,7 +280,7 @@ class _OnboardingFlowPageState extends State<OnboardingFlowPage> with SingleTick
                   onContinue: waterIntake == null ? null : nextStep,
                   onBack: prevStep,
                 );
-              } else if (step == 11) {
+              } else if (step == 12) {
                 return _ProfileSummaryStep(
                   fadeAnimation: _fadeAnimation,
                   slideAnimation: _slideAnimation,
@@ -289,7 +321,7 @@ class _OnboardingFlowPageState extends State<OnboardingFlowPage> with SingleTick
                   isDiabetic: isDiabetic,
                   waterIntake: waterIntake,
                 );
-              } else if (step == 12) {
+              } else if (step == 13) {
                 return _EatingHabitsStep(
                   fadeAnimation: _fadeAnimation,
                   slideAnimation: _slideAnimation,
@@ -301,55 +333,175 @@ class _OnboardingFlowPageState extends State<OnboardingFlowPage> with SingleTick
                       selectedHabits.add(habit);
                     }
                   }),
-                  onContinue: selectedHabits.isNotEmpty ? nextStep : null,
+                  onContinue: selectedHabits.isNotEmpty ? () { setState(() { step = 15; }); } : null,
                   onBack: prevStep,
                 );
-              } else if (step == 13) {
-                return _MealsPerDayStep(
-                  fadeAnimation: _fadeAnimation,
-                  slideAnimation: _slideAnimation,
-                  selectedMeals: mealsPerDay,
-                  onSelect: (v) => setState(() => mealsPerDay = v),
-                  onContinue: mealsPerDay != null ? nextStep : null,
-                  onBack: prevStep,
-                );
-              } else if (step == 14) {
-                return _NutritionPlanSummaryStep(
-                  fadeAnimation: _fadeAnimation,
-                  slideAnimation: _slideAnimation,
-                  calories: 2200, // Placeholder, replace with AI later
-                  protein: 120,   // Placeholder
-                  fat: 70,        // Placeholder
-                  carbs: 250,     // Placeholder
-                  onFinish: () async {
-                    final user = await getCurrentUser();
-                    if (user != null) {
-                      final now = DateTime.now();
-                      await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
-                        'dailyCalorieGoal': 2200, // Placeholder, or use your AI value
-                        'proteinGoal': 120,
-                        'fatGoal': 70,
-                        'carbsGoal': 250,
-                        'lastUpdated': now,
-                        'hasCompletedOnboarding': true,
-                      }, SetOptions(merge: true));
-                    }
-                    Navigator.of(context).pushAndRemoveUntil(
-                      MaterialPageRoute(builder: (_) => MainNavScreen()),
-                      (route) => false,
-                    );
-                  },
-                  onBack: prevStep,
-                );
+              } else if (step == 15) {
+                if (isLoadingNutritionPlan) {
+                  return NutritionLoadingAnimation(message: "Yumie is cooking up your personalized nutrition plan...");
+                }
+                if (aiNutritionPlan != null) {
+                  return _NutritionPlanSummaryStep(
+                    fadeAnimation: _fadeAnimation,
+                    slideAnimation: _slideAnimation,
+                    calories: aiNutritionPlan!["calories"]!,
+                    protein: aiNutritionPlan!["protein"]!,
+                    fat: aiNutritionPlan!["fat"]!,
+                    carbs: aiNutritionPlan!["carbs"]!,
+                    onFinish: () async {
+                      final user = await getCurrentUser();
+                      if (user != null) {
+                        final now = DateTime.now();
+                        print('[DEBUG] aiNutritionPlan: '
+                            'calories=${aiNutritionPlan!["calories"]}, '
+                            'protein=${aiNutritionPlan!["protein"]}, '
+                            'fat=${aiNutritionPlan!["fat"]}, '
+                            'carbs=${aiNutritionPlan!["carbs"]}');
+                        print('[DEBUG] About to write to Firestore...');
+                        try {
+                          await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
+                            'dailyCalorieGoal': aiNutritionPlan!["calories"],
+                            'proteinGoal': aiNutritionPlan!["protein"],
+                            'fatGoal': aiNutritionPlan!["fat"],
+                            'carbsGoal': aiNutritionPlan!["carbs"],
+                            'lastUpdated': now,
+                            'hasCompletedOnboarding': true,
+                            'positiveHabits': selectedHabits, // Save positive habits for notifications
+                          }, SetOptions(merge: true));
+                          print('[DEBUG] Firestore write complete');
+                        } catch (e) {
+                          print('[ERROR] Firestore write failed: $e');
+                        }
+                        // Wait for Firestore to update
+                        bool updated = false;
+                        while (!updated) {
+                          final doc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
+                          final data = doc.data();
+                          if (data != null &&
+                              data['dailyCalorieGoal'] == aiNutritionPlan!["calories"] &&
+                              data['proteinGoal'] == aiNutritionPlan!["protein"] &&
+                              data['fatGoal'] == aiNutritionPlan!["fat"] &&
+                              data['carbsGoal'] == aiNutritionPlan!["carbs"]) {
+                            updated = true;
+                          } else {
+                            await Future.delayed(Duration(milliseconds: 200));
+                          }
+                        }
+                      }
+                      Navigator.of(context).pushAndRemoveUntil(
+                        MaterialPageRoute(builder: (_) => MainNavScreen()),
+                        (route) => false,
+                      );
+                    },
+                    onBack: prevStep,
+                  );
+                }
+                if (aiError != null) {
+                  return Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.error, color: Colors.red, size: 48),
+                        SizedBox(height: 16),
+                        Text('Could not generate your plan. Please try again.', style: TextStyle(fontSize: 18)),
+                        SizedBox(height: 24),
+                        ElevatedButton(
+                          onPressed: () {
+                            setState(() {
+                              aiError = null;
+                              _fetchNutritionPlan();
+                            });
+                          },
+                          child: Text('Retry'),
+                        ),
+                      ],
+                    ),
+                  );
+                }
+                // Trigger AI fetch on first build of this step
+                Future.microtask(_fetchNutritionPlan);
+                return NutritionLoadingAnimation(message: "Yumie is cooking up your personalized nutrition plan...");
               } else {
-                // TODO: Continue with weight, etc.
-                return Center(child: Text('Next: Weight step'));
+                // Fallback UI for unknown steps
+                return Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.error, color: Colors.red, size: 48),
+                      SizedBox(height: 16),
+                      Text('Something went wrong. Please restart the onboarding process.', style: TextStyle(fontSize: 18)),
+                      SizedBox(height: 24),
+                      ElevatedButton(
+                        onPressed: () {
+                          setState(() {
+                            step = 0;
+                          });
+                        },
+                        child: Text('Restart Onboarding'),
+                      ),
+                    ],
+                  ),
+                );
               }
             },
           ),
         ),
       ),
     );
+  }
+
+  void _fetchNutritionPlan() async {
+    setState(() {
+      isLoadingNutritionPlan = true;
+      aiNutritionPlan = null;
+      aiError = null;
+    });
+    try {
+      final aiService = AIService();
+      final int age = selectedAge ?? 16;
+      final String sex = selectedSex ?? "Other";
+      final int heightFt = selectedHeightFeet;
+      final int heightIn = selectedHeightInches;
+      final int weightLb = selectedWeightKg != null ? (selectedWeightKg! * 2.20462).round() : 154;
+      final String goal = selectedGoal ?? "Maintenance";
+      final String activity = activityLevel ?? "Sedentary";
+      final String blood = bloodType ?? "O+";
+      final bool diabetic = isDiabetic ?? false;
+      final String? water = waterIntake;
+      final start = DateTime.now();
+      final plan = await aiService.getNutritionPlanRecommendation(
+        age: age,
+        sex: sex,
+        heightFt: heightFt,
+        heightIn: heightIn,
+        weightLb: weightLb,
+        goal: goal,
+        activityLevel: activity,
+        bloodType: blood,
+        isDiabetic: diabetic,
+        waterIntake: water,
+        motivation: selectedMotivation,
+        targetWeightKg: targetWeightKg,
+        eatingHabits: selectedHabits,
+      );
+      print('[DEBUG] AI plan generated: $plan');
+      if (plan == null) throw Exception("AI did not return a plan");
+      // Ensure at least 7 seconds of loading
+      final elapsed = DateTime.now().difference(start).inMilliseconds;
+      final minLoading = 7000;
+      if (elapsed < minLoading) {
+        await Future.delayed(Duration(milliseconds: minLoading - elapsed));
+      }
+      setState(() {
+        aiNutritionPlan = plan;
+        isLoadingNutritionPlan = false;
+      });
+    } catch (e) {
+      setState(() {
+        aiError = e.toString();
+        isLoadingNutritionPlan = false;
+      });
+    }
   }
 }
 
@@ -364,117 +516,129 @@ class _GoalStep extends StatelessWidget {
 
   final List<Map<String, dynamic>> goals = const [
     {'icon': Icons.trending_down, 'label': 'Lose body weight', 'color': Color(0xFFFF6B6B)},
-    {'icon': Icons.favorite, 'label': 'Improve health', 'color': Color(0xFF4ECDC4)},
-    {'icon': Icons.fitness_center, 'label': 'Keep fit', 'color': Color(0xFFFFD93D)},
-    {'icon': Icons.restaurant, 'label': 'Master eating discipline', 'color': Color(0xFF95E1D3)},
+    {'icon': Icons.favorite, 'label': 'Gain weight', 'color': Color(0xFF4ECDC4)},
+    {'icon': Icons.fitness_center, 'label': 'Build muscle', 'color': Color(0xFFFFD93D)},
+    {'icon': Icons.restaurant, 'label': 'Eat healthier', 'color': Color(0xFF95E1D3)},
+    {'icon': Icons.balance, 'label': 'Maintain body weight', 'color': Color(0xFF9C27B0)},
   ];
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        Align(
-          alignment: Alignment.centerLeft,
-          child: Container(
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
-                  blurRadius: 8,
-                  offset: Offset(0, 2),
-                ),
-              ],
-            ),
-            child: IconButton(
-              icon: Icon(Icons.arrow_back, color: theme.primaryColor, size: 24),
-              onPressed: onBack,
-            ),
-          ),
-        ),
-        SizedBox(height: 24),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            _buildProgressDot(context, true),
-            _buildProgressLine(context, true),
-            _buildProgressDot(context, false),
-            _buildProgressLine(context, false),
-            _buildProgressDot(context, false),
-          ],
-        ),
-        SizedBox(height: 32),
-        FadeTransition(
-          opacity: fadeAnimation,
-          child: SlideTransition(
-            position: slideAnimation,
-            child: Column(
-              children: [
-                Text(
-                  'What is your main goal?',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 32,
-                    letterSpacing: -0.5,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-                SizedBox(height: 12),
-                Text(
-                  'Choose the goal that best aligns with your journey',
-                  style: TextStyle(
-                    color: Colors.grey[600],
-                    fontSize: 16,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-              ],
-            ),
-          ),
-        ),
-        SizedBox(height: 32),
         Expanded(
-          child: ListView.builder(
-            itemCount: goals.length,
-            itemBuilder: (context, index) {
-              final goal = goals[index];
-              final isSelected = selectedGoal == goal['label'];
-              return FadeTransition(
-                opacity: fadeAnimation,
-                child: SlideTransition(
-                  position: slideAnimation,
-                  child: Padding(
-                    padding: EdgeInsets.only(bottom: 16),
-                    child: _buildGoalCard(goal, isSelected, theme, onSelect),
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.05),
+                          blurRadius: 8,
+                          offset: Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: IconButton(
+                      icon: Icon(Icons.arrow_back, color: theme.primaryColor, size: 24),
+                      onPressed: onBack,
+                    ),
                   ),
                 ),
-              );
-            },
+                SizedBox(height: 24),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    _buildProgressDot(context, true),
+                    _buildProgressLine(context, true),
+                    _buildProgressDot(context, false),
+                    _buildProgressLine(context, false),
+                    _buildProgressDot(context, false),
+                  ],
+                ),
+                SizedBox(height: 32),
+                FadeTransition(
+                  opacity: fadeAnimation,
+                  child: SlideTransition(
+                    position: slideAnimation,
+                    child: Column(
+                      children: [
+                        Text(
+                          'What is your main goal?',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 32,
+                            letterSpacing: -0.5,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                        SizedBox(height: 12),
+                        Text(
+                          'Choose the goal that best aligns with your journey',
+                          style: TextStyle(
+                            color: Colors.grey[600],
+                            fontSize: 16,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                SizedBox(height: 32),
+                ListView.builder(
+                  shrinkWrap: true,
+                  physics: NeverScrollableScrollPhysics(),
+                  itemCount: goals.length,
+                  itemBuilder: (context, index) {
+                    final goal = goals[index];
+                    final isSelected = selectedGoal == goal['label'];
+                    return FadeTransition(
+                      opacity: fadeAnimation,
+                      child: SlideTransition(
+                        position: slideAnimation,
+                        child: Padding(
+                          padding: EdgeInsets.only(bottom: 16),
+                          child: _buildGoalCard(goal, isSelected, theme, onSelect),
+                        ),
+                      ),
+                    );
+                  },
+                ),
+                SizedBox(height: 24),
+              ],
+            ),
           ),
         ),
-        Container(
-          width: double.infinity,
-          margin: EdgeInsets.only(top: 16),
-          child: ElevatedButton(
-            onPressed: onContinue,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: theme.primaryColor,
-              foregroundColor: Colors.white,
-              padding: EdgeInsets.symmetric(vertical: 20),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-              elevation: 0,
-              textStyle: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text('Continue'),
-                SizedBox(width: 8),
-                Icon(Icons.arrow_forward, size: 20),
-              ],
+        SafeArea(
+          minimum: EdgeInsets.only(left: 16, right: 16, bottom: 16),
+          child: SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: onContinue,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: theme.primaryColor,
+                foregroundColor: Colors.white,
+                padding: EdgeInsets.symmetric(vertical: 20),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                elevation: 0,
+                textStyle: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text('Continue'),
+                  SizedBox(width: 8),
+                  Icon(Icons.arrow_forward, size: 20),
+                ],
+              ),
             ),
           ),
         ),
@@ -576,114 +740,126 @@ class _MotivationStep extends StatelessWidget {
     {'icon': Icons.wb_sunny_outlined, 'label': 'Feel energetic every day', 'color': Color(0xFFFFB74D)},
     {'icon': Icons.emoji_events, 'label': 'Achieve a personal milestone', 'color': Color(0xFFBA68C8)},
     {'icon': Icons.self_improvement, 'label': 'Boost my confidence', 'color': Color(0xFF64B5F6)},
+    {'icon': Icons.health_and_safety, 'label': 'Long term health', 'color': Color(0xFF4CAF50)},
   ];
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        Align(
-          alignment: Alignment.centerLeft,
-          child: Container(
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
-                  blurRadius: 8,
-                  offset: Offset(0, 2),
-                ),
-              ],
-            ),
-            child: IconButton(
-              icon: Icon(Icons.arrow_back, color: theme.primaryColor, size: 24),
-              onPressed: onBack,
-            ),
-          ),
-        ),
-        SizedBox(height: 24),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            _buildProgressDot(context, true),
-            _buildProgressLine(context, true),
-            _buildProgressDot(context, true),
-            _buildProgressLine(context, false),
-            _buildProgressDot(context, false),
-          ],
-        ),
-        SizedBox(height: 32),
-        FadeTransition(
-          opacity: fadeAnimation,
-          child: SlideTransition(
-            position: slideAnimation,
-            child: Column(
-              children: [
-                Text(
-                  'What motivates you?',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 32,
-                    letterSpacing: -0.5,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-                SizedBox(height: 12),
-                Text(
-                  'Choose what drives you to achieve your goals',
-                  style: TextStyle(
-                    color: Colors.grey[600],
-                    fontSize: 16,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-              ],
-            ),
-          ),
-        ),
-        SizedBox(height: 32),
         Expanded(
-          child: ListView.builder(
-            itemCount: motivations.length,
-            itemBuilder: (context, index) {
-              final motivation = motivations[index];
-              final isSelected = selectedMotivation == motivation['label'];
-              return FadeTransition(
-                opacity: fadeAnimation,
-                child: SlideTransition(
-                  position: slideAnimation,
-                  child: Padding(
-                    padding: EdgeInsets.only(bottom: 16),
-                    child: _buildMotivationCard(motivation, isSelected, theme, onSelect),
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.05),
+                          blurRadius: 8,
+                          offset: Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: IconButton(
+                      icon: Icon(Icons.arrow_back, color: theme.primaryColor, size: 24),
+                      onPressed: onBack,
+                    ),
                   ),
                 ),
-              );
-            },
+                SizedBox(height: 24),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    _buildProgressDot(context, true),
+                    _buildProgressLine(context, true),
+                    _buildProgressDot(context, true),
+                    _buildProgressLine(context, false),
+                    _buildProgressDot(context, false),
+                  ],
+                ),
+                SizedBox(height: 32),
+                FadeTransition(
+                  opacity: fadeAnimation,
+                  child: SlideTransition(
+                    position: slideAnimation,
+                    child: Column(
+                      children: [
+                        Text(
+                          'What motivates you?',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 32,
+                            letterSpacing: -0.5,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                        SizedBox(height: 12),
+                        Text(
+                          'Choose what drives you to achieve your goals',
+                          style: TextStyle(
+                            color: Colors.grey[600],
+                            fontSize: 16,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                SizedBox(height: 32),
+                ListView.builder(
+                  shrinkWrap: true,
+                  physics: NeverScrollableScrollPhysics(),
+                  itemCount: motivations.length,
+                  itemBuilder: (context, index) {
+                    final motivation = motivations[index];
+                    final isSelected = selectedMotivation == motivation['label'];
+                    return FadeTransition(
+                      opacity: fadeAnimation,
+                      child: SlideTransition(
+                        position: slideAnimation,
+                        child: Padding(
+                          padding: EdgeInsets.only(bottom: 16),
+                          child: _buildMotivationCard(motivation, isSelected, theme, onSelect),
+                        ),
+                      ),
+                    );
+                  },
+                ),
+                SizedBox(height: 24),
+              ],
+            ),
           ),
         ),
-        Container(
-          width: double.infinity,
-          margin: EdgeInsets.only(top: 16),
-          child: ElevatedButton(
-            onPressed: onContinue,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: theme.primaryColor,
-              foregroundColor: Colors.white,
-              padding: EdgeInsets.symmetric(vertical: 20),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-              elevation: 0,
-              textStyle: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text('Continue'),
-                SizedBox(width: 8),
-                Icon(Icons.arrow_forward, size: 20),
-              ],
+        SafeArea(
+          minimum: EdgeInsets.only(left: 16, right: 16, bottom: 16),
+          child: SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: onContinue,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: theme.primaryColor,
+                foregroundColor: Colors.white,
+                padding: EdgeInsets.symmetric(vertical: 20),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                elevation: 0,
+                textStyle: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text('Continue'),
+                  SizedBox(width: 8),
+                  Icon(Icons.arrow_forward, size: 20),
+                ],
+              ),
             ),
           ),
         ),
@@ -1619,7 +1795,20 @@ class _GoalWeightStep extends StatelessWidget {
   final void Function(double) onGoalWeightChanged;
   final VoidCallback? onContinue;
   final VoidCallback onBack;
-  _GoalWeightStep({required this.fadeAnimation, required this.slideAnimation, required this.useMetricWeight, required this.goalWeightKg, required this.onGoalWeightChanged, required this.onContinue, required this.onBack});
+  final String? selectedGoal;
+  final double currentWeightKg;
+
+  const _GoalWeightStep({
+    required this.fadeAnimation,
+    required this.slideAnimation,
+    required this.useMetricWeight,
+    required this.goalWeightKg,
+    required this.onGoalWeightChanged,
+    required this.onContinue,
+    required this.onBack,
+    required this.selectedGoal,
+    required this.currentWeightKg,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -1630,8 +1819,34 @@ class _GoalWeightStep extends StatelessWidget {
     final double sliderMaxLb = 440;
     final double sliderHeight = 64;
     final double valueFontSize = 44;
-    final double goalWeightDisplay = useMetricWeight ? goalWeightKg : goalWeightKg * 2.20462;
+    final double currentWeightDisplay = useMetricWeight ? currentWeightKg : currentWeightKg * 2.20462;
     final String weightUnit = useMetricWeight ? 'kg' : 'lbs';
+
+    // Determine slider min, max, and initial based on goal
+    double min, max, initial;
+    if (selectedGoal == 'Lose body weight') {
+      min = useMetricWeight ? 30 : 66;
+      max = currentWeightDisplay;
+      initial = currentWeightDisplay;
+    } else if (selectedGoal == 'Gain weight') {
+      min = currentWeightDisplay;
+      max = useMetricWeight ? 200 : 440;
+      initial = currentWeightDisplay;
+    } else if (selectedGoal == 'Build muscle' || selectedGoal == 'Eat healthier') {
+      // For build muscle and eat healthier, set target to current weight by default
+      min = currentWeightDisplay;
+      max = currentWeightDisplay;
+      initial = currentWeightDisplay;
+      // Set the target weight to current weight when the widget is built
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        onGoalWeightChanged(currentWeightKg);
+      });
+    } else {
+      min = useMetricWeight ? 30 : 66;
+      max = useMetricWeight ? 200 : 440;
+      initial = currentWeightDisplay;
+    }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
@@ -1673,7 +1888,9 @@ class _GoalWeightStep extends StatelessWidget {
                 ),
                 SizedBox(height: 18),
                 Text(
-                  'Set a realistic goal for your journey',
+                  (selectedGoal == 'Build muscle' || selectedGoal == 'Eat healthier')
+                      ? 'Your target weight is set to your current weight'
+                      : 'Set a realistic goal for your journey',
                   style: TextStyle(
                     color: Colors.grey[600],
                     fontSize: 16,
@@ -1685,49 +1902,52 @@ class _GoalWeightStep extends StatelessWidget {
           ),
         ),
         SizedBox(height: 36),
-        SizedBox(
-          height: 180,
-          child: Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                // Large slider
-                SizedBox(
-                  height: sliderHeight,
-                  child: useMetricWeight
-                      ? _BigSliderWeightKg(
-                          value: goalWeightKg,
-                          min: sliderMinKg,
-                          max: sliderMaxKg,
-                          onChanged: onGoalWeightChanged,
-                        )
-                      : _BigSliderWeightLb(
-                          value: goalWeightDisplay,
-                          min: sliderMinLb,
-                          max: sliderMaxLb,
-                          onChanged: (lb) => onGoalWeightChanged(lb / 2.20462),
-                        ),
-                ),
-                SizedBox(height: 18),
-                // Animated value display
-                AnimatedSwitcher(
-                  duration: Duration(milliseconds: 250),
-                  transitionBuilder: (child, anim) => ScaleTransition(scale: anim, child: FadeTransition(opacity: anim, child: child)),
-                  child: Text(
-                    '${goalWeightDisplay.toStringAsFixed(1)} $weightUnit',
-                    key: ValueKey('goal-${goalWeightDisplay.toStringAsFixed(1)}'),
-                    style: TextStyle(fontSize: valueFontSize, fontWeight: FontWeight.bold, color: Colors.black),
+        if (selectedGoal != 'Build muscle' && selectedGoal != 'Eat healthier')
+          SizedBox(
+            height: 180,
+            child: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  // Large slider
+                  SizedBox(
+                    height: sliderHeight,
+                    child: Slider(
+                      value: useMetricWeight ? goalWeightKg : goalWeightKg * 2.20462,
+                      min: min,
+                      max: max,
+                      divisions: (max - min).toInt(),
+                      onChanged: (v) => onGoalWeightChanged(useMetricWeight ? v : v / 2.20462),
+                    ),
                   ),
-                ),
-              ],
+                  SizedBox(height: 18),
+                  // Animated value display
+                  AnimatedSwitcher(
+                    duration: Duration(milliseconds: 250),
+                    transitionBuilder: (child, anim) => ScaleTransition(scale: anim, child: FadeTransition(opacity: anim, child: child)),
+                    child: Text(
+                      '${(useMetricWeight ? goalWeightKg : goalWeightKg * 2.20462).toStringAsFixed(1)} $weightUnit',
+                      key: ValueKey('goal-${(useMetricWeight ? goalWeightKg : goalWeightKg * 2.20462).toStringAsFixed(1)}'),
+                      style: TextStyle(fontSize: valueFontSize, fontWeight: FontWeight.bold, color: Colors.black),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
-        ),
+        if (selectedGoal == 'Build muscle' || selectedGoal == 'Eat healthier')
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 32),
+            child: Text(
+              '${(useMetricWeight ? currentWeightKg : currentWeightKg * 2.20462).toStringAsFixed(1)} $weightUnit',
+              style: TextStyle(fontSize: valueFontSize, fontWeight: FontWeight.bold, color: theme.primaryColor),
+            ),
+          ),
         Spacer(),
         Padding(
           padding: const EdgeInsets.only(bottom: 8),
           child: Text(
-            '${goalWeightDisplay.toStringAsFixed(1)} $weightUnit',
+            '${(useMetricWeight ? goalWeightKg : goalWeightKg * 2.20462).toStringAsFixed(1)} $weightUnit',
             style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: theme.primaryColor),
           ),
         ),
@@ -1770,137 +1990,149 @@ class _ActivityLevelStep extends StatelessWidget {
       {'label': 'Very active', 'desc': 'Hard exercise/sports 6-7 days/week', 'icon': Icons.fitness_center},
     ];
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        Align(
-          alignment: Alignment.centerLeft,
-          child: Container(
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
-                  blurRadius: 8,
-                  offset: Offset(0, 2),
-                ),
-              ],
-            ),
-            child: IconButton(
-              icon: Icon(Icons.arrow_back, color: theme.primaryColor, size: 28),
-              onPressed: onBack,
-            ),
-          ),
-        ),
-        SizedBox(height: 32),
-        FadeTransition(
-          opacity: fadeAnimation,
-          child: SlideTransition(
-            position: slideAnimation,
-            child: Column(
-              children: [
-                Text(
-                  'Your activity level',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 32,
-                    letterSpacing: -0.5,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-                SizedBox(height: 18),
-                Text(
-                  'This helps us personalize your plan',
-                  style: TextStyle(
-                    color: Colors.grey[600],
-                    fontSize: 16,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-              ],
-            ),
-          ),
-        ),
-        SizedBox(height: 36),
         Expanded(
-          child: ListView.builder(
-            itemCount: activityLevels.length,
-            itemBuilder: (context, i) {
-              final level = activityLevels[i];
-              final isSelected = activityLevel == level['label'];
-              return Padding(
-                padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
-                child: GestureDetector(
-                  onTap: () => onActivityLevelChanged(level['label']),
-                  child: AnimatedContainer(
-                    duration: Duration(milliseconds: 200),
-                    padding: EdgeInsets.all(20),
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Container(
                     decoration: BoxDecoration(
-                      color: isSelected ? theme.primaryColor.withOpacity(0.08) : Colors.white,
-                      borderRadius: BorderRadius.circular(18),
-                      border: Border.all(
-                        color: isSelected ? theme.primaryColor : Colors.grey[200]!,
-                        width: isSelected ? 2 : 1,
-                      ),
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.04),
+                          color: Colors.black.withOpacity(0.05),
                           blurRadius: 8,
                           offset: Offset(0, 2),
                         ),
                       ],
                     ),
-                    child: Row(
+                    child: IconButton(
+                      icon: Icon(Icons.arrow_back, color: theme.primaryColor, size: 28),
+                      onPressed: onBack,
+                    ),
+                  ),
+                ),
+                SizedBox(height: 32),
+                FadeTransition(
+                  opacity: fadeAnimation,
+                  child: SlideTransition(
+                    position: slideAnimation,
+                    child: Column(
                       children: [
-                        Container(
-                          decoration: BoxDecoration(
-                            color: theme.primaryColor.withOpacity(0.15),
-                            shape: BoxShape.circle,
+                        Text(
+                          'Your activity level',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 32,
+                            letterSpacing: -0.5,
                           ),
-                          padding: EdgeInsets.all(14),
-                          child: Icon(level['icon'], color: theme.primaryColor, size: 28),
+                          textAlign: TextAlign.center,
                         ),
-                        SizedBox(width: 20),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(level['label'], style: TextStyle(fontWeight: FontWeight.w600, fontSize: 18, color: isSelected ? theme.primaryColor : Colors.black)),
-                              SizedBox(height: 6),
-                              Text(level['desc'], style: TextStyle(color: Colors.grey[600], fontSize: 15)),
-                            ],
+                        SizedBox(height: 18),
+                        Text(
+                          'This helps us personalize your plan',
+                          style: TextStyle(
+                            color: Colors.grey[600],
+                            fontSize: 16,
                           ),
+                          textAlign: TextAlign.center,
                         ),
-                        if (isSelected)
-                          Container(
-                            padding: EdgeInsets.all(4),
-                            decoration: BoxDecoration(
-                              color: theme.primaryColor.withOpacity(0.1),
-                              shape: BoxShape.circle,
-                            ),
-                            child: Icon(Icons.check, color: theme.primaryColor, size: 20),
-                          ),
                       ],
                     ),
                   ),
                 ),
-              );
-            },
+                SizedBox(height: 36),
+                ListView.builder(
+                  shrinkWrap: true,
+                  physics: NeverScrollableScrollPhysics(),
+                  itemCount: activityLevels.length,
+                  itemBuilder: (context, i) {
+                    final level = activityLevels[i];
+                    final isSelected = activityLevel == level['label'];
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+                      child: GestureDetector(
+                        onTap: () => onActivityLevelChanged(level['label']),
+                        child: AnimatedContainer(
+                          duration: Duration(milliseconds: 200),
+                          padding: EdgeInsets.all(20),
+                          decoration: BoxDecoration(
+                            color: isSelected ? theme.primaryColor.withOpacity(0.08) : Colors.white,
+                            borderRadius: BorderRadius.circular(18),
+                            border: Border.all(
+                              color: isSelected ? theme.primaryColor : Colors.grey[200]!,
+                              width: isSelected ? 2 : 1,
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.04),
+                                blurRadius: 8,
+                                offset: Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: Row(
+                            children: [
+                              Container(
+                                decoration: BoxDecoration(
+                                  color: theme.primaryColor.withOpacity(0.15),
+                                  shape: BoxShape.circle,
+                                ),
+                                padding: EdgeInsets.all(14),
+                                child: Icon(level['icon'], color: theme.primaryColor, size: 28),
+                              ),
+                              SizedBox(width: 20),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(level['label'], style: TextStyle(fontWeight: FontWeight.w600, fontSize: 18, color: isSelected ? theme.primaryColor : Colors.black)),
+                                    SizedBox(height: 6),
+                                    Text(level['desc'], style: TextStyle(color: Colors.grey[600], fontSize: 15)),
+                                  ],
+                                ),
+                              ),
+                              if (isSelected)
+                                Container(
+                                  padding: EdgeInsets.all(4),
+                                  decoration: BoxDecoration(
+                                    color: theme.primaryColor.withOpacity(0.1),
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: Icon(Icons.check, color: theme.primaryColor, size: 20),
+                                ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                ),
+                SizedBox(height: 24),
+              ],
+            ),
           ),
         ),
-        SizedBox(
-          width: double.infinity,
-          child: ElevatedButton(
-            onPressed: onContinue,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: theme.primaryColor,
-              foregroundColor: Colors.white,
-              padding: EdgeInsets.symmetric(vertical: 20),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-              elevation: 0,
-              textStyle: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+        SafeArea(
+          minimum: EdgeInsets.only(left: 16, right: 16, bottom: 16),
+          child: SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: onContinue,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: theme.primaryColor,
+                foregroundColor: Colors.white,
+                padding: EdgeInsets.symmetric(vertical: 20),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                elevation: 0,
+                textStyle: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              child: Text('Continue'),
             ),
-            child: Text('Continue'),
           ),
         ),
       ],
@@ -2135,12 +2367,13 @@ class _EatingHabitsStep extends StatelessWidget {
   final VoidCallback onBack;
   _EatingHabitsStep({required this.fadeAnimation, required this.slideAnimation, required this.selectedHabits, required this.onHabitToggle, required this.onContinue, required this.onBack});
 
+  // New, positive, creative habits with new emojis
   final List<Map<String, dynamic>> habits = [
-    {'emoji': '🍿', 'label': "I'm a late-night eater"},
-    {'emoji': '🍔', 'label': 'Fast food is my usual choice'},
-    {'emoji': '🥜', 'label': 'I snack between meals'},
-    {'emoji': '🍝', 'label': 'I eat large portions'},
-    {'emoji': '😓', 'label': 'I eat to cope with stress & other emotions'},
+    {'emoji': '🥗', 'label': "I love making colorful salads"},
+    {'emoji': '🚶‍♂️', 'label': 'I take mindful walks daily'},
+    {'emoji': '💧', 'label': 'I drink water first thing in the morning'},
+    {'emoji': '🧘‍♀️', 'label': 'I practice a moment of calm before meals'},
+    {'emoji': '🍎', 'label': 'I try a new fruit or veggie each week'},
   ];
 
   @override
@@ -2177,7 +2410,7 @@ class _EatingHabitsStep extends StatelessWidget {
             child: Column(
               children: [
                 Text(
-                  'Everyone has some not-so-healthy eating habits.',
+                  'Pick some positive habits you want to celebrate or try!',
                   style: TextStyle(fontWeight: FontWeight.bold, fontSize: 26),
                   textAlign: TextAlign.center,
                 ),
@@ -2239,19 +2472,22 @@ class _EatingHabitsStep extends StatelessWidget {
             },
           ),
         ),
-        SizedBox(
-          width: double.infinity,
-          child: ElevatedButton(
-            onPressed: onContinue,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: theme.primaryColor,
-              foregroundColor: Colors.white,
-              padding: EdgeInsets.symmetric(vertical: 20),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-              elevation: 0,
-              textStyle: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+        SafeArea(
+          minimum: EdgeInsets.only(left: 16, right: 16, bottom: 16),
+          child: SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: onContinue,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: theme.primaryColor,
+                foregroundColor: Colors.white,
+                padding: EdgeInsets.symmetric(vertical: 20),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                elevation: 0,
+                textStyle: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              child: Text('Continue'),
             ),
-            child: Text('Continue'),
           ),
         ),
       ],
@@ -2259,131 +2495,7 @@ class _EatingHabitsStep extends StatelessWidget {
   }
 }
 
-class _MealsPerDayStep extends StatelessWidget {
-  final Animation<double> fadeAnimation;
-  final Animation<Offset> slideAnimation;
-  final int? selectedMeals;
-  final void Function(int) onSelect;
-  final VoidCallback? onContinue;
-  final VoidCallback onBack;
-  _MealsPerDayStep({required this.fadeAnimation, required this.slideAnimation, required this.selectedMeals, required this.onSelect, required this.onContinue, required this.onBack});
-
-  final List<Map<String, dynamic>> mealOptions = const [
-    {'emoji': '🍳🥗🍕🍫🍦', 'label': '5 meals per day', 'desc': 'Breakfast, Lunch, Dinner and 2 Snacks', 'value': 5},
-    {'emoji': '🍳🥗🍕🍫', 'label': '4 meals per day', 'desc': 'Breakfast, Lunch, Dinner and a Snack', 'value': 4},
-    {'emoji': '🍳🥗🍕', 'label': '3 meals per day', 'desc': 'Breakfast, Lunch, Dinner', 'value': 3},
-    {'emoji': '🍳🥗', 'label': '2 meals per day', 'desc': 'Breakfast or Dinner with Lunch', 'value': 2},
-  ];
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        Align(
-          alignment: Alignment.centerLeft,
-          child: Container(
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
-                  blurRadius: 8,
-                  offset: Offset(0, 2),
-                ),
-              ],
-            ),
-            child: IconButton(
-              icon: Icon(Icons.arrow_back, color: theme.primaryColor, size: 28),
-              onPressed: onBack,
-            ),
-          ),
-        ),
-        SizedBox(height: 32),
-        FadeTransition(
-          opacity: fadeAnimation,
-          child: SlideTransition(
-            position: slideAnimation,
-            child: Column(
-              children: [
-                Text(
-                  'How many meals do you have per day?',
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 26),
-                  textAlign: TextAlign.center,
-                ),
-                SizedBox(height: 18),
-              ],
-            ),
-          ),
-        ),
-        SizedBox(height: 12),
-        Expanded(
-          child: ListView.builder(
-            itemCount: mealOptions.length,
-            itemBuilder: (context, i) {
-              final option = mealOptions[i];
-              final isSelected = selectedMeals == option['value'];
-              return Padding(
-                padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
-                child: GestureDetector(
-                  onTap: () => onSelect(option['value']),
-                  child: AnimatedContainer(
-                    duration: Duration(milliseconds: 200),
-                    padding: EdgeInsets.all(18),
-                    decoration: BoxDecoration(
-                      color: isSelected ? theme.primaryColor.withOpacity(0.08) : Colors.white,
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(
-                        color: isSelected ? theme.primaryColor : Colors.grey[200]!,
-                        width: isSelected ? 2 : 1,
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.04),
-                          blurRadius: 8,
-                          offset: Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(option['emoji'], style: TextStyle(fontSize: 28)),
-                        SizedBox(height: 10),
-                        Text(option['label'], style: TextStyle(fontWeight: FontWeight.w600, fontSize: 18, color: isSelected ? theme.primaryColor : Colors.black)),
-                        SizedBox(height: 4),
-                        Text(option['desc'], style: TextStyle(color: Colors.grey[600], fontSize: 15)),
-                      ],
-                    ),
-                  ),
-                ),
-              );
-            },
-          ),
-        ),
-        SizedBox(
-          width: double.infinity,
-          child: ElevatedButton(
-            onPressed: onContinue,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: theme.primaryColor,
-              foregroundColor: Colors.white,
-              padding: EdgeInsets.symmetric(vertical: 20),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-              elevation: 0,
-              textStyle: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            child: Text('Continue'),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _NutritionPlanSummaryStep extends StatelessWidget {
+class _NutritionPlanSummaryStep extends StatefulWidget {
   final Animation<double> fadeAnimation;
   final Animation<Offset> slideAnimation;
   final int calories;
@@ -2395,134 +2507,211 @@ class _NutritionPlanSummaryStep extends StatelessWidget {
   _NutritionPlanSummaryStep({required this.fadeAnimation, required this.slideAnimation, required this.calories, required this.protein, required this.fat, required this.carbs, required this.onFinish, required this.onBack});
 
   @override
+  State<_NutritionPlanSummaryStep> createState() => _NutritionPlanSummaryStepState();
+}
+
+class _NutritionPlanSummaryStepState extends State<_NutritionPlanSummaryStep> with SingleTickerProviderStateMixin {
+  bool _showConfetti = true;
+  double _confettiOpacity = 0.0;
+
+  @override
+  void initState() {
+    super.initState();
+    // Fade in
+    Future.delayed(Duration(milliseconds: 50), () {
+      if (mounted) setState(() => _confettiOpacity = 1.0);
+    });
+    // Fade out after 2.1s, then hide after 2.5s
+    Future.delayed(Duration(milliseconds: 2100), () {
+      if (mounted) setState(() => _confettiOpacity = 0.0);
+    });
+    Future.delayed(Duration(milliseconds: 2500), () {
+      if (mounted) setState(() => _showConfetti = false);
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Container(
-      color: Color(0xFFF8F9FA),
-      width: double.infinity,
-      height: double.infinity,
-      child: SafeArea(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Align(
-              alignment: Alignment.topLeft,
-              child: Container(
-                margin: EdgeInsets.only(top: 8, left: 8),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(12),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.05),
-                      blurRadius: 8,
-                      offset: Offset(0, 2),
-                    ),
-                  ],
-                ),
-                child: IconButton(
-                  icon: Icon(Icons.arrow_back, color: theme.primaryColor, size: 28),
-                  onPressed: onBack,
-                ),
-              ),
-            ),
-            SizedBox(height: 32),
-            FadeTransition(
-              opacity: fadeAnimation,
-              child: SlideTransition(
-                position: slideAnimation,
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      'Your Personalized Nutrition Plan',
-                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 28),
-                      textAlign: TextAlign.center,
-                    ),
-                    SizedBox(height: 28),
-                    // Remove card, just show the content on the background
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        Text('Recommended Daily Intake', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 22)),
-                        SizedBox(height: 28),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(Icons.local_fire_department, color: theme.primaryColor),
-                            SizedBox(width: 8),
-                            Text('Calories: ', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 18)),
-                            Text('$calories kcal', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
-                          ],
-                        ),
-                        SizedBox(height: 18),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(Icons.fitness_center, color: theme.primaryColor),
-                            SizedBox(width: 8),
-                            Text('Protein: ', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 18)),
-                            Text('$protein g', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
-                          ],
-                        ),
-                        SizedBox(height: 18),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(Icons.opacity, color: theme.primaryColor),
-                            SizedBox(width: 8),
-                            Text('Fat: ', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 18)),
-                            Text('$fat g', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
-                          ],
-                        ),
-                        SizedBox(height: 18),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(Icons.grain, color: theme.primaryColor),
-                            SizedBox(width: 8),
-                            Text('Carbs: ', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 18)),
-                            Text('$carbs g', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
-                          ],
+    return Stack(
+      children: [
+        Container(
+          color: Color(0xFFF8F9FA),
+          width: double.infinity,
+          height: double.infinity,
+          child: SafeArea(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Align(
+                  alignment: Alignment.topLeft,
+                  child: Container(
+                    margin: EdgeInsets.only(top: 8, left: 8),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.05),
+                          blurRadius: 8,
+                          offset: Offset(0, 2),
                         ),
                       ],
                     ),
-                  ],
-                ),
-              ),
-            ),
-            Spacer(),
-            SizedBox(
-              width: double.infinity,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
-                child: ElevatedButton(
-                  onPressed: () {
-                    // Navigate to main app/dashboard
-                    Navigator.of(context).pushAndRemoveUntil(
-                      MaterialPageRoute(builder: (_) => MainNavScreen()),
-                      (route) => false,
-                    );
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: theme.primaryColor,
-                    foregroundColor: Colors.white,
-                    padding: EdgeInsets.symmetric(vertical: 20),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                    elevation: 0,
-                    textStyle: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    child: IconButton(
+                      icon: Icon(Icons.arrow_back, color: theme.primaryColor, size: 28),
+                      onPressed: widget.onBack,
+                    ),
                   ),
-                  child: Text('Get Started'),
+                ),
+                SizedBox(height: 36),
+                Text(
+                  "You're all set! 🎉",
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 32, color: theme.primaryColor, letterSpacing: -1.2),
+                  textAlign: TextAlign.center,
+                ),
+                SizedBox(height: 18),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                  child: Text(
+                    "Here's your personalized nutrition plan. Welcome to your health journey with Yumie!",
+                    style: TextStyle(fontSize: 18, color: Colors.grey[700]),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+                SizedBox(height: 36),
+                Center(
+                  child: Container(
+                    width: 360,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(32),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.07),
+                          blurRadius: 18,
+                          offset: Offset(0, 8),
+                        ),
+                      ],
+                    ),
+                    padding: EdgeInsets.symmetric(vertical: 36, horizontal: 28),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _NutritionRow(
+                          icon: Icons.local_fire_department,
+                          label: 'Calories',
+                          value: '${widget.calories} kcal',
+                          iconColor: Color(0xFF43A047),
+                        ),
+                        SizedBox(height: 18),
+                        _NutritionRow(
+                          icon: Icons.fitness_center,
+                          label: 'Protein',
+                          value: '${widget.protein} g',
+                          iconColor: Color(0xFF1976D2),
+                        ),
+                        SizedBox(height: 18),
+                        _NutritionRow(
+                          icon: Icons.opacity,
+                          label: 'Fat',
+                          value: '${widget.fat} g',
+                          iconColor: Color(0xFFFBC02D),
+                        ),
+                        SizedBox(height: 18),
+                        _NutritionRow(
+                          icon: Icons.grain,
+                          label: 'Carbs',
+                          value: '${widget.carbs} g',
+                          iconColor: Color(0xFF8D6E63),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                SizedBox(height: 48),
+                SizedBox(
+                  width: double.infinity,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+                    child: ElevatedButton(
+                      onPressed: widget.onFinish,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: theme.primaryColor,
+                        foregroundColor: Colors.white,
+                        padding: EdgeInsets.symmetric(vertical: 24),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+                        elevation: 3,
+                        textStyle: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, letterSpacing: 0.5),
+                        shadowColor: theme.primaryColor.withOpacity(0.18),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.check_circle, size: 26, color: Colors.white),
+                          SizedBox(width: 12),
+                          Text('Get Started'),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        // Confetti overlay
+        if (_showConfetti)
+          Positioned.fill(
+            child: AnimatedOpacity(
+              opacity: _confettiOpacity,
+              duration: Duration(milliseconds: 400),
+              child: Container(
+                color: Colors.transparent,
+                child: Lottie.asset(
+                  'assets/animations/confetti.json',
+                  repeat: false,
+                  fit: BoxFit.cover,
                 ),
               ),
             ),
-          ],
-        ),
+          ),
+      ],
+    );
+  }
+}
+
+class _NutritionRow extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final String value;
+  final Color iconColor;
+  const _NutritionRow({required this.icon, required this.label, required this.value, required this.iconColor});
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 2.0),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Container(
+            decoration: BoxDecoration(
+              color: iconColor.withOpacity(0.12),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            padding: EdgeInsets.all(12),
+            child: Icon(icon, color: iconColor, size: 32),
+          ),
+          SizedBox(width: 18),
+          Text('$label:', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 20)),
+          SizedBox(width: 8),
+          Text(value, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20, color: iconColor)),
+        ],
       ),
     );
   }
-} 
+}
 
 class _BloodTypeStep extends StatelessWidget {
   final Animation<double> fadeAnimation;
@@ -2551,81 +2740,92 @@ class _BloodTypeStep extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        Align(
-          alignment: Alignment.centerLeft,
-          child: Container(
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
-                  blurRadius: 8,
-                  offset: Offset(0, 2),
+        Expanded(
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.05),
+                          blurRadius: 8,
+                          offset: Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: IconButton(
+                      icon: Icon(Icons.arrow_back, color: theme.primaryColor, size: 24),
+                      onPressed: onBack,
+                    ),
+                  ),
                 ),
+                SizedBox(height: 32),
+                Text('What is your blood type?', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 28)),
+                SizedBox(height: 18),
+                Text('This helps us personalize your health insights.', style: TextStyle(color: Colors.grey[600], fontSize: 16)),
+                SizedBox(height: 32),
+                Wrap(
+                  spacing: 18,
+                  runSpacing: 18,
+                  children: bloodTypes.map((type) {
+                    final isSelected = selectedBloodType == type;
+                    return GestureDetector(
+                      onTap: () => onSelect(type),
+                      child: AnimatedContainer(
+                        duration: Duration(milliseconds: 180),
+                        padding: EdgeInsets.symmetric(vertical: 18, horizontal: 28),
+                        decoration: BoxDecoration(
+                          color: isSelected ? theme.primaryColor.withOpacity(0.12) : Colors.white,
+                          borderRadius: BorderRadius.circular(18),
+                          border: Border.all(color: isSelected ? theme.primaryColor : Colors.grey[300]!, width: 2),
+                          boxShadow: isSelected
+                              ? [BoxShadow(color: theme.primaryColor.withOpacity(0.08), blurRadius: 12, offset: Offset(0, 4))]
+                              : [],
+                        ),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              bloodIcons[type],
+                              color: isSelected ? theme.primaryColor : Color(0xFFFFCDD2), // faded red for unselected
+                              size: 36,
+                            ),
+                            SizedBox(height: 8),
+                            Text(type, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 22, color: isSelected ? theme.primaryColor : Colors.black)),
+                          ],
+                        ),
+                      ),
+                    );
+                  }).toList(),
+                ),
+                SizedBox(height: 36),
               ],
-            ),
-            child: IconButton(
-              icon: Icon(Icons.arrow_back, color: theme.primaryColor, size: 24),
-              onPressed: onBack,
             ),
           ),
         ),
-        SizedBox(height: 32),
-        Text('What is your blood type?', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 28)),
-        SizedBox(height: 18),
-        Text('This helps us personalize your health insights.', style: TextStyle(color: Colors.grey[600], fontSize: 16)),
-        SizedBox(height: 32),
-        Wrap(
-          spacing: 18,
-          runSpacing: 18,
-          children: bloodTypes.map((type) {
-            final isSelected = selectedBloodType == type;
-            return GestureDetector(
-              onTap: () => onSelect(type),
-              child: AnimatedContainer(
-                duration: Duration(milliseconds: 180),
-                padding: EdgeInsets.symmetric(vertical: 18, horizontal: 28),
-                decoration: BoxDecoration(
-                  color: isSelected ? theme.primaryColor.withOpacity(0.12) : Colors.white,
-                  borderRadius: BorderRadius.circular(18),
-                  border: Border.all(color: isSelected ? theme.primaryColor : Colors.grey[300]!, width: 2),
-                  boxShadow: isSelected
-                      ? [BoxShadow(color: theme.primaryColor.withOpacity(0.08), blurRadius: 12, offset: Offset(0, 4))]
-                      : [],
-                ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      bloodIcons[type],
-                      color: isSelected ? theme.primaryColor : Color(0xFFFFCDD2), // faded red for unselected
-                      size: 36,
-                    ),
-                    SizedBox(height: 8),
-                    Text(type, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 22, color: isSelected ? theme.primaryColor : Colors.black)),
-                  ],
-                ),
+        SafeArea(
+          minimum: EdgeInsets.only(left: 16, right: 16, bottom: 16),
+          child: SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: onContinue,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: theme.primaryColor,
+                foregroundColor: Colors.white,
+                padding: EdgeInsets.symmetric(vertical: 20),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                elevation: 0,
+                textStyle: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
-            );
-          }).toList(),
-        ),
-        SizedBox(height: 36),
-        SizedBox(
-          width: double.infinity,
-          child: ElevatedButton(
-            onPressed: onContinue,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: theme.primaryColor,
-              foregroundColor: Colors.white,
-              padding: EdgeInsets.symmetric(vertical: 20),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-              elevation: 0,
-              textStyle: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              child: Text('Continue'),
             ),
-            child: Text('Continue'),
           ),
         ),
       ],
@@ -2646,67 +2846,78 @@ class _DiabeticStep extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        Align(
-          alignment: Alignment.centerLeft,
-          child: Container(
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
-                  blurRadius: 8,
-                  offset: Offset(0, 2),
+        Expanded(
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.05),
+                          blurRadius: 8,
+                          offset: Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: IconButton(
+                      icon: Icon(Icons.arrow_back, color: theme.primaryColor, size: 24),
+                      onPressed: onBack,
+                    ),
+                  ),
                 ),
+                SizedBox(height: 32),
+                Text('Are you diabetic?', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 28)),
+                SizedBox(height: 18),
+                Text('This helps us personalize your health plan.', style: TextStyle(color: Colors.grey[600], fontSize: 16)),
+                SizedBox(height: 32),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    _DiabeticOption(
+                      label: 'Yes',
+                      icon: Icons.check_circle,
+                      selected: isDiabetic == true,
+                      color: Colors.green,
+                      onTap: () => onSelect(true),
+                    ),
+                    SizedBox(width: 32),
+                    _DiabeticOption(
+                      label: 'No',
+                      icon: Icons.cancel,
+                      selected: isDiabetic == false,
+                      color: Colors.red,
+                      onTap: () => onSelect(false),
+                    ),
+                  ],
+                ),
+                SizedBox(height: 36),
               ],
-            ),
-            child: IconButton(
-              icon: Icon(Icons.arrow_back, color: theme.primaryColor, size: 24),
-              onPressed: onBack,
             ),
           ),
         ),
-        SizedBox(height: 32),
-        Text('Are you diabetic?', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 28)),
-        SizedBox(height: 18),
-        Text('This helps us personalize your health plan.', style: TextStyle(color: Colors.grey[600], fontSize: 16)),
-        SizedBox(height: 32),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            _DiabeticOption(
-              label: 'Yes',
-              icon: Icons.check_circle,
-              selected: isDiabetic == true,
-              color: Colors.green,
-              onTap: () => onSelect(true),
+        SafeArea(
+          minimum: EdgeInsets.only(left: 16, right: 16, bottom: 16),
+          child: SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: onContinue,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: theme.primaryColor,
+                foregroundColor: Colors.white,
+                padding: EdgeInsets.symmetric(vertical: 20),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                elevation: 0,
+                textStyle: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              child: Text('Continue'),
             ),
-            SizedBox(width: 32),
-            _DiabeticOption(
-              label: 'No',
-              icon: Icons.cancel,
-              selected: isDiabetic == false,
-              color: Colors.red,
-              onTap: () => onSelect(false),
-            ),
-          ],
-        ),
-        SizedBox(height: 36),
-        SizedBox(
-          width: double.infinity,
-          child: ElevatedButton(
-            onPressed: onContinue,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: theme.primaryColor,
-              foregroundColor: Colors.white,
-              padding: EdgeInsets.symmetric(vertical: 20),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-              elevation: 0,
-              textStyle: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            child: Text('Continue'),
           ),
         ),
       ],
@@ -2766,6 +2977,121 @@ class _WaterIntakeStep extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Column(
+      children: [
+        Expanded(
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.05),
+                          blurRadius: 8,
+                          offset: Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: IconButton(
+                      icon: Icon(Icons.arrow_back, color: theme.primaryColor, size: 24),
+                      onPressed: onBack,
+                    ),
+                  ),
+                ),
+                SizedBox(height: 32),
+                Text('How much water do you drink per day?', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 28)),
+                SizedBox(height: 18),
+                Text('Staying hydrated is key to your health.', style: TextStyle(color: Colors.grey[600], fontSize: 16)),
+                SizedBox(height: 32),
+                Wrap(
+                  spacing: 18,
+                  runSpacing: 18,
+                  children: options.map((opt) {
+                    final isSelected = selectedWaterIntake == opt;
+                    return GestureDetector(
+                      onTap: () => onSelect(opt),
+                      child: AnimatedContainer(
+                        duration: Duration(milliseconds: 180),
+                        padding: EdgeInsets.symmetric(vertical: 18, horizontal: 28),
+                        decoration: BoxDecoration(
+                          color: isSelected ? theme.primaryColor.withOpacity(0.12) : Colors.white,
+                          borderRadius: BorderRadius.circular(18),
+                          border: Border.all(color: isSelected ? theme.primaryColor : Colors.grey[300]!, width: 2),
+                          boxShadow: isSelected
+                              ? [BoxShadow(color: theme.primaryColor.withOpacity(0.08), blurRadius: 12, offset: Offset(0, 4))]
+                              : [],
+                        ),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.water_drop, color: isSelected ? theme.primaryColor : Colors.blue[200], size: 36),
+                            SizedBox(height: 8),
+                            Text(opt, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 22, color: isSelected ? theme.primaryColor : Colors.black)),
+                          ],
+                        ),
+                      ),
+                    );
+                  }).toList(),
+                ),
+                SizedBox(height: 36),
+              ],
+            ),
+          ),
+        ),
+        SafeArea(
+          minimum: EdgeInsets.only(left: 16, right: 16, bottom: 16),
+          child: SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: onContinue,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: theme.primaryColor,
+                foregroundColor: Colors.white,
+                padding: EdgeInsets.symmetric(vertical: 20),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                elevation: 0,
+                textStyle: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              child: Text('Continue'),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _SexStep extends StatelessWidget {
+  final Animation<double> fadeAnimation;
+  final Animation<Offset> slideAnimation;
+  final String? selectedSex;
+  final void Function(String) onSelect;
+  final VoidCallback? onContinue;
+  final VoidCallback onBack;
+  _SexStep({
+    required this.fadeAnimation,
+    required this.slideAnimation,
+    required this.selectedSex,
+    required this.onSelect,
+    required this.onContinue,
+    required this.onBack,
+  });
+
+  final List<Map<String, dynamic>> options = const [
+    {'label': 'Male', 'icon': Icons.male, 'color': Color(0xFF64B5F6)},
+    {'label': 'Female', 'icon': Icons.female, 'color': Color(0xFFFFB6C1)},
+    {'label': 'Other', 'icon': Icons.transgender, 'color': Color(0xFFBA68C8)},
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Column(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         Align(
@@ -2789,43 +3115,103 @@ class _WaterIntakeStep extends StatelessWidget {
           ),
         ),
         SizedBox(height: 32),
-        Text('How much water do you drink per day?', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 28)),
-        SizedBox(height: 18),
-        Text('Staying hydrated is key to your health.', style: TextStyle(color: Colors.grey[600], fontSize: 16)),
-        SizedBox(height: 32),
-        Wrap(
-          spacing: 18,
-          runSpacing: 18,
-          children: options.map((opt) {
-            final isSelected = selectedWaterIntake == opt;
-            return GestureDetector(
-              onTap: () => onSelect(opt),
-              child: AnimatedContainer(
-                duration: Duration(milliseconds: 180),
-                padding: EdgeInsets.symmetric(vertical: 18, horizontal: 28),
-                decoration: BoxDecoration(
-                  color: isSelected ? theme.primaryColor.withOpacity(0.12) : Colors.white,
-                  borderRadius: BorderRadius.circular(18),
-                  border: Border.all(color: isSelected ? theme.primaryColor : Colors.grey[300]!, width: 2),
-                  boxShadow: isSelected
-                      ? [BoxShadow(color: theme.primaryColor.withOpacity(0.08), blurRadius: 12, offset: Offset(0, 4))]
-                      : [],
+        FadeTransition(
+          opacity: fadeAnimation,
+          child: SlideTransition(
+            position: slideAnimation,
+            child: Column(
+              children: [
+                Text(
+                  'What is your sex?',
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 32, letterSpacing: -0.5),
+                  textAlign: TextAlign.center,
                 ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(Icons.water_drop, color: isSelected ? theme.primaryColor : Colors.blue[200], size: 36),
-                    SizedBox(height: 8),
-                    Text(opt, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 22, color: isSelected ? theme.primaryColor : Colors.black)),
-                  ],
+                SizedBox(height: 18),
+                Text(
+                  'This helps us personalize your nutrition plan.',
+                  style: TextStyle(color: Colors.grey[600], fontSize: 16),
+                  textAlign: TextAlign.center,
                 ),
-              ),
-            );
-          }).toList(),
+              ],
+            ),
+          ),
         ),
         SizedBox(height: 36),
-        SizedBox(
+        Expanded(
+          child: ListView.builder(
+            itemCount: options.length,
+            itemBuilder: (context, i) {
+              final opt = options[i];
+              final isSelected = selectedSex == opt['label'];
+              return FadeTransition(
+                opacity: fadeAnimation,
+                child: SlideTransition(
+                  position: slideAnimation,
+                  child: Padding(
+                    padding: EdgeInsets.only(bottom: 16),
+                    child: GestureDetector(
+                      onTap: () => onSelect(opt['label']),
+                      child: AnimatedContainer(
+                        duration: Duration(milliseconds: 200),
+                        padding: EdgeInsets.all(20),
+                        decoration: BoxDecoration(
+                          color: isSelected ? opt['color'].withOpacity(0.1) : Colors.white,
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(
+                            color: isSelected ? opt['color'] : Colors.grey[200]!,
+                            width: isSelected ? 2 : 1,
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.04),
+                              blurRadius: 8,
+                              offset: Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: Row(
+                          children: [
+                            Container(
+                              decoration: BoxDecoration(
+                                color: opt['color'].withOpacity(0.15),
+                                shape: BoxShape.circle,
+                              ),
+                              padding: EdgeInsets.all(14),
+                              child: Icon(opt['icon'], color: opt['color'], size: 28),
+                            ),
+                            SizedBox(width: 20),
+                            Expanded(
+                              child: Text(
+                                opt['label'],
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 18,
+                                  color: isSelected ? opt['color'] : Colors.black,
+                                ),
+                              ),
+                            ),
+                            if (isSelected)
+                              Container(
+                                padding: EdgeInsets.all(4),
+                                decoration: BoxDecoration(
+                                  color: opt['color'].withOpacity(0.1),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: Icon(Icons.check, color: opt['color'], size: 20),
+                              ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+        Container(
           width: double.infinity,
+          margin: EdgeInsets.only(top: 16),
           child: ElevatedButton(
             onPressed: onContinue,
             style: ElevatedButton.styleFrom(
@@ -2836,7 +3222,14 @@ class _WaterIntakeStep extends StatelessWidget {
               elevation: 0,
               textStyle: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
-            child: Text('Continue'),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text('Continue'),
+                SizedBox(width: 8),
+                Icon(Icons.arrow_forward, size: 20),
+              ],
+            ),
           ),
         ),
       ],
@@ -2847,4 +3240,31 @@ class _WaterIntakeStep extends StatelessWidget {
 // Helper to get current user
 Future<User?> getCurrentUser() async {
   return FirebaseAuth.instance.currentUser;
+}
+
+class NutritionLoadingAnimation extends StatelessWidget {
+  final String message;
+  const NutritionLoadingAnimation({this.message = "Creating your plan..."});
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Lottie.asset(
+            'assets/animations/AI Loading spinner..json',
+            width: 220,
+            height: 220,
+            repeat: true,
+          ),
+          SizedBox(height: 32),
+          Text(
+            message,
+            style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600, color: Theme.of(context).primaryColor),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
+    );
+  }
 }

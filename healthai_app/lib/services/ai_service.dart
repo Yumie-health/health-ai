@@ -6,7 +6,7 @@ class AIService {
   static const String _openAIApiKey = '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';
   static const String _apiUrl = 'https://api.openai.com/v1/chat/completions';
 
-  Future<String?> sendMessage(String message, {String model = 'gpt-4o'}) async {
+  Future<String?> sendMessage(String message, {String model = 'gpt-4o-mini'}) async {
     final headers = {
       'Content-Type': 'application/json',
       'Authorization': 'Bearer $_openAIApiKey',
@@ -45,7 +45,7 @@ class AIService {
     required double waterIntakeL,
     required String bloodType,
     required bool isDiabetic,
-    String model = 'gpt-4o',
+    String model = 'gpt-4o-mini',
     String? specialInstruction,
   }) async {
     final headers = {
@@ -138,5 +138,83 @@ Respond in a motivating and friendly tone, like a helpful nutrition buddy. If th
 ✅ Always reflect the current calorie/macronutrient balance.
 ✅ Encourage smart and realistic choices.
 ''';
+  }
+
+  Future<Map<String, int>?> getNutritionPlanRecommendation({
+    required int age,
+    required String sex,
+    required int heightFt,
+    required int heightIn,
+    required int weightLb,
+    required String goal,
+    required String activityLevel,
+    required String bloodType,
+    required bool isDiabetic,
+    String? waterIntake,
+    String? motivation,
+    double? targetWeightKg,
+    List<String>? eatingHabits,
+  }) async {
+    final prompt = '''
+You are Yumie, a smart nutrition AI trained to create personalized daily intake plans based on individual health data.
+
+Use the following user inputs from the onboarding flow:
+
+Age: $age
+Sex: $sex
+Height: $heightFt ft $heightIn in
+Weight: $weightLb lb
+Goal: $goal
+Activity Level: $activityLevel
+Blood Type: $bloodType
+Diabetic: ${isDiabetic ? 'Yes' : 'No'}
+${waterIntake != null ? "Water Intake: $waterIntake" : ""}
+${motivation != null ? "Motivation: $motivation" : ""}
+${targetWeightKg != null ? "Target Weight: ${(targetWeightKg * 2.20462).round()} lb" : ""}
+${eatingHabits != null && eatingHabits.isNotEmpty ? "Eating Habits:\n${eatingHabits.map((h) => "- $h").join('\n')}" : ""}
+
+Based on this information:
+- Calculate Total Daily Energy Expenditure (TDEE) using Mifflin-St Jeor formula.
+- Adjust caloric target according to their goal:
+  - Weight Loss: TDEE - 500 kcal
+  - Muscle Gain: TDEE + 300 kcal
+  - Maintenance: TDEE
+- Distribute macros based on standard ratios (or adjust smartly):
+  - Protein: 1g per pound of body weight (or 1.2g if muscle gain)
+  - Fat: 0.3–0.4g per pound
+  - Carbs = Remaining calories / 4
+- Consider their eating habits and motivation when suggesting meal timing and composition
+- Account for their target weight in the calorie deficit/surplus calculation
+- Adjust recommendations based on their blood type and diabetic status
+
+Output ONLY like this (no extra text, no units, no emojis, no explanations):
+Calories: <number>
+Protein: <number>
+Fat: <number>
+Carbs: <number>
+
+Example:
+Calories: 2200
+Protein: 120
+Fat: 70
+Carbs: 250
+''';
+    final response = await sendMessage(prompt);
+    if (response == null) return null;
+    print('[AI RAW RESPONSE] $response');
+    // Parse the response for numbers (simple regex, can be improved)
+    final caloriesMatch = RegExp(r'Calories:\s*([\d,]+)').firstMatch(response);
+    final proteinMatch = RegExp(r'Protein:\s*(\d+)').firstMatch(response);
+    final fatMatch = RegExp(r'Fat:\s*(\d+)').firstMatch(response);
+    final carbsMatch = RegExp(r'Carbs:\s*(\d+)').firstMatch(response);
+    if (caloriesMatch == null || proteinMatch == null || fatMatch == null || carbsMatch == null) {
+      return null;
+    }
+    return {
+      'calories': int.parse(caloriesMatch.group(1)!.replaceAll(',', '')),
+      'protein': int.parse(proteinMatch.group(1)!),
+      'fat': int.parse(fatMatch.group(1)!),
+      'carbs': int.parse(carbsMatch.group(1)!),
+    };
   }
 } 

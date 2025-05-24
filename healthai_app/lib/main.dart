@@ -489,14 +489,9 @@ class MyApp extends StatelessWidget {
                 }
 
                 final userData = userSnapshot.data!.data() as Map<String, dynamic>?;
-                // Check if all required fields are present and non-zero
+                // Use a single boolean flag for onboarding completion
                 final hasCompletedOnboarding = userData != null &&
-                    userData['age'] != null &&
-                    userData['height'] != null &&
-                    userData['weight'] != null &&
-                    userData['targetWeight'] != null &&
-                    userData['activityLevel'] != null &&
-                    userData['dailyCalorieGoal'] != null;
+                    userData['hasCompletedOnboarding'] == true;
 
                 if (!hasCompletedOnboarding) {
                   return OnboardingFlowPage();
@@ -1815,10 +1810,10 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
                     builder: (context, userSnap) {
                       if (!userSnap.hasData) return const SizedBox(height: 220, child: Center(child: CircularProgressIndicator()));
                       final userProfile = userSnap.data!;
-                      final dailyCalorieGoal = userProfile.dailyCalorieGoal ?? 2000;
-                      final proteinGoal = userProfile.proteinGoal ?? 120;
-                      final carbsGoal = userProfile.carbsGoal ?? 250;
-                      final fatGoal = userProfile.fatGoal ?? 50;
+                      final dailyCalorieGoal = userProfile.dailyCalorieGoal;
+                      final proteinGoal = userProfile.proteinGoal;
+                      final carbsGoal = userProfile.carbsGoal;
+                      final fatGoal = userProfile.fatGoal;
                       return StreamBuilder<List<Meal>>(
                         stream: _mealService.getTodayMeals(),
                         builder: (context, snapshot) {
@@ -1828,6 +1823,33 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
                           final totalProtein = meals.fold(0, (sum, m) => sum + m.protein);
                           final totalCarbs = meals.fold(0, (sum, m) => sum + m.carbs);
                           final totalFat = meals.fold(0, (sum, m) => sum + m.fat);
+                          if (dailyCalorieGoal == null || proteinGoal == null || carbsGoal == null || fatGoal == null) {
+                            return Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(18),
+                                border: Border.all(color: const Color(0xFFE5E7EB)),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.grey.withOpacity(0.06),
+                                    blurRadius: 16,
+                                    offset: const Offset(0, 4),
+                                  ),
+                                ],
+                              ),
+                              child: Center(
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Text('Nutrition goals not set', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20)),
+                                    SizedBox(height: 12),
+                                    Text('Set your calorie and macro goals in the Nutrition Plan page.', style: TextStyle(color: Colors.grey[700], fontSize: 16)),
+                                  ],
+                                ),
+                              ),
+                            );
+                          }
                           return Container(
                             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
                             decoration: BoxDecoration(
@@ -1854,13 +1876,13 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
                                       Text('Nutrition Summary', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 22)),
                                       const SizedBox(height: 18),
                                       TweenAnimationBuilder<double>(
-                                        tween: Tween<double>(begin: 0, end: totalProtein / proteinGoal),
+                                        tween: Tween<double>(begin: 0, end: totalProtein / proteinGoal!),
                                         duration: const Duration(milliseconds: 900),
                                         curve: Curves.easeOutCubic,
                                         builder: (context, value, child) => _MacroProgressRow(
                                           color: kSecondaryBlue,
                                           label: 'Protein',
-                                          value: '${(value * proteinGoal).round()} g',
+                                          value: '${(value * proteinGoal!).round()} g',
                                           percent: value,
                                           valueSuffix: 'g',
                                           valueFontWeight: FontWeight.w600,
@@ -1871,13 +1893,13 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
                                         ),
                                       ),
                                       TweenAnimationBuilder<double>(
-                                        tween: Tween<double>(begin: 0, end: totalCarbs / carbsGoal),
+                                        tween: Tween<double>(begin: 0, end: totalCarbs / carbsGoal!),
                                         duration: const Duration(milliseconds: 1100),
                                         curve: Curves.easeOutCubic,
                                         builder: (context, value, child) => _MacroProgressRow(
                                           color: kAccentOrange,
                                           label: 'Carbs',
-                                          value: '${(value * carbsGoal).round()} g',
+                                          value: '${(value * carbsGoal!).round()} g',
                                           percent: value,
                                           valueSuffix: 'g',
                                           valueFontWeight: FontWeight.w600,
@@ -1888,13 +1910,13 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
                                         ),
                                       ),
                                       TweenAnimationBuilder<double>(
-                                        tween: Tween<double>(begin: 0, end: totalFat / fatGoal),
+                                        tween: Tween<double>(begin: 0, end: totalFat / fatGoal!),
                                         duration: const Duration(milliseconds: 1200),
                                         curve: Curves.easeOutCubic,
                                         builder: (context, value, child) => _MacroProgressRow(
                                           color: kWarningRed,
                                           label: 'Fat',
-                                          value: '${(value * fatGoal).round()} g',
+                                          value: '${(value * fatGoal!).round()} g',
                                           percent: value,
                                           valueSuffix: 'g',
                                           valueFontWeight: FontWeight.w600,
@@ -1964,7 +1986,7 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
                                 const SizedBox(width: 24),
                                 // Circular Calories (move down slightly)
                                 TweenAnimationBuilder<double>(
-                                  tween: Tween<double>(begin: 0, end: totalCalories / dailyCalorieGoal),
+                                  tween: Tween<double>(begin: 0, end: totalCalories / dailyCalorieGoal!),
                                   duration: const Duration(milliseconds: 1200),
                                   curve: Curves.easeOutCubic,
                                   builder: (context, value, child) => Column(
@@ -1975,7 +1997,7 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
                                       const SizedBox(height: 8),
                                       _CircularCalories(
                                         calories: totalCalories,
-                                        goal: dailyCalorieGoal,
+                                        goal: dailyCalorieGoal!,
                                         size: 90,
                                         fontSize: 26,
                                         subFontSize: 15,

@@ -4,6 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'main.dart';
 import 'services/user_service.dart';
+import 'services/ai_service.dart';
 
 class NutritionalPlanPage extends StatefulWidget {
   @override
@@ -78,17 +79,6 @@ class _NutritionalPlanPageState extends State<NutritionalPlanPage> {
     }
   }
 
-  void _aiSuggestMacros() {
-    // Placeholder: AI suggestion logic
-    setState(() {
-      userData!['dailyCalorieGoal'] = 2100;
-      userData!['proteinGoal'] = 130;
-      userData!['carbsGoal'] = 240;
-      userData!['fatGoal'] = 65;
-      hasChanges = true;
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
     final prefs = Provider.of<PreferencesProvider>(context);
@@ -106,10 +96,10 @@ class _NutritionalPlanPageState extends State<NutritionalPlanPage> {
     final double bmi = weight / (heightM * heightM);
     final double targetWeight = (userData!['targetWeight'] ?? weight).toDouble();
     final int age = (userData!['age'] ?? 18).toInt();
-    final int calories = (userData!['dailyCalorieGoal'] ?? 2000).toInt();
-    final int protein = (userData!['proteinGoal'] ?? 120).toInt();
-    final int carbs = (userData!['carbsGoal'] ?? 250).toInt();
-    final int fat = (userData!['fatGoal'] ?? 70).toInt();
+    final int? calories = userData!['dailyCalorieGoal'] != null ? userData!['dailyCalorieGoal'] as int : null;
+    final int? protein = userData!['proteinGoal'] != null ? userData!['proteinGoal'] as int : null;
+    final int? carbs = userData!['carbsGoal'] != null ? userData!['carbsGoal'] as int : null;
+    final int? fat = userData!['fatGoal'] != null ? userData!['fatGoal'] as int : null;
     // Unit conversions
     final double displayWeight = useMetric ? weight : (weight * 2.20462);
     final String weightUnit = useMetric ? 'kg' : 'lb';
@@ -214,83 +204,63 @@ class _NutritionalPlanPageState extends State<NutritionalPlanPage> {
             ),
             _EditableCard(
               label: 'Calorie Goal',
-              value: '$calories kcal',
+              value: calories != null ? '$calories kcal' : 'Not set',
               isEditing: editingField == 'dailyCalorieGoal',
               onTap: () => _startEdit('dailyCalorieGoal'),
               editor: editingField == 'dailyCalorieGoal'
                   ? _SliderEditor(
-                      initial: calories.toDouble(),
+                      initial: calories?.toDouble() ?? 2000,
                       min: 1000,
                       max: 5000,
                       unit: 'kcal',
                       onChanged: (v) => _updateField('dailyCalorieGoal', v.round()),
                     )
                   : null,
-              trailing: IconButton(
-                icon: Icon(Icons.auto_fix_high, color: Colors.orange),
-                tooltip: 'AI Suggest',
-                onPressed: _aiSuggestMacros,
-              ),
             ),
             _EditableCard(
               label: 'Protein Goal',
-              value: '$protein g',
+              value: protein != null ? '$protein g' : 'Not set',
               isEditing: editingField == 'proteinGoal',
               onTap: () => _startEdit('proteinGoal'),
               editor: editingField == 'proteinGoal'
                   ? _SliderEditor(
-                      initial: protein.toDouble(),
+                      initial: protein?.toDouble() ?? 120,
                       min: 40,
                       max: 300,
                       unit: 'g',
                       onChanged: (v) => _updateField('proteinGoal', v.round()),
                     )
                   : null,
-              trailing: IconButton(
-                icon: Icon(Icons.auto_fix_high, color: Colors.orange),
-                tooltip: 'AI Suggest',
-                onPressed: _aiSuggestMacros,
-              ),
             ),
             _EditableCard(
               label: 'Carb Goal',
-              value: '$carbs g',
+              value: carbs != null ? '$carbs g' : 'Not set',
               isEditing: editingField == 'carbsGoal',
               onTap: () => _startEdit('carbsGoal'),
               editor: editingField == 'carbsGoal'
                   ? _SliderEditor(
-                      initial: carbs.toDouble(),
+                      initial: carbs?.toDouble() ?? 250,
                       min: 40,
                       max: 600,
                       unit: 'g',
                       onChanged: (v) => _updateField('carbsGoal', v.round()),
                     )
                   : null,
-              trailing: IconButton(
-                icon: Icon(Icons.auto_fix_high, color: Colors.orange),
-                tooltip: 'AI Suggest',
-                onPressed: _aiSuggestMacros,
-              ),
             ),
             _EditableCard(
               label: 'Fat Goal',
-              value: '$fat g',
+              value: fat != null ? '$fat g' : 'Not set',
               isEditing: editingField == 'fatGoal',
               onTap: () => _startEdit('fatGoal'),
               editor: editingField == 'fatGoal'
                   ? _SliderEditor(
-                      initial: fat.toDouble(),
+                      initial: fat?.toDouble() ?? 70,
                       min: 10,
                       max: 200,
                       unit: 'g',
                       onChanged: (v) => _updateField('fatGoal', v.round()),
                     )
                   : null,
-              trailing: IconButton(
-                icon: Icon(Icons.auto_fix_high, color: Colors.orange),
-                tooltip: 'AI Suggest',
-                onPressed: _aiSuggestMacros,
-              ),
             ),
             _EditableCard(
               label: 'Water Intake',
