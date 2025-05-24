@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'dart:io';
 
 class AIService {
   // TODO: Move this to secure storage or env variable in production
@@ -216,5 +217,151 @@ Carbs: 250
       'fat': int.parse(fatMatch.group(1)!),
       'carbs': int.parse(carbsMatch.group(1)!),
     };
+  }
+
+  String _extractJson(String response) {
+    final codeBlockRegex = RegExp(r'```(?:json)?\s*([\s\S]*?)\s*```', multiLine: true, caseSensitive: false);
+    final match = codeBlockRegex.firstMatch(response);
+    if (match != null) {
+      return match.group(1)!.trim();
+    }
+    return response.trim();
+  }
+
+  /// Analyze a meal image and return food name, macros, and ingredients.
+  Future<Map<String, dynamic>?> analyzeMealImage(File imageFile) async {
+    final bytes = await imageFile.readAsBytes();
+    final base64Image = base64Encode(bytes);
+    final dataUrl = 'data:image/jpeg;base64,$base64Image';
+    final prompt = '''
+You are a nutrition AI. Given this photo of a meal, return a JSON object with:
+- food_name: string
+- calories: integer
+- protein: integer
+- carbs: integer
+- fat: integer
+- ingredients: array of strings
+Respond ONLY with valid JSON.
+''';
+    final headers = {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer $_openAIApiKey',
+    };
+    final body = jsonEncode({
+      'model': 'gpt-4o-mini',
+      'messages': [
+        {'role': 'system', 'content': prompt},
+        {
+          'role': 'user',
+          'content': [
+            {'type': 'text', 'text': prompt},
+            {'type': 'image_url', 'image_url': {'url': dataUrl}},
+          ]
+        },
+      ],
+      'max_tokens': 512,
+      'temperature': 0.3,
+    });
+    final response = await http.post(Uri.parse(_apiUrl), headers: headers, body: body);
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      final content = data['choices'][0]['message']['content'];
+      final jsonString = _extractJson(content);
+      final result = jsonDecode(jsonString);
+      return result as Map<String, dynamic>;
+    } else {
+      print('AI meal scan error: ${response.statusCode} ${response.body}');
+      return null;
+    }
+  }
+
+  /// Analyze a fridge image and return a list of detected items.
+  Future<List<String>?> analyzeFridgeImage(File imageFile) async {
+    final bytes = await imageFile.readAsBytes();
+    final base64Image = base64Encode(bytes);
+    final dataUrl = 'data:image/jpeg;base64,$base64Image';
+    final prompt = '''
+You are a kitchen assistant AI. Given this photo of a fridge, return a JSON array of all visible food items (ingredients). Respond ONLY with a JSON array of strings.
+''';
+    final headers = {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer $_openAIApiKey',
+    };
+    final body = jsonEncode({
+      'model': 'gpt-4o-mini',
+      'messages': [
+        {'role': 'system', 'content': prompt},
+        {
+          'role': 'user',
+          'content': [
+            {'type': 'text', 'text': prompt},
+            {'type': 'image_url', 'image_url': {'url': dataUrl}},
+          ]
+        },
+      ],
+      'max_tokens': 512,
+      'temperature': 0.3,
+    });
+    final response = await http.post(Uri.parse(_apiUrl), headers: headers, body: body);
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      final content = data['choices'][0]['message']['content'];
+      try {
+        final jsonString = _extractJson(content);
+        final items = jsonDecode(jsonString);
+        return (items as List).map((e) => e.toString()).toList();
+      } catch (e) {
+        print('Failed to parse fridge scan JSON: $e\n$content');
+        return null;
+      }
+    } else {
+      print('AI fridge scan error: ${response.statusCode} ${response.body}');
+      return null;
+    }
+  }
+
+  /// Generate a meal suggestion from fridge items and user profile.
+  Future<Map<String, dynamic>?> generateMealFromFridge({
+    required List<String> fridgeItems,
+    required Map<String, dynamic> userProfile,
+  }) async {
+    final prompt = '''
+You are a nutrition AI. Given this user profile: ${jsonEncode(userProfile)} and these fridge items: ${jsonEncode(fridgeItems)}, suggest a healthy meal the user can make, including:
+- meal_name: string
+- ingredients: array of strings (all ingredients needed for the meal)
+- recipe: array of steps (strings)
+- calories: integer
+- protein: integer
+- carbs: integer
+- fat: integer
+Respond ONLY with valid JSON.
+''';
+    final headers = {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer $_openAIApiKey',
+    };
+    final body = jsonEncode({
+      'model': 'gpt-4o-mini',
+      'messages': [
+        {'role': 'system', 'content': prompt},
+        {'role': 'user', 'content': prompt},
+      ],
+      'max_tokens': 512,
+      'temperature': 0.5,
+    });
+    final response = await http.post(Uri.parse(_apiUrl), headers: headers, body: body);
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      final content = data['choices'][0]['message']['content'];
+      try {
+        return jsonDecode(content);
+      } catch (e) {
+        print('Failed to parse generated meal JSON: $e\n$content');
+        return null;
+      }
+    } else {
+      print('AI generate meal error: ${response.statusCode} ${response.body}');
+      return null;
+    }
   }
 } 

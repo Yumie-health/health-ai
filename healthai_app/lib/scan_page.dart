@@ -165,11 +165,19 @@ class _ScanPageState extends State<ScanPage> {
   Future<void> _uploadFromGallery() async {
     final picked = await _picker.pickImage(source: ImageSource.gallery);
     if (picked != null && mounted) {
-      Navigator.of(context).push(
-        MaterialPageRoute(
-          builder: (_) => ScanResultPage(imagePath: picked.path),
-        ),
-      );
+      if (_isFridgeMode) {
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (_) => ScanResultFridgePage(imagePath: picked.path),
+          ),
+        );
+      } else {
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (_) => ScanResultPage(imagePath: picked.path),
+          ),
+        );
+      }
     }
   }
 

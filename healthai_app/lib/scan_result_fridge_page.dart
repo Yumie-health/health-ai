@@ -5,6 +5,9 @@ import 'models/meal.dart';
 import 'services/meal_service.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'scan_result_page.dart';
+import 'package:lottie/lottie.dart';
+import 'services/ai_service.dart';
+import './generated_meal_fridge_page.dart';
 
 class ScanResultFridgePage extends StatefulWidget {
   final String imagePath;
@@ -25,6 +28,9 @@ class _ScanResultFridgePageState extends State<ScanResultFridgePage> {
   String _selectedMealType = 'breakfast';
   bool _isSaving = false;
   String? _error;
+  bool _isLoadingAI = true;
+  bool _isGeneratingMeal = false;
+  Map<String, dynamic>? _generatedMeal;
 
   final List<String> _mealTypes = ['breakfast', 'lunch', 'dinner', 'snack'];
   final Map<String, String> _mealTypeLabels = {
@@ -38,6 +44,7 @@ class _ScanResultFridgePageState extends State<ScanResultFridgePage> {
   void initState() {
     super.initState();
     _foodNameController.addListener(() => setState(() {}));
+    _runAIFridgeScan();
   }
 
   @override
@@ -118,6 +125,46 @@ class _ScanResultFridgePageState extends State<ScanResultFridgePage> {
     }
   }
 
+  Future<void> _runAIFridgeScan() async {
+    setState(() { _isLoadingAI = true; });
+    final aiService = AIService();
+    final result = await aiService.analyzeFridgeImage(File(widget.imagePath));
+    if (result != null) {
+      setState(() {
+        _ingredients = result;
+        _isLoadingAI = false;
+      });
+    } else {
+      setState(() { _isLoadingAI = false; });
+    }
+  }
+
+  Future<void> _generateMealFromFridge() async {
+    setState(() { _isGeneratingMeal = true; });
+    final aiService = AIService();
+    // Example user profile, replace with actual user data if available
+    final userProfile = {
+      'age': 25,
+      'sex': 'female',
+      'height_cm': 165,
+      'weight_kg': 60,
+      'goal': 'maintenance',
+      // Add more fields as needed
+    };
+    final result = await aiService.generateMealFromFridge(fridgeItems: _ingredients, userProfile: userProfile);
+    setState(() {
+      _generatedMeal = result;
+      _isGeneratingMeal = false;
+    });
+    if (result != null) {
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(
+          builder: (_) => GeneratedMealFromFridgePage(meal: result),
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -145,120 +192,126 @@ class _ScanResultFridgePageState extends State<ScanResultFridgePage> {
         title: Text('Review Meal', style: TextStyle(color: Colors.black)),
         centerTitle: true,
       ),
-      body: Column(
-        children: [
-          // Image preview
-          Container(
-            width: double.infinity,
-            color: Colors.black,
-            height: 220,
-            child: Stack(
-              children: [
-                Positioned.fill(
-                  child: Image.file(
-                    File(widget.imagePath),
-                    fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) => Center(child: Text('Failed to load image', style: TextStyle(color: Colors.white))),
-                  ),
-                ),
-                Positioned.fill(
-                  child: Container(
-                    color: Colors.black.withOpacity(0.25),
-                  ),
-                ),
-                Center(
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.white.withOpacity(0.85),
-                      foregroundColor: Colors.black,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
-                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                    ),
-                    onPressed: () {
-                      showDialog(
-                        context: context,
-                        builder: (_) => Dialog(
-                          backgroundColor: Colors.black,
-                          child: InteractiveViewer(
-                            child: Image.file(File(widget.imagePath)),
-                          ),
-                        ),
-                      );
-                    },
-                    child: const Text('Preview Full Image', style: TextStyle(fontWeight: FontWeight.bold)),
-                  ),
-                ),
-              ],
+      body: _isLoadingAI
+        ? Center(
+            child: Lottie.asset(
+              'assets/animations/AI Loading spinner..json',
+              width: 100,
+              height: 100,
             ),
-          ),
-          // Generate Meal button
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
-            child: SizedBox(
-              width: double.infinity,
-              height: 56,
-              child: ElevatedButton(
-                onPressed: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (_) => ScanResultPage(imagePath: widget.imagePath),
-                    ),
-                  );
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.green,
-                  foregroundColor: Colors.white,
-                  textStyle: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                ),
-                child: const Text('Generate Meal'),
-              ),
-            ),
-          ),
-          // Fridge items box
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24),
-            child: Container(
-              width: double.infinity,
-              constraints: BoxConstraints(minHeight: 80, maxHeight: 180),
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Color(0xFFF5F5F5),
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: Colors.grey.shade300),
-              ),
-              child: _ingredients.isEmpty
-                  ? const Center(child: Text('No fridge items detected.', style: TextStyle(color: Colors.grey)))
-                  : ListView.builder(
-                      shrinkWrap: true,
-                      itemCount: _ingredients.length,
-                      itemBuilder: (context, i) => Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 4),
-                        child: Text(_ingredients[i], style: const TextStyle(fontSize: 16)),
+          )
+        : Column(
+            children: [
+              // Image preview
+              Container(
+                width: double.infinity,
+                color: Colors.black,
+                height: 220,
+                child: Stack(
+                  children: [
+                    Positioned.fill(
+                      child: Image.file(
+                        File(widget.imagePath),
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) => Center(child: Text('Failed to load image', style: TextStyle(color: Colors.white))),
                       ),
                     ),
-            ),
-          ),
-          // Discard button
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
-            child: SizedBox(
-              width: double.infinity,
-              height: 48,
-              child: ElevatedButton(
-                onPressed: _discard,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.red,
-                  foregroundColor: Colors.white,
-                  textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                    Positioned.fill(
+                      child: Container(
+                        color: Colors.black.withOpacity(0.25),
+                      ),
+                    ),
+                    Center(
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.white.withOpacity(0.85),
+                          foregroundColor: Colors.black,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
+                          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                        ),
+                        onPressed: () {
+                          showDialog(
+                            context: context,
+                            builder: (_) => Dialog(
+                              backgroundColor: Colors.black,
+                              child: InteractiveViewer(
+                                child: Image.file(File(widget.imagePath)),
+                              ),
+                            ),
+                          );
+                        },
+                        child: const Text('Preview Full Image', style: TextStyle(fontWeight: FontWeight.bold)),
+                      ),
+                    ),
+                  ],
                 ),
-                child: const Text('Discard'),
               ),
-            ),
+              // Generate Meal button
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+                child: SizedBox(
+                  width: double.infinity,
+                  height: 56,
+                  child: ElevatedButton(
+                    onPressed: _ingredients.isEmpty || _isGeneratingMeal ? null : _generateMealFromFridge,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.green,
+                      foregroundColor: Colors.white,
+                      textStyle: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    ),
+                    child: _isGeneratingMeal
+                      ? SizedBox(width: 28, height: 28, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 3))
+                      : const Text('Generate Meal'),
+                  ),
+                ),
+              ),
+              // Fridge items box
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: Card(
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                  elevation: 2,
+                  margin: EdgeInsets.zero,
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('Detected Fridge Items', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 17, color: Colors.green[700])),
+                        SizedBox(height: 10),
+                        _ingredients.isEmpty
+                          ? const Center(child: Text('No fridge items detected.', style: TextStyle(color: Colors.grey)))
+                          : Wrap(
+                              spacing: 8,
+                              runSpacing: 8,
+                              children: _ingredients.map((item) => Chip(label: Text(item))).toList(),
+                            ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              // Discard button
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+                child: SizedBox(
+                  width: double.infinity,
+                  height: 48,
+                  child: ElevatedButton(
+                    onPressed: _discard,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.red,
+                      foregroundColor: Colors.white,
+                      textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                    ),
+                    child: const Text('Discard'),
+                  ),
+                ),
+              ),
+            ],
           ),
-        ],
-      ),
     );
   }
 } 

@@ -22,6 +22,7 @@ import 'onboarding_flow.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'services/ai_service.dart';
+import 'package:lottie/lottie.dart';
 
 // Define the color palette
 const Color kPrimaryGreen = Color(0xFF4CAF50); // Soft green
@@ -3663,20 +3664,17 @@ class _CoachScreenState extends State<CoachScreen> with TickerProviderStateMixin
       duration: const Duration(milliseconds: 600),
     );
     _playEntranceAnimationsIfNeeded();
+    _loadLastInsight();
   }
 
-  void _playEntranceAnimationsIfNeeded() {
-    if (!_hasAnimatedEntrance) {
-      _chatController.forward();
-      _insightsController.forward();
-      _hasAnimatedEntrance = true;
-    } else {
-      _chatController.value = 1.0;
-      _insightsController.value = 1.0;
-    }
+  Future<void> _loadLastInsight() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _aiHealthInsight = prefs.getString('last_health_insight');
+    });
   }
 
-  void _fetchAIHealthInsight() async {
+  Future<void> _fetchAIHealthInsight() async {
     setState(() { _loadingInsight = true; });
     final userProfile = await UserService().getCurrentUserProfile().first;
     if (userProfile == null) {
@@ -3718,6 +3716,22 @@ class _CoachScreenState extends State<CoachScreen> with TickerProviderStateMixin
       specialInstruction: 'For this health insight, respond as a concise list of 3-5 bullet points. Each point should be a short, actionable tip or observation. Do not use paragraphs.'
     );
     setState(() { _aiHealthInsight = aiResponse ?? "Could not get AI insight."; _loadingInsight = false; });
+    // Save to SharedPreferences
+    final prefs = await SharedPreferences.getInstance();
+    if (_aiHealthInsight != null) {
+      prefs.setString('last_health_insight', _aiHealthInsight!);
+    }
+  }
+
+  void _playEntranceAnimationsIfNeeded() {
+    if (!_hasAnimatedEntrance) {
+      _chatController.forward();
+      _insightsController.forward();
+      _hasAnimatedEntrance = true;
+    } else {
+      _chatController.value = 1.0;
+      _insightsController.value = 1.0;
+    }
   }
 
   void _handleCommonQuestion(String question) {
@@ -3908,7 +3922,7 @@ class _CoachScreenState extends State<CoachScreen> with TickerProviderStateMixin
                     onTap: () {
                       setState(() => _tabIndex = 1);
                       _tabController.forward(from: 0.0);
-                      _fetchAIHealthInsight();
+                      // _fetchAIHealthInsight(); // Removed to prevent auto-refresh on tab switch
                     },
                     child: Container(
                       padding: EdgeInsets.symmetric(vertical: 12),
@@ -4102,41 +4116,47 @@ class _CoachScreenState extends State<CoachScreen> with TickerProviderStateMixin
                                   children: [
                                     Text('Health Insights', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20)),
                                     SizedBox(height: 14),
-                                    if (_loadingInsight)
-                                      Center(child: CircularProgressIndicator())
-                                    else if (_aiHealthInsight != null)
-                                      Builder(
-                                        builder: (context) {
-                                          // Remove intro/outro and split into up to 3 bullet points
-                                          final lines = _aiHealthInsight!
-                                            .replaceAll(RegExp(r'^(hey|hi|hello)[^\n]*\n*', caseSensitive: false), '')
-                                            .replaceAll(RegExp(r"you're doing great.*", caseSensitive: false), '')
-                                            .split(RegExp(r'\n+|- '))
-                                            .map((l) => l.trim())
-                                            .where((l) => l.isNotEmpty)
-                                            .take(3)
-                                            .toList();
-                                          return Column(
-                                            crossAxisAlignment: CrossAxisAlignment.start,
-                                            children: [
-                                              for (final line in lines)
-                                                Padding(
-                                                  padding: const EdgeInsets.only(bottom: 8),
-                                                  child: Row(
-                                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                                    children: [
-                                                      Container(width: 8, height: 8, margin: EdgeInsets.only(top: 7), decoration: BoxDecoration(color: kPrimaryGreen, shape: BoxShape.circle)),
-                                                      SizedBox(width: 10),
-                                                      Expanded(child: Text(line, style: TextStyle(fontSize: 16, color: kPrimaryGreen, fontWeight: FontWeight.w600))),
-                                                    ],
-                                                  ),
-                                                ),
-                                            ],
-                                          );
-                                        },
-                                      )
-                                    else
-                                      Text('No insight available.', style: TextStyle(fontSize: 16, color: Colors.grey[800])),
+                                    _loadingInsight
+                                      ? Center(
+                                          child: Lottie.asset(
+                                            'assets/animations/AI Loading spinner..json',
+                                            width: 80,
+                                            height: 80,
+                                            fit: BoxFit.contain,
+                                          ),
+                                        )
+                                      : _aiHealthInsight != null
+                                          ? Builder(
+                                              builder: (context) {
+                                                // Remove intro/outro and split into up to 3 bullet points
+                                                final lines = _aiHealthInsight!
+                                                  .replaceAll(RegExp(r'^(hey|hi|hello)[^\n]*\n*', caseSensitive: false), '')
+                                                  .replaceAll(RegExp(r"you're doing great.*", caseSensitive: false), '')
+                                                  .split(RegExp(r'\n+|- '))
+                                                  .map((l) => l.trim())
+                                                  .where((l) => l.isNotEmpty)
+                                                  .take(3)
+                                                  .toList();
+                                                return Column(
+                                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                                  children: [
+                                                    for (final line in lines)
+                                                      Padding(
+                                                        padding: const EdgeInsets.only(bottom: 8),
+                                                        child: Row(
+                                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                                          children: [
+                                                            Container(width: 8, height: 8, margin: EdgeInsets.only(top: 7), decoration: BoxDecoration(color: kPrimaryGreen, shape: BoxShape.circle)),
+                                                            SizedBox(width: 10),
+                                                            Expanded(child: Text(line, style: TextStyle(fontSize: 16, color: kPrimaryGreen, fontWeight: FontWeight.w600))),
+                                                          ],
+                                                        ),
+                                                      ),
+                                                  ],
+                                                );
+                                              },
+                                            )
+                                          : Text('No insight available.', style: TextStyle(fontSize: 16, color: Colors.grey[800])),
                                     SizedBox(height: 10),
                                     OutlinedButton(
                                       onPressed: _fetchAIHealthInsight,
@@ -5243,50 +5263,46 @@ class _ProfileInfoChip extends StatelessWidget {
 }
 
 class SettingsPage extends StatelessWidget {
-  Future<void> _launchEmail() async {
-    final Uri emailLaunchUri = Uri(
-      scheme: 'mailto',
-      path: 'support@healthai.com',
-      queryParameters: {
-        'subject': 'HealthAI Support',
-        'body': 'Hello, I need help with...',
-      },
-    );
-    if (await canLaunchUrl(emailLaunchUri)) {
-      await launchUrl(emailLaunchUri);
-    } else {
-      throw 'Could not launch email';
-    }
-  }
   @override
   Widget build(BuildContext context) {
     final prefs = Provider.of<PreferencesProvider>(context);
     return Scaffold(
       appBar: AppBar(title: Text('Settings')),
-      body: ListView(
-        children: [
-          SwitchListTile(
-            title: Text('Dark Mode'),
-            subtitle: Text('Enable dark theme'),
-            value: prefs.darkMode,
-            onChanged: (v) => prefs.setDarkMode(v),
-            secondary: Icon(Icons.dark_mode),
-          ),
-          SwitchListTile(
-            title: Text('Use Metric Units'),
-            subtitle: Text('kg/cm or lb/ft'),
-            value: prefs.useMetric,
-            onChanged: (v) => prefs.setUnits(v),
-            secondary: Icon(Icons.straighten),
-          ),
-          Divider(),
-          ListTile(
-            leading: Icon(Icons.email),
-            title: Text('Contact Support'),
-            subtitle: Text('Email us for help'),
-            onTap: _launchEmail,
-          ),
-        ],
+      body: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 24),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Preferences', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 22)),
+            SizedBox(height: 18),
+            Card(
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+              elevation: 2,
+              child: Column(
+                children: [
+                  SwitchListTile(
+                    title: Text('Dark Mode', style: TextStyle(fontWeight: FontWeight.w600)),
+                    subtitle: Text('Enable dark theme'),
+                    value: prefs.darkMode,
+                    onChanged: (v) => prefs.setDarkMode(v),
+                    secondary: Icon(Icons.dark_mode),
+                  ),
+                  Divider(height: 1, thickness: 1, indent: 16, endIndent: 16),
+                  SwitchListTile(
+                    title: Text('Use Metric Units', style: TextStyle(fontWeight: FontWeight.w600)),
+                    subtitle: Text('kg/cm or lb/ft'),
+                    value: prefs.useMetric,
+                    onChanged: (v) => prefs.setUnits(v),
+                    secondary: Icon(Icons.straighten),
+                  ),
+                ],
+              ),
+            ),
+            SizedBox(height: 32),
+            // Add more settings sections here if needed
+            // Example: Account, Notifications, etc.
+          ],
+        ),
       ),
     );
   }

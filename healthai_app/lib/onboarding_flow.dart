@@ -92,9 +92,9 @@ class _OnboardingFlowPageState extends State<OnboardingFlowPage> with SingleTick
         _controller.reset();
         _controller.forward();
       } else if (step > 0) {
-        step--;
-        _controller.reset();
-        _controller.forward();
+      step--;
+      _controller.reset();
+      _controller.forward();
       } else {
         // If at the first step, exit onboarding (go to AuthScreen)
         Navigator.of(context).pushReplacement(
@@ -341,17 +341,17 @@ class _OnboardingFlowPageState extends State<OnboardingFlowPage> with SingleTick
                   return NutritionLoadingAnimation(message: "Yumie is cooking up your personalized nutrition plan...");
                 }
                 if (aiNutritionPlan != null) {
-                  return _NutritionPlanSummaryStep(
-                    fadeAnimation: _fadeAnimation,
-                    slideAnimation: _slideAnimation,
+                return _NutritionPlanSummaryStep(
+                  fadeAnimation: _fadeAnimation,
+                  slideAnimation: _slideAnimation,
                     calories: aiNutritionPlan!["calories"]!,
                     protein: aiNutritionPlan!["protein"]!,
                     fat: aiNutritionPlan!["fat"]!,
                     carbs: aiNutritionPlan!["carbs"]!,
-                    onFinish: () async {
-                      final user = await getCurrentUser();
-                      if (user != null) {
-                        final now = DateTime.now();
+                  onFinish: () async {
+                    final user = await getCurrentUser();
+                    if (user != null) {
+                      final now = DateTime.now();
                         print('[DEBUG] aiNutritionPlan: '
                             'calories=${aiNutritionPlan!["calories"]}, '
                             'protein=${aiNutritionPlan!["protein"]}, '
@@ -359,15 +359,15 @@ class _OnboardingFlowPageState extends State<OnboardingFlowPage> with SingleTick
                             'carbs=${aiNutritionPlan!["carbs"]}');
                         print('[DEBUG] About to write to Firestore...');
                         try {
-                          await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
+                      await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
                             'dailyCalorieGoal': aiNutritionPlan!["calories"],
                             'proteinGoal': aiNutritionPlan!["protein"],
                             'fatGoal': aiNutritionPlan!["fat"],
                             'carbsGoal': aiNutritionPlan!["carbs"],
-                            'lastUpdated': now,
-                            'hasCompletedOnboarding': true,
+                        'lastUpdated': now,
+                        'hasCompletedOnboarding': true,
                             'positiveHabits': selectedHabits, // Save positive habits for notifications
-                          }, SetOptions(merge: true));
+                      }, SetOptions(merge: true));
                           print('[DEBUG] Firestore write complete');
                         } catch (e) {
                           print('[ERROR] Firestore write failed: $e');
@@ -387,14 +387,14 @@ class _OnboardingFlowPageState extends State<OnboardingFlowPage> with SingleTick
                             await Future.delayed(Duration(milliseconds: 200));
                           }
                         }
-                      }
-                      Navigator.of(context).pushAndRemoveUntil(
-                        MaterialPageRoute(builder: (_) => MainNavScreen()),
-                        (route) => false,
-                      );
-                    },
-                    onBack: prevStep,
-                  );
+                    }
+                    Navigator.of(context).pushAndRemoveUntil(
+                      MaterialPageRoute(builder: (_) => MainNavScreen()),
+                      (route) => false,
+                    );
+                  },
+                  onBack: prevStep,
+                );
                 }
                 if (aiError != null) {
                   return Center(
@@ -530,88 +530,88 @@ class _GoalStep extends StatelessWidget {
         Expanded(
           child: SingleChildScrollView(
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        Align(
+          alignment: Alignment.centerLeft,
+          child: Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.05),
+                  blurRadius: 8,
+                  offset: Offset(0, 2),
+                ),
+              ],
+            ),
+            child: IconButton(
+              icon: Icon(Icons.arrow_back, color: theme.primaryColor, size: 24),
+              onPressed: onBack,
+            ),
+          ),
+        ),
+        SizedBox(height: 24),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            _buildProgressDot(context, true),
+            _buildProgressLine(context, true),
+            _buildProgressDot(context, false),
+            _buildProgressLine(context, false),
+            _buildProgressDot(context, false),
+          ],
+        ),
+        SizedBox(height: 32),
+        FadeTransition(
+          opacity: fadeAnimation,
+          child: SlideTransition(
+            position: slideAnimation,
+            child: Column(
               children: [
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(12),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.05),
-                          blurRadius: 8,
-                          offset: Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                    child: IconButton(
-                      icon: Icon(Icons.arrow_back, color: theme.primaryColor, size: 24),
-                      onPressed: onBack,
-                    ),
+                Text(
+                  'What is your main goal?',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 32,
+                    letterSpacing: -0.5,
                   ),
+                  textAlign: TextAlign.center,
                 ),
-                SizedBox(height: 24),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    _buildProgressDot(context, true),
-                    _buildProgressLine(context, true),
-                    _buildProgressDot(context, false),
-                    _buildProgressLine(context, false),
-                    _buildProgressDot(context, false),
-                  ],
-                ),
-                SizedBox(height: 32),
-                FadeTransition(
-                  opacity: fadeAnimation,
-                  child: SlideTransition(
-                    position: slideAnimation,
-                    child: Column(
-                      children: [
-                        Text(
-                          'What is your main goal?',
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 32,
-                            letterSpacing: -0.5,
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
-                        SizedBox(height: 12),
-                        Text(
-                          'Choose the goal that best aligns with your journey',
-                          style: TextStyle(
-                            color: Colors.grey[600],
-                            fontSize: 16,
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
-                      ],
-                    ),
+                SizedBox(height: 12),
+                Text(
+                  'Choose the goal that best aligns with your journey',
+                  style: TextStyle(
+                    color: Colors.grey[600],
+                    fontSize: 16,
                   ),
+                  textAlign: TextAlign.center,
                 ),
-                SizedBox(height: 32),
+              ],
+            ),
+          ),
+        ),
+        SizedBox(height: 32),
                 ListView.builder(
                   shrinkWrap: true,
                   physics: NeverScrollableScrollPhysics(),
-                  itemCount: goals.length,
-                  itemBuilder: (context, index) {
-                    final goal = goals[index];
-                    final isSelected = selectedGoal == goal['label'];
-                    return FadeTransition(
-                      opacity: fadeAnimation,
-                      child: SlideTransition(
-                        position: slideAnimation,
-                        child: Padding(
-                          padding: EdgeInsets.only(bottom: 16),
-                          child: _buildGoalCard(goal, isSelected, theme, onSelect),
-                        ),
-                      ),
-                    );
-                  },
+            itemCount: goals.length,
+            itemBuilder: (context, index) {
+              final goal = goals[index];
+              final isSelected = selectedGoal == goal['label'];
+              return FadeTransition(
+                opacity: fadeAnimation,
+                child: SlideTransition(
+                  position: slideAnimation,
+                  child: Padding(
+                    padding: EdgeInsets.only(bottom: 16),
+                    child: _buildGoalCard(goal, isSelected, theme, onSelect),
+                  ),
                 ),
+              );
+            },
+          ),
                 SizedBox(height: 24),
               ],
             ),
@@ -620,24 +620,24 @@ class _GoalStep extends StatelessWidget {
         SafeArea(
           minimum: EdgeInsets.only(left: 16, right: 16, bottom: 16),
           child: SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              onPressed: onContinue,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: theme.primaryColor,
-                foregroundColor: Colors.white,
-                padding: EdgeInsets.symmetric(vertical: 20),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                elevation: 0,
-                textStyle: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text('Continue'),
-                  SizedBox(width: 8),
-                  Icon(Icons.arrow_forward, size: 20),
-                ],
+          width: double.infinity,
+          child: ElevatedButton(
+            onPressed: onContinue,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: theme.primaryColor,
+              foregroundColor: Colors.white,
+              padding: EdgeInsets.symmetric(vertical: 20),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              elevation: 0,
+              textStyle: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text('Continue'),
+                SizedBox(width: 8),
+                Icon(Icons.arrow_forward, size: 20),
+              ],
               ),
             ),
           ),
@@ -751,88 +751,88 @@ class _MotivationStep extends StatelessWidget {
         Expanded(
           child: SingleChildScrollView(
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        Align(
+          alignment: Alignment.centerLeft,
+          child: Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.05),
+                  blurRadius: 8,
+                  offset: Offset(0, 2),
+                ),
+              ],
+            ),
+            child: IconButton(
+              icon: Icon(Icons.arrow_back, color: theme.primaryColor, size: 24),
+              onPressed: onBack,
+            ),
+          ),
+        ),
+        SizedBox(height: 24),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            _buildProgressDot(context, true),
+            _buildProgressLine(context, true),
+            _buildProgressDot(context, true),
+            _buildProgressLine(context, false),
+            _buildProgressDot(context, false),
+          ],
+        ),
+        SizedBox(height: 32),
+        FadeTransition(
+          opacity: fadeAnimation,
+          child: SlideTransition(
+            position: slideAnimation,
+            child: Column(
               children: [
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(12),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.05),
-                          blurRadius: 8,
-                          offset: Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                    child: IconButton(
-                      icon: Icon(Icons.arrow_back, color: theme.primaryColor, size: 24),
-                      onPressed: onBack,
-                    ),
+                Text(
+                  'What motivates you?',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 32,
+                    letterSpacing: -0.5,
                   ),
+                  textAlign: TextAlign.center,
                 ),
-                SizedBox(height: 24),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    _buildProgressDot(context, true),
-                    _buildProgressLine(context, true),
-                    _buildProgressDot(context, true),
-                    _buildProgressLine(context, false),
-                    _buildProgressDot(context, false),
-                  ],
-                ),
-                SizedBox(height: 32),
-                FadeTransition(
-                  opacity: fadeAnimation,
-                  child: SlideTransition(
-                    position: slideAnimation,
-                    child: Column(
-                      children: [
-                        Text(
-                          'What motivates you?',
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 32,
-                            letterSpacing: -0.5,
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
-                        SizedBox(height: 12),
-                        Text(
-                          'Choose what drives you to achieve your goals',
-                          style: TextStyle(
-                            color: Colors.grey[600],
-                            fontSize: 16,
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
-                      ],
-                    ),
+                SizedBox(height: 12),
+                Text(
+                  'Choose what drives you to achieve your goals',
+                  style: TextStyle(
+                    color: Colors.grey[600],
+                    fontSize: 16,
                   ),
+                  textAlign: TextAlign.center,
                 ),
-                SizedBox(height: 32),
+              ],
+            ),
+          ),
+        ),
+        SizedBox(height: 32),
                 ListView.builder(
                   shrinkWrap: true,
                   physics: NeverScrollableScrollPhysics(),
-                  itemCount: motivations.length,
-                  itemBuilder: (context, index) {
-                    final motivation = motivations[index];
-                    final isSelected = selectedMotivation == motivation['label'];
-                    return FadeTransition(
-                      opacity: fadeAnimation,
-                      child: SlideTransition(
-                        position: slideAnimation,
-                        child: Padding(
-                          padding: EdgeInsets.only(bottom: 16),
-                          child: _buildMotivationCard(motivation, isSelected, theme, onSelect),
-                        ),
-                      ),
-                    );
-                  },
+            itemCount: motivations.length,
+            itemBuilder: (context, index) {
+              final motivation = motivations[index];
+              final isSelected = selectedMotivation == motivation['label'];
+              return FadeTransition(
+                opacity: fadeAnimation,
+                child: SlideTransition(
+                  position: slideAnimation,
+                  child: Padding(
+                    padding: EdgeInsets.only(bottom: 16),
+                    child: _buildMotivationCard(motivation, isSelected, theme, onSelect),
+                  ),
                 ),
+              );
+            },
+          ),
                 SizedBox(height: 24),
               ],
             ),
@@ -841,24 +841,24 @@ class _MotivationStep extends StatelessWidget {
         SafeArea(
           minimum: EdgeInsets.only(left: 16, right: 16, bottom: 16),
           child: SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              onPressed: onContinue,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: theme.primaryColor,
-                foregroundColor: Colors.white,
-                padding: EdgeInsets.symmetric(vertical: 20),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                elevation: 0,
-                textStyle: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text('Continue'),
-                  SizedBox(width: 8),
-                  Icon(Icons.arrow_forward, size: 20),
-                ],
+          width: double.infinity,
+          child: ElevatedButton(
+            onPressed: onContinue,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: theme.primaryColor,
+              foregroundColor: Colors.white,
+              padding: EdgeInsets.symmetric(vertical: 20),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              elevation: 0,
+              textStyle: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text('Continue'),
+                SizedBox(width: 8),
+                Icon(Icons.arrow_forward, size: 20),
+              ],
               ),
             ),
           ),
@@ -1903,38 +1903,38 @@ class _GoalWeightStep extends StatelessWidget {
         ),
         SizedBox(height: 36),
         if (selectedGoal != 'Build muscle' && selectedGoal != 'Eat healthier')
-          SizedBox(
-            height: 180,
-            child: Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  // Large slider
-                  SizedBox(
-                    height: sliderHeight,
+        SizedBox(
+          height: 180,
+          child: Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                // Large slider
+                SizedBox(
+                  height: sliderHeight,
                     child: Slider(
                       value: useMetricWeight ? goalWeightKg : goalWeightKg * 2.20462,
                       min: min,
                       max: max,
                       divisions: (max - min).toInt(),
                       onChanged: (v) => onGoalWeightChanged(useMetricWeight ? v : v / 2.20462),
-                    ),
-                  ),
-                  SizedBox(height: 18),
-                  // Animated value display
-                  AnimatedSwitcher(
-                    duration: Duration(milliseconds: 250),
-                    transitionBuilder: (child, anim) => ScaleTransition(scale: anim, child: FadeTransition(opacity: anim, child: child)),
-                    child: Text(
+                        ),
+                ),
+                SizedBox(height: 18),
+                // Animated value display
+                AnimatedSwitcher(
+                  duration: Duration(milliseconds: 250),
+                  transitionBuilder: (child, anim) => ScaleTransition(scale: anim, child: FadeTransition(opacity: anim, child: child)),
+                  child: Text(
                       '${(useMetricWeight ? goalWeightKg : goalWeightKg * 2.20462).toStringAsFixed(1)} $weightUnit',
                       key: ValueKey('goal-${(useMetricWeight ? goalWeightKg : goalWeightKg * 2.20462).toStringAsFixed(1)}'),
-                      style: TextStyle(fontSize: valueFontSize, fontWeight: FontWeight.bold, color: Colors.black),
-                    ),
+                    style: TextStyle(fontSize: valueFontSize, fontWeight: FontWeight.bold, color: Colors.black),
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
+        ),
         if (selectedGoal == 'Build muscle' || selectedGoal == 'Eat healthier')
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 32),
@@ -1994,124 +1994,124 @@ class _ActivityLevelStep extends StatelessWidget {
         Expanded(
           child: SingleChildScrollView(
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        Align(
+          alignment: Alignment.centerLeft,
+          child: Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.05),
+                  blurRadius: 8,
+                  offset: Offset(0, 2),
+                ),
+              ],
+            ),
+            child: IconButton(
+              icon: Icon(Icons.arrow_back, color: theme.primaryColor, size: 28),
+              onPressed: onBack,
+            ),
+          ),
+        ),
+        SizedBox(height: 32),
+        FadeTransition(
+          opacity: fadeAnimation,
+          child: SlideTransition(
+            position: slideAnimation,
+            child: Column(
               children: [
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: Container(
+                Text(
+                  'Your activity level',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 32,
+                    letterSpacing: -0.5,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                SizedBox(height: 18),
+                Text(
+                  'This helps us personalize your plan',
+                  style: TextStyle(
+                    color: Colors.grey[600],
+                    fontSize: 16,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
+          ),
+        ),
+        SizedBox(height: 36),
+                ListView.builder(
+                  shrinkWrap: true,
+                  physics: NeverScrollableScrollPhysics(),
+            itemCount: activityLevels.length,
+            itemBuilder: (context, i) {
+              final level = activityLevels[i];
+              final isSelected = activityLevel == level['label'];
+              return Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+                child: GestureDetector(
+                  onTap: () => onActivityLevelChanged(level['label']),
+                  child: AnimatedContainer(
+                    duration: Duration(milliseconds: 200),
+                    padding: EdgeInsets.all(20),
                     decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(12),
+                      color: isSelected ? theme.primaryColor.withOpacity(0.08) : Colors.white,
+                      borderRadius: BorderRadius.circular(18),
+                      border: Border.all(
+                        color: isSelected ? theme.primaryColor : Colors.grey[200]!,
+                        width: isSelected ? 2 : 1,
+                      ),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.05),
+                          color: Colors.black.withOpacity(0.04),
                           blurRadius: 8,
                           offset: Offset(0, 2),
                         ),
                       ],
                     ),
-                    child: IconButton(
-                      icon: Icon(Icons.arrow_back, color: theme.primaryColor, size: 28),
-                      onPressed: onBack,
-                    ),
-                  ),
-                ),
-                SizedBox(height: 32),
-                FadeTransition(
-                  opacity: fadeAnimation,
-                  child: SlideTransition(
-                    position: slideAnimation,
-                    child: Column(
+                    child: Row(
                       children: [
-                        Text(
-                          'Your activity level',
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 32,
-                            letterSpacing: -0.5,
+                        Container(
+                          decoration: BoxDecoration(
+                            color: theme.primaryColor.withOpacity(0.15),
+                            shape: BoxShape.circle,
                           ),
-                          textAlign: TextAlign.center,
+                          padding: EdgeInsets.all(14),
+                          child: Icon(level['icon'], color: theme.primaryColor, size: 28),
                         ),
-                        SizedBox(height: 18),
-                        Text(
-                          'This helps us personalize your plan',
-                          style: TextStyle(
-                            color: Colors.grey[600],
-                            fontSize: 16,
+                        SizedBox(width: 20),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(level['label'], style: TextStyle(fontWeight: FontWeight.w600, fontSize: 18, color: isSelected ? theme.primaryColor : Colors.black)),
+                              SizedBox(height: 6),
+                              Text(level['desc'], style: TextStyle(color: Colors.grey[600], fontSize: 15)),
+                            ],
                           ),
-                          textAlign: TextAlign.center,
                         ),
+                        if (isSelected)
+                          Container(
+                            padding: EdgeInsets.all(4),
+                            decoration: BoxDecoration(
+                              color: theme.primaryColor.withOpacity(0.1),
+                              shape: BoxShape.circle,
+                            ),
+                            child: Icon(Icons.check, color: theme.primaryColor, size: 20),
+                          ),
                       ],
                     ),
                   ),
                 ),
-                SizedBox(height: 36),
-                ListView.builder(
-                  shrinkWrap: true,
-                  physics: NeverScrollableScrollPhysics(),
-                  itemCount: activityLevels.length,
-                  itemBuilder: (context, i) {
-                    final level = activityLevels[i];
-                    final isSelected = activityLevel == level['label'];
-                    return Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
-                      child: GestureDetector(
-                        onTap: () => onActivityLevelChanged(level['label']),
-                        child: AnimatedContainer(
-                          duration: Duration(milliseconds: 200),
-                          padding: EdgeInsets.all(20),
-                          decoration: BoxDecoration(
-                            color: isSelected ? theme.primaryColor.withOpacity(0.08) : Colors.white,
-                            borderRadius: BorderRadius.circular(18),
-                            border: Border.all(
-                              color: isSelected ? theme.primaryColor : Colors.grey[200]!,
-                              width: isSelected ? 2 : 1,
-                            ),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.04),
-                                blurRadius: 8,
-                                offset: Offset(0, 2),
-                              ),
-                            ],
-                          ),
-                          child: Row(
-                            children: [
-                              Container(
-                                decoration: BoxDecoration(
-                                  color: theme.primaryColor.withOpacity(0.15),
-                                  shape: BoxShape.circle,
-                                ),
-                                padding: EdgeInsets.all(14),
-                                child: Icon(level['icon'], color: theme.primaryColor, size: 28),
-                              ),
-                              SizedBox(width: 20),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(level['label'], style: TextStyle(fontWeight: FontWeight.w600, fontSize: 18, color: isSelected ? theme.primaryColor : Colors.black)),
-                                    SizedBox(height: 6),
-                                    Text(level['desc'], style: TextStyle(color: Colors.grey[600], fontSize: 15)),
-                                  ],
-                                ),
-                              ),
-                              if (isSelected)
-                                Container(
-                                  padding: EdgeInsets.all(4),
-                                  decoration: BoxDecoration(
-                                    color: theme.primaryColor.withOpacity(0.1),
-                                    shape: BoxShape.circle,
-                                  ),
-                                  child: Icon(Icons.check, color: theme.primaryColor, size: 20),
-                                ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    );
-                  },
-                ),
+              );
+            },
+          ),
                 SizedBox(height: 24),
               ],
             ),
@@ -2120,18 +2120,18 @@ class _ActivityLevelStep extends StatelessWidget {
         SafeArea(
           minimum: EdgeInsets.only(left: 16, right: 16, bottom: 16),
           child: SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              onPressed: onContinue,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: theme.primaryColor,
-                foregroundColor: Colors.white,
-                padding: EdgeInsets.symmetric(vertical: 20),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                elevation: 0,
-                textStyle: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-              child: Text('Continue'),
+          width: double.infinity,
+          child: ElevatedButton(
+            onPressed: onContinue,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: theme.primaryColor,
+              foregroundColor: Colors.white,
+              padding: EdgeInsets.symmetric(vertical: 20),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              elevation: 0,
+              textStyle: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            child: Text('Continue'),
             ),
           ),
         ),
@@ -2475,18 +2475,18 @@ class _EatingHabitsStep extends StatelessWidget {
         SafeArea(
           minimum: EdgeInsets.only(left: 16, right: 16, bottom: 16),
           child: SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              onPressed: onContinue,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: theme.primaryColor,
-                foregroundColor: Colors.white,
-                padding: EdgeInsets.symmetric(vertical: 20),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                elevation: 0,
-                textStyle: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-              child: Text('Continue'),
+          width: double.infinity,
+          child: ElevatedButton(
+            onPressed: onContinue,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: theme.primaryColor,
+              foregroundColor: Colors.white,
+              padding: EdgeInsets.symmetric(vertical: 20),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              elevation: 0,
+              textStyle: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            child: Text('Continue'),
             ),
           ),
         ),
@@ -2542,29 +2542,29 @@ class _NutritionPlanSummaryStepState extends State<_NutritionPlanSummaryStep> wi
           child: SafeArea(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Align(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        Align(
                   alignment: Alignment.topLeft,
-                  child: Container(
+          child: Container(
                     margin: EdgeInsets.only(top: 8, left: 8),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(12),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.05),
-                          blurRadius: 8,
-                          offset: Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                    child: IconButton(
-                      icon: Icon(Icons.arrow_back, color: theme.primaryColor, size: 28),
-                      onPressed: widget.onBack,
-                    ),
-                  ),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.05),
+                  blurRadius: 8,
+                  offset: Offset(0, 2),
                 ),
+              ],
+            ),
+            child: IconButton(
+              icon: Icon(Icons.arrow_back, color: theme.primaryColor, size: 28),
+                      onPressed: widget.onBack,
+            ),
+          ),
+        ),
                 SizedBox(height: 36),
                 Text(
                   "You're all set! 🎉",
@@ -2625,21 +2625,21 @@ class _NutritionPlanSummaryStepState extends State<_NutritionPlanSummaryStep> wi
                           label: 'Carbs',
                           value: '${widget.carbs} g',
                           iconColor: Color(0xFF8D6E63),
-                        ),
-                      ],
                     ),
-                  ),
+                      ],
                 ),
+                  ),
+          ),
                 SizedBox(height: 48),
-                SizedBox(
-                  width: double.infinity,
+        SizedBox(
+          width: double.infinity,
                   child: Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
-                    child: ElevatedButton(
+          child: ElevatedButton(
                       onPressed: widget.onFinish,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: theme.primaryColor,
-                        foregroundColor: Colors.white,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: theme.primaryColor,
+              foregroundColor: Colors.white,
                         padding: EdgeInsets.symmetric(vertical: 24),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
                         elevation: 3,
@@ -2647,16 +2647,16 @@ class _NutritionPlanSummaryStepState extends State<_NutritionPlanSummaryStep> wi
                         shadowColor: theme.primaryColor.withOpacity(0.18),
                       ),
                       child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
                           Icon(Icons.check_circle, size: 26, color: Colors.white),
                           SizedBox(width: 12),
                           Text('Get Started'),
                         ],
                       ),
-                    ),
-                  ),
                 ),
+              ),
+            ),
               ],
             ),
           ),
@@ -2675,7 +2675,7 @@ class _NutritionPlanSummaryStepState extends State<_NutritionPlanSummaryStep> wi
                   fit: BoxFit.cover,
                 ),
               ),
-            ),
+                    ),
           ),
       ],
     );
@@ -2694,7 +2694,7 @@ class _NutritionRow extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 2.0),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
+                          children: [
           Container(
             decoration: BoxDecoration(
               color: iconColor.withOpacity(0.12),
@@ -2707,11 +2707,11 @@ class _NutritionRow extends StatelessWidget {
           Text('$label:', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 20)),
           SizedBox(width: 8),
           Text(value, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20, color: iconColor)),
-        ],
+          ],
       ),
     );
   }
-}
+} 
 
 class _BloodTypeStep extends StatelessWidget {
   final Animation<double> fadeAnimation;
@@ -2744,68 +2744,68 @@ class _BloodTypeStep extends StatelessWidget {
         Expanded(
           child: SingleChildScrollView(
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(12),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.05),
-                          blurRadius: 8,
-                          offset: Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                    child: IconButton(
-                      icon: Icon(Icons.arrow_back, color: theme.primaryColor, size: 24),
-                      onPressed: onBack,
-                    ),
-                  ),
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        Align(
+          alignment: Alignment.centerLeft,
+          child: Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.05),
+                  blurRadius: 8,
+                  offset: Offset(0, 2),
                 ),
-                SizedBox(height: 32),
-                Text('What is your blood type?', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 28)),
-                SizedBox(height: 18),
-                Text('This helps us personalize your health insights.', style: TextStyle(color: Colors.grey[600], fontSize: 16)),
-                SizedBox(height: 32),
-                Wrap(
-                  spacing: 18,
-                  runSpacing: 18,
-                  children: bloodTypes.map((type) {
-                    final isSelected = selectedBloodType == type;
-                    return GestureDetector(
-                      onTap: () => onSelect(type),
-                      child: AnimatedContainer(
-                        duration: Duration(milliseconds: 180),
-                        padding: EdgeInsets.symmetric(vertical: 18, horizontal: 28),
-                        decoration: BoxDecoration(
-                          color: isSelected ? theme.primaryColor.withOpacity(0.12) : Colors.white,
-                          borderRadius: BorderRadius.circular(18),
-                          border: Border.all(color: isSelected ? theme.primaryColor : Colors.grey[300]!, width: 2),
-                          boxShadow: isSelected
-                              ? [BoxShadow(color: theme.primaryColor.withOpacity(0.08), blurRadius: 12, offset: Offset(0, 4))]
-                              : [],
-                        ),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              bloodIcons[type],
-                              color: isSelected ? theme.primaryColor : Color(0xFFFFCDD2), // faded red for unselected
-                              size: 36,
-                            ),
-                            SizedBox(height: 8),
-                            Text(type, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 22, color: isSelected ? theme.primaryColor : Colors.black)),
-                          ],
-                        ),
-                      ),
-                    );
-                  }).toList(),
+              ],
+            ),
+            child: IconButton(
+              icon: Icon(Icons.arrow_back, color: theme.primaryColor, size: 24),
+              onPressed: onBack,
+            ),
+          ),
+        ),
+        SizedBox(height: 32),
+        Text('What is your blood type?', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 28)),
+        SizedBox(height: 18),
+        Text('This helps us personalize your health insights.', style: TextStyle(color: Colors.grey[600], fontSize: 16)),
+        SizedBox(height: 32),
+        Wrap(
+          spacing: 18,
+          runSpacing: 18,
+          children: bloodTypes.map((type) {
+            final isSelected = selectedBloodType == type;
+            return GestureDetector(
+              onTap: () => onSelect(type),
+              child: AnimatedContainer(
+                duration: Duration(milliseconds: 180),
+                padding: EdgeInsets.symmetric(vertical: 18, horizontal: 28),
+                decoration: BoxDecoration(
+                  color: isSelected ? theme.primaryColor.withOpacity(0.12) : Colors.white,
+                  borderRadius: BorderRadius.circular(18),
+                  border: Border.all(color: isSelected ? theme.primaryColor : Colors.grey[300]!, width: 2),
+                  boxShadow: isSelected
+                      ? [BoxShadow(color: theme.primaryColor.withOpacity(0.08), blurRadius: 12, offset: Offset(0, 4))]
+                      : [],
                 ),
-                SizedBox(height: 36),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      bloodIcons[type],
+                      color: isSelected ? theme.primaryColor : Color(0xFFFFCDD2), // faded red for unselected
+                      size: 36,
+                    ),
+                    SizedBox(height: 8),
+                    Text(type, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 22, color: isSelected ? theme.primaryColor : Colors.black)),
+                  ],
+                ),
+              ),
+            );
+          }).toList(),
+        ),
+        SizedBox(height: 36),
               ],
             ),
           ),
@@ -2813,18 +2813,18 @@ class _BloodTypeStep extends StatelessWidget {
         SafeArea(
           minimum: EdgeInsets.only(left: 16, right: 16, bottom: 16),
           child: SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              onPressed: onContinue,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: theme.primaryColor,
-                foregroundColor: Colors.white,
-                padding: EdgeInsets.symmetric(vertical: 20),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                elevation: 0,
-                textStyle: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-              child: Text('Continue'),
+          width: double.infinity,
+          child: ElevatedButton(
+            onPressed: onContinue,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: theme.primaryColor,
+              foregroundColor: Colors.white,
+              padding: EdgeInsets.symmetric(vertical: 20),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              elevation: 0,
+              textStyle: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            child: Text('Continue'),
             ),
           ),
         ),
@@ -2850,54 +2850,54 @@ class _DiabeticStep extends StatelessWidget {
         Expanded(
           child: SingleChildScrollView(
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(12),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.05),
-                          blurRadius: 8,
-                          offset: Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                    child: IconButton(
-                      icon: Icon(Icons.arrow_back, color: theme.primaryColor, size: 24),
-                      onPressed: onBack,
-                    ),
-                  ),
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        Align(
+          alignment: Alignment.centerLeft,
+          child: Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.05),
+                  blurRadius: 8,
+                  offset: Offset(0, 2),
                 ),
-                SizedBox(height: 32),
-                Text('Are you diabetic?', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 28)),
-                SizedBox(height: 18),
-                Text('This helps us personalize your health plan.', style: TextStyle(color: Colors.grey[600], fontSize: 16)),
-                SizedBox(height: 32),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    _DiabeticOption(
-                      label: 'Yes',
-                      icon: Icons.check_circle,
-                      selected: isDiabetic == true,
-                      color: Colors.green,
-                      onTap: () => onSelect(true),
-                    ),
-                    SizedBox(width: 32),
-                    _DiabeticOption(
-                      label: 'No',
-                      icon: Icons.cancel,
-                      selected: isDiabetic == false,
-                      color: Colors.red,
-                      onTap: () => onSelect(false),
-                    ),
-                  ],
-                ),
-                SizedBox(height: 36),
+              ],
+            ),
+            child: IconButton(
+              icon: Icon(Icons.arrow_back, color: theme.primaryColor, size: 24),
+              onPressed: onBack,
+            ),
+          ),
+        ),
+        SizedBox(height: 32),
+        Text('Are you diabetic?', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 28)),
+        SizedBox(height: 18),
+        Text('This helps us personalize your health plan.', style: TextStyle(color: Colors.grey[600], fontSize: 16)),
+        SizedBox(height: 32),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            _DiabeticOption(
+              label: 'Yes',
+              icon: Icons.check_circle,
+              selected: isDiabetic == true,
+              color: Colors.green,
+              onTap: () => onSelect(true),
+            ),
+            SizedBox(width: 32),
+            _DiabeticOption(
+              label: 'No',
+              icon: Icons.cancel,
+              selected: isDiabetic == false,
+              color: Colors.red,
+              onTap: () => onSelect(false),
+            ),
+          ],
+        ),
+        SizedBox(height: 36),
               ],
             ),
           ),
@@ -2905,18 +2905,18 @@ class _DiabeticStep extends StatelessWidget {
         SafeArea(
           minimum: EdgeInsets.only(left: 16, right: 16, bottom: 16),
           child: SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              onPressed: onContinue,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: theme.primaryColor,
-                foregroundColor: Colors.white,
-                padding: EdgeInsets.symmetric(vertical: 20),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                elevation: 0,
-                textStyle: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-              child: Text('Continue'),
+          width: double.infinity,
+          child: ElevatedButton(
+            onPressed: onContinue,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: theme.primaryColor,
+              foregroundColor: Colors.white,
+              padding: EdgeInsets.symmetric(vertical: 20),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              elevation: 0,
+              textStyle: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            child: Text('Continue'),
             ),
           ),
         ),
@@ -2981,64 +2981,64 @@ class _WaterIntakeStep extends StatelessWidget {
         Expanded(
           child: SingleChildScrollView(
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(12),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.05),
-                          blurRadius: 8,
-                          offset: Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                    child: IconButton(
-                      icon: Icon(Icons.arrow_back, color: theme.primaryColor, size: 24),
-                      onPressed: onBack,
-                    ),
-                  ),
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        Align(
+          alignment: Alignment.centerLeft,
+          child: Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.05),
+                  blurRadius: 8,
+                  offset: Offset(0, 2),
                 ),
-                SizedBox(height: 32),
-                Text('How much water do you drink per day?', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 28)),
-                SizedBox(height: 18),
-                Text('Staying hydrated is key to your health.', style: TextStyle(color: Colors.grey[600], fontSize: 16)),
-                SizedBox(height: 32),
-                Wrap(
-                  spacing: 18,
-                  runSpacing: 18,
-                  children: options.map((opt) {
-                    final isSelected = selectedWaterIntake == opt;
-                    return GestureDetector(
-                      onTap: () => onSelect(opt),
-                      child: AnimatedContainer(
-                        duration: Duration(milliseconds: 180),
-                        padding: EdgeInsets.symmetric(vertical: 18, horizontal: 28),
-                        decoration: BoxDecoration(
-                          color: isSelected ? theme.primaryColor.withOpacity(0.12) : Colors.white,
-                          borderRadius: BorderRadius.circular(18),
-                          border: Border.all(color: isSelected ? theme.primaryColor : Colors.grey[300]!, width: 2),
-                          boxShadow: isSelected
-                              ? [BoxShadow(color: theme.primaryColor.withOpacity(0.08), blurRadius: 12, offset: Offset(0, 4))]
-                              : [],
-                        ),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(Icons.water_drop, color: isSelected ? theme.primaryColor : Colors.blue[200], size: 36),
-                            SizedBox(height: 8),
-                            Text(opt, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 22, color: isSelected ? theme.primaryColor : Colors.black)),
-                          ],
-                        ),
-                      ),
-                    );
-                  }).toList(),
+              ],
+            ),
+            child: IconButton(
+              icon: Icon(Icons.arrow_back, color: theme.primaryColor, size: 24),
+              onPressed: onBack,
+            ),
+          ),
+        ),
+        SizedBox(height: 32),
+        Text('How much water do you drink per day?', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 28)),
+        SizedBox(height: 18),
+        Text('Staying hydrated is key to your health.', style: TextStyle(color: Colors.grey[600], fontSize: 16)),
+        SizedBox(height: 32),
+        Wrap(
+          spacing: 18,
+          runSpacing: 18,
+          children: options.map((opt) {
+            final isSelected = selectedWaterIntake == opt;
+            return GestureDetector(
+              onTap: () => onSelect(opt),
+              child: AnimatedContainer(
+                duration: Duration(milliseconds: 180),
+                padding: EdgeInsets.symmetric(vertical: 18, horizontal: 28),
+                decoration: BoxDecoration(
+                  color: isSelected ? theme.primaryColor.withOpacity(0.12) : Colors.white,
+                  borderRadius: BorderRadius.circular(18),
+                  border: Border.all(color: isSelected ? theme.primaryColor : Colors.grey[300]!, width: 2),
+                  boxShadow: isSelected
+                      ? [BoxShadow(color: theme.primaryColor.withOpacity(0.08), blurRadius: 12, offset: Offset(0, 4))]
+                      : [],
                 ),
-                SizedBox(height: 36),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.water_drop, color: isSelected ? theme.primaryColor : Colors.blue[200], size: 36),
+                    SizedBox(height: 8),
+                    Text(opt, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 22, color: isSelected ? theme.primaryColor : Colors.black)),
+                  ],
+                ),
+              ),
+            );
+          }).toList(),
+        ),
+        SizedBox(height: 36),
               ],
             ),
           ),
@@ -3046,18 +3046,18 @@ class _WaterIntakeStep extends StatelessWidget {
         SafeArea(
           minimum: EdgeInsets.only(left: 16, right: 16, bottom: 16),
           child: SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              onPressed: onContinue,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: theme.primaryColor,
-                foregroundColor: Colors.white,
-                padding: EdgeInsets.symmetric(vertical: 20),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                elevation: 0,
-                textStyle: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-              child: Text('Continue'),
+          width: double.infinity,
+          child: ElevatedButton(
+            onPressed: onContinue,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: theme.primaryColor,
+              foregroundColor: Colors.white,
+              padding: EdgeInsets.symmetric(vertical: 20),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              elevation: 0,
+              textStyle: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            child: Text('Continue'),
             ),
           ),
         ),
