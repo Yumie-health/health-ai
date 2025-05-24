@@ -294,7 +294,7 @@ class _SplashOrAppState extends State<SplashOrApp> with SingleTickerProviderStat
                       ),
                       child: Padding(
                         padding: const EdgeInsets.all(16.0),
-                        child: Image.asset('assets/logo.jpg', fit: BoxFit.contain),
+                        child: Image.asset('assets/logo.png', fit: BoxFit.contain),
                       ),
                     ),
                     const SizedBox(height: 28),
@@ -732,7 +732,7 @@ class _AuthScreenState extends State<AuthScreen> {
                         shape: BoxShape.circle,
                       ),
                       padding: const EdgeInsets.all(16),
-                      child: Image.asset('assets/logo.jpg', height: 56, width: 56, fit: BoxFit.contain),
+                      child: Image.asset('assets/logo.png', height: 56, width: 56, fit: BoxFit.contain),
                     ),
                     const SizedBox(height: 24),
                     Text(
@@ -3857,7 +3857,7 @@ class _CoachScreenState extends State<CoachScreen> with TickerProviderStateMixin
                   ),
                   padding: EdgeInsets.all(4),
                   child: Image.asset(
-                    'assets/logo.jpg',
+                    'assets/logo.png',
                     width: 48,
                     height: 48,
                     fit: BoxFit.contain,
