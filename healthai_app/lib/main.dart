@@ -23,6 +23,9 @@ import 'package:device_info_plus/device_info_plus.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'services/ai_service.dart';
 import 'package:lottie/lottie.dart';
+import 'generated_meal_fridge_page.dart';
+import 'package:flutter/services.dart';
+import 'dart:convert';
 
 // Define the color palette
 const Color kPrimaryGreen = Color(0xFF4CAF50); // Soft green
@@ -1535,19 +1538,11 @@ class _MainNavScreenState extends State<MainNavScreen> with TickerProviderStateM
               ),
             ),
           ),
-        ),
-        // FAB always above the footer
-        // FAB always above the footer
-        Positioned(
-          left: 0,
-          right: 0,
-          bottom: 38, // Raise FAB above the footer
-          child: Center(
-            child: _AnimatedFab(
+          floatingActionButton: _AnimatedFab(
               expanded: _fabExpanded,
               onTap: () => _onItemTapped(2),
             ),
-          ),
+          floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
         ),
         // Overlay for Log/Scan
         if (_fabExpanded)
@@ -2296,6 +2291,8 @@ class _QuickActionCardState extends State<_QuickActionCard> with SingleTickerPro
           child: child,
         ),
       child: Container(
+          height: 80, // fixed height for all cards
+          width: double.infinity,
         decoration: BoxDecoration(
             color: widget.color.withOpacity(0.08),
           borderRadius: BorderRadius.circular(16),
@@ -2316,9 +2313,20 @@ class _QuickActionCardState extends State<_QuickActionCard> with SingleTickerPro
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                    Text(widget.label, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                    Text(widget.subtitle, style: TextStyle(color: Colors.grey[500], fontSize: 13)),
+                    Text(
+                      widget.label,
+                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    Text(
+                      widget.subtitle,
+                      style: TextStyle(color: Colors.grey[500], fontSize: 13),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                 ],
               ),
             ),
@@ -4127,35 +4135,35 @@ class _CoachScreenState extends State<CoachScreen> with TickerProviderStateMixin
                                         )
                                       : _aiHealthInsight != null
                                           ? Builder(
-                                              builder: (context) {
-                                                // Remove intro/outro and split into up to 3 bullet points
-                                                final lines = _aiHealthInsight!
-                                                  .replaceAll(RegExp(r'^(hey|hi|hello)[^\n]*\n*', caseSensitive: false), '')
-                                                  .replaceAll(RegExp(r"you're doing great.*", caseSensitive: false), '')
-                                                  .split(RegExp(r'\n+|- '))
-                                                  .map((l) => l.trim())
-                                                  .where((l) => l.isNotEmpty)
-                                                  .take(3)
-                                                  .toList();
-                                                return Column(
-                                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                                  children: [
-                                                    for (final line in lines)
-                                                      Padding(
-                                                        padding: const EdgeInsets.only(bottom: 8),
-                                                        child: Row(
-                                                          crossAxisAlignment: CrossAxisAlignment.start,
-                                                          children: [
-                                                            Container(width: 8, height: 8, margin: EdgeInsets.only(top: 7), decoration: BoxDecoration(color: kPrimaryGreen, shape: BoxShape.circle)),
-                                                            SizedBox(width: 10),
-                                                            Expanded(child: Text(line, style: TextStyle(fontSize: 16, color: kPrimaryGreen, fontWeight: FontWeight.w600))),
-                                                          ],
-                                                        ),
-                                                      ),
-                                                  ],
-                                                );
-                                              },
-                                            )
+                                        builder: (context) {
+                                          // Remove intro/outro and split into up to 3 bullet points
+                                          final lines = _aiHealthInsight!
+                                            .replaceAll(RegExp(r'^(hey|hi|hello)[^\n]*\n*', caseSensitive: false), '')
+                                            .replaceAll(RegExp(r"you're doing great.*", caseSensitive: false), '')
+                                            .split(RegExp(r'\n+|- '))
+                                            .map((l) => l.trim())
+                                            .where((l) => l.isNotEmpty)
+                                            .take(3)
+                                            .toList();
+                                          return Column(
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            children: [
+                                              for (final line in lines)
+                                                Padding(
+                                                  padding: const EdgeInsets.only(bottom: 8),
+                                                  child: Row(
+                                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                                    children: [
+                                                      Container(width: 8, height: 8, margin: EdgeInsets.only(top: 7), decoration: BoxDecoration(color: kPrimaryGreen, shape: BoxShape.circle)),
+                                                      SizedBox(width: 10),
+                                                      Expanded(child: Text(line, style: TextStyle(fontSize: 16, color: kPrimaryGreen, fontWeight: FontWeight.w600))),
+                                                    ],
+                                                  ),
+                                                ),
+                                            ],
+                                          );
+                                        },
+                                      )
                                           : Text('No insight available.', style: TextStyle(fontSize: 16, color: Colors.grey[800])),
                                     SizedBox(height: 10),
                                     OutlinedButton(
@@ -4400,9 +4408,33 @@ class _FoodScreenState extends State<FoodScreen> with TickerProviderStateMixin {
 
   List<Map<String, dynamic>> _shuffledRecipes = [];
 
-  // Add meal type bar state
-  final List<String> _mealTypes = ['Breakfast', 'Lunch', 'Dinner', 'Snack'];
-  int _selectedMealTypeIndex = 0;
+  // Helper to get current meal period
+  String get _currentMealPeriod {
+    final hour = DateTime.now().hour;
+    if (hour >= 5 && hour < 11) return 'breakfast';
+    if (hour >= 11 && hour < 15) return 'lunch';
+    if (hour >= 15 && hour < 20) return 'dinner';
+    return 'snack';
+  }
+
+  String get _currentMealLabel {
+    final period = _currentMealPeriod;
+    switch (period) {
+      case 'breakfast':
+        return 'Morning Meals ☀️';
+      case 'lunch':
+        return 'Lunch Time! 🌤️';
+      case 'dinner':
+        return 'Dinner Tastic! 🌇';
+      default:
+        return '🌙 Healthy Snacks!';
+    }
+  }
+
+  List<Map<String, dynamic>> get _filteredRecipesByTime {
+    final period = _currentMealPeriod;
+    return _shuffledRecipes.where((r) => (r['mealType'] ?? '').toLowerCase() == period).toList();
+  }
 
   late AnimationController _tabController;
   late AnimationController _calendarController;
@@ -4416,6 +4448,42 @@ class _FoodScreenState extends State<FoodScreen> with TickerProviderStateMixin {
   // Add state for meal type filter in Food page
   int _selectedFoodMealTypeIndex = 0;
   final List<String> _foodMealTypes = ['Breakfast', 'Lunch', 'Dinner', 'Snack'];
+
+  // Add cache for AI meals
+  Map<String, List<Map<String, dynamic>>> _cachedAIMeals = {};
+  String? _cachedPeriodKey;
+  DateTime? _cachedDate;
+
+  Future<List<Map<String, dynamic>>?> _getOrFetchAIMeals() async {
+    final prefs = await SharedPreferences.getInstance();
+    final period = _currentMealPeriod;
+    final today = DateTime.now();
+    final dateKey = '${today.year}-${today.month}-${today.day}';
+    final cacheKey = 'ai_meals_${period}_$dateKey';
+    // If already loaded in memory for this period and day
+    if (_cachedPeriodKey == cacheKey && _cachedAIMeals[cacheKey] != null) {
+      return _cachedAIMeals[cacheKey]!;
+    }
+    // Try to load from SharedPreferences
+    final cachedJson = prefs.getString(cacheKey);
+    if (cachedJson != null) {
+      final List<dynamic> decoded = jsonDecode(cachedJson);
+      final meals = decoded.cast<Map<String, dynamic>>();
+      _cachedAIMeals[cacheKey] = meals;
+      _cachedPeriodKey = cacheKey;
+      _cachedDate = today;
+      return meals;
+    }
+    // Fetch from AI
+    final meals = await AIService().getSuggestedMeals(mealPeriod: period);
+    if (meals != null) {
+      prefs.setString(cacheKey, jsonEncode(meals));
+      _cachedAIMeals[cacheKey] = meals;
+      _cachedPeriodKey = cacheKey;
+      _cachedDate = today;
+    }
+    return meals;
+  }
 
   @override
   void initState() {
@@ -4448,11 +4516,6 @@ class _FoodScreenState extends State<FoodScreen> with TickerProviderStateMixin {
     _suggestedController.forward();
   }
 
-  // Filter recipes by selected meal type
-  List<Map<String, dynamic>> get _filteredRecipes {
-    final type = _mealTypes[_selectedMealTypeIndex];
-    return _shuffledRecipes.where((r) => (r['mealType'] ?? '').toLowerCase() == type.toLowerCase()).toList();
-  }
 
   Future<void> _onRefresh() async {
     _shuffleRecipes();
@@ -4692,101 +4755,153 @@ class _FoodScreenState extends State<FoodScreen> with TickerProviderStateMixin {
                         position: Tween<Offset>(begin: Offset(0, 0.06), end: Offset.zero).animate(_suggestedController),
                         child: RefreshIndicator(
                           onRefresh: _onRefresh,
-                          child: ListView(
+                          child: FutureBuilder<List<Map<String, dynamic>>?>(
+                            future: _getOrFetchAIMeals(),
+                            builder: (context, snapshot) {
+                              if (snapshot.connectionState == ConnectionState.waiting) {
+                                return SizedBox(
+                                  height: 320,
+                                  child: Center(child: CircularProgressIndicator()),
+                                );
+                              }
+                              if (snapshot.hasError || !snapshot.hasData || snapshot.data == null) {
+                                return Padding(
+                                  padding: const EdgeInsets.all(32),
+                                  child: Center(child: Text('Could not load AI meal suggestions. Please try again later.', style: TextStyle(color: Colors.grey[600], fontSize: 16))),
+                                );
+                              }
+                              final meals = snapshot.data!;
+                              return ListView(
                             padding: const EdgeInsets.only(left: 0, right: 0, top: 0, bottom: 24),
                             children: [
-                              // Meal type bar + shuffle icon
                               Padding(
-                                padding: const EdgeInsets.fromLTRB(16, 18, 16, 0),
-                                child: SingleChildScrollView(
-                                  scrollDirection: Axis.horizontal,
-                                  child: Row(
-                                    children: List.generate(_mealTypes.length, (i) {
-                                      final selected = i == _selectedMealTypeIndex;
-                                      return Padding(
-                                        padding: EdgeInsets.only(right: i < _mealTypes.length - 1 ? 10 : 0),
-                                        child: GestureDetector(
-                                          onTap: () => setState(() => _selectedMealTypeIndex = i),
-                                          child: AnimatedContainer(
-                                            duration: Duration(milliseconds: 180),
-                                            padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                                            decoration: BoxDecoration(
-                                              color: selected ? kPrimaryGreen : Color(0xFFF1F1F1),
-                                              borderRadius: BorderRadius.circular(22),
-                                            ),
-                                            child: Text(
-                                              _mealTypes[i],
-                                              style: TextStyle(
-                                                color: selected ? Colors.white : Colors.grey[700],
-                                                fontWeight: FontWeight.w600,
-                                                fontSize: 17,
-                                              ),
-                                            ),
-                                          ),
-                                        ),
-                                      );
-                                    }),
+                                    padding: const EdgeInsets.fromLTRB(20, 18, 20, 0),
+                                    child: Text(_currentMealLabel, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 22)),
                                   ),
-                                ),
-                              ),
-                              // Recipe Suggestions title + shuffle icon
-                              Padding(
-                                padding: const EdgeInsets.fromLTRB(20, 18, 20, 0),
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Text('Recipe Suggestions', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20)),
-                                    IconButton(
-                                      icon: const Icon(Icons.shuffle, color: kPrimaryGreen),
-                                      tooltip: 'Shuffle Recipes',
-                                      onPressed: _shuffleRecipes,
+                                  ...List.generate(meals.length, (i) {
+                                    final meal = meals[i];
+                                    // Log the image URL for debugging
+                                    print('[AI SUGGESTED MEAL IMAGE] ${meal['image']}');
+                                      return Padding(
+                                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                                      child: Stack(
+                                        children: [
+                                          Container(
+                                            height: 180,
+                                            decoration: BoxDecoration(
+                                              color: Colors.white,
+                                              borderRadius: BorderRadius.circular(20),
+                                              boxShadow: [
+                                                BoxShadow(
+                                                  color: Colors.black.withOpacity(0.04),
+                                                  blurRadius: 10,
+                                                  offset: const Offset(0, 4),
+                                                ),
+                                              ],
+                                            ),
+                                            child: Row(
+                                              crossAxisAlignment: CrossAxisAlignment.start,
+                                              children: [
+                                                // AI image
+                                                Container(
+                                                  width: 90,
+                                                  height: 90,
+                                                  margin: const EdgeInsets.all(16),
+                                                  decoration: BoxDecoration(
+                                                    color: Colors.grey[100],
+                                                    borderRadius: BorderRadius.circular(16),
+                                                  ),
+                                                  child: meal['image'] != null && (meal['image'] as String).isNotEmpty
+                                                      ? ClipRRect(
+                                                          borderRadius: BorderRadius.circular(16),
+                                                          child: Image.network(
+                                                            meal['image'],
+                                                            fit: BoxFit.cover,
+                                                            width: 90,
+                                                            height: 90,
+                                                            errorBuilder: (context, error, stackTrace) => Icon(Icons.fastfood, color: Colors.orange[300], size: 40),
+                                                          ),
+                                                        )
+                                                      : Icon(Icons.fastfood, color: Colors.orange[300], size: 40),
+                                                ),
+                                                Expanded(
+                                                  child: Padding(
+                                                    padding: const EdgeInsets.fromLTRB(0, 18, 16, 18),
+                                                    child: Column(
+                                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                                      mainAxisAlignment: MainAxisAlignment.center,
+                                                      children: [
+                                                        Row(
+                                                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                                          children: [
+                                                            Text(meal['meal_name'] as String? ?? '', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+                                                            Text('${meal['calories']} cal', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16)),
+                                                          ],
+                                                        ),
+                                                        const SizedBox(height: 8),
+                                                        Text(meal['time'] as String? ?? '5 mins', style: TextStyle(color: Colors.grey[600], fontSize: 15)),
+                                                        const SizedBox(height: 8),
+                                                        Row(
+                                                          children: [
+                                                            for (final tag in (meal['benefits'] as List<dynamic>? ?? []))
+                                                              Container(
+                                                                margin: const EdgeInsets.only(right: 8),
+                                                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                                                decoration: BoxDecoration(
+                                                                  color: Colors.orange[50],
+                                                                  borderRadius: BorderRadius.circular(10),
+                                                                ),
+                                                                child: Text(tag.toString(), style: TextStyle(color: Colors.orange[700], fontWeight: FontWeight.w500, fontSize: 13)),
+                                                              ),
+                                                          ],
                                     ),
                                   ],
                                 ),
                               ),
-                              // Big cards (first 3)
-                              ..._filteredRecipes.take(3).map((recipe) {
-                                final idx = _filteredRecipes.indexOf(recipe);
-                                return TweenAnimationBuilder<double>(
-                                  tween: Tween<double>(begin: 0, end: 1),
-                                  duration: Duration(milliseconds: 400 + idx * 100),
-                                  builder: (context, value, child) => Opacity(
-                                    opacity: value,
-                                    child: Transform.translate(
-                                      offset: Offset(0, (1 - value) * 32),
-                                      child: _RecipeCardBig(recipe: recipe),
-                                    ),
-                                  ),
-                                );
-                              }).toList(),
-                              // Grid of smaller cards
-                              if (_filteredRecipes.length > 3)
-                                Padding(
-                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-                                  child: GridView.count(
-                                    crossAxisCount: 2,
-                                    shrinkWrap: true,
-                                    physics: NeverScrollableScrollPhysics(),
-                                    mainAxisSpacing: 12,
-                                    crossAxisSpacing: 12,
-                                    childAspectRatio: 1.5,
-                                    children: [
-                                      for (final recipe in _filteredRecipes.skip(3))
-                                        TweenAnimationBuilder<double>(
-                                          tween: Tween<double>(begin: 0, end: 1),
-                                          duration: Duration(milliseconds: 400 + (_filteredRecipes.indexOf(recipe) - 3) * 80),
-                                          builder: (context, value, child) => Opacity(
-                                            opacity: value,
-                                            child: Transform.translate(
-                                              offset: Offset(0, (1 - value) * 20),
-                                              child: _RecipeCardSmall(recipe: recipe),
+                                                ),
+                                              ],
                                             ),
                                           ),
-                                        ),
-                                    ],
+                                          // Plus button at bottom right, floating over the card
+                                          Positioned(
+                                            bottom: 18,
+                                            right: 18,
+                                            child: Material(
+                                              color: Colors.transparent,
+                                              child: InkWell(
+                                                borderRadius: BorderRadius.circular(20),
+                                                onTap: () {
+                                                  Navigator.of(context).push(
+                                                    MaterialPageRoute(
+                                                      builder: (_) => GeneratedMealFromFridgePage(meal: meal),
+                                                    ),
+                                                  );
+                                                },
+                                                child: Container(
+                                                  decoration: BoxDecoration(
+                                                    color: Colors.green,
+                                                    borderRadius: BorderRadius.circular(20),
+                                                    boxShadow: [
+                                                      BoxShadow(
+                                                        color: Colors.green.withOpacity(0.12),
+                                                        blurRadius: 6,
+                                                        offset: Offset(0, 2),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                  padding: const EdgeInsets.all(8),
+                                                  child: Icon(Icons.add, color: Colors.white, size: 24),
+                                                ),
+                                              ),
                                   ),
                                 ),
                             ],
+                                      ),
+                                    );
+                                  }),
+                                ],
+                              );
+                            },
                           ),
                         ),
                       ),
@@ -5279,22 +5394,22 @@ class SettingsPage extends StatelessWidget {
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
               elevation: 2,
               child: Column(
-                children: [
-                  SwitchListTile(
+        children: [
+          SwitchListTile(
                     title: Text('Dark Mode', style: TextStyle(fontWeight: FontWeight.w600)),
-                    subtitle: Text('Enable dark theme'),
-                    value: prefs.darkMode,
-                    onChanged: (v) => prefs.setDarkMode(v),
-                    secondary: Icon(Icons.dark_mode),
-                  ),
+            subtitle: Text('Enable dark theme'),
+            value: prefs.darkMode,
+            onChanged: (v) => prefs.setDarkMode(v),
+            secondary: Icon(Icons.dark_mode),
+          ),
                   Divider(height: 1, thickness: 1, indent: 16, endIndent: 16),
-                  SwitchListTile(
+          SwitchListTile(
                     title: Text('Use Metric Units', style: TextStyle(fontWeight: FontWeight.w600)),
-                    subtitle: Text('kg/cm or lb/ft'),
-                    value: prefs.useMetric,
-                    onChanged: (v) => prefs.setUnits(v),
-                    secondary: Icon(Icons.straighten),
-                  ),
+            subtitle: Text('kg/cm or lb/ft'),
+            value: prefs.useMetric,
+            onChanged: (v) => prefs.setUnits(v),
+            secondary: Icon(Icons.straighten),
+          ),
                 ],
               ),
             ),

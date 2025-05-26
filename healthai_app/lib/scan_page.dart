@@ -172,11 +172,11 @@ class _ScanPageState extends State<ScanPage> {
           ),
         );
       } else {
-        Navigator.of(context).push(
-          MaterialPageRoute(
-            builder: (_) => ScanResultPage(imagePath: picked.path),
-          ),
-        );
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) => ScanResultPage(imagePath: picked.path),
+        ),
+      );
       }
     }
   }

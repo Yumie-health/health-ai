@@ -201,117 +201,117 @@ class _ScanResultFridgePageState extends State<ScanResultFridgePage> {
             ),
           )
         : Column(
-            children: [
-              // Image preview
-              Container(
-                width: double.infinity,
-                color: Colors.black,
-                height: 220,
-                child: Stack(
-                  children: [
-                    Positioned.fill(
-                      child: Image.file(
-                        File(widget.imagePath),
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) => Center(child: Text('Failed to load image', style: TextStyle(color: Colors.white))),
-                      ),
-                    ),
-                    Positioned.fill(
-                      child: Container(
-                        color: Colors.black.withOpacity(0.25),
-                      ),
-                    ),
-                    Center(
-                      child: ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.white.withOpacity(0.85),
-                          foregroundColor: Colors.black,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
-                          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                        ),
-                        onPressed: () {
-                          showDialog(
-                            context: context,
-                            builder: (_) => Dialog(
-                              backgroundColor: Colors.black,
-                              child: InteractiveViewer(
-                                child: Image.file(File(widget.imagePath)),
-                              ),
-                            ),
-                          );
-                        },
-                        child: const Text('Preview Full Image', style: TextStyle(fontWeight: FontWeight.bold)),
-                      ),
-                    ),
-                  ],
+        children: [
+          // Image preview
+          Container(
+            width: double.infinity,
+            color: Colors.black,
+            height: 220,
+            child: Stack(
+              children: [
+                Positioned.fill(
+                  child: Image.file(
+                    File(widget.imagePath),
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) => Center(child: Text('Failed to load image', style: TextStyle(color: Colors.white))),
+                  ),
                 ),
-              ),
-              // Generate Meal button
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
-                child: SizedBox(
-                  width: double.infinity,
-                  height: 56,
+                Positioned.fill(
+                  child: Container(
+                    color: Colors.black.withOpacity(0.25),
+                  ),
+                ),
+                Center(
                   child: ElevatedButton(
-                    onPressed: _ingredients.isEmpty || _isGeneratingMeal ? null : _generateMealFromFridge,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.green,
-                      foregroundColor: Colors.white,
-                      textStyle: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                      backgroundColor: Colors.white.withOpacity(0.85),
+                      foregroundColor: Colors.black,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
+                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                     ),
+                    onPressed: () {
+                      showDialog(
+                        context: context,
+                        builder: (_) => Dialog(
+                          backgroundColor: Colors.black,
+                          child: InteractiveViewer(
+                            child: Image.file(File(widget.imagePath)),
+                          ),
+                        ),
+                      );
+                    },
+                    child: const Text('Preview Full Image', style: TextStyle(fontWeight: FontWeight.bold)),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          // Generate Meal button
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+            child: SizedBox(
+              width: double.infinity,
+              height: 56,
+              child: ElevatedButton(
+                    onPressed: _ingredients.isEmpty || _isGeneratingMeal ? null : _generateMealFromFridge,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.green,
+                  foregroundColor: Colors.white,
+                  textStyle: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                ),
                     child: _isGeneratingMeal
                       ? SizedBox(width: 28, height: 28, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 3))
                       : const Text('Generate Meal'),
-                  ),
-                ),
               ),
-              // Fridge items box
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24),
+            ),
+          ),
+          // Fridge items box
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24),
                 child: Card(
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                   elevation: 2,
                   margin: EdgeInsets.zero,
                   child: Padding(
-                    padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(16),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text('Detected Fridge Items', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 17, color: Colors.green[700])),
                         SizedBox(height: 10),
                         _ingredients.isEmpty
-                          ? const Center(child: Text('No fridge items detected.', style: TextStyle(color: Colors.grey)))
+                  ? const Center(child: Text('No fridge items detected.', style: TextStyle(color: Colors.grey)))
                           : Wrap(
                               spacing: 8,
                               runSpacing: 8,
                               children: _ingredients.map((item) => Chip(label: Text(item))).toList(),
                             ),
                       ],
+                      ),
                     ),
-                  ),
-                ),
-              ),
-              // Discard button
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
-                child: SizedBox(
-                  width: double.infinity,
-                  height: 48,
-                  child: ElevatedButton(
-                    onPressed: _discard,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.red,
-                      foregroundColor: Colors.white,
-                      textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                    ),
-                    child: const Text('Discard'),
-                  ),
-                ),
-              ),
-            ],
+            ),
           ),
+          // Discard button
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+            child: SizedBox(
+              width: double.infinity,
+              height: 48,
+              child: ElevatedButton(
+                onPressed: _discard,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.red,
+                  foregroundColor: Colors.white,
+                  textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                ),
+                child: const Text('Discard'),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 } 

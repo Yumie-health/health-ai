@@ -97,14 +97,14 @@ class _ScanResultPageState extends State<ScanResultPage> {
       String? imageUrl;
       // Upload image to Firebase Storage or use fallback
       if (widget.imagePath.isNotEmpty && File(widget.imagePath).existsSync()) {
-        final file = File(widget.imagePath);
-        final fileName = 'meal_${DateTime.now().millisecondsSinceEpoch}.jpg';
-        final ref = FirebaseStorage.instance.ref().child('meal_images/${user.uid}/$fileName');
-        final uploadTask = await ref.putFile(file);
-        if (uploadTask.state == TaskState.success) {
-          imageUrl = await ref.getDownloadURL();
-        } else {
-          throw Exception('Image upload failed');
+      final file = File(widget.imagePath);
+      final fileName = 'meal_${DateTime.now().millisecondsSinceEpoch}.jpg';
+      final ref = FirebaseStorage.instance.ref().child('meal_images/${user.uid}/$fileName');
+      final uploadTask = await ref.putFile(file);
+      if (uploadTask.state == TaskState.success) {
+        imageUrl = await ref.getDownloadURL();
+      } else {
+        throw Exception('Image upload failed');
         }
       } else {
         imageUrl = 'assets/meal_icon.png'; // Fallback asset path
@@ -205,49 +205,49 @@ class _ScanResultPageState extends State<ScanResultPage> {
         children: [
           // Image preview (only if imagePath is not empty)
           if (widget.imagePath.isNotEmpty)
-            Container(
-              width: double.infinity,
-              color: Colors.black,
-              height: 220,
-              child: Stack(
-                children: [
-                  Positioned.fill(
-                    child: Image.file(
-                      File(widget.imagePath),
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) => Center(child: Text('Failed to load image', style: TextStyle(color: Colors.white))),
-                    ),
+          Container(
+            width: double.infinity,
+            color: Colors.black,
+            height: 220,
+            child: Stack(
+              children: [
+                Positioned.fill(
+                  child: Image.file(
+                    File(widget.imagePath),
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) => Center(child: Text('Failed to load image', style: TextStyle(color: Colors.white))),
                   ),
-                  Positioned.fill(
-                    child: Container(
-                      color: Colors.black.withOpacity(0.25),
-                    ),
+                ),
+                Positioned.fill(
+                  child: Container(
+                    color: Colors.black.withOpacity(0.25),
                   ),
-                  Center(
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.white.withOpacity(0.85),
-                        foregroundColor: Colors.black,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
-                        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                      ),
-                      onPressed: () {
-                        showDialog(
-                          context: context,
-                          builder: (_) => Dialog(
-                            backgroundColor: Colors.black,
-                            child: InteractiveViewer(
-                              child: Image.file(File(widget.imagePath)),
-                            ),
+                ),
+                Center(
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.white.withOpacity(0.85),
+                      foregroundColor: Colors.black,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
+                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                    ),
+                    onPressed: () {
+                      showDialog(
+                        context: context,
+                        builder: (_) => Dialog(
+                          backgroundColor: Colors.black,
+                          child: InteractiveViewer(
+                            child: Image.file(File(widget.imagePath)),
                           ),
-                        );
-                      },
-                      child: const Text('Preview Full Image', style: TextStyle(fontWeight: FontWeight.bold)),
-                    ),
+                        ),
+                      );
+                    },
+                    child: const Text('Preview Full Image', style: TextStyle(fontWeight: FontWeight.bold)),
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
+          ),
           Expanded(
             child: SingleChildScrollView(
               padding: const EdgeInsets.all(20),

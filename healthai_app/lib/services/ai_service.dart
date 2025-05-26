@@ -364,4 +364,57 @@ Respond ONLY with valid JSON.
       return null;
     }
   }
+
+  /// Get AI-powered suggested meals for a given meal period
+  Future<List<Map<String, dynamic>>?> getSuggestedMeals({required String mealPeriod}) async {
+    final prompt = '''
+You are a nutrition AI. Suggest 3 healthy $mealPeriod meals. For each meal, provide:
+- image: a direct Foodiesfeed.com image URL (relevant to the meal, e.g. https://www.foodiesfeed.com/free-food-photo/food-photo-12345/)
+- meal_name: string (max 30 characters)
+- time: string (e.g. "10 mins")
+- benefits: array of 2 short strings (e.g. ["High Protein", "Low Sugar"])
+- calories: integer
+- protein: integer
+- fat: integer
+- carbs: integer
+- ingredients: array of strings
+- recipe: array of steps (strings)
+Respond ONLY with a JSON array of 3 objects, no extra text, no explanations, no markdown.
+''';
+    final headers = {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer $_openAIApiKey',
+    };
+    final body = jsonEncode({
+      'model': 'gpt-4o-mini',
+      'messages': [
+        {'role': 'system', 'content': prompt},
+        {'role': 'user', 'content': prompt},
+      ],
+      'max_tokens': 900,
+      'temperature': 0.7,
+    });
+    final response = await http.post(Uri.parse(_apiUrl), headers: headers, body: body);
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      final content = data['choices'][0]['message']['content'];
+      try {
+        // Try to extract JSON array if wrapped in code block
+        final codeBlockRegex = RegExp(r'```(?:json)?\s*([\s\S]*?)\s*```', multiLine: true, caseSensitive: false);
+        final match = codeBlockRegex.firstMatch(content);
+        final jsonString = match != null ? match.group(1)!.trim() : content.trim();
+        final meals = jsonDecode(jsonString);
+        if (meals is List) {
+          return meals.cast<Map<String, dynamic>>();
+        }
+        return null;
+      } catch (e) {
+        print('Failed to parse AI suggested meals JSON: $e\n$content');
+        return null;
+      }
+    } else {
+      print('AI suggested meals error: \\${response.statusCode} \\${response.body}');
+      return null;
+    }
+  }
 } 
