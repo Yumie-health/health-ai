@@ -2588,66 +2588,70 @@ class _MealCardModernState extends State<_MealCardModern> {
       child: Column(
         children: [
           Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-              // Meal image placeholder
-          Container(
-                width: 48,
-                height: 48,
-            decoration: BoxDecoration(
-              color: kContainerGrey,
-              borderRadius: BorderRadius.circular(12),
-            ),
-                child: meal.imageUrl != null && meal.imageUrl!.isNotEmpty
-                    ? ClipRRect(
-                        borderRadius: BorderRadius.circular(12),
-                        child: Image.network(
-                          meal.imageUrl!,
-                          fit: BoxFit.cover,
-                          width: 48,
-                          height: 48,
-                          errorBuilder: (context, error, stackTrace) => Icon(Icons.fastfood, color: kPrimaryGreen, size: 28),
-                        ),
-                      )
-                    : Icon(Icons.fastfood, color: kPrimaryGreen, size: 28),
-          ),
-              const SizedBox(width: 10),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Meal image
+              FutureBuilder<String?>(
+                future: meal.imageUrl != null && meal.imageUrl!.isNotEmpty
+                    ? Future.value(meal.imageUrl)
+                    : PexelsService.fetchMealImage(meal.name),
+                builder: (context, snapshot) {
+                  final imageUrl = snapshot.data;
+                  return ClipRRect(
+                    borderRadius: BorderRadius.circular(16),
+                    child: imageUrl != null
+                        ? Image.network(
+                            imageUrl,
+                            width: 70,
+                            height: 70,
+                            fit: BoxFit.cover,
+                          )
+                        : Container(
+                            width: 70,
+                            height: 70,
+                            color: Colors.grey[200],
+                            child: Icon(Icons.fastfood, color: Colors.grey[400]),
+                          ),
+                  );
+                },
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(meal.mealType.capitalize(), style: TextStyle(color: kPrimaryGreen, fontWeight: FontWeight.w600)),
-                    const SizedBox(width: 8),
-                    Text(formatTime(meal.timestamp), style: TextStyle(color: Colors.grey[500], fontSize: 13)),
+                    Row(
+                      children: [
+                        Text(meal.mealType.capitalize(), style: TextStyle(color: kPrimaryGreen, fontWeight: FontWeight.w600)),
+                        const SizedBox(width: 8),
+                        Text(formatTime(meal.timestamp), style: TextStyle(color: Colors.grey[500], fontSize: 13)),
+                      ],
+                    ),
+                    const SizedBox(height: 2),
+                    Text(meal.name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                    const SizedBox(height: 6),
+                    Row(
+                      children: [
+                        _MacroTag(label: 'P', value: '${meal.protein}g', color: kSecondaryBlue),
+                        const SizedBox(width: 6),
+                        _MacroTag(label: 'C', value: '${meal.carbs}g', color: kAccentOrange),
+                        const SizedBox(width: 6),
+                        _MacroTag(label: 'F', value: '${meal.fat}g', color: kWarningRed),
+                      ],
+                    ),
                   ],
                 ),
-                const SizedBox(height: 2),
-                Text(meal.name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                const SizedBox(height: 6),
-                Row(
-                  children: [
-                    _MacroTag(label: 'P', value: '${meal.protein}g', color: kSecondaryBlue),
-                    const SizedBox(width: 6),
-                    _MacroTag(label: 'C', value: '${meal.carbs}g', color: kAccentOrange),
-                    const SizedBox(width: 6),
-                    _MacroTag(label: 'F', value: '${meal.fat}g', color: kWarningRed),
-                  ],
-                ),
-              ],
-            ),
-          ),
+              ),
               // Calories, delete, and dropdown in a vertical column
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
                   Row(
                     mainAxisSize: MainAxisSize.min,
-            children: [
-              Text('${meal.calories}', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+                    children: [
+                      Text('${meal.calories}', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
                       const SizedBox(width: 2),
-              Text('cal', style: TextStyle(color: Colors.grey[600], fontSize: 13)),
+                      Text('cal', style: TextStyle(color: Colors.grey[600], fontSize: 13)),
                       IconButton(
                         icon: Icon(Icons.delete, color: Colors.redAccent, size: 22),
                         tooltip: 'Delete meal',
@@ -2683,9 +2687,9 @@ class _MealCardModernState extends State<_MealCardModern> {
                         padding: EdgeInsets.zero,
                         constraints: BoxConstraints(),
                         onPressed: () => setState(() => _expanded = !_expanded),
-          ),
-        ],
-      ),
+                      ),
+                    ],
+                  ),
                 ],
               ),
             ],
@@ -2717,12 +2721,12 @@ class _MealCardModernState extends State<_MealCardModern> {
       ),
     );
   }
-  }
+}
 
-  String formatTime(DateTime dt) {
-    final h = dt.hour.toString().padLeft(2, '0');
-    final m = dt.minute.toString().padLeft(2, '0');
-    return '$h:$m';
+String formatTime(DateTime dt) {
+  final h = dt.hour.toString().padLeft(2, '0');
+  final m = dt.minute.toString().padLeft(2, '0');
+  return '$h:$m';
 }
 
 // Macro Tag
@@ -4990,151 +4994,156 @@ class _FoodScreenState extends State<FoodScreen> with TickerProviderStateMixin {
                                 );
                               }
                               final meals = snapshot.data!;
-                              return ListView(
-                            padding: const EdgeInsets.only(left: 0, right: 0, top: 0, bottom: 24),
-                            children: [
-                              Padding(
-                                    padding: const EdgeInsets.fromLTRB(20, 18, 20, 0),
-                                    child: Text(_currentMealLabel, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 22)),
-                                  ),
-                                  ...List.generate(meals.length, (i) {
-                                    final meal = meals[i];
-                                    // Log the image URL for debugging
-                                    print('[AI SUGGESTED MEAL IMAGE] ${meal['image']}');
+                              return SafeArea(
+                                child: ListView(
+                                  padding: const EdgeInsets.only(left: 0, right: 0, top: 0, bottom: 24),
+                                  children: [
+                                    Padding(
+                                      padding: const EdgeInsets.fromLTRB(20, 18, 20, 0),
+                                      child: Text(_currentMealLabel, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 22)),
+                                    ),
+                                    ...List.generate(meals.length, (i) {
+                                      final meal = meals[i];
+                                      // Log the image URL for debugging
+                                      print('[AI SUGGESTED MEAL IMAGE] ${meal['image']}');
                                       return Padding(
-                                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                                      child: Stack(
-                                        children: [
-                                          Container(
-                                            height: 180,
-                                            decoration: BoxDecoration(
-                                              color: Colors.white,
-                                              borderRadius: BorderRadius.circular(20),
-                                              boxShadow: [
-                                                BoxShadow(
-                                                  color: Colors.black.withOpacity(0.04),
-                                                  blurRadius: 10,
-                                                  offset: const Offset(0, 4),
-                                                ),
-                                              ],
-                                            ),
-                                            child: Row(
-                                              crossAxisAlignment: CrossAxisAlignment.start,
-                                              children: [
-                                                // AI image
-                                                Container(
-                                                  width: 90,
-                                                  height: 90,
-                                                  margin: const EdgeInsets.all(16),
-                                                  decoration: BoxDecoration(
-                                                    color: Colors.grey[100],
-                                                    borderRadius: BorderRadius.circular(16),
-                                            ),
-                                                  child: FutureBuilder<String?>(
-                                                    future: PexelsService.fetchMealImage(meal['meal_name'] as String? ?? ''),
+                                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24), // increased from 20
+                                        child: Stack(
+                                          children: [
+                                            Container(
+                                              padding: const EdgeInsets.fromLTRB(0, 24, 48, 24), // <-- increased top and bottom padding
+                                              decoration: BoxDecoration(
+                                                color: Colors.white,
+                                                borderRadius: BorderRadius.circular(20),
+                                                boxShadow: [
+                                                  BoxShadow(
+                                                    color: Colors.black.withOpacity(0.04),
+                                                    blurRadius: 10,
+                                                    offset: const Offset(0, 4),
+                                                  ),
+                                                ],
+                                              ),
+                                              child: Row(
+                                                crossAxisAlignment: CrossAxisAlignment.start,
+                                                children: [
+                                                  // Meal image
+                                                  FutureBuilder<String?>(
+                                                    future: meal['image'] != null && meal['image'].toString().isNotEmpty
+                                                      ? Future.value(meal['image'])
+                                                      : PexelsService.fetchMealImage(meal['meal_name'] as String? ?? ''),
                                                     builder: (context, snapshot) {
-                                                      if (snapshot.connectionState == ConnectionState.waiting) {
-                                                        return Center(
-                                                          child: SizedBox(
-                                                            width: 32,
-                                                            height: 32,
-                                                            child: CircularProgressIndicator(strokeWidth: 2, color: Colors.orange[300]),
-                                                          ),
-                                                        );
-                                                      }
                                                       final imageUrl = snapshot.data;
-                                                      if (imageUrl != null && imageUrl.isNotEmpty) {
-                                                        return ClipRRect(
-                                                          borderRadius: BorderRadius.circular(16),
-                                                          child: Image.network(
-                                                            imageUrl,
-                                                            fit: BoxFit.cover,
-                                                            width: 90,
-                                                            height: 90,
-                                                            errorBuilder: (context, error, stackTrace) => Icon(Icons.fastfood, color: Colors.orange[300], size: 40),
-                                            ),
-                                                        );
-                                                      }
-                                                      return Icon(Icons.fastfood, color: Colors.orange[300], size: 40);
+                                                      return ClipRRect(
+                                                        borderRadius: BorderRadius.circular(16),
+                                                        child: imageUrl != null
+                                                          ? Image.network(
+                                                              imageUrl,
+                                                              width: 70,
+                                                              height: 70,
+                                                              fit: BoxFit.cover,
+                                                            )
+                                                          : Container(
+                                                              width: 70,
+                                                              height: 70,
+                                                              color: Colors.grey[200],
+                                                              child: Icon(Icons.fastfood, color: Colors.grey[400]),
+                                                            ),
+                                                      );
                                                     },
-                                  ),
-                                ),
-                                                Expanded(
-                                                  child: Padding(
-                                                    padding: const EdgeInsets.fromLTRB(0, 18, 16, 18),
+                                                  ),
+                                                  const SizedBox(width: 14),
+                                                  // Meal info
+                                                  Expanded(
                                                     child: Column(
                                                       crossAxisAlignment: CrossAxisAlignment.start,
                                                       mainAxisAlignment: MainAxisAlignment.center,
                                                       children: [
                                                         Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                  children: [
-                                                            Text(meal['meal_name'] as String? ?? '', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
-                                                            Text('${meal['calories']} cal', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16)),
+                                                          children: [
+                                                            Expanded(
+                                                              child: Text(
+                                                                meal['meal_name'] as String? ?? '',
+                                                                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                                                                maxLines: 1,
+                                                                overflow: TextOverflow.ellipsis,
+                                                              ),
+                                                            ),
+                                                            const SizedBox(width: 8),
+                                                            Text(
+                                                              '${meal['calories']} cal',
+                                                              style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
+                                                              maxLines: 1,
+                                                              overflow: TextOverflow.ellipsis,
+                                                            ),
                                                           ],
                                                         ),
                                                         const SizedBox(height: 8),
                                                         Text(meal['time'] as String? ?? '5 mins', style: TextStyle(color: Colors.grey[600], fontSize: 15)),
                                                         const SizedBox(height: 8),
-                                                        Row(
+                                                        Wrap(
+                                                          spacing: 8,
+                                                          runSpacing: 4,
                                                           children: [
                                                             for (final tag in (meal['benefits'] as List<dynamic>? ?? []))
                                                               Container(
-                                                                margin: const EdgeInsets.only(right: 8),
                                                                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                                                                 decoration: BoxDecoration(
                                                                   color: Colors.orange[50],
                                                                   borderRadius: BorderRadius.circular(10),
                                                                 ),
-                                                                child: Text(tag.toString(), style: TextStyle(color: Colors.orange[700], fontWeight: FontWeight.w500, fontSize: 13)),
-                                    ),
-                                  ],
-                                ),
-                                  ],
-                                ),
-                              ),
-                                                ),
-                                              ],
-                                            ),
-                              ),
-                                          // Plus button at bottom right, floating over the card
-                                          Positioned(
-                                            bottom: 18,
-                                            right: 18,
-                                            child: Material(
-                                              color: Colors.transparent,
-                                              child: InkWell(
-                                                borderRadius: BorderRadius.circular(20),
-                                                onTap: () {
-                                                  Navigator.of(context).push(
-                                                    MaterialPageRoute(
-                                                      builder: (_) => GeneratedMealFromFridgePage(meal: meal),
+                                                                child: Text(
+                                                                  tag.toString(),
+                                                                  style: TextStyle(color: Colors.orange[700], fontWeight: FontWeight.w500, fontSize: 13),
+                                                                  maxLines: 1,
+                                                                  overflow: TextOverflow.ellipsis,
+                                                                ),
+                                                              ),
+                                                          ],
+                                                        ),
+                                                      ],
                                                     ),
-                                                  );
-                                                },
-                                                child: Container(
-                                                  decoration: BoxDecoration(
-                                                    color: Colors.green,
-                                                    borderRadius: BorderRadius.circular(20),
-                                                    boxShadow: [
-                                                      BoxShadow(
-                                                        color: Colors.green.withOpacity(0.12),
-                                                        blurRadius: 6,
-                                                        offset: Offset(0, 2),
-                                                      ),
-                                                    ],
                                                   ),
-                                                  padding: const EdgeInsets.all(8),
-                                                  child: Icon(Icons.add, color: Colors.white, size: 24),
+                                                ],
+                                              ),
                                             ),
-                                          ),
-                                  ),
+                                            Positioned(
+                                              bottom: 18,
+                                              right: 18,
+                                              child: Material(
+                                                color: Colors.transparent,
+                                                child: InkWell(
+                                                  borderRadius: BorderRadius.circular(20),
+                                                  onTap: () {
+                                                    Navigator.of(context).push(
+                                                      MaterialPageRoute(
+                                                        builder: (_) => GeneratedMealFromFridgePage(meal: meal),
+                                                      ),
+                                                    );
+                                                  },
+                                                  child: Container(
+                                                    decoration: BoxDecoration(
+                                                      color: Colors.green,
+                                                      borderRadius: BorderRadius.circular(20),
+                                                      boxShadow: [
+                                                        BoxShadow(
+                                                          color: Colors.green.withOpacity(0.12),
+                                                          blurRadius: 6,
+                                                          offset: Offset(0, 2),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                    padding: const EdgeInsets.all(8),
+                                                    child: Icon(Icons.add, color: Colors.white, size: 24),
+                                                  ),
+                                                ),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      );
+                                    }).toList(),
+                                  ],
                                 ),
-                            ],
-                                      ),
-                                    );
-                                  }),
-                                ],
                               );
                             },
                           ),
@@ -5179,63 +5188,69 @@ class _FoodMealCardState extends State<_FoodMealCard> {
       child: Column(
         children: [
           Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-              // Meal image placeholder
-          ClipRRect(
-            borderRadius: BorderRadius.circular(12),
-            child: Container(
-                  width: 48,
-                  height: 48,
-              color: kContainerGrey,
-                  child: meal.imageUrl != null && meal.imageUrl!.isNotEmpty
-                      ? Image.network(
-                          meal.imageUrl!,
-                          fit: BoxFit.cover,
-                          width: 48,
-                          height: 48,
-                          errorBuilder: (context, error, stackTrace) => Icon(Icons.fastfood, color: kPrimaryGreen, size: 28),
-                        )
-                      : Icon(Icons.fastfood, color: kPrimaryGreen, size: 28),
-            ),
-          ),
-              const SizedBox(width: 10),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Meal image
+              FutureBuilder<String?>(
+                future: meal.imageUrl != null && meal.imageUrl!.isNotEmpty
+                    ? Future.value(meal.imageUrl)
+                    : PexelsService.fetchMealImage(meal.name),
+                builder: (context, snapshot) {
+                  final imageUrl = snapshot.data;
+                  return ClipRRect(
+                    borderRadius: BorderRadius.circular(16),
+                    child: imageUrl != null
+                        ? Image.network(
+                            imageUrl,
+                            width: 70,
+                            height: 70,
+                            fit: BoxFit.cover,
+                          )
+                        : Container(
+                            width: 70,
+                            height: 70,
+                            color: Colors.grey[200],
+                            child: Icon(Icons.fastfood, color: Colors.grey[400]),
+                          ),
+                  );
+                },
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(meal.mealType.capitalize(), style: TextStyle(color: kPrimaryGreen, fontWeight: FontWeight.w600)),
-                    const SizedBox(width: 8),
-                    Text(formatTime(meal.timestamp), style: TextStyle(color: Colors.grey[500], fontSize: 13)),
+                    Row(
+                      children: [
+                        Text(meal.mealType.capitalize(), style: TextStyle(color: kPrimaryGreen, fontWeight: FontWeight.w600)),
+                        const SizedBox(width: 8),
+                        Text(formatTime(meal.timestamp), style: TextStyle(color: Colors.grey[500], fontSize: 13)),
+                      ],
+                    ),
+                    const SizedBox(height: 2),
+                    Text(meal.name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                    const SizedBox(height: 6),
+                    Row(
+                      children: [
+                        _MacroTag(label: 'P', value: '${meal.protein}g', color: kSecondaryBlue),
+                        const SizedBox(width: 6),
+                        _MacroTag(label: 'C', value: '${meal.carbs}g', color: kAccentOrange),
+                        const SizedBox(width: 6),
+                        _MacroTag(label: 'F', value: '${meal.fat}g', color: kWarningRed),
+                      ],
+                    ),
                   ],
                 ),
-                const SizedBox(height: 2),
-                Text(meal.name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                const SizedBox(height: 6),
-                Row(
-                  children: [
-                    _MacroTag(label: 'P', value: '${meal.protein}g', color: kSecondaryBlue),
-                    const SizedBox(width: 6),
-                    _MacroTag(label: 'C', value: '${meal.carbs}g', color: kAccentOrange),
-                    const SizedBox(width: 6),
-                    _MacroTag(label: 'F', value: '${meal.fat}g', color: kWarningRed),
-                  ],
-                ),
-              ],
-            ),
-          ),
-              // Calories, delete, and dropdown in a single row
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
+              ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
                   Row(
                     mainAxisSize: MainAxisSize.min,
-            children: [
-              Text('${meal.calories}', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+                    children: [
+                      Text('${meal.calories}', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
                       const SizedBox(width: 2),
-              Text('cal', style: TextStyle(color: Colors.grey[600], fontSize: 13)),
+                      Text('cal', style: TextStyle(color: Colors.grey[600], fontSize: 13)),
                       IconButton(
                         icon: Icon(Icons.delete, color: Colors.redAccent, size: 22),
                         tooltip: 'Delete meal',
@@ -5271,9 +5286,9 @@ class _FoodMealCardState extends State<_FoodMealCard> {
                         padding: EdgeInsets.zero,
                         constraints: BoxConstraints(),
                         onPressed: () => setState(() => _expanded = !_expanded),
-          ),
-        ],
-      ),
+                      ),
+                    ],
+                  ),
                 ],
               ),
             ],
@@ -5296,7 +5311,7 @@ class _FoodMealCardState extends State<_FoodMealCard> {
                       );
                     } else {
                       return Text('No ingredients listed.', style: TextStyle(color: Colors.grey[600], fontStyle: FontStyle.italic));
-}
+                    }
                   },
                 ),
               ),
@@ -5593,19 +5608,29 @@ class _ProfileInfoChip extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       margin: EdgeInsets.symmetric(horizontal: 2),
-      padding: EdgeInsets.symmetric(horizontal: 6, vertical: 8), // reduced horizontal padding
+      padding: EdgeInsets.symmetric(horizontal: 8, vertical: 6),
       decoration: BoxDecoration(
         color: kPrimaryGreen.withOpacity(0.08),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: kPrimaryGreen.withOpacity(0.15)),
       ),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, color: kPrimaryGreen, size: 17),
+          Icon(icon, color: kPrimaryGreen, size: 16),
           SizedBox(width: 4),
-          Text('$label: ', style: TextStyle(fontWeight: FontWeight.w500, color: kPrimaryGreen, fontSize: 14)),
-          Text(value, style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black, fontSize: 15)),
+          Flexible(
+            child: Text(
+              '$label: $value',
+              style: TextStyle(
+                fontWeight: FontWeight.w500,
+                color: kPrimaryGreen,
+                fontSize: 13,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
         ],
       ),
     );

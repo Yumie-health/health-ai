@@ -1013,8 +1013,8 @@ class _LogMealPageState extends State<LogMealPage> with TickerProviderStateMixin
           ],
         ),
       ),
-      bottomNavigationBar: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+      bottomNavigationBar: SafeArea(
+        minimum: EdgeInsets.fromLTRB(16, 0, 16, 24),
         child: ElevatedButton(
           onPressed: _foodNameController.text.trim().isEmpty || _isSaving
               ? null
