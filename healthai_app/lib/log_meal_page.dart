@@ -1123,7 +1123,12 @@ class _ExpandableMealTileState extends State<_ExpandableMealTile> {
                     backgroundColor: kPrimaryGreen.withOpacity(0.13),
                     child: Icon(widget.icon, color: widget.iconColor),
                   ),
-            title: Text(widget.name, style: const TextStyle(fontWeight: FontWeight.w600)),
+            title: Text(
+              widget.name,
+              style: const TextStyle(fontWeight: FontWeight.w600),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
             subtitle: widget.isCustomMeal ? null : Wrap(
               spacing: 6,
               runSpacing: 2,
