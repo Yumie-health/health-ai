@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:lottie/lottie.dart';
 import 'services/ai_service.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class OnboardingFlowPage extends StatefulWidget {
   const OnboardingFlowPage({Key? key}) : super(key: key);
@@ -37,6 +38,7 @@ class _OnboardingFlowPageState extends State<OnboardingFlowPage> with SingleTick
   bool isLoadingNutritionPlan = false;
   Map<String, int>? aiNutritionPlan;
   String? aiError;
+  List<String> selectedReminders = [];
 
   @override
   void initState() {
@@ -298,6 +300,13 @@ class _OnboardingFlowPageState extends State<OnboardingFlowPage> with SingleTick
                           if (user != null) {
                             final now = DateTime.now();
                             String name = user.email != null ? user.email!.split('@').first : user.uid;
+                            // Save reminders locally
+                            final prefs = await SharedPreferences.getInstance();
+                            await prefs.setBool('mealLoggingPrompts', selectedReminders.contains('Meal Logging Prompts'));
+                            await prefs.setBool('waterIntakeReminders', selectedReminders.contains('Water Intake Reminders'));
+                            await prefs.setBool('mindfulWalksReminders', selectedReminders.contains('Mindful Walks Reminders'));
+                            await prefs.setBool('momentOfCalmReminders', selectedReminders.contains('Moment of Calm Before Meals'));
+                            // Save other user info to Firestore as before, but exclude reminders
                             await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
                               'name': name,
                               'email': user.email ?? '',
@@ -322,18 +331,18 @@ class _OnboardingFlowPageState extends State<OnboardingFlowPage> with SingleTick
                   waterIntake: waterIntake,
                 );
               } else if (step == 13) {
-                return _EatingHabitsStep(
+                return _RemindersStep(
                   fadeAnimation: _fadeAnimation,
                   slideAnimation: _slideAnimation,
-                  selectedHabits: selectedHabits,
-                  onHabitToggle: (habit) => setState(() {
-                    if (selectedHabits.contains(habit)) {
-                      selectedHabits.remove(habit);
+                  selectedReminders: selectedReminders,
+                  onReminderToggle: (reminder) => setState(() {
+                    if (selectedReminders.contains(reminder)) {
+                      selectedReminders.remove(reminder);
                     } else {
-                      selectedHabits.add(habit);
+                      selectedReminders.add(reminder);
                     }
                   }),
-                  onContinue: selectedHabits.isNotEmpty ? () { setState(() { step = 15; }); } : null,
+                  onContinue: selectedReminders.isNotEmpty ? () { setState(() { step = 15; }); } : null,
                   onBack: prevStep,
                 );
               } else if (step == 15) {
@@ -359,6 +368,12 @@ class _OnboardingFlowPageState extends State<OnboardingFlowPage> with SingleTick
                             'carbs=${aiNutritionPlan!["carbs"]}');
                         print('[DEBUG] About to write to Firestore...');
                         try {
+                          final Map<String, bool> remindersMap = {
+                            'mealLoggingPrompts': selectedReminders.contains('Meal Logging Prompts'),
+                            'waterIntakeReminders': selectedReminders.contains('Water Intake Reminders'),
+                            'mindfulWalksReminders': selectedReminders.contains('Mindful Walks Reminders'),
+                            'momentOfCalmReminders': selectedReminders.contains('Moment of Calm Before Meals'),
+                          };
                       await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
                             'dailyCalorieGoal': aiNutritionPlan!["calories"],
                             'proteinGoal': aiNutritionPlan!["protein"],
@@ -366,7 +381,7 @@ class _OnboardingFlowPageState extends State<OnboardingFlowPage> with SingleTick
                             'carbsGoal': aiNutritionPlan!["carbs"],
                         'lastUpdated': now,
                         'hasCompletedOnboarding': true,
-                            'positiveHabits': selectedHabits, // Save positive habits for notifications
+                            'reminders': remindersMap, // Save reminders as a map of booleans
                       }, SetOptions(merge: true));
                           print('[DEBUG] Firestore write complete');
                         } catch (e) {
@@ -482,7 +497,7 @@ class _OnboardingFlowPageState extends State<OnboardingFlowPage> with SingleTick
         waterIntake: water,
         motivation: selectedMotivation,
         targetWeightKg: targetWeightKg,
-        eatingHabits: selectedHabits,
+        eatingHabits: selectedReminders, // pass reminders if needed
       );
       print('[DEBUG] AI plan generated: $plan');
       if (plan == null) throw Exception("AI did not return a plan");
@@ -2358,143 +2373,6 @@ class _ProfileSummaryStep extends StatelessWidget {
   }
 }
 
-class _EatingHabitsStep extends StatelessWidget {
-  final Animation<double> fadeAnimation;
-  final Animation<Offset> slideAnimation;
-  final List<String> selectedHabits;
-  final void Function(String) onHabitToggle;
-  final VoidCallback? onContinue;
-  final VoidCallback onBack;
-  _EatingHabitsStep({required this.fadeAnimation, required this.slideAnimation, required this.selectedHabits, required this.onHabitToggle, required this.onContinue, required this.onBack});
-
-  // New, positive, creative habits with new emojis
-  final List<Map<String, dynamic>> habits = [
-    {'emoji': '🥗', 'label': "I love making colorful salads"},
-    {'emoji': '🚶‍♂️', 'label': 'I take mindful walks daily'},
-    {'emoji': '💧', 'label': 'I drink water first thing in the morning'},
-    {'emoji': '🧘‍♀️', 'label': 'I practice a moment of calm before meals'},
-    {'emoji': '🍎', 'label': 'I try a new fruit or veggie each week'},
-  ];
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        Align(
-          alignment: Alignment.centerLeft,
-          child: Container(
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
-                  blurRadius: 8,
-                  offset: Offset(0, 2),
-                ),
-              ],
-            ),
-            child: IconButton(
-              icon: Icon(Icons.arrow_back, color: theme.primaryColor, size: 28),
-              onPressed: onBack,
-            ),
-          ),
-        ),
-        SizedBox(height: 32),
-        FadeTransition(
-          opacity: fadeAnimation,
-          child: SlideTransition(
-            position: slideAnimation,
-            child: Column(
-              children: [
-                Text(
-                  'Pick some positive habits you want to celebrate or try!',
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 26),
-                  textAlign: TextAlign.center,
-                ),
-                SizedBox(height: 18),
-              ],
-            ),
-          ),
-        ),
-        SizedBox(height: 12),
-        Expanded(
-          child: ListView.builder(
-            itemCount: habits.length,
-            itemBuilder: (context, i) {
-              final habit = habits[i];
-              final isSelected = selectedHabits.contains(habit['label']);
-              return Padding(
-                padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
-                child: GestureDetector(
-                  onTap: () => onHabitToggle(habit['label']),
-                  child: AnimatedContainer(
-                    duration: Duration(milliseconds: 200),
-                    padding: EdgeInsets.all(18),
-                    decoration: BoxDecoration(
-                      color: isSelected ? theme.primaryColor.withOpacity(0.08) : Colors.white,
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(
-                        color: isSelected ? theme.primaryColor : Colors.grey[200]!,
-                        width: isSelected ? 2 : 1,
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.04),
-                          blurRadius: 8,
-                          offset: Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                    child: Row(
-                      children: [
-                        Text(habit['emoji'], style: TextStyle(fontSize: 28)),
-                        SizedBox(width: 18),
-                        Expanded(
-                          child: Text(habit['label'], style: TextStyle(fontWeight: FontWeight.w600, fontSize: 18, color: isSelected ? theme.primaryColor : Colors.black)),
-                        ),
-                        if (isSelected)
-                          Container(
-                            padding: EdgeInsets.all(4),
-                            decoration: BoxDecoration(
-                              color: theme.primaryColor.withOpacity(0.1),
-                              shape: BoxShape.circle,
-                            ),
-                            child: Icon(Icons.check, color: theme.primaryColor, size: 20),
-                          ),
-                      ],
-                    ),
-                  ),
-                ),
-              );
-            },
-          ),
-        ),
-        SafeArea(
-          minimum: EdgeInsets.only(left: 16, right: 16, bottom: 16),
-          child: SizedBox(
-          width: double.infinity,
-          child: ElevatedButton(
-            onPressed: onContinue,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: theme.primaryColor,
-              foregroundColor: Colors.white,
-              padding: EdgeInsets.symmetric(vertical: 20),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-              elevation: 0,
-              textStyle: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            child: Text('Continue'),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
 class _NutritionPlanSummaryStep extends StatefulWidget {
   final Animation<double> fadeAnimation;
   final Animation<Offset> slideAnimation;
@@ -2625,11 +2503,11 @@ class _NutritionPlanSummaryStepState extends State<_NutritionPlanSummaryStep> wi
                           label: 'Carbs',
                           value: '${widget.carbs} g',
                           iconColor: Color(0xFF8D6E63),
-                    ),
+                          ),
                       ],
-                ),
+                    ),
                   ),
-          ),
+                ),
                 SizedBox(height: 48),
         SizedBox(
           width: double.infinity,
@@ -2648,15 +2526,15 @@ class _NutritionPlanSummaryStepState extends State<_NutritionPlanSummaryStep> wi
                       ),
                       child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
-          children: [
+      children: [
                           Icon(Icons.check_circle, size: 26, color: Colors.white),
                           SizedBox(width: 12),
                           Text('Get Started'),
-                        ],
-                      ),
-                ),
-              ),
+              ],
             ),
+            ),
+          ),
+        ),
               ],
             ),
           ),
@@ -2673,10 +2551,10 @@ class _NutritionPlanSummaryStepState extends State<_NutritionPlanSummaryStep> wi
                   'assets/animations/confetti.json',
                   repeat: false,
                   fit: BoxFit.cover,
-                ),
+            ),
               ),
-                    ),
           ),
+        ),
       ],
     );
   }
@@ -2693,21 +2571,21 @@ class _NutritionRow extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 2.0),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
-                          children: [
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
           Container(
-            decoration: BoxDecoration(
+                decoration: BoxDecoration(
               color: iconColor.withOpacity(0.12),
-              borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(12),
             ),
             padding: EdgeInsets.all(12),
             child: Icon(icon, color: iconColor, size: 32),
-          ),
+            ),
           SizedBox(width: 18),
           Text('$label:', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 20)),
-          SizedBox(width: 8),
+                            SizedBox(width: 8),
           Text(value, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20, color: iconColor)),
-          ],
+                          ],
       ),
     );
   }
@@ -3265,6 +3143,142 @@ class NutritionLoadingAnimation extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+class _RemindersStep extends StatelessWidget {
+  final Animation<double> fadeAnimation;
+  final Animation<Offset> slideAnimation;
+  final List<String> selectedReminders;
+  final void Function(String) onReminderToggle;
+  final VoidCallback? onContinue;
+  final VoidCallback onBack;
+  _RemindersStep({required this.fadeAnimation, required this.slideAnimation, required this.selectedReminders, required this.onReminderToggle, required this.onContinue, required this.onBack});
+
+  // Reminders to choose from
+  final List<Map<String, dynamic>> reminders = [
+    {'emoji': '🍽️', 'label': 'Meal Logging Prompts'},
+    {'emoji': '💧', 'label': 'Water Intake Reminders'},
+    {'emoji': '🚶‍♂️', 'label': 'Mindful Walks Reminders'},
+    {'emoji': '🧘‍♀️', 'label': 'Moment of Calm Before Meals'},
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        Align(
+          alignment: Alignment.centerLeft,
+          child: Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.05),
+                  blurRadius: 8,
+                  offset: Offset(0, 2),
+                ),
+              ],
+            ),
+            child: IconButton(
+              icon: Icon(Icons.arrow_back, color: theme.primaryColor, size: 28),
+              onPressed: onBack,
+            ),
+          ),
+        ),
+        SizedBox(height: 32),
+        FadeTransition(
+          opacity: fadeAnimation,
+          child: SlideTransition(
+            position: slideAnimation,
+            child: Column(
+              children: [
+                Text(
+                  'Which reminders would you like to receive?',
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 26),
+                  textAlign: TextAlign.center,
+                ),
+                SizedBox(height: 18),
+              ],
+            ),
+          ),
+        ),
+        SizedBox(height: 12),
+        Expanded(
+          child: ListView.builder(
+            itemCount: reminders.length,
+            itemBuilder: (context, i) {
+              final reminder = reminders[i];
+              final isSelected = selectedReminders.contains(reminder['label']);
+              return Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+                child: GestureDetector(
+                  onTap: () => onReminderToggle(reminder['label']),
+                  child: AnimatedContainer(
+                    duration: Duration(milliseconds: 200),
+                    padding: EdgeInsets.all(18),
+                    decoration: BoxDecoration(
+                      color: isSelected ? theme.primaryColor.withOpacity(0.08) : Colors.white,
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                        color: isSelected ? theme.primaryColor : Colors.grey[200]!,
+                        width: isSelected ? 2 : 1,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.04),
+                          blurRadius: 8,
+                          offset: Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: Row(
+                      children: [
+                        Text(reminder['emoji'], style: TextStyle(fontSize: 28)),
+                        SizedBox(width: 18),
+                        Expanded(
+                          child: Text(reminder['label'], style: TextStyle(fontWeight: FontWeight.w600, fontSize: 18, color: isSelected ? theme.primaryColor : Colors.black)),
+                        ),
+                        if (isSelected)
+                          Container(
+                            padding: EdgeInsets.all(4),
+                            decoration: BoxDecoration(
+                              color: theme.primaryColor.withOpacity(0.1),
+                              shape: BoxShape.circle,
+                            ),
+                            child: Icon(Icons.check, color: theme.primaryColor, size: 20),
+                          ),
+                      ],
+                    ),
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+        SafeArea(
+          minimum: EdgeInsets.only(left: 16, right: 16, bottom: 16),
+          child: SizedBox(
+          width: double.infinity,
+          child: ElevatedButton(
+            onPressed: onContinue,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: theme.primaryColor,
+              foregroundColor: Colors.white,
+              padding: EdgeInsets.symmetric(vertical: 20),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              elevation: 0,
+              textStyle: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            child: Text('Continue'),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

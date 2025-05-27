@@ -31,6 +31,7 @@ import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:firebase_analytics/observer.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:timezone/timezone.dart' as tz;
 
 // Define the color palette
 const Color kPrimaryGreen = Color(0xFF4CAF50); // Soft green
@@ -41,13 +42,24 @@ const Color kBackgroundWhite = Color(0xFFFFFFFF); // Clean white
 const Color kWarningRed = Color(0xFFFF7043); // Orange/Red for warnings
 const Color kContainerGrey = Color(0xFFF5F5F5); // Light grey for containers
 
+// Initialize FlutterLocalNotificationsPlugin
+final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
+
 // Preferences Provider
 class PreferencesProvider extends ChangeNotifier {
   bool _darkMode = false;
   bool _useMetric = true;
+  bool _mealLoggingPrompts = false;
+  bool _waterIntakeReminders = false;
+  bool _mindfulWalksReminders = false;
+  bool _momentOfCalmReminders = false;
 
   bool get darkMode => _darkMode;
   bool get useMetric => _useMetric;
+  bool get mealLoggingPrompts => _mealLoggingPrompts;
+  bool get waterIntakeReminders => _waterIntakeReminders;
+  bool get mindfulWalksReminders => _mindfulWalksReminders;
+  bool get momentOfCalmReminders => _momentOfCalmReminders;
 
   PreferencesProvider() {
     _loadPrefs();
@@ -57,6 +69,10 @@ class PreferencesProvider extends ChangeNotifier {
     final prefs = await SharedPreferences.getInstance();
     _darkMode = prefs.getBool('darkMode') ?? false;
     _useMetric = prefs.getBool('useMetric') ?? true;
+    _mealLoggingPrompts = prefs.getBool('mealLoggingPrompts') ?? false;
+    _waterIntakeReminders = prefs.getBool('waterIntakeReminders') ?? false;
+    _mindfulWalksReminders = prefs.getBool('mindfulWalksReminders') ?? false;
+    _momentOfCalmReminders = prefs.getBool('momentOfCalmReminders') ?? false;
     notifyListeners();
   }
 
@@ -73,9 +89,170 @@ class PreferencesProvider extends ChangeNotifier {
     await prefs.setBool('useMetric', useMetric);
     notifyListeners();
   }
-}
 
-final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
+  Future<void> setMealLoggingPrompts(bool value) async {
+    final prefs = await SharedPreferences.getInstance();
+    _mealLoggingPrompts = value;
+    await prefs.setBool('mealLoggingPrompts', value);
+    notifyListeners();
+    if (value) {
+      await _scheduleMealLoggingPrompts();
+    } else {
+      await _cancelMealLoggingPrompts();
+    }
+  }
+
+  Future<void> setWaterIntakeReminders(bool value) async {
+    final prefs = await SharedPreferences.getInstance();
+    _waterIntakeReminders = value;
+    await prefs.setBool('waterIntakeReminders', value);
+    notifyListeners();
+    if (value) {
+      await _scheduleWaterIntakeReminders();
+    } else {
+      await _cancelWaterIntakeReminders();
+    }
+  }
+
+  Future<void> setMindfulWalksReminders(bool value) async {
+    final prefs = await SharedPreferences.getInstance();
+    _mindfulWalksReminders = value;
+    await prefs.setBool('mindfulWalksReminders', value);
+    notifyListeners();
+    if (value) {
+      await _scheduleMindfulWalksReminders();
+    } else {
+      await _cancelMindfulWalksReminders();
+    }
+  }
+
+  Future<void> setMomentOfCalmReminders(bool value) async {
+    final prefs = await SharedPreferences.getInstance();
+    _momentOfCalmReminders = value;
+    await prefs.setBool('momentOfCalmReminders', value);
+    notifyListeners();
+    // Placeholder: actual popup logic should be triggered before meal logging
+  }
+
+  // --- Notification scheduling helpers ---
+  Future<void> _scheduleMealLoggingPrompts() async {
+    final times = [
+      [8, 0],   // Breakfast
+      [13, 0],  // Lunch
+      [19, 0],  // Dinner
+      [22, 0],  // Night/Snack
+    ];
+    final mealLabels = [
+      'Breakfast Time!',
+      'Lunch Time!',
+      'Dinner Time!',
+      'Snack Time!',
+    ];
+    for (int i = 0; i < times.length; i++) {
+      await flutterLocalNotificationsPlugin.zonedSchedule(
+        2000 + i,
+        mealLabels[i],
+        'Remember to log your meal!',
+        _nextInstanceOfTime(times[i][0], times[i][1]),
+        const NotificationDetails(
+          android: AndroidNotificationDetails('meal_channel', 'Meal Logging', importance: Importance.max, priority: Priority.high),
+          iOS: DarwinNotificationDetails(),
+        ),
+        androidAllowWhileIdle: true,
+        uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
+        matchDateTimeComponents: DateTimeComponents.time,
+      );
+    }
+  }
+  Future<void> _cancelMealLoggingPrompts() async {
+    for (int i = 0; i < 4; i++) {
+      await flutterLocalNotificationsPlugin.cancel(2000 + i);
+    }
+  }
+
+  Future<void> _scheduleWaterIntakeReminders() async {
+    final times = [9, 12, 15, 18, 21];
+    for (int i = 0; i < times.length; i++) {
+      await flutterLocalNotificationsPlugin.zonedSchedule(
+        3000 + i,
+        'Hydration Reminder',
+        'Drink some water! 💧',
+        _nextInstanceOfTime(times[i], 0),
+        const NotificationDetails(
+          android: AndroidNotificationDetails('water_channel', 'Water Intake', importance: Importance.max, priority: Priority.high),
+          iOS: DarwinNotificationDetails(),
+        ),
+        androidAllowWhileIdle: true,
+        uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
+        matchDateTimeComponents: DateTimeComponents.time,
+      );
+    }
+  }
+  Future<void> _cancelWaterIntakeReminders() async {
+    for (int i = 0; i < 5; i++) {
+      await flutterLocalNotificationsPlugin.cancel(3000 + i);
+    }
+  }
+
+  Future<void> _scheduleMindfulWalksReminders() async {
+    await flutterLocalNotificationsPlugin.zonedSchedule(
+      4001,
+      'Mindful Walk',
+      'Take a mindful walk today!',
+      _nextInstanceOfTime(18, 0),
+      const NotificationDetails(
+        android: AndroidNotificationDetails('walk_channel', 'Mindful Walks', importance: Importance.max, priority: Priority.high),
+        iOS: DarwinNotificationDetails(),
+      ),
+      androidAllowWhileIdle: true,
+      uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
+      matchDateTimeComponents: DateTimeComponents.time,
+    );
+  }
+  Future<void> _cancelMindfulWalksReminders() async {
+    await flutterLocalNotificationsPlugin.cancel(4001);
+  }
+
+  // --- Helper functions for scheduling ---
+  tz.TZDateTime _nextInstanceOfTime(int hour, int minute) {
+    final now = tz.TZDateTime.now(tz.local);
+    var scheduled = tz.TZDateTime(tz.local, now.year, now.month, now.day, hour, minute);
+    if (scheduled.isBefore(now)) {
+      scheduled = scheduled.add(Duration(days: 1));
+    }
+    return scheduled;
+  }
+
+  tz.TZDateTime _nextInstanceOfWeekday(int hour, int minute, int weekday) {
+    tz.TZDateTime scheduled = _nextInstanceOfTime(hour, minute);
+    while (scheduled.weekday != weekday) {
+      scheduled = scheduled.add(Duration(days: 1));
+    }
+    return scheduled;
+  }
+
+  // Water Intake Reminders: Call this after a meal is logged
+  Future<void> scheduleWaterReminderAfterMeal({required DateTime mealTime, required bool waterGoalReached}) async {
+    if (!_waterIntakeReminders || waterGoalReached) return;
+    final scheduledTime = mealTime.add(Duration(minutes: 20));
+    final id = scheduledTime.millisecondsSinceEpoch % 1000000 + 3000; // unique id
+    await flutterLocalNotificationsPlugin.zonedSchedule(
+      id,
+      'Drink Water',
+      'Don\'t forget to drink water and log your intake!',
+      tz.TZDateTime.from(scheduledTime, tz.local),
+      const NotificationDetails(
+        android: AndroidNotificationDetails('water_channel', 'Water Intake', importance: Importance.max, priority: Priority.high),
+        iOS: DarwinNotificationDetails(),
+      ),
+      androidAllowWhileIdle: true,
+      uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
+    );
+  }
+
+  // Moment of Calm: Call this after a meal is logged if toggle is on
+  bool get momentOfCalmEnabled => _momentOfCalmReminders;
+}
 
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   // Handle background message
@@ -5470,10 +5647,49 @@ class SettingsPage extends StatelessWidget {
               ),
             ),
             SizedBox(height: 32),
-            // Add more settings sections here if needed
-            // Example: Account, Notifications, etc.
+            Text('Habit Notifications', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 22)),
+            SizedBox(height: 18),
+            Card(
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+              elevation: 2,
+              child: Column(
+                children: [
+                  SwitchListTile(
+                    title: Text('Meal Logging Prompts', style: TextStyle(fontWeight: FontWeight.w600)),
+                    subtitle: Text('Get reminders to log your meals'),
+                    value: prefs.mealLoggingPrompts,
+                    onChanged: (v) => prefs.setMealLoggingPrompts(v),
+                    secondary: Icon(Icons.restaurant),
+                  ),
+                  Divider(height: 1, thickness: 1, indent: 16, endIndent: 16),
+                  SwitchListTile(
+                    title: Text('Water Intake Reminders', style: TextStyle(fontWeight: FontWeight.w600)),
+                    subtitle: Text('Get reminders to drink water'),
+                    value: prefs.waterIntakeReminders,
+                    onChanged: (v) => prefs.setWaterIntakeReminders(v),
+                    secondary: Icon(Icons.water_drop),
+                  ),
+                  Divider(height: 1, thickness: 1, indent: 16, endIndent: 16),
+                  SwitchListTile(
+                    title: Text('Mindful Walks Reminders', style: TextStyle(fontWeight: FontWeight.w600)),
+                    subtitle: Text('Get reminders to take a mindful walk'),
+                    value: prefs.mindfulWalksReminders,
+                    onChanged: (v) => prefs.setMindfulWalksReminders(v),
+                    secondary: Icon(Icons.directions_walk),
+                  ),
+                  Divider(height: 1, thickness: 1, indent: 16, endIndent: 16),
+                  SwitchListTile(
+                    title: Text('Moment of Calm Before Meals', style: TextStyle(fontWeight: FontWeight.w600)),
+                    subtitle: Text('Show a calming popup before logging a meal'),
+                    value: prefs.momentOfCalmReminders,
+                    onChanged: (v) => prefs.setMomentOfCalmReminders(v),
+                    secondary: Icon(Icons.self_improvement),
+                  ),
+                ],
+              ),
+            ),
           ],
-          ),
+        ),
       ),
     );
   }

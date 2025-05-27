@@ -33,7 +33,7 @@ dependencies:
   logger: ^2.0.2+1
   flutter_launcher_icons: ^0.14.3
   flutter_native_splash: ^2.4.6
-  table_calendar: ^3.0.9
+  table_calendar: ^3.0.9 
   firebase_analytics: ^10.8.0
   firebase_messaging: ^14.7.10
 
