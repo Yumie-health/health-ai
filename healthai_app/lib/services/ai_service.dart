@@ -369,7 +369,6 @@ Respond ONLY with valid JSON.
   Future<List<Map<String, dynamic>>?> getSuggestedMeals({required String mealPeriod}) async {
     final prompt = '''
 You are a nutrition AI. Suggest 3 healthy $mealPeriod meals. For each meal, provide:
-- image: a direct Foodiesfeed.com image URL (relevant to the meal, e.g. https://www.foodiesfeed.com/free-food-photo/food-photo-12345/)
 - meal_name: string (max 30 characters)
 - time: string (e.g. "10 mins")
 - benefits: array of 2 short strings (e.g. ["High Protein", "Low Sugar"])

@@ -1941,8 +1941,8 @@ class _GoalWeightStep extends StatelessWidget {
             child: Text(
               '${(useMetricWeight ? currentWeightKg : currentWeightKg * 2.20462).toStringAsFixed(1)} $weightUnit',
               style: TextStyle(fontSize: valueFontSize, fontWeight: FontWeight.bold, color: theme.primaryColor),
-            ),
           ),
+        ),
         Spacer(),
         Padding(
           padding: const EdgeInsets.only(bottom: 8),

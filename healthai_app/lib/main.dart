@@ -26,6 +26,11 @@ import 'package:lottie/lottie.dart';
 import 'generated_meal_fridge_page.dart';
 import 'package:flutter/services.dart';
 import 'dart:convert';
+import 'services/pexels_service.dart';
+import 'package:firebase_analytics/firebase_analytics.dart';
+import 'package:firebase_analytics/observer.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 // Define the color palette
 const Color kPrimaryGreen = Color(0xFF4CAF50); // Soft green
@@ -70,8 +75,32 @@ class PreferencesProvider extends ChangeNotifier {
   }
 }
 
+final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
+
+Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+  // Handle background message
+  print('Handling a background message: ${message.messageId}');
+}
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp();
+
+  // Set up background message handler
+  FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+
+  // Local notifications setup
+  const AndroidInitializationSettings initializationSettingsAndroid =
+      AndroidInitializationSettings('@mipmap/ic_launcher');
+  final InitializationSettings initializationSettings = InitializationSettings(
+    android: initializationSettingsAndroid,
+    iOS: DarwinInitializationSettings(),
+  );
+  await flutterLocalNotificationsPlugin.initialize(initializationSettings);
+
+  // Request notification permissions (especially for iOS)
+  await FirebaseMessaging.instance.requestPermission();
+
   runApp(
     ChangeNotifierProvider(
       create: (_) => PreferencesProvider(),
@@ -86,9 +115,13 @@ class HealthAIApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final prefs = Provider.of<PreferencesProvider>(context);
+    final FirebaseAnalytics analytics = FirebaseAnalytics.instance;
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'HealthAI App',
+      navigatorObservers: [
+        FirebaseAnalyticsObserver(analytics: analytics),
+      ],
       theme: ThemeData(
         colorScheme: ColorScheme(
           brightness: Brightness.light,
@@ -531,6 +564,7 @@ class _AuthScreenState extends State<AuthScreen> {
   bool isSamsung = false;
   bool isIOS = Platform.isIOS;
   bool isAndroid = Platform.isAndroid;
+  final FirebaseAnalytics analytics = FirebaseAnalytics.instance;
 
   @override
   void initState() {
@@ -562,6 +596,7 @@ class _AuthScreenState extends State<AuthScreen> {
         idToken: googleAuth.idToken,
       );
       final userCredential = await FirebaseAuth.instance.signInWithCredential(credential);
+      await analytics.logLogin(loginMethod: 'google');
       final userService = UserService();
       final user = FirebaseAuth.instance.currentUser;
       if (user != null) {
@@ -594,6 +629,7 @@ class _AuthScreenState extends State<AuthScreen> {
       }
     } catch (e) {
       setState(() => isLoading = false);
+      await analytics.logEvent(name: 'login_failed', parameters: {'method': 'google', 'error': e.toString()});
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Google sign-in failed: $e')),
       );
@@ -620,6 +656,7 @@ class _AuthScreenState extends State<AuthScreen> {
         email: emailController.text.trim(),
         password: passwordController.text,
       );
+      await analytics.logLogin(loginMethod: 'email');
       // Check if user profile exists, if not, create it
       final userService = UserService();
       final user = FirebaseAuth.instance.currentUser;
@@ -632,6 +669,7 @@ class _AuthScreenState extends State<AuthScreen> {
       setState(() => message = 'Sign in successful!');
     } catch (e) {
       setState(() => message = 'Error: $e');
+      await analytics.logEvent(name: 'login_failed', parameters: {'method': 'email', 'error': e.toString()});
     } finally {
       setState(() => isLoading = false);
     }
@@ -657,6 +695,7 @@ class _AuthScreenState extends State<AuthScreen> {
         email: emailController.text.trim(),
         password: password,
       );
+      await analytics.logSignUp(signUpMethod: 'email');
       // Create a full user profile
       final userService = UserService();
       await userService.createInitialUserProfile(
@@ -671,6 +710,7 @@ class _AuthScreenState extends State<AuthScreen> {
       }
     } catch (e) {
       setState(() => message = 'Error: $e');
+      await analytics.logEvent(name: 'signup_failed', parameters: {'method': 'email', 'error': e.toString()});
     } finally {
       setState(() => isLoading = false);
     }
@@ -4421,13 +4461,13 @@ class _FoodScreenState extends State<FoodScreen> with TickerProviderStateMixin {
     final period = _currentMealPeriod;
     switch (period) {
       case 'breakfast':
-        return 'Morning Meals ☀️';
+        return 'Morning Sunshine ☀️';
       case 'lunch':
         return 'Lunch Time! 🌤️';
       case 'dinner':
         return 'Dinner Tastic! 🌇';
       default:
-        return '🌙 Healthy Snacks!';
+        return 'Healthy Snacks! 🌙';
     }
   }
 
@@ -4810,20 +4850,36 @@ class _FoodScreenState extends State<FoodScreen> with TickerProviderStateMixin {
                                                   decoration: BoxDecoration(
                                                     color: Colors.grey[100],
                                                     borderRadius: BorderRadius.circular(16),
-                                                  ),
-                                                  child: meal['image'] != null && (meal['image'] as String).isNotEmpty
-                                                      ? ClipRRect(
+                                            ),
+                                                  child: FutureBuilder<String?>(
+                                                    future: PexelsService.fetchMealImage(meal['meal_name'] as String? ?? ''),
+                                                    builder: (context, snapshot) {
+                                                      if (snapshot.connectionState == ConnectionState.waiting) {
+                                                        return Center(
+                                                          child: SizedBox(
+                                                            width: 32,
+                                                            height: 32,
+                                                            child: CircularProgressIndicator(strokeWidth: 2, color: Colors.orange[300]),
+                                                          ),
+                                                        );
+                                                      }
+                                                      final imageUrl = snapshot.data;
+                                                      if (imageUrl != null && imageUrl.isNotEmpty) {
+                                                        return ClipRRect(
                                                           borderRadius: BorderRadius.circular(16),
                                                           child: Image.network(
-                                                            meal['image'],
+                                                            imageUrl,
                                                             fit: BoxFit.cover,
                                                             width: 90,
                                                             height: 90,
                                                             errorBuilder: (context, error, stackTrace) => Icon(Icons.fastfood, color: Colors.orange[300], size: 40),
-                                                          ),
-                                                        )
-                                                      : Icon(Icons.fastfood, color: Colors.orange[300], size: 40),
-                                                ),
+                                            ),
+                                                        );
+                                                      }
+                                                      return Icon(Icons.fastfood, color: Colors.orange[300], size: 40);
+                                                    },
+                                  ),
+                                ),
                                                 Expanded(
                                                   child: Padding(
                                                     padding: const EdgeInsets.fromLTRB(0, 18, 16, 18),
@@ -4832,8 +4888,8 @@ class _FoodScreenState extends State<FoodScreen> with TickerProviderStateMixin {
                                                       mainAxisAlignment: MainAxisAlignment.center,
                                                       children: [
                                                         Row(
-                                                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                                          children: [
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
                                                             Text(meal['meal_name'] as String? ?? '', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
                                                             Text('${meal['calories']} cal', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16)),
                                                           ],
@@ -4852,16 +4908,16 @@ class _FoodScreenState extends State<FoodScreen> with TickerProviderStateMixin {
                                                                   borderRadius: BorderRadius.circular(10),
                                                                 ),
                                                                 child: Text(tag.toString(), style: TextStyle(color: Colors.orange[700], fontWeight: FontWeight.w500, fontSize: 13)),
-                                                              ),
-                                                          ],
                                     ),
+                                  ],
+                                ),
                                   ],
                                 ),
                               ),
                                                 ),
                                               ],
                                             ),
-                                          ),
+                              ),
                                           // Plus button at bottom right, floating over the card
                                           Positioned(
                                             bottom: 18,
@@ -4891,8 +4947,8 @@ class _FoodScreenState extends State<FoodScreen> with TickerProviderStateMixin {
                                                   ),
                                                   padding: const EdgeInsets.all(8),
                                                   child: Icon(Icons.add, color: Colors.white, size: 24),
-                                                ),
-                                              ),
+                                            ),
+                                          ),
                                   ),
                                 ),
                             ],
@@ -5417,7 +5473,7 @@ class SettingsPage extends StatelessWidget {
             // Add more settings sections here if needed
             // Example: Account, Notifications, etc.
           ],
-        ),
+          ),
       ),
     );
   }
