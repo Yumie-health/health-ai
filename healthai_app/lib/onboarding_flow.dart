@@ -305,7 +305,7 @@ class _OnboardingFlowPageState extends State<OnboardingFlowPage> with SingleTick
                             await prefs.setBool('mealLoggingPrompts', selectedReminders.contains('Meal Logging Prompts'));
                             await prefs.setBool('waterIntakeReminders', selectedReminders.contains('Water Intake Reminders'));
                             await prefs.setBool('mindfulWalksReminders', selectedReminders.contains('Mindful Walks Reminders'));
-                            await prefs.setBool('momentOfCalmReminders', selectedReminders.contains('Moment of Calm Before Meals'));
+                            await prefs.setBool('momentOfCalmReminders', selectedReminders.contains('Moment of Calm After Meals'));
                             // Save other user info to Firestore as before, but exclude reminders
                             await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
                               'name': name,
@@ -372,7 +372,7 @@ class _OnboardingFlowPageState extends State<OnboardingFlowPage> with SingleTick
                             'mealLoggingPrompts': selectedReminders.contains('Meal Logging Prompts'),
                             'waterIntakeReminders': selectedReminders.contains('Water Intake Reminders'),
                             'mindfulWalksReminders': selectedReminders.contains('Mindful Walks Reminders'),
-                            'momentOfCalmReminders': selectedReminders.contains('Moment of Calm Before Meals'),
+                            'momentOfCalmReminders': selectedReminders.contains('Moment of Calm After Meals'),
                           };
                       await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
                             'dailyCalorieGoal': aiNutritionPlan!["calories"],
@@ -3161,7 +3161,7 @@ class _RemindersStep extends StatelessWidget {
     {'emoji': '🍽️', 'label': 'Meal Logging Prompts'},
     {'emoji': '💧', 'label': 'Water Intake Reminders'},
     {'emoji': '🚶‍♂️', 'label': 'Mindful Walks Reminders'},
-    {'emoji': '🧘‍♀️', 'label': 'Moment of Calm Before Meals'},
+    {'emoji': '🧘‍♀️', 'label': 'Moment of Calm After Meals'},
   ];
 
   @override

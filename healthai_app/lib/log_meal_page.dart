@@ -5,6 +5,7 @@ import 'models/meal.dart';
 import 'services/meal_service.dart';
 import 'main.dart'; // For color constants and _MacroTag
 import 'models/custom_meal.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 
 class LogMealPage extends StatefulWidget {
   const LogMealPage({Key? key}) : super(key: key);
@@ -78,6 +79,111 @@ class _LogMealPageState extends State<LogMealPage> with TickerProviderStateMixin
     super.dispose();
   }
 
+  Future<void> _showCalmPopupIfNeeded(VoidCallback onContinue) async {
+    final prefs = Provider.of<PreferencesProvider>(context, listen: false);
+    if (prefs.momentOfCalmEnabled) {
+      await showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => Dialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
+          child: Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  Color(0xFFE8F5E9),
+                  Color(0xFFF1F8E9),
+            ],
+          ),
+              borderRadius: BorderRadius.circular(28),
+            ),
+            child: Padding(
+              padding: EdgeInsets.symmetric(horizontal: 28, vertical: 32),
+              child: Column(
+            mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+                  // Animated breathing circle with emoji
+                  TweenAnimationBuilder<double>(
+                    tween: Tween(begin: 0.85, end: 1.15),
+                    duration: Duration(seconds: 3),
+                    curve: Curves.easeInOut,
+                    builder: (context, value, child) {
+                      return Transform.scale(
+                        scale: value,
+                        child: Container(
+                          width: 90,
+                          height: 90,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: kPrimaryGreen.withOpacity(0.13),
+                          ),
+                          child: Center(
+                            child: Text(
+                              '🧘‍♀️',
+                              style: TextStyle(fontSize: 48),
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                    // Loop the animation
+                    onEnd: () {
+                      // Rebuild to loop
+                      (context as Element).markNeedsBuild();
+                    },
+                  ),
+              SizedBox(height: 24),
+                  Text(
+                    'Moment of Calm',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: kPrimaryGreen,
+                      fontSize: 26,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 0.2,
+                    ),
+                  ),
+                  SizedBox(height: 18),
+                  Text(
+                    'Take a moment to appreciate your meal and practice mindful eating.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 17,
+                      color: Colors.black87,
+                      height: 1.5,
+                    ),
+          ),
+                  SizedBox(height: 32),
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+              onPressed: () => Navigator.of(context).pop(),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: kPrimaryGreen,
+                        foregroundColor: Colors.white,
+                        padding: EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        elevation: 0,
+                        textStyle: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+                      ),
+                      child: Text('Continue'),
+                    ),
+            ),
+          ],
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+    onContinue();
+  }
+
   Future<void> _saveMeal() async {
     setState(() {
       _isSaving = true;
@@ -100,7 +206,19 @@ class _LogMealPageState extends State<LogMealPage> with TickerProviderStateMixin
       );
       await MealService().addMeal(meal);
       setState(() { _ingredients.clear(); });
-      if (mounted) Navigator.of(context).pop();
+      if (mounted) {
+        await _showCalmPopupIfNeeded(() {
+          Navigator.of(context).pop();
+          Fluttertoast.showToast(
+            msg: "🎉 Meal saved!",
+            toastLength: Toast.LENGTH_SHORT,
+            gravity: ToastGravity.CENTER,
+            backgroundColor: Colors.black87,
+            textColor: Colors.white,
+            fontSize: 20.0,
+          );
+        });
+      }
     } catch (e) {
       setState(() => _error = e.toString());
     } finally {
@@ -898,7 +1016,9 @@ class _LogMealPageState extends State<LogMealPage> with TickerProviderStateMixin
       bottomNavigationBar: Padding(
         padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
         child: ElevatedButton(
-          onPressed: _foodNameController.text.trim().isEmpty || _isSaving ? null : _saveMeal,
+          onPressed: _foodNameController.text.trim().isEmpty || _isSaving
+              ? null
+              : _saveMeal,
           style: ElevatedButton.styleFrom(
             backgroundColor: kPrimaryGreen,
             foregroundColor: Colors.white,
@@ -1004,12 +1124,12 @@ class _ExpandableMealTileState extends State<_ExpandableMealTile> {
                     child: Icon(widget.icon, color: widget.iconColor),
                   ),
             title: Text(widget.name, style: const TextStyle(fontWeight: FontWeight.w600)),
-            subtitle: widget.isCustomMeal ? null : Row(
+            subtitle: widget.isCustomMeal ? null : Wrap(
+              spacing: 6,
+              runSpacing: 2,
               children: [
                 _MacroTag(label: 'P', value: '${widget.protein}g', color: kSecondaryBlue),
-                const SizedBox(width: 6),
                 _MacroTag(label: 'C', value: '${widget.carbs}g', color: kAccentOrange),
-                const SizedBox(width: 6),
                 _MacroTag(label: 'F', value: '${widget.fat}g', color: kWarningRed),
               ],
             ),

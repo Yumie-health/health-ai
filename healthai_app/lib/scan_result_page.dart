@@ -6,6 +6,9 @@ import 'services/meal_service.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:lottie/lottie.dart';
 import 'services/ai_service.dart';
+import 'package:provider/provider.dart';
+import 'main.dart'; // For PreferencesProvider and kPrimaryGreen
+import 'package:fluttertoast/fluttertoast.dart';
 
 class ScanResultPage extends StatefulWidget {
   final String imagePath;
@@ -86,6 +89,108 @@ class _ScanResultPageState extends State<ScanResultPage> {
     Navigator.of(context).popUntil((route) => route.isFirst);
   }
 
+  Future<void> _showCalmPopupIfNeeded(VoidCallback onContinue) async {
+    final prefs = Provider.of<PreferencesProvider>(context, listen: false);
+    if (prefs.momentOfCalmEnabled) {
+      await showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => Dialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
+          child: Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  Color(0xFFE8F5E9),
+                  Color(0xFFF1F8E9),
+                ],
+              ),
+              borderRadius: BorderRadius.circular(28),
+            ),
+            child: Padding(
+              padding: EdgeInsets.symmetric(horizontal: 28, vertical: 32),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  TweenAnimationBuilder<double>(
+                    tween: Tween(begin: 0.85, end: 1.15),
+                    duration: Duration(seconds: 3),
+                    curve: Curves.easeInOut,
+                    builder: (context, value, child) {
+                      return Transform.scale(
+                        scale: value,
+                        child: Container(
+                          width: 90,
+                          height: 90,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: kPrimaryGreen.withOpacity(0.13),
+                          ),
+                          child: Center(
+                            child: Text(
+                              '🧘‍♀️',
+                              style: TextStyle(fontSize: 48),
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                    onEnd: () {
+                      (context as Element).markNeedsBuild();
+                    },
+                  ),
+                  SizedBox(height: 24),
+                  Text(
+                    'Moment of Calm',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: kPrimaryGreen,
+                      fontSize: 26,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 0.2,
+                    ),
+                  ),
+                  SizedBox(height: 18),
+                  Text(
+                    'Take a moment to appreciate your meal and practice mindful eating.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 17,
+                      color: Colors.black87,
+                      height: 1.5,
+                    ),
+                  ),
+                  SizedBox(height: 32),
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: () => Navigator.of(context).pop(),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: kPrimaryGreen,
+                        foregroundColor: Colors.white,
+                        padding: EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        elevation: 0,
+                        textStyle: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+                      ),
+                      child: Text('Continue'),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+    onContinue();
+  }
+
   Future<void> _saveMeal() async {
     setState(() {
       _isSaving = true;
@@ -95,11 +200,10 @@ class _ScanResultPageState extends State<ScanResultPage> {
       final user = FirebaseAuth.instance.currentUser;
       if (user == null) throw Exception('Not signed in');
       String? imageUrl;
-      // Upload image to Firebase Storage or use fallback
       if (widget.imagePath.isNotEmpty && File(widget.imagePath).existsSync()) {
       final file = File(widget.imagePath);
       final fileName = 'meal_${DateTime.now().millisecondsSinceEpoch}.jpg';
-      final ref = FirebaseStorage.instance.ref().child('meal_images/${user.uid}/$fileName');
+        final ref = FirebaseStorage.instance.ref().child('meal_images/${user.uid}/$fileName');
       final uploadTask = await ref.putFile(file);
       if (uploadTask.state == TaskState.success) {
         imageUrl = await ref.getDownloadURL();
@@ -107,7 +211,7 @@ class _ScanResultPageState extends State<ScanResultPage> {
         throw Exception('Image upload failed');
         }
       } else {
-        imageUrl = 'assets/meal_icon.png'; // Fallback asset path
+        imageUrl = 'assets/meal_icon.png';
       }
       final meal = Meal(
         id: '',
@@ -125,10 +229,17 @@ class _ScanResultPageState extends State<ScanResultPage> {
       await MealService().addMeal(meal);
       setState(() { _ingredients.clear(); });
       if (mounted) {
+        await _showCalmPopupIfNeeded(() {
         Navigator.of(context).popUntil((route) => route.isFirst);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Meal saved!')),
+        Fluttertoast.showToast(
+          msg: "🎉 Meal saved!",
+          toastLength: Toast.LENGTH_SHORT,
+          gravity: ToastGravity.CENTER,
+          backgroundColor: Colors.black87,
+          textColor: Colors.white,
+          fontSize: 20.0,
         );
+        });
       }
     } catch (e) {
       setState(() => _error = e.toString());

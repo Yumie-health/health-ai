@@ -32,6 +32,7 @@ import 'package:firebase_analytics/observer.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/timezone.dart' as tz;
+import 'package:timezone/data/latest.dart' as tz;
 
 // Define the color palette
 const Color kPrimaryGreen = Color(0xFF4CAF50); // Soft green
@@ -261,6 +262,7 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  tz.initializeTimeZones(); // Initialize time zones for scheduled notifications
   await Firebase.initializeApp();
 
   // Set up background message handler
@@ -5679,8 +5681,8 @@ class SettingsPage extends StatelessWidget {
                   ),
                   Divider(height: 1, thickness: 1, indent: 16, endIndent: 16),
                   SwitchListTile(
-                    title: Text('Moment of Calm Before Meals', style: TextStyle(fontWeight: FontWeight.w600)),
-                    subtitle: Text('Show a calming popup before logging a meal'),
+                    title: Text('Moment of Calm After Meals', style: TextStyle(fontWeight: FontWeight.w600)),
+                    subtitle: Text('Show a calming popup after logging a meal'),
                     value: prefs.momentOfCalmReminders,
                     onChanged: (v) => prefs.setMomentOfCalmReminders(v),
                     secondary: Icon(Icons.self_improvement),
