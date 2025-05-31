@@ -48,6 +48,7 @@ class AIService {
     required bool isDiabetic,
     String model = 'gpt-4o-mini',
     String? specialInstruction,
+    String language = 'en',
   }) async {
     final headers = {
       'Content-Type': 'application/json',
@@ -67,6 +68,7 @@ class AIService {
       bloodType: bloodType,
       isDiabetic: isDiabetic,
       specialInstruction: specialInstruction,
+      language: language,
     );
     final messages = [
       {'role': 'system', 'content': systemPrompt},
@@ -102,6 +104,7 @@ class AIService {
     required String bloodType,
     required bool isDiabetic,
     String? specialInstruction,
+    String language = 'en',
   }) {
     // Convert height to ft/in
     final totalInches = (heightCm / 2.54).round();
@@ -109,11 +112,16 @@ class AIService {
     final heightIn = totalInches % 12;
     // Convert weight to lb
     final weightLb = (weightKg * 2.20462).round();
-
+    String languageInstruction = '';
+    if (language == 'ar') {
+      languageInstruction = '\nRespond in Modern Standard Arabic.';
+    } else if (language == 'es') {
+      languageInstruction = '\nRespond in Spanish.';
+    }
     return '''
 You are Yumie, a friendly, expert-level virtual nutrition coach. Your job is to provide clear, accurate, and supportive responses tailored to the user's unique profile. Use the following user data to guide every answer:
 
-Respond in clear, friendly, plain English. Avoid Markdown formatting (like **bold** or lists) unless the user specifically asks for it.
+Respond in clear, friendly, plain English. Avoid Markdown formatting (like **bold** or lists) unless the user specifically asks for it.$languageInstruction
 
 - Name: $name
 - Age: $age
@@ -229,10 +237,16 @@ Carbs: 250
   }
 
   /// Analyze a meal image and return food name, macros, and ingredients.
-  Future<Map<String, dynamic>?> analyzeMealImage(File imageFile) async {
+  Future<Map<String, dynamic>?> analyzeMealImage(File imageFile, {String language = 'en'}) async {
     final bytes = await imageFile.readAsBytes();
     final base64Image = base64Encode(bytes);
     final dataUrl = 'data:image/jpeg;base64,$base64Image';
+    String languageInstruction = '';
+    if (language == 'ar') {
+      languageInstruction = '\nRespond in Modern Standard Arabic.';
+    } else if (language == 'es') {
+      languageInstruction = '\nRespond in Spanish.';
+    }
     final prompt = '''
 You are a nutrition AI. Given this photo of a meal, return a JSON object with:
 - food_name: string
@@ -241,7 +255,7 @@ You are a nutrition AI. Given this photo of a meal, return a JSON object with:
 - carbs: integer
 - fat: integer
 - ingredients: array of strings
-Respond ONLY with valid JSON.
+Respond ONLY with valid JSON.$languageInstruction
 ''';
     final headers = {
       'Content-Type': 'application/json',
@@ -276,12 +290,18 @@ Respond ONLY with valid JSON.
   }
 
   /// Analyze a fridge image and return a list of detected items.
-  Future<List<String>?> analyzeFridgeImage(File imageFile) async {
+  Future<List<String>?> analyzeFridgeImage(File imageFile, {String language = 'en'}) async {
     final bytes = await imageFile.readAsBytes();
     final base64Image = base64Encode(bytes);
     final dataUrl = 'data:image/jpeg;base64,$base64Image';
+    String languageInstruction = '';
+    if (language == 'ar') {
+      languageInstruction = '\nRespond in Modern Standard Arabic.';
+    } else if (language == 'es') {
+      languageInstruction = '\nRespond in Spanish.';
+    }
     final prompt = '''
-You are a kitchen assistant AI. Given this photo of a fridge, return a JSON array of all visible food items (ingredients). Respond ONLY with a JSON array of strings.
+You are a kitchen assistant AI. Given this photo of a fridge, return a JSON array of all visible food items (ingredients). Respond ONLY with a JSON array of strings.$languageInstruction
 ''';
     final headers = {
       'Content-Type': 'application/json',
@@ -324,7 +344,14 @@ You are a kitchen assistant AI. Given this photo of a fridge, return a JSON arra
   Future<Map<String, dynamic>?> generateMealFromFridge({
     required List<String> fridgeItems,
     required Map<String, dynamic> userProfile,
+    String language = 'en',
   }) async {
+    String languageInstruction = '';
+    if (language == 'ar') {
+      languageInstruction = '\nRespond in Modern Standard Arabic.';
+    } else if (language == 'es') {
+      languageInstruction = '\nRespond in Spanish.';
+    }
     final prompt = '''
 You are a nutrition AI. Given this user profile: ${jsonEncode(userProfile)} and these fridge items: ${jsonEncode(fridgeItems)}, suggest a healthy meal the user can make, including:
 - meal_name: string
@@ -334,7 +361,7 @@ You are a nutrition AI. Given this user profile: ${jsonEncode(userProfile)} and 
 - protein: integer
 - carbs: integer
 - fat: integer
-Respond ONLY with valid JSON.
+Respond ONLY with valid JSON.$languageInstruction
 ''';
     final headers = {
       'Content-Type': 'application/json',
@@ -366,7 +393,13 @@ Respond ONLY with valid JSON.
   }
 
   /// Get AI-powered suggested meals for a given meal period
-  Future<List<Map<String, dynamic>>?> getSuggestedMeals({required String mealPeriod}) async {
+  Future<List<Map<String, dynamic>>?> getSuggestedMeals({required String mealPeriod, String language = 'en'}) async {
+    String languageInstruction = '';
+    if (language == 'ar') {
+      languageInstruction = '\nRespond in Modern Standard Arabic.';
+    } else if (language == 'es') {
+      languageInstruction = '\nRespond in Spanish.';
+    }
     final prompt = '''
 You are a nutrition AI. Suggest 3 healthy $mealPeriod meals. For each meal, provide:
 - meal_name: string (max 30 characters)
@@ -378,7 +411,7 @@ You are a nutrition AI. Suggest 3 healthy $mealPeriod meals. For each meal, prov
 - carbs: integer
 - ingredients: array of strings
 - recipe: array of steps (strings)
-Respond ONLY with a JSON array of 3 objects, no extra text, no explanations, no markdown.
+Respond ONLY with a JSON array of 3 objects, no extra text, no explanations, no markdown.$languageInstruction
 ''';
     final headers = {
       'Content-Type': 'application/json',

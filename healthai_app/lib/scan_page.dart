@@ -11,6 +11,7 @@ import 'scanner_overlay.dart';
 import 'scan_result_fridge_page.dart';
 import 'scan_paywall_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'l10n/app_localizations.dart';
 
 class ScanPage extends StatefulWidget {
   const ScanPage({Key? key}) : super(key: key);
@@ -230,11 +231,11 @@ class _ScanPageState extends State<ScanPage> {
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            _buildModeButton('Meal', !_isFridgeMode, () {
+                            _buildModeButton(AppLocalizations.of(context)!.meal, !_isFridgeMode, () {
                               setState(() { _isFridgeMode = false; });
                             }),
                             const SizedBox(width: 12),
-                            _buildModeButton('Fridge', _isFridgeMode, () {
+                            _buildModeButton(AppLocalizations.of(context)!.fridge, _isFridgeMode, () {
                               setState(() { _isFridgeMode = true; });
                             }),
                           ],
@@ -253,9 +254,9 @@ class _ScanPageState extends State<ScanPage> {
                             color: Colors.black.withOpacity(0.55),
                             borderRadius: BorderRadius.circular(22),
                           ),
-                          child: const Text(
-                            "Place the food inside of the frame",
-                            style: TextStyle(
+                          child: Text(
+                            AppLocalizations.of(context)!.placeFoodInFrame,
+                            style: const TextStyle(
                               color: Colors.white,
                               fontSize: 18,
                               fontWeight: FontWeight.w700,

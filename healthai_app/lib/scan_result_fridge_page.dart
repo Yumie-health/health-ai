@@ -10,6 +10,7 @@ import 'services/ai_service.dart';
 import './generated_meal_fridge_page.dart';
 import 'package:provider/provider.dart';
 import 'main.dart'; // For PreferencesProvider and kPrimaryGreen
+import 'l10n/app_localizations.dart';
 
 class ScanResultFridgePage extends StatefulWidget {
   final String imagePath;
@@ -35,12 +36,15 @@ class _ScanResultFridgePageState extends State<ScanResultFridgePage> {
   Map<String, dynamic>? _generatedMeal;
 
   final List<String> _mealTypes = ['breakfast', 'lunch', 'dinner', 'snack'];
-  final Map<String, String> _mealTypeLabels = {
-    'breakfast': 'Breakfast',
-    'lunch': 'Lunch',
-    'dinner': 'Dinner',
-    'snack': 'Snack',
-  };
+  Map<String, String> get _mealTypeLabels {
+    final localizations = AppLocalizations.of(context)!;
+    return {
+      'breakfast': localizations.breakfast,
+      'lunch': localizations.lunch,
+      'dinner': localizations.dinner,
+      'snack': localizations.snack,
+    };
+  }
 
   @override
   void initState() {
@@ -135,7 +139,7 @@ class _ScanResultFridgePageState extends State<ScanResultFridgePage> {
                   ),
                   SizedBox(height: 24),
                   Text(
-                    'Moment of Calm',
+                    AppLocalizations.of(context)!.momentOfCalm,
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       color: kPrimaryGreen,
@@ -146,7 +150,7 @@ class _ScanResultFridgePageState extends State<ScanResultFridgePage> {
                   ),
                   SizedBox(height: 18),
                   Text(
-                    'Take a moment to appreciate your meal and practice mindful eating.',
+                    AppLocalizations.of(context)!.practiceMindfulEating,
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: 17,
@@ -233,7 +237,9 @@ class _ScanResultFridgePageState extends State<ScanResultFridgePage> {
   Future<void> _runAIFridgeScan() async {
     setState(() { _isLoadingAI = true; });
     final aiService = AIService();
-    final result = await aiService.analyzeFridgeImage(File(widget.imagePath));
+    final prefs = Provider.of<PreferencesProvider>(context, listen: false);
+    final language = prefs.language;
+    final result = await aiService.analyzeFridgeImage(File(widget.imagePath), language: language);
     if (result != null) {
       setState(() {
         _ingredients = result;
@@ -256,7 +262,9 @@ class _ScanResultFridgePageState extends State<ScanResultFridgePage> {
       'goal': 'maintenance',
       // Add more fields as needed
     };
-    final result = await aiService.generateMealFromFridge(fridgeItems: _ingredients, userProfile: userProfile);
+    final prefs = Provider.of<PreferencesProvider>(context, listen: false);
+    final language = prefs.language;
+    final result = await aiService.generateMealFromFridge(fridgeItems: _ingredients, userProfile: userProfile, language: language);
     setState(() {
       _generatedMeal = result;
       _isGeneratingMeal = false;
@@ -288,13 +296,13 @@ class _ScanResultFridgePageState extends State<ScanResultFridgePage> {
                 children: [
                   Icon(Icons.refresh, color: Colors.green, size: 22),
                   const SizedBox(width: 4),
-                  Text('Retake Scan', style: TextStyle(color: Colors.green, fontWeight: FontWeight.w600, fontSize: 15)),
+                  Text(AppLocalizations.of(context)!.retakeScan, style: TextStyle(color: Colors.green, fontWeight: FontWeight.w600, fontSize: 15)),
                 ],
               ),
             ),
           ),
         ],
-        title: Text('Review Meal', style: TextStyle(color: Colors.black)),
+        title: Text(AppLocalizations.of(context)!.reviewMeal, style: TextStyle(color: Colors.black)),
         centerTitle: true,
       ),
       body: _isLoadingAI
@@ -345,7 +353,7 @@ class _ScanResultFridgePageState extends State<ScanResultFridgePage> {
                         ),
                       );
                     },
-                    child: const Text('Preview Full Image', style: TextStyle(fontWeight: FontWeight.bold)),
+                    child: Text(AppLocalizations.of(context)!.previewFullImage, style: TextStyle(fontWeight: FontWeight.bold)),
                   ),
                 ),
               ],
@@ -367,7 +375,7 @@ class _ScanResultFridgePageState extends State<ScanResultFridgePage> {
                 ),
                     child: _isGeneratingMeal
                       ? SizedBox(width: 28, height: 28, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 3))
-                      : const Text('Generate Meal'),
+                      : Text(AppLocalizations.of(context)!.generateMeal),
               ),
             ),
           ),
@@ -383,10 +391,10 @@ class _ScanResultFridgePageState extends State<ScanResultFridgePage> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('Detected Fridge Items', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 17, color: Colors.green[700])),
+                        Text(AppLocalizations.of(context)!.detectedFridgeItems, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 17, color: Colors.green[700])),
                         SizedBox(height: 10),
                         _ingredients.isEmpty
-                  ? const Center(child: Text('No fridge items detected.', style: TextStyle(color: Colors.grey)))
+                  ? Center(child: Text(AppLocalizations.of(context)!.noFridgeItemsDetected, style: TextStyle(color: Colors.grey)))
                           : Wrap(
                               spacing: 8,
                               runSpacing: 8,
@@ -411,7 +419,7 @@ class _ScanResultFridgePageState extends State<ScanResultFridgePage> {
                   textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                 ),
-                child: const Text('Discard'),
+                child: Text(AppLocalizations.of(context)!.discard),
               ),
             ),
           ),

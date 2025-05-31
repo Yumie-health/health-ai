@@ -7,6 +7,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'scan_result_page.dart';
 import 'package:share_plus/share_plus.dart';
+import '../l10n/app_localizations.dart';
 
 class GeneratedMealFromFridgePage extends StatefulWidget {
   final Map<String, dynamic> meal;
@@ -53,11 +54,12 @@ class _GeneratedMealFromFridgePageState extends State<GeneratedMealFromFridgePag
   @override
   Widget build(BuildContext context) {
     final meal = widget.meal;
+    final localizations = AppLocalizations.of(context)!;
     final macros = [
-      {'label': 'Calories', 'value': meal['calories']?.toString() ?? '-', 'color': Colors.green[700] ?? Colors.green},
-      {'label': 'Protein', 'value': '${meal['protein'] ?? '-'}g', 'color': Colors.blue[700] ?? Colors.blue},
-      {'label': 'Carbs', 'value': '${meal['carbs'] ?? '-'}g', 'color': Colors.orange[700] ?? Colors.orange},
-      {'label': 'Fat', 'value': '${meal['fat'] ?? '-'}g', 'color': Colors.red[400] ?? Colors.red},
+      {'label': localizations.calories, 'value': meal['calories']?.toString() ?? '-', 'color': Colors.green[700] ?? Colors.green},
+      {'label': localizations.protein, 'value': '${meal['protein'] ?? '-'}g', 'color': Colors.blue[700] ?? Colors.blue},
+      {'label': localizations.carbs, 'value': '${meal['carbs'] ?? '-'}g', 'color': Colors.orange[700] ?? Colors.orange},
+      {'label': localizations.fat, 'value': '${meal['fat'] ?? '-'}g', 'color': Colors.red[400] ?? Colors.red},
     ];
     final recipe = (meal['recipe'] as List?)?.map((e) => e.toString()).toList() ?? [];
     final ingredients = (meal['ingredients'] as List?)?.map((e) => e.toString()).toList() ?? [];
@@ -104,7 +106,7 @@ class _GeneratedMealFromFridgePageState extends State<GeneratedMealFromFridgePag
               ),
               SizedBox(height: 18),
               if (ingredients.isNotEmpty) ...[
-                Text('Ingredients', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Colors.green)),
+                Text(localizations.ingredients, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Colors.green)),
                 SizedBox(height: 8),
                 Wrap(
                   spacing: 8,
@@ -113,7 +115,14 @@ class _GeneratedMealFromFridgePageState extends State<GeneratedMealFromFridgePag
                 ),
                 SizedBox(height: 18),
               ],
-              Text('How to Make', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+              Text(
+                localizations.localeName.startsWith('ar')
+                    ? 'طريقة التحضير'
+                    : localizations.localeName.startsWith('es')
+                        ? 'Cómo preparar'
+                        : 'How to Make',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+              ),
               SizedBox(height: 8),
               Expanded(
                 child: ListView.builder(
@@ -159,7 +168,7 @@ class _GeneratedMealFromFridgePageState extends State<GeneratedMealFromFridgePag
                           padding: const EdgeInsets.symmetric(vertical: 16),
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                         ),
-                        child: const Text('Log Meal'),
+                        child: Text(localizations.logMeal),
                       ),
                     ),
                     SizedBox(width: 16),
@@ -172,7 +181,7 @@ class _GeneratedMealFromFridgePageState extends State<GeneratedMealFromFridgePag
                           padding: const EdgeInsets.symmetric(vertical: 16),
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                         ),
-                        child: const Text('Discard'),
+                        child: Text(localizations.discard),
                       ),
                     ),
                   ],

@@ -6,6 +6,8 @@ import 'services/meal_service.dart';
 import 'main.dart'; // For color constants and _MacroTag
 import 'models/custom_meal.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'l10n/app_localizations.dart';
+import 'services/pexels_service.dart';
 
 class LogMealPage extends StatefulWidget {
   const LogMealPage({Key? key}) : super(key: key);
@@ -28,12 +30,6 @@ class _LogMealPageState extends State<LogMealPage> with TickerProviderStateMixin
   String? _error;
 
   final List<String> _mealTypes = ['breakfast', 'lunch', 'dinner', 'snack'];
-  final Map<String, String> _mealTypeLabels = {
-    'breakfast': 'Breakfast',
-    'lunch': 'Lunch',
-    'dinner': 'Dinner',
-    'snack': 'Snack',
-  };
 
   late AnimationController _tabsController;
   late AnimationController _foodNameControllerAnim;
@@ -137,7 +133,7 @@ class _LogMealPageState extends State<LogMealPage> with TickerProviderStateMixin
                   ),
               SizedBox(height: 24),
                   Text(
-                    'Moment of Calm',
+                    AppLocalizations.of(context)!.momentOfCalm,
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       color: kPrimaryGreen,
@@ -148,7 +144,7 @@ class _LogMealPageState extends State<LogMealPage> with TickerProviderStateMixin
                   ),
                   SizedBox(height: 18),
                   Text(
-                    'Take a moment to appreciate your meal and practice mindful eating.',
+                    AppLocalizations.of(context)!.takeMomentToAppreciate,
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: 17,
@@ -171,7 +167,7 @@ class _LogMealPageState extends State<LogMealPage> with TickerProviderStateMixin
                         elevation: 0,
                         textStyle: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
                       ),
-                      child: Text('Continue'),
+                      child: Text(AppLocalizations.of(context)!.continueButton),
                     ),
             ),
           ],
@@ -210,7 +206,7 @@ class _LogMealPageState extends State<LogMealPage> with TickerProviderStateMixin
         await _showCalmPopupIfNeeded(() {
           Navigator.of(context).pop();
           Fluttertoast.showToast(
-            msg: "🎉 Meal saved!",
+            msg: AppLocalizations.of(context)!.mealSaved,
             toastLength: Toast.LENGTH_SHORT,
             gravity: ToastGravity.CENTER,
             backgroundColor: Colors.black87,
@@ -226,7 +222,7 @@ class _LogMealPageState extends State<LogMealPage> with TickerProviderStateMixin
     }
   }
 
-  Widget _buildMealTypeTabs() {
+  Widget _buildMealTypeTabs(Map<String, String> mealTypeLabels) {
     return FadeTransition(
       opacity: _tabsController,
       child: SlideTransition(
@@ -252,7 +248,7 @@ class _LogMealPageState extends State<LogMealPage> with TickerProviderStateMixin
                   ),
                   child: Center(
                     child: Text(
-                      _mealTypeLabels[type]!,
+                      mealTypeLabels[type]!,
                       style: TextStyle(
                         fontWeight: FontWeight.w600,
                         fontSize: 18,
@@ -270,6 +266,7 @@ class _LogMealPageState extends State<LogMealPage> with TickerProviderStateMixin
   }
 
   Widget _buildMacrosInputs() {
+    final localizations = AppLocalizations.of(context)!;
     return FadeTransition(
       opacity: _macrosController,
       child: SlideTransition(
@@ -279,11 +276,11 @@ class _LogMealPageState extends State<LogMealPage> with TickerProviderStateMixin
             Row(
               children: [
                 Expanded(
-                  child: _macroField('Calories', _caloriesController),
+                  child: _macroField('calories', localizations.calories, _caloriesController),
                 ),
                 const SizedBox(width: 16),
                 Expanded(
-                  child: _macroField('Protein (g)', _proteinController),
+                  child: _macroField('protein', localizations.protein + ' (g)', _proteinController),
                 ),
               ],
             ),
@@ -291,11 +288,11 @@ class _LogMealPageState extends State<LogMealPage> with TickerProviderStateMixin
             Row(
               children: [
                 Expanded(
-                  child: _macroField('Carbs (g)', _carbsController),
+                  child: _macroField('carbs', localizations.carbs + ' (g)', _carbsController),
                 ),
                 const SizedBox(width: 16),
                 Expanded(
-                  child: _macroField('Fat (g)', _fatController),
+                  child: _macroField('fat', localizations.fat + ' (g)', _fatController),
                 ),
               ],
             ),
@@ -305,16 +302,22 @@ class _LogMealPageState extends State<LogMealPage> with TickerProviderStateMixin
     );
   }
 
-  Widget _macroField(String label, TextEditingController controller) {
+  Widget _macroField(String macroType, String label, TextEditingController controller) {
     Color color;
-    if (label.contains('Protein')) {
-      color = kSecondaryBlue;
-    } else if (label.contains('Carbs')) {
-      color = kAccentOrange;
-    } else if (label.contains('Fat')) {
-      color = kWarningRed;
-    } else {
-      color = kPrimaryGreen;
+    switch (macroType) {
+      case 'protein':
+        color = kSecondaryBlue;
+        break;
+      case 'carbs':
+        color = kAccentOrange;
+        break;
+      case 'fat':
+        color = kWarningRed;
+        break;
+      case 'calories':
+      default:
+        color = kPrimaryGreen;
+        break;
     }
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -358,9 +361,9 @@ class _LogMealPageState extends State<LogMealPage> with TickerProviderStateMixin
           builder: (context, snapshot) {
             final meals = snapshot.data ?? [];
             if (meals.isEmpty) {
-              return const Padding(
-                padding: EdgeInsets.symmetric(vertical: 24),
-                child: Center(child: Text('No recent foods.')),
+              return Padding(
+                padding: const EdgeInsets.symmetric(vertical: 24),
+                child: Center(child: Text(AppLocalizations.of(context)!.noRecentFoods)),
               );
             }
             return Column(
@@ -443,18 +446,18 @@ class _LogMealPageState extends State<LogMealPage> with TickerProviderStateMixin
             opacity: anim1.value,
             child: AlertDialog(
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-              title: Text('Build a Custom Meal', style: TextStyle(fontWeight: FontWeight.bold, color: kPrimaryGreen)),
+              title: Text(AppLocalizations.of(context)!.buildCustomMeal, style: TextStyle(fontWeight: FontWeight.bold, color: kPrimaryGreen)),
               content: SingleChildScrollView(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Meal Name', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 18, color: kPrimaryGreen)),
+                    Text(AppLocalizations.of(context)!.mealName, style: TextStyle(fontWeight: FontWeight.w600, fontSize: 18, color: kPrimaryGreen)),
                     const SizedBox(height: 8),
                     TextField(
                       controller: nameController,
                       decoration: InputDecoration(
-                        hintText: 'Search or enter food name',
+                        hintText: AppLocalizations.of(context)!.searchOrEnterFoodName,
                         filled: true,
                         fillColor: const Color(0xFFF5F5F5),
                         border: OutlineInputBorder(
@@ -466,28 +469,28 @@ class _LogMealPageState extends State<LogMealPage> with TickerProviderStateMixin
                     const SizedBox(height: 18),
                     Row(
                       children: [
-                        Expanded(child: _macroField('Calories', caloriesController)),
+                        Expanded(child: _macroField('calories', AppLocalizations.of(context)!.calories, caloriesController)),
                         const SizedBox(width: 16),
-                        Expanded(child: _macroField('Protein (g)', proteinController)),
+                        Expanded(child: _macroField('protein', AppLocalizations.of(context)!.protein + ' (g)', proteinController)),
                       ],
                     ),
                     const SizedBox(height: 12),
                     Row(
                       children: [
-                        Expanded(child: _macroField('Carbs (g)', carbsController)),
+                        Expanded(child: _macroField('carbs', AppLocalizations.of(context)!.carbs + ' (g)', carbsController)),
                         const SizedBox(width: 16),
-                        Expanded(child: _macroField('Fat (g)', fatController)),
+                        Expanded(child: _macroField('fat', AppLocalizations.of(context)!.fat + ' (g)', fatController)),
                       ],
                     ),
                     const SizedBox(height: 18),
-                    Text('Ingredients', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 17, color: kPrimaryGreen)),
+                    Text(AppLocalizations.of(context)!.ingredients, style: TextStyle(fontWeight: FontWeight.w600, fontSize: 17, color: kPrimaryGreen)),
                     Row(
                       children: [
                         Expanded(
                           child: TextField(
                             controller: ingredientController,
                             decoration: InputDecoration(
-                              hintText: 'Add ingredient',
+                              hintText: AppLocalizations.of(context)!.addIngredient,
                               filled: true,
                               fillColor: const Color(0xFFF5F5F5),
                               border: OutlineInputBorder(
@@ -530,7 +533,7 @@ class _LogMealPageState extends State<LogMealPage> with TickerProviderStateMixin
               actions: [
                 TextButton(
                   onPressed: () => Navigator.pop(context),
-                  child: Text('Cancel', style: TextStyle(color: kPrimaryGreen)),
+                  child: Text(AppLocalizations.of(context)!.cancel, style: TextStyle(color: kPrimaryGreen)),
                 ),
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(backgroundColor: kPrimaryGreen),
@@ -560,7 +563,7 @@ class _LogMealPageState extends State<LogMealPage> with TickerProviderStateMixin
                             });
                           }
                         },
-                  child: isSaving ? SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)) : Text('Save'),
+                  child: isSaving ? SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)) : Text(AppLocalizations.of(context)!.save),
                 ),
               ],
             ),
@@ -591,7 +594,7 @@ class _LogMealPageState extends State<LogMealPage> with TickerProviderStateMixin
                   ),
                   child: Center(
                     child: Text(
-                      'Recent',
+                      AppLocalizations.of(context)!.recent,
                       style: TextStyle(
                         color: _foodTabIndex == 0 ? kPrimaryGreen : Colors.grey[500],
                         fontWeight: FontWeight.w600,
@@ -613,7 +616,7 @@ class _LogMealPageState extends State<LogMealPage> with TickerProviderStateMixin
                   ),
                   child: Center(
                     child: Text(
-                      'My Foods',
+                      AppLocalizations.of(context)!.myFoods,
                       style: TextStyle(
                         color: _foodTabIndex == 1 ? kPrimaryGreen : Colors.grey[500],
                         fontWeight: FontWeight.w600,
@@ -641,7 +644,7 @@ class _LogMealPageState extends State<LogMealPage> with TickerProviderStateMixin
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 const SizedBox(height: 32),
-                Text("You haven't saved any custom foods yet", style: TextStyle(color: Colors.grey[500], fontSize: 18)),
+                Text(AppLocalizations.of(context)!.noCustomFoods, style: TextStyle(color: Colors.grey[500], fontSize: 18)),
                 const SizedBox(height: 24),
                 OutlinedButton(
                   onPressed: _showCustomMealDialog,
@@ -651,7 +654,7 @@ class _LogMealPageState extends State<LogMealPage> with TickerProviderStateMixin
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                     padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
                   ),
-                  child: const Text('Add Custom Food', style: TextStyle(fontSize: 18)),
+                  child: Text(AppLocalizations.of(context)!.addCustomFood, style: TextStyle(fontSize: 18)),
                 ),
               ],
             ),
@@ -672,7 +675,7 @@ class _LogMealPageState extends State<LogMealPage> with TickerProviderStateMixin
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                 padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
               ),
-              child: const Text('Build a Custom Meal', style: TextStyle(fontSize: 18)),
+              child: Text(AppLocalizations.of(context)!.buildCustomMeal, style: TextStyle(fontSize: 18)),
                 ),
               ],
             ),
@@ -730,18 +733,18 @@ class _LogMealPageState extends State<LogMealPage> with TickerProviderStateMixin
                 opacity: anim1.value,
                 child: AlertDialog(
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                  title: Text('Edit Custom Meal', style: TextStyle(fontWeight: FontWeight.bold, color: kPrimaryGreen)),
+                  title: Text(AppLocalizations.of(context)!.editCustomMeal, style: TextStyle(fontWeight: FontWeight.bold, color: kPrimaryGreen)),
                   content: SingleChildScrollView(
                     child: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                        Text('Meal Name', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 18, color: kPrimaryGreen)),
+                        Text(AppLocalizations.of(context)!.mealName, style: TextStyle(fontWeight: FontWeight.w600, fontSize: 18, color: kPrimaryGreen)),
                         const SizedBox(height: 8),
                         TextField(
                           controller: nameController,
                           decoration: InputDecoration(
-                            hintText: 'Search or enter food name',
+                            hintText: AppLocalizations.of(context)!.searchOrEnterFoodName,
                             filled: true,
                             fillColor: const Color(0xFFF5F5F5),
                             border: OutlineInputBorder(
@@ -753,28 +756,28 @@ class _LogMealPageState extends State<LogMealPage> with TickerProviderStateMixin
                         const SizedBox(height: 18),
                         Row(
                           children: [
-                            Expanded(child: _macroField('Calories', caloriesController)),
+                            Expanded(child: _macroField('calories', AppLocalizations.of(context)!.calories, caloriesController)),
                             const SizedBox(width: 16),
-                            Expanded(child: _macroField('Protein (g)', proteinController)),
+                            Expanded(child: _macroField('protein', AppLocalizations.of(context)!.protein + ' (g)', proteinController)),
                           ],
                         ),
                   const SizedBox(height: 12),
                         Row(
                           children: [
-                            Expanded(child: _macroField('Carbs (g)', carbsController)),
+                            Expanded(child: _macroField('carbs', AppLocalizations.of(context)!.carbs + ' (g)', carbsController)),
                             const SizedBox(width: 16),
-                            Expanded(child: _macroField('Fat (g)', fatController)),
+                            Expanded(child: _macroField('fat', AppLocalizations.of(context)!.fat + ' (g)', fatController)),
                           ],
                         ),
                         const SizedBox(height: 16),
-                        Text('Ingredients', style: TextStyle(fontWeight: FontWeight.w600)),
+                        Text(AppLocalizations.of(context)!.ingredients, style: TextStyle(fontWeight: FontWeight.w600)),
                         Row(
                           children: [
                             Expanded(
                               child: TextField(
                                 controller: ingredientController,
                                 decoration: InputDecoration(
-                                  hintText: 'Add ingredient',
+                                  hintText: AppLocalizations.of(context)!.addIngredient,
                                   filled: true,
                                   fillColor: const Color(0xFFF5F5F5),
                                   border: OutlineInputBorder(
@@ -817,7 +820,7 @@ class _LogMealPageState extends State<LogMealPage> with TickerProviderStateMixin
               actions: [
                 TextButton(
                   onPressed: () => Navigator.pop(context),
-                      child: Text('Cancel', style: TextStyle(color: kPrimaryGreen)),
+                      child: Text(AppLocalizations.of(context)!.cancel, style: TextStyle(color: kPrimaryGreen)),
                 ),
                     ElevatedButton(
                       style: ElevatedButton.styleFrom(backgroundColor: kPrimaryGreen),
@@ -847,7 +850,7 @@ class _LogMealPageState extends State<LogMealPage> with TickerProviderStateMixin
                                 });
                               }
                             },
-                      child: isSaving ? SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)) : Text('Save'),
+                      child: isSaving ? SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)) : Text(AppLocalizations.of(context)!.save),
                 ),
               ],
                 ),
@@ -863,9 +866,16 @@ class _LogMealPageState extends State<LogMealPage> with TickerProviderStateMixin
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final localizations = AppLocalizations.of(context)!;
+    final Map<String, String> _mealTypeLabels = {
+      'breakfast': localizations.breakfast,
+      'lunch': localizations.lunch,
+      'dinner': localizations.dinner,
+      'snack': localizations.snack,
+    };
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Log Meal', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black, fontSize: 22)),
+        title: Text(AppLocalizations.of(context)!.logMeal, style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black, fontSize: 22)),
         leading: Padding(
           padding: const EdgeInsets.only(left: 10),
           child: GestureDetector(
@@ -898,7 +908,7 @@ class _LogMealPageState extends State<LogMealPage> with TickerProviderStateMixin
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const SizedBox(height: 8),
-            _buildMealTypeTabs(),
+            _buildMealTypeTabs(_mealTypeLabels),
             const SizedBox(height: 24),
             // --- FORM SECTION: always visible, no tabs ---
             FadeTransition(
@@ -911,7 +921,7 @@ class _LogMealPageState extends State<LogMealPage> with TickerProviderStateMixin
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Text('Food Name', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 18)),
+                    Text(AppLocalizations.of(context)!.foodName, style: TextStyle(fontWeight: FontWeight.w600, fontSize: 18)),
                         OutlinedButton.icon(
                           onPressed: () {
                             _foodNameController.clear();
@@ -924,7 +934,7 @@ class _LogMealPageState extends State<LogMealPage> with TickerProviderStateMixin
                             });
                           },
                           icon: Icon(Icons.delete_outline, color: kPrimaryGreen, size: 18),
-                          label: const Text('Clear All', style: TextStyle(fontWeight: FontWeight.w500, fontSize: 15, color: kPrimaryGreen)),
+                          label: Text(AppLocalizations.of(context)!.clearAll, style: TextStyle(fontWeight: FontWeight.w500, fontSize: 15, color: kPrimaryGreen)),
                           style: OutlinedButton.styleFrom(
                             side: BorderSide(color: kPrimaryGreen, width: 1.4),
                             shape: StadiumBorder(),
@@ -941,7 +951,7 @@ class _LogMealPageState extends State<LogMealPage> with TickerProviderStateMixin
                     TextField(
                       controller: _foodNameController,
                       decoration: InputDecoration(
-                        hintText: 'Search or enter food name',
+                        hintText: AppLocalizations.of(context)!.searchOrEnterFoodName,
                         filled: true,
                         fillColor: const Color(0xFFF5F5F5),
                         border: OutlineInputBorder(
@@ -958,14 +968,14 @@ class _LogMealPageState extends State<LogMealPage> with TickerProviderStateMixin
             _buildMacrosInputs(),
             const SizedBox(height: 24),
             // Ingredient input section
-            Text('Ingredients', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 17, color: kPrimaryGreen)),
+            Text(AppLocalizations.of(context)!.ingredients, style: TextStyle(fontWeight: FontWeight.w600, fontSize: 17, color: kPrimaryGreen)),
             Row(
               children: [
                 Expanded(
                   child: TextField(
                     controller: _ingredientController,
                     decoration: InputDecoration(
-                      hintText: 'Add ingredient',
+                      hintText: AppLocalizations.of(context)!.addIngredient,
                       filled: true,
                       fillColor: const Color(0xFFF5F5F5),
                       border: OutlineInputBorder(
@@ -1029,7 +1039,7 @@ class _LogMealPageState extends State<LogMealPage> with TickerProviderStateMixin
           ),
           child: _isSaving
               ? const SizedBox(height: 24, width: 24, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-              : const Text('Save Meal', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600)),
+              : Text(AppLocalizations.of(context)!.saveMeal, style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600)),
         ),
       ),
     );
@@ -1114,20 +1124,34 @@ class _ExpandableMealTileState extends State<_ExpandableMealTile> {
       child: Column(
         children: [
           ListTile(
-            leading: widget.imageUrl != null && widget.imageUrl!.isNotEmpty
+            leading: widget.isCustomMeal
                 ? CircleAvatar(
                     backgroundColor: kPrimaryGreen.withOpacity(0.13),
-                    backgroundImage: NetworkImage(widget.imageUrl!),
-                  )
-                : CircleAvatar(
-                    backgroundColor: kPrimaryGreen.withOpacity(0.13),
                     child: Icon(widget.icon, color: widget.iconColor),
+                  )
+                : FutureBuilder<String?>(
+                    future: PexelsService.fetchMealImage(widget.name),
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return CircleAvatar(
+                          backgroundColor: kPrimaryGreen.withOpacity(0.13),
+                          child: CircularProgressIndicator(strokeWidth: 2, color: kPrimaryGreen),
+                        );
+                      }
+                      final imageUrl = snapshot.data;
+                      return CircleAvatar(
+                        backgroundColor: kPrimaryGreen.withOpacity(0.13),
+                        backgroundImage: imageUrl != null ? NetworkImage(imageUrl) : null,
+                        child: imageUrl == null ? Icon(widget.icon, color: widget.iconColor) : null,
+                      );
+                    },
                   ),
             title: Text(
               widget.name,
               style: const TextStyle(fontWeight: FontWeight.w600),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
+              textDirection: AppLocalizations.of(context)!.localeName.startsWith('ar') ? TextDirection.rtl : TextDirection.ltr,
             ),
             subtitle: widget.isCustomMeal ? null : Wrap(
               spacing: 6,
@@ -1154,14 +1178,14 @@ class _ExpandableMealTileState extends State<_ExpandableMealTile> {
                   if (widget.onCustomize != null)
                     IconButton(
                       icon: Icon(Icons.edit, color: kPrimaryGreen, size: 22),
-                      tooltip: 'Customize meal',
+                      tooltip: AppLocalizations.of(context)!.customizeMeal,
                       onPressed: widget.onCustomize,
                       constraints: BoxConstraints(),
                       padding: EdgeInsets.zero,
                     ),
                   IconButton(
                     icon: Icon(_expanded ? Icons.expand_less : Icons.expand_more, color: kPrimaryGreen, size: 24),
-                    tooltip: _expanded ? 'Hide ingredients' : 'Show ingredients',
+                    tooltip: _expanded ? AppLocalizations.of(context)!.hideIngredients : AppLocalizations.of(context)!.showIngredients,
                     onPressed: () => setState(() => _expanded = !_expanded),
                     constraints: BoxConstraints(),
                     padding: EdgeInsets.zero,
@@ -1182,12 +1206,12 @@ class _ExpandableMealTileState extends State<_ExpandableMealTile> {
                       return Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('Ingredients:', style: TextStyle(fontWeight: FontWeight.w600, color: kPrimaryGreen)),
+                          Text(AppLocalizations.of(context)!.ingredientsColon, style: TextStyle(fontWeight: FontWeight.w600, color: kPrimaryGreen)),
                           ...ingredients.map((ing) => Text('• $ing', style: TextStyle(color: Colors.black87))).toList(),
                         ],
                       );
                     } else {
-                      return Text('No ingredients listed.', style: TextStyle(color: Colors.grey[600], fontStyle: FontStyle.italic));
+                      return Text(AppLocalizations.of(context)!.noIngredientsListed, style: TextStyle(color: Colors.grey[600], fontStyle: FontStyle.italic));
                     }
                   },
                 ),

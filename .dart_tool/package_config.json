@@ -93,7 +93,7 @@
     },
     {
       "name": "built_value",
-      "rootUri": "file:///Users/loushi/.pub-cache/hosted/pub.dev/built_value-8.9.5",
+      "rootUri": "file:///Users/loushi/.pub-cache/hosted/pub.dev/built_value-8.10.1",
       "packageUri": "lib/",
       "languageVersion": "3.0"
     },
@@ -242,6 +242,24 @@
       "languageVersion": "3.0"
     },
     {
+      "name": "firebase_analytics",
+      "rootUri": "file:///Users/loushi/.pub-cache/hosted/pub.dev/firebase_analytics-11.4.6",
+      "packageUri": "lib/",
+      "languageVersion": "3.2"
+    },
+    {
+      "name": "firebase_analytics_platform_interface",
+      "rootUri": "file:///Users/loushi/.pub-cache/hosted/pub.dev/firebase_analytics_platform_interface-4.3.6",
+      "packageUri": "lib/",
+      "languageVersion": "3.2"
+    },
+    {
+      "name": "firebase_analytics_web",
+      "rootUri": "file:///Users/loushi/.pub-cache/hosted/pub.dev/firebase_analytics_web-0.5.10+12",
+      "packageUri": "lib/",
+      "languageVersion": "3.4"
+    },
+    {
       "name": "firebase_auth",
       "rootUri": "file:///Users/loushi/.pub-cache/hosted/pub.dev/firebase_auth-5.5.4",
       "packageUri": "lib/",
@@ -278,6 +296,24 @@
       "languageVersion": "3.4"
     },
     {
+      "name": "firebase_messaging",
+      "rootUri": "file:///Users/loushi/.pub-cache/hosted/pub.dev/firebase_messaging-15.2.6",
+      "packageUri": "lib/",
+      "languageVersion": "3.2"
+    },
+    {
+      "name": "firebase_messaging_platform_interface",
+      "rootUri": "file:///Users/loushi/.pub-cache/hosted/pub.dev/firebase_messaging_platform_interface-4.6.6",
+      "packageUri": "lib/",
+      "languageVersion": "3.2"
+    },
+    {
+      "name": "firebase_messaging_web",
+      "rootUri": "file:///Users/loushi/.pub-cache/hosted/pub.dev/firebase_messaging_web-3.10.6",
+      "packageUri": "lib/",
+      "languageVersion": "3.4"
+    },
+    {
       "name": "fixnum",
       "rootUri": "file:///Users/loushi/.pub-cache/hosted/pub.dev/fixnum-1.1.1",
       "packageUri": "lib/",
@@ -309,9 +345,9 @@
     },
     {
       "name": "flutter_lints",
-      "rootUri": "file:///Users/loushi/.pub-cache/hosted/pub.dev/flutter_lints-5.0.0",
+      "rootUri": "file:///Users/loushi/.pub-cache/hosted/pub.dev/flutter_lints-6.0.0",
       "packageUri": "lib/",
-      "languageVersion": "3.5"
+      "languageVersion": "3.8"
     },
     {
       "name": "flutter_local_notifications",
@@ -507,9 +543,9 @@
     },
     {
       "name": "lints",
-      "rootUri": "file:///Users/loushi/.pub-cache/hosted/pub.dev/lints-5.1.1",
+      "rootUri": "file:///Users/loushi/.pub-cache/hosted/pub.dev/lints-6.0.0",
       "packageUri": "lib/",
-      "languageVersion": "3.6"
+      "languageVersion": "3.8"
     },
     {
       "name": "logger",

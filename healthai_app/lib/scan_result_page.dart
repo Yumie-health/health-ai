@@ -9,6 +9,8 @@ import 'services/ai_service.dart';
 import 'package:provider/provider.dart';
 import 'main.dart'; // For PreferencesProvider and kPrimaryGreen
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:flutter/foundation.dart';
+import 'l10n/app_localizations.dart';
 
 class ScanResultPage extends StatefulWidget {
   final String imagePath;
@@ -33,12 +35,6 @@ class _ScanResultPageState extends State<ScanResultPage> {
   bool _isLoadingAI = true;
 
   final List<String> _mealTypes = ['breakfast', 'lunch', 'dinner', 'snack'];
-  final Map<String, String> _mealTypeLabels = {
-    'breakfast': 'Breakfast',
-    'lunch': 'Lunch',
-    'dinner': 'Dinner',
-    'snack': 'Snack',
-  };
 
   @override
   void initState() {
@@ -144,7 +140,7 @@ class _ScanResultPageState extends State<ScanResultPage> {
                   ),
                   SizedBox(height: 24),
                   Text(
-                    'Moment of Calm',
+                    AppLocalizations.of(context)!.momentOfCalm,
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       color: kPrimaryGreen,
@@ -155,7 +151,7 @@ class _ScanResultPageState extends State<ScanResultPage> {
                   ),
                   SizedBox(height: 18),
                   Text(
-                    'Take a moment to appreciate your meal and practice mindful eating.',
+                    AppLocalizations.of(context)!.practiceMindfulEating,
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: 17,
@@ -251,7 +247,9 @@ class _ScanResultPageState extends State<ScanResultPage> {
   Future<void> _runAIMealScan() async {
     setState(() { _isLoadingAI = true; });
     final aiService = AIService();
-    final result = await aiService.analyzeMealImage(File(widget.imagePath));
+    final prefs = Provider.of<PreferencesProvider>(context, listen: false);
+    final language = prefs.language;
+    final result = await aiService.analyzeMealImage(File(widget.imagePath), language: language);
     print('AI meal scan result:');
     print(result);
     if (result != null) {
@@ -270,6 +268,16 @@ class _ScanResultPageState extends State<ScanResultPage> {
         _error = "Could not analyze meal. Try again or enter details manually.";
       });
     }
+  }
+
+  Map<String, String> get _mealTypeLabels {
+    final localizations = AppLocalizations.of(context)!;
+    return {
+      'breakfast': localizations.breakfast,
+      'lunch': localizations.lunch,
+      'dinner': localizations.dinner,
+      'snack': localizations.snack,
+    };
   }
 
   @override
@@ -295,13 +303,13 @@ class _ScanResultPageState extends State<ScanResultPage> {
                 children: [
                   Icon(Icons.refresh, color: Colors.green, size: 22),
                   const SizedBox(width: 4),
-                  Text('Retake Scan', style: TextStyle(color: Colors.green, fontWeight: FontWeight.w600, fontSize: 15)),
+                  Text(AppLocalizations.of(context)!.retakeScan, style: TextStyle(color: Colors.green, fontWeight: FontWeight.w600, fontSize: 15)),
                 ],
               ),
             ),
           ),
         ],
-        title: Text('Review Meal', style: TextStyle(color: Colors.black)),
+        title: Text(AppLocalizations.of(context)!.reviewMeal, style: TextStyle(color: Colors.black)),
         centerTitle: true,
       ),
       body: _isLoadingAI
@@ -353,7 +361,7 @@ class _ScanResultPageState extends State<ScanResultPage> {
                         ),
                       );
                     },
-                    child: const Text('Preview Full Image', style: TextStyle(fontWeight: FontWeight.bold)),
+                    child: Text(AppLocalizations.of(context)!.previewFullImage, style: TextStyle(fontWeight: FontWeight.bold)),
                   ),
                 ),
               ],
@@ -405,7 +413,7 @@ class _ScanResultPageState extends State<ScanResultPage> {
                   TextField(
                     controller: _foodNameController,
                     decoration: InputDecoration(
-                      hintText: 'Search or enter food name',
+                      hintText: AppLocalizations.of(context)!.searchOrEnterFoodName,
                       filled: true,
                       fillColor: const Color(0xFFF5F5F5),
                       border: OutlineInputBorder(
@@ -439,7 +447,7 @@ class _ScanResultPageState extends State<ScanResultPage> {
                     ],
                   ),
                   const SizedBox(height: 18),
-                  const Text('Ingredients', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 17, color: Colors.green)),
+                  Text(AppLocalizations.of(context)!.ingredients, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 17, color: Colors.green)),
                   const SizedBox(height: 8),
                   Row(
                     children: [
@@ -447,7 +455,7 @@ class _ScanResultPageState extends State<ScanResultPage> {
                         child: TextField(
                           controller: _ingredientController,
                           decoration: InputDecoration(
-                            hintText: 'Add ingredient',
+                            hintText: AppLocalizations.of(context)!.addIngredient,
                             filled: true,
                             fillColor: const Color(0xFFF5F5F5),
                             border: OutlineInputBorder(
@@ -496,7 +504,7 @@ class _ScanResultPageState extends State<ScanResultPage> {
                         padding: const EdgeInsets.symmetric(vertical: 16),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                       ),
-                      child: const Text('Discard'),
+                      child: Text(AppLocalizations.of(context)!.discard),
                     ),
                   ),
                   const SizedBox(width: 16),
@@ -511,7 +519,7 @@ class _ScanResultPageState extends State<ScanResultPage> {
                       ),
                       child: _isSaving
                           ? const SizedBox(height: 22, width: 22, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                          : const Text('Save Meal'),
+                          : Text(AppLocalizations.of(context)!.saveMeal),
                     ),
                   ),
                 ],
@@ -524,6 +532,12 @@ class _ScanResultPageState extends State<ScanResultPage> {
   }
 
   Widget _macroField(String label, TextEditingController controller, {required Color color, String suffix = ''}) {
+    final localizations = AppLocalizations.of(context)!;
+    String localizedLabel = label;
+    if (label == 'Calories') localizedLabel = localizations.calories;
+    if (label == 'Protein (g)') localizedLabel = localizations.protein + ' (g)';
+    if (label == 'Carbs (g)') localizedLabel = localizations.carbs + ' (g)';
+    if (label == 'Fat (g)') localizedLabel = localizations.fat + ' (g)';
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -531,7 +545,7 @@ class _ScanResultPageState extends State<ScanResultPage> {
           children: [
             Container(width: 8, height: 8, decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
             const SizedBox(width: 6),
-            Text(label, style: TextStyle(color: color, fontWeight: FontWeight.w600)),
+            Text(localizedLabel, style: TextStyle(color: color, fontWeight: FontWeight.w600)),
           ],
         ),
         const SizedBox(height: 6),

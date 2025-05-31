@@ -33,6 +33,8 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:timezone/data/latest.dart' as tz;
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'l10n/app_localizations.dart';
 
 // Define the color palette
 const Color kPrimaryGreen = Color(0xFF4CAF50); // Soft green
@@ -54,6 +56,7 @@ class PreferencesProvider extends ChangeNotifier {
   bool _waterIntakeReminders = false;
   bool _mindfulWalksReminders = false;
   bool _momentOfCalmReminders = false;
+  String _language = 'en';
 
   bool get darkMode => _darkMode;
   bool get useMetric => _useMetric;
@@ -61,6 +64,7 @@ class PreferencesProvider extends ChangeNotifier {
   bool get waterIntakeReminders => _waterIntakeReminders;
   bool get mindfulWalksReminders => _mindfulWalksReminders;
   bool get momentOfCalmReminders => _momentOfCalmReminders;
+  String get language => _language;
 
   PreferencesProvider() {
     _loadPrefs();
@@ -74,6 +78,7 @@ class PreferencesProvider extends ChangeNotifier {
     _waterIntakeReminders = prefs.getBool('waterIntakeReminders') ?? false;
     _mindfulWalksReminders = prefs.getBool('mindfulWalksReminders') ?? false;
     _momentOfCalmReminders = prefs.getBool('momentOfCalmReminders') ?? false;
+    _language = prefs.getString('language') ?? 'en';
     notifyListeners();
   }
 
@@ -133,6 +138,13 @@ class PreferencesProvider extends ChangeNotifier {
     await prefs.setBool('momentOfCalmReminders', value);
     notifyListeners();
     // Placeholder: actual popup logic should be triggered before meal logging
+  }
+
+  Future<void> setLanguage(String language) async {
+    final prefs = await SharedPreferences.getInstance();
+    _language = language;
+    await prefs.setString('language', language);
+    notifyListeners();
   }
 
   // --- Notification scheduling helpers ---
@@ -301,6 +313,33 @@ class HealthAIApp extends StatelessWidget {
       navigatorObservers: [
         FirebaseAnalyticsObserver(analytics: analytics),
       ],
+      // Localization setup
+      supportedLocales: const [
+        Locale('en'),
+        Locale('ar'),
+        Locale('es'),
+      ],
+      localizationsDelegates: const [
+        AppLocalizations.delegate,
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      locale: _getLocale(prefs.language),
+      localeResolutionCallback: (deviceLocale, supportedLocales) {
+        // If user has selected a language, use it
+        if (prefs.language.isNotEmpty &&
+            supportedLocales.any((l) => l.languageCode == prefs.language)) {
+          return Locale(prefs.language);
+        }
+        // Otherwise, use device language if supported
+        if (deviceLocale != null &&
+            supportedLocales.any((l) => l.languageCode == deviceLocale.languageCode)) {
+          return Locale(deviceLocale.languageCode!);
+        }
+        // Default to English
+        return const Locale('en');
+      },
       theme: ThemeData(
         colorScheme: ColorScheme(
           brightness: Brightness.light,
@@ -557,170 +596,45 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final prefs = Provider.of<PreferencesProvider>(context);
-    return MaterialApp(
-      title: 'HealthAI App',
-      theme: ThemeData(
-        colorScheme: ColorScheme(
-          brightness: Brightness.light,
-          primary: kPrimaryGreen,
-          onPrimary: Colors.white,
-          secondary: kSecondaryBlue,
-          onSecondary: Colors.white,
-          error: kWarningRed,
-          onError: Colors.white,
-          surface: kContainerGrey,
-          onSurface: Colors.black,
-        ),
-        scaffoldBackgroundColor: kBackgroundWhite,
-        appBarTheme: AppBarTheme(
-          backgroundColor: kPrimaryGreen,
-          foregroundColor: Colors.white,
-        ),
-        elevatedButtonTheme: ElevatedButtonThemeData(
-          style: ElevatedButton.styleFrom(
-            backgroundColor: kPrimaryGreen,
-            foregroundColor: Colors.white,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-            textStyle: TextStyle(fontWeight: FontWeight.bold),
-          ),
-        ),
-        outlinedButtonTheme: OutlinedButtonThemeData(
-          style: OutlinedButton.styleFrom(
-            foregroundColor: kSecondaryBlue,
-            side: BorderSide(color: kSecondaryBlue, width: 2),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-            textStyle: TextStyle(fontWeight: FontWeight.bold),
-          ),
-        ),
-        inputDecorationTheme: InputDecorationTheme(
-          filled: true,
-          fillColor: kContainerGrey,
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide.none,
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide(color: kPrimaryGreen, width: 2),
-          ),
-          labelStyle: TextStyle(color: kPrimaryGreen),
-        ),
-      ),
-      darkTheme: ThemeData(
-        brightness: Brightness.dark,
-        colorScheme: ColorScheme.dark(
-          primary: kPrimaryGreen,
-          secondary: kSecondaryBlue,
-          error: kWarningRed,
-          background: Colors.black,
-          surface: Colors.black,
-          onBackground: Colors.white,
-          onSurface: Colors.white,
-        ),
-        scaffoldBackgroundColor: Colors.black,
-        cardColor: Colors.black,
-        appBarTheme: AppBarTheme(
-          backgroundColor: kPrimaryGreen, // Always green
-          foregroundColor: Colors.white,
-        ),
-        elevatedButtonTheme: ElevatedButtonThemeData(
-          style: ElevatedButton.styleFrom(
-            backgroundColor: kPrimaryGreen,
-            foregroundColor: Colors.white,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-            textStyle: TextStyle(fontWeight: FontWeight.bold),
-          ),
-        ),
-        outlinedButtonTheme: OutlinedButtonThemeData(
-          style: OutlinedButton.styleFrom(
-            foregroundColor: kSecondaryBlue,
-            side: BorderSide(color: kSecondaryBlue, width: 2),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-            textStyle: TextStyle(fontWeight: FontWeight.bold),
-          ),
-        ),
-        inputDecorationTheme: InputDecorationTheme(
-          filled: true,
-          fillColor: Colors.black,
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide.none,
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide(color: kPrimaryGreen, width: 2),
-          ),
-          labelStyle: TextStyle(color: Colors.white),
-        ),
-        textTheme: const TextTheme(
-          bodyLarge: TextStyle(color: Colors.white),
-          bodyMedium: TextStyle(color: Colors.white),
-          bodySmall: TextStyle(color: Colors.white),
-          displayLarge: TextStyle(color: Colors.white),
-          displayMedium: TextStyle(color: Colors.white),
-          displaySmall: TextStyle(color: Colors.white),
-          headlineLarge: TextStyle(color: Colors.white),
-          headlineMedium: TextStyle(color: Colors.white),
-          headlineSmall: TextStyle(color: Colors.white),
-          titleLarge: TextStyle(color: Colors.white),
-          titleMedium: TextStyle(color: Colors.white),
-          titleSmall: TextStyle(color: Colors.white),
-          labelLarge: TextStyle(color: Colors.white),
-          labelMedium: TextStyle(color: Colors.white),
-          labelSmall: TextStyle(color: Colors.white),
-        ),
-        iconTheme: const IconThemeData(color: Colors.white),
-        dividerColor: Colors.white24,
-      ),
-      themeMode: prefs.darkMode ? ThemeMode.dark : ThemeMode.light,
-      home: StreamBuilder<User?>(
-        stream: FirebaseAuth.instance.authStateChanges(),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return Center(child: CircularProgressIndicator());
-          }
-          
-          if (snapshot.hasData) {
-            // User is logged in, check if onboarding is completed
-            return FutureBuilder<DocumentSnapshot>(
-              future: FirebaseFirestore.instance
-                  .collection('users')
-                  .doc(snapshot.data!.uid)
-                  .get(),
-              builder: (context, userSnapshot) {
-                if (userSnapshot.connectionState == ConnectionState.waiting) {
-                  return Center(child: CircularProgressIndicator());
-                }
+    return StreamBuilder<User?>(
+      stream: FirebaseAuth.instance.authStateChanges(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return Center(child: CircularProgressIndicator());
+        }
+        
+        if (snapshot.hasData) {
+          // User is logged in, check if onboarding is completed
+          return FutureBuilder<DocumentSnapshot>(
+            future: FirebaseFirestore.instance
+                .collection('users')
+                .doc(snapshot.data!.uid)
+                .get(),
+            builder: (context, userSnapshot) {
+              if (userSnapshot.connectionState == ConnectionState.waiting) {
+                return Center(child: CircularProgressIndicator());
+              }
 
-                if (!userSnapshot.hasData || !userSnapshot.data!.exists) {
-                  return OnboardingFlowPage();
-                }
+              if (!userSnapshot.hasData || !userSnapshot.data!.exists) {
+                return OnboardingFlowPage();
+              }
 
-                final userData = userSnapshot.data!.data() as Map<String, dynamic>?;
-                // Use a single boolean flag for onboarding completion
-                final hasCompletedOnboarding = userData != null &&
-                    userData['hasCompletedOnboarding'] == true;
+              final userData = userSnapshot.data!.data() as Map<String, dynamic>?;
+              // Use a single boolean flag for onboarding completion
+              final hasCompletedOnboarding = userData != null &&
+                  userData['hasCompletedOnboarding'] == true;
 
-                if (!hasCompletedOnboarding) {
-                  return OnboardingFlowPage();
-                }
+              if (!hasCompletedOnboarding) {
+                return OnboardingFlowPage();
+              }
 
-                return MainNavScreen();
-              },
-            );
-          }
-          
-          return AuthScreen();
-        },
-      ),
+              return MainNavScreen();
+            },
+          );
+        }
+        
+        return AuthScreen();
+      },
     );
   }
 }
@@ -1724,27 +1638,27 @@ class _MainNavScreenState extends State<MainNavScreen> with TickerProviderStateM
                         children: [
                           _AnimatedNavBarItem(
                             icon: Icons.home,
-                            label: 'Home',
+                            label: AppLocalizations.of(context)!.home,
                             selected: _selectedIndex == 0,
                             onTap: () => _onItemTapped(0),
                             selectedColor: kPrimaryGreen,
                           ),
                           _AnimatedNavBarItem(
                             icon: Icons.restaurant_menu,
-                            label: 'Food',
+                            label: AppLocalizations.of(context)!.food,
                             selected: _selectedIndex == 1,
                             onTap: () => _onItemTapped(1),
                           ),
                           SizedBox(width: 64), // Space for FAB
                           _AnimatedNavBarItem(
                             icon: Icons.chat_bubble_outline,
-                            label: 'Coach',
+                            label: AppLocalizations.of(context)!.coach,
                             selected: _selectedIndex == 3,
                             onTap: () => _onItemTapped(3),
                           ),
                           _AnimatedNavBarItem(
                             icon: Icons.person,
-                            label: 'Profile',
+                            label: AppLocalizations.of(context)!.profile,
                             selected: _selectedIndex == 4,
                             onTap: () => _onItemTapped(4),
                             iconSize: 28,
@@ -1780,13 +1694,13 @@ class _MainNavScreenState extends State<MainNavScreen> with TickerProviderStateM
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             _FabActionButton(
-                              label: 'Log',
+                              label: AppLocalizations.of(context)!.log,
                               icon: Icons.edit,
                               onTap: _navigateToLog,
                             ),
                             const SizedBox(width: 32),
                             _FabActionButton(
-                              label: 'Scan',
+                              label: AppLocalizations.of(context)!.scan,
                               icon: Icons.camera_alt,
                               onTap: _navigateToScan,
                             ),
@@ -1991,9 +1905,9 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text('Welcome back!', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 26, color: Colors.black)),
+                            Text(AppLocalizations.of(context)!.welcomeBack, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 26, color: Colors.black)),
                             const SizedBox(height: 4),
-                            Text("Let's track your nutrition today", style: TextStyle(color: Colors.grey[500], fontSize: 16)),
+                            Text(AppLocalizations.of(context)!.trackNutritionToday, style: TextStyle(color: Colors.grey[500], fontSize: 16)),
                           ],
                         ),
                       ),
@@ -2057,9 +1971,9 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
                                 child: Column(
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
-                                    Text('Nutrition goals not set', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20)),
+                                    Text(AppLocalizations.of(context)!.nutritionSummary, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20)),
                                     SizedBox(height: 12),
-                                    Text('Set your calorie and macro goals in the Nutrition Plan page.', style: TextStyle(color: Colors.grey[700], fontSize: 16)),
+                                    Text(AppLocalizations.of(context)!.setCalorieAndMacroGoals, style: TextStyle(color: Colors.grey[700], fontSize: 16)),
                                   ],
                                 ),
                               ),
@@ -2088,7 +2002,7 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     mainAxisAlignment: MainAxisAlignment.center,
                                     children: [
-                                      Text('Nutrition Summary', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 22)),
+                                      Text(AppLocalizations.of(context)!.nutritionSummary, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 22)),
                                       const SizedBox(height: 18),
                                       TweenAnimationBuilder<double>(
                                         tween: Tween<double>(begin: 0, end: totalProtein / proteinGoal!),
@@ -2096,7 +2010,7 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
                                         curve: Curves.easeOutCubic,
                                         builder: (context, value, child) => _MacroProgressRow(
                                           color: kSecondaryBlue,
-                                          label: 'Protein',
+                                          label: AppLocalizations.of(context)!.protein,
                                           value: '${(value * proteinGoal!).round()} g',
                                           percent: value,
                                           valueSuffix: 'g',
@@ -2113,7 +2027,7 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
                                         curve: Curves.easeOutCubic,
                                         builder: (context, value, child) => _MacroProgressRow(
                                           color: kAccentOrange,
-                                          label: 'Carbs',
+                                          label: AppLocalizations.of(context)!.carbs,
                                           value: '${(value * carbsGoal!).round()} g',
                                           percent: value,
                                           valueSuffix: 'g',
@@ -2130,7 +2044,7 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
                                         curve: Curves.easeOutCubic,
                                         builder: (context, value, child) => _MacroProgressRow(
                                           color: kWarningRed,
-                                          label: 'Fat',
+                                          label: AppLocalizations.of(context)!.fat,
                                           value: '${(value * fatGoal!).round()} g',
                                           percent: value,
                                           valueSuffix: 'g',
@@ -2208,7 +2122,7 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
                                     mainAxisAlignment: MainAxisAlignment.start,
                                     children: [
                                       const SizedBox(height: 24),
-                                      Text('Calories', style: TextStyle(color: Colors.grey[600], fontWeight: FontWeight.w600, fontSize: 16)),
+                                      Text(AppLocalizations.of(context)!.calories, style: TextStyle(color: Colors.grey[600], fontWeight: FontWeight.w600, fontSize: 16)),
                                       const SizedBox(height: 8),
                                       _CircularCalories(
                                         calories: totalCalories,
@@ -2241,7 +2155,7 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('Quick Actions', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+                      Text(AppLocalizations.of(context)!.quickActions, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
                       const SizedBox(height: 12),
                       Row(
                         children: [
@@ -2249,8 +2163,8 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
                             child: _AnimatedScaleOnTap(
                               child: _QuickActionCard(
                                 icon: Icons.camera_alt,
-                                label: 'Log Meal',
-                                subtitle: 'Track your food',
+                                label: AppLocalizations.of(context)!.logMeal,
+                                subtitle: AppLocalizations.of(context)!.trackYourFood,
                                 color: kPrimaryGreen,
                                 onTap: () {
                                   Navigator.of(context).push(
@@ -2265,8 +2179,8 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
                             child: _AnimatedScaleOnTap(
                               child: _QuickActionCard(
                                 icon: Icons.qr_code_scanner,
-                                label: 'Scan',
-                                subtitle: 'Analyze your food',
+                                label: AppLocalizations.of(context)!.scan,
+                                subtitle: AppLocalizations.of(context)!.analyzeYourFood,
                                 color: kSecondaryBlue,
                                 onTap: () {
                                   Navigator.of(context).push(
@@ -2294,10 +2208,10 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text("Today's Meals", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+                      Text(AppLocalizations.of(context)!.todaysMeals, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
                       TextButton(
                         onPressed: widget.onViewAllMeals,
-                        child: Text('View All', style: TextStyle(color: kPrimaryGreen)),
+                        child: Text(AppLocalizations.of(context)!.viewAll, style: TextStyle(color: kPrimaryGreen)),
                       ),
                     ],
                   ),
@@ -2318,7 +2232,7 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
                       if (meals.isEmpty) {
                         return Padding(
                           padding: const EdgeInsets.symmetric(vertical: 24),
-                          child: Center(child: Text('No meals logged for this day.', style: TextStyle(color: Colors.grey[600]))),
+                          child: Center(child: Text(AppLocalizations.of(context)!.noMealsLoggedForThisDay, style: TextStyle(color: Colors.grey[600]))),
                         );
                       }
                       return Column(
@@ -2592,10 +2506,19 @@ class _MealCardModernState extends State<_MealCardModern> {
             children: [
               // Meal image
               FutureBuilder<String?>(
-                future: meal.imageUrl != null && meal.imageUrl!.isNotEmpty
-                    ? Future.value(meal.imageUrl)
-                    : PexelsService.fetchMealImage(meal.name),
+                future: PexelsService.fetchMealImage(meal.name, locale: Locale(AppLocalizations.of(context)!.localeName)),
                 builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return ClipRRect(
+                      borderRadius: BorderRadius.circular(16),
+                      child: Container(
+                        width: 70,
+                        height: 70,
+                        color: Colors.grey[200],
+                        child: Center(child: CircularProgressIndicator(strokeWidth: 2, color: kPrimaryGreen)),
+                      ),
+                    );
+                  }
                   final imageUrl = snapshot.data;
                   return ClipRRect(
                     borderRadius: BorderRadius.circular(16),
@@ -2628,14 +2551,20 @@ class _MealCardModernState extends State<_MealCardModern> {
                       ],
                     ),
                     const SizedBox(height: 2),
-                    Text(meal.name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                    Text(
+                      meal.name,
+                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      textDirection: AppLocalizations.of(context)!.localeName.startsWith('ar') ? TextDirection.rtl : TextDirection.ltr,
+                    ),
                     const SizedBox(height: 6),
-                    Row(
+                    Wrap(
+                      spacing: 6,
+                      runSpacing: 2,
                       children: [
                         _MacroTag(label: 'P', value: '${meal.protein}g', color: kSecondaryBlue),
-                        const SizedBox(width: 6),
                         _MacroTag(label: 'C', value: '${meal.carbs}g', color: kAccentOrange),
-                        const SizedBox(width: 6),
                         _MacroTag(label: 'F', value: '${meal.fat}g', color: kWarningRed),
                       ],
                     ),
@@ -2645,12 +2574,13 @@ class _MealCardModernState extends State<_MealCardModern> {
               // Calories, delete, and dropdown in a vertical column
               Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
+                mainAxisAlignment: MainAxisAlignment.start,
                 children: [
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    mainAxisAlignment: MainAxisAlignment.start,
                     children: [
                       Text('${meal.calories}', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
-                      const SizedBox(width: 2),
                       Text('cal', style: TextStyle(color: Colors.grey[600], fontSize: 13)),
                       IconButton(
                         icon: Icon(Icons.delete, color: Colors.redAccent, size: 22),
@@ -3103,7 +3033,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   // Header
                   Padding(
                     padding: const EdgeInsets.fromLTRB(24, 24, 24, 8),
-                    child: Text('Your Profile', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 28)),
+                    child: Text(AppLocalizations.of(context)!.profile, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 28)),
                   ),
                   Divider(height: 1, thickness: 1, color: Colors.grey[200]),
                   // Profile Card
@@ -3167,7 +3097,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                                 children: [
                                                   ElevatedButton.icon(
                                                     icon: Icon(Icons.upload),
-                                                    label: Text('Upload New'),
+                                                    label: Text(AppLocalizations.of(context)!.uploadNew),
                                                     onPressed: () async {
                                                       Navigator.pop(context);
                                                       await _changeProfilePicture();
@@ -3177,7 +3107,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                                     SizedBox(width: 12),
                                                     OutlinedButton.icon(
                                                       icon: Icon(Icons.delete),
-                                                      label: Text('Delete'),
+                                                      label: Text(AppLocalizations.of(context)!.delete),
                                                       onPressed: () async {
                                                         Navigator.pop(context);
                                                         final user = FirebaseAuth.instance.currentUser;
@@ -3238,7 +3168,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                     Text(userName, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 22)),
                                     IconButton(
                                       icon: Icon(Icons.edit, color: kPrimaryGreen, size: 20),
-                                      tooltip: 'Edit name',
+                                      tooltip: AppLocalizations.of(context)!.editName,
                                       onPressed: () => _changeProfileName(userName),
                                     ),
                                     const SizedBox(width: 10),
@@ -3306,7 +3236,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                           children: [
                                             Icon(Icons.cake, color: kPrimaryGreen, size: 26),
                                             SizedBox(height: 6),
-                                            Text('Age', style: TextStyle(color: kPrimaryGreen, fontWeight: FontWeight.w600, fontSize: 15)),
+                                            Text(AppLocalizations.of(context)!.age, style: TextStyle(color: kPrimaryGreen, fontWeight: FontWeight.w600, fontSize: 15)),
                                             SizedBox(height: 2),
                                             Text('${profile.age}', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Colors.black)),
                                           ],
@@ -3323,7 +3253,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                           children: [
                                             Icon(Icons.monitor_weight, color: kPrimaryGreen, size: 26),
                                             SizedBox(height: 6),
-                                            Text('Weight', style: TextStyle(color: kPrimaryGreen, fontWeight: FontWeight.w600, fontSize: 15)),
+                                            Text(AppLocalizations.of(context)!.weight, style: TextStyle(color: kPrimaryGreen, fontWeight: FontWeight.w600, fontSize: 15)),
                                             SizedBox(height: 2),
                                             Text('${weight.toStringAsFixed(1)} $weightUnit', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Colors.black)),
                                           ],
@@ -3340,7 +3270,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                           children: [
                                             Icon(Icons.height, color: kPrimaryGreen, size: 26),
                                             SizedBox(height: 6),
-                                            Text('Height', style: TextStyle(color: kPrimaryGreen, fontWeight: FontWeight.w600, fontSize: 15)),
+                                            Text(AppLocalizations.of(context)!.height, style: TextStyle(color: kPrimaryGreen, fontWeight: FontWeight.w600, fontSize: 15)),
                                             SizedBox(height: 2),
                                             Text(heightDisplay, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Colors.black)),
                                           ],
@@ -3376,39 +3306,39 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         children: [
                           _ProfileMenuTile(
                             icon: Icons.show_chart,
-                            label: 'Nutritional Plan',
+                            label: AppLocalizations.of(context)!.nutritionalPlan,
                             onTap: () {
-                              Navigator.of(context).push(MaterialPageRoute(builder: (_) => NutritionalPlanPage()));
+                              Navigator.of(context).push(MaterialPageRoute(builder: (context) => NutritionalPlanPage()));
                             },
                           ),
                           Divider(height: 1, color: Colors.grey[200]),
                           _ProfileMenuTile(
                             icon: Icons.health_and_safety,
-                            label: 'Health Awareness',
+                            label: AppLocalizations.of(context)!.healthAwareness,
                             onTap: () {
-                              Navigator.of(context).push(MaterialPageRoute(builder: (_) => HealthAwarenessPage()));
+                              Navigator.of(context).push(MaterialPageRoute(builder: (context) => HealthAwarenessPage()));
                             },
                           ),
                           Divider(height: 1, color: Colors.grey[200]),
                           _ProfileMenuTile(
                             icon: Icons.settings,
-                            label: 'Settings',
+                            label: AppLocalizations.of(context)!.settings,
                             iconColor: kPrimaryGreen,
                             onTap: () {
-                              Navigator.of(context).push(MaterialPageRoute(builder: (_) => SettingsPage()));
+                              Navigator.of(context).push(MaterialPageRoute(builder: (context) => SettingsPage()));
                             },
                           ),
                           Divider(height: 1, color: Colors.grey[200]),
                           _ProfileMenuTile(
                             icon: Icons.tune,
-                            label: 'Plan Settings',
+                            label: AppLocalizations.of(context)!.planSettings,
                             onTap: () {
                               showDialog(
                                 context: context,
                                 builder: (context) => AlertDialog(
-                                  title: Text('Plan Settings'),
-                                  content: Text('This feature is coming soon!'),
-                                  actions: [TextButton(onPressed: () => Navigator.pop(context), child: Text('OK'))],
+                                  title: Text(AppLocalizations.of(context)!.planSettings),
+                                  content: Text(AppLocalizations.of(context)!.featureComingSoon),
+                                  actions: [TextButton(onPressed: () => Navigator.pop(context), child: Text(AppLocalizations.of(context)!.ok))],
                                 ),
                               );
                             },
@@ -3416,15 +3346,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           Divider(height: 1, color: Colors.grey[200]),
                           _ProfileMenuTile(
                             icon: Icons.star_rate,
-                            label: 'Rate us on Google',
+                            label: AppLocalizations.of(context)!.rateUsOnGoogle,
                             iconColor: kAccentOrange,
                             onTap: () {
                               showDialog(
                                 context: context,
                                 builder: (context) => AlertDialog(
-                                  title: Text('Coming Soon!'),
-                                  content: Text('Rating on Google will be available after release.'),
-                                  actions: [TextButton(onPressed: () => Navigator.pop(context), child: Text('OK'))],
+                                  title: Text(AppLocalizations.of(context)!.comingSoon),
+                                  content: Text(AppLocalizations.of(context)!.ratingOnGoogleAvailableAfterRelease),
+                                  actions: [TextButton(onPressed: () => Navigator.pop(context), child: Text(AppLocalizations.of(context)!.ok))],
                                 ),
                               );
                             },
@@ -3432,15 +3362,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           Divider(height: 1, color: Colors.grey[200]),
                           _ProfileMenuTile(
                             icon: Icons.share,
-                            label: 'Share with Friends',
+                            label: AppLocalizations.of(context)!.shareWithFriends,
                             iconColor: kSecondaryBlue,
                             onTap: () {
                               showDialog(
                                 context: context,
                                 builder: (context) => AlertDialog(
-                                  title: Text('Coming Soon!'),
-                                  content: Text('Sharing will be available after release.'),
-                                  actions: [TextButton(onPressed: () => Navigator.pop(context), child: Text('OK'))],
+                                  title: Text(AppLocalizations.of(context)!.comingSoon),
+                                  content: Text(AppLocalizations.of(context)!.sharingAvailableAfterRelease),
+                                  actions: [TextButton(onPressed: () => Navigator.pop(context), child: Text(AppLocalizations.of(context)!.ok))],
                                 ),
                               );
                             },
@@ -3448,7 +3378,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           Divider(height: 1, color: Colors.grey[200]),
                           _ProfileMenuTile(
                             icon: Icons.lock_reset,
-                            label: 'Reset password',
+                            label: AppLocalizations.of(context)!.resetPassword,
                             onTap: () {
                               showDialog(
                                 context: context,
@@ -3523,7 +3453,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                                       borderRadius: BorderRadius.circular(12),
                                                     ),
                                                   ),
-                                                  child: Text('Close'),
+                                                  child: Text(AppLocalizations.of(context)!.close),
                                                 ),
                                                 SizedBox(width: 12),
                                                 ElevatedButton(
@@ -3546,7 +3476,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                                       },
                                                   child: isLoading
                                                     ? SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                                                    : Text('Send Reset Link'),
+                                                    : Text(AppLocalizations.of(context)!.sendResetLink),
                                                 ),
                                               ],
                                             ),
@@ -3562,7 +3492,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           Divider(height: 1, color: Colors.grey[200]),
                           _ProfileMenuTile(
                             icon: Icons.help_outline,
-                            label: 'Help & Support',
+                            label: AppLocalizations.of(context)!.helpSupport,
                             iconColor: Colors.red,
                             onTap: () {
                               showDialog(
@@ -3583,7 +3513,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                         ),
                                         SizedBox(height: 16),
                                         Text(
-                                          'Help & Support',
+                                          AppLocalizations.of(context)!.helpSupport,
                                           style: TextStyle(
                                             fontSize: 24,
                                             fontWeight: FontWeight.bold,
@@ -3591,7 +3521,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                         ),
                                         SizedBox(height: 8),
                                         Text(
-                                          'Need assistance? Contact our support team:',
+                                          AppLocalizations.of(context)!.needAssistanceContactSupport,
                                           style: TextStyle(
                                             fontSize: 16,
                                             color: Colors.grey[600],
@@ -3675,7 +3605,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                               );
                                             }
                                           },
-                                          child: Text('Test Web URL'),
+                                          child: Text(AppLocalizations.of(context)!.testWebURL),
                                         ),
                                         SizedBox(height: 8),
                                         ElevatedButton(
@@ -3704,7 +3634,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                               );
                                             }
                                           },
-                                          child: Text('Test Simple Mailto'),
+                                          child: Text(AppLocalizations.of(context)!.testSimpleMailto),
                                         ),
                                         SizedBox(height: 24),
                                         Row(
@@ -3719,7 +3649,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                                   borderRadius: BorderRadius.circular(12),
                                                 ),
                                               ),
-                                              child: Text('Close'),
+                                              child: Text(AppLocalizations.of(context)!.close),
                                             ),
                                           ],
                                         ),
@@ -3733,7 +3663,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           Divider(height: 1, color: Colors.grey[200]),
                           _ProfileMenuTile(
                             icon: Icons.logout,
-                            label: 'Log Out',
+                            label: AppLocalizations.of(context)!.logOut,
                             iconColor: Colors.red,
                             labelColor: Colors.red,
                             onTap: () {
@@ -3755,7 +3685,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                         ),
                                         SizedBox(height: 16),
                                         Text(
-                                          'Log Out',
+                                          AppLocalizations.of(context)!.logOut,
                                           style: TextStyle(
                                             fontSize: 24,
                                             fontWeight: FontWeight.bold,
@@ -3763,7 +3693,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                         ),
                                         SizedBox(height: 8),
                                         Text(
-                                          'Are you sure you want to log out?',
+                                          AppLocalizations.of(context)!.areYouSureYouWantToLogOut,
                                           style: TextStyle(
                                             fontSize: 16,
                                             color: Colors.grey[600],
@@ -3784,7 +3714,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                                 ),
                                                 padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                                               ),
-                                              child: Text('No'),
+                                              child: Text(AppLocalizations.of(context)!.no),
                                             ),
                                             ElevatedButton(
                                               onPressed: () async {
@@ -3803,7 +3733,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                                 ),
                                                 padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                                               ),
-                                              child: Text('Yes'),
+                                              child: Text(AppLocalizations.of(context)!.yes),
                                             ),
                                           ],
                                         ),
@@ -3864,17 +3794,7 @@ class _CoachScreenState extends State<CoachScreen> with TickerProviderStateMixin
   late AnimationController _insightsController;
   static bool _hasAnimatedEntrance = false;
 
-  static final List<_ChatMessage> _messages = [
-    _ChatMessage(
-      text: "Hello! I'm Yumie, your nutrition coach. How can I help you today?\n\nAsk Yumie about healthy recipes, meal plans, or nutrition tips!",
-      isUser: false,
-      quickReplies: [
-        'What should I eat today?',
-        'Analyze my last meal',
-        'Help me plan my week',
-      ],
-    ),
-  ];
+  List<_ChatMessage> _messages = [];
 
   String? _aiHealthInsight;
   bool _loadingInsight = false;
@@ -3894,6 +3814,21 @@ class _CoachScreenState extends State<CoachScreen> with TickerProviderStateMixin
       vsync: this,
       duration: const Duration(milliseconds: 600),
     );
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      setState(() {
+        _messages = [
+          _ChatMessage(
+            text: AppLocalizations.of(context)!.coachWelcome,
+            isUser: false,
+            quickReplies: [
+              AppLocalizations.of(context)!.coachQuick1,
+              AppLocalizations.of(context)!.coachQuick2,
+              AppLocalizations.of(context)!.coachQuick3,
+            ],
+          ),
+        ];
+      });
+    });
     _playEntranceAnimationsIfNeeded();
     _loadLastInsight();
   }
@@ -3930,6 +3865,7 @@ class _CoachScreenState extends State<CoachScreen> with TickerProviderStateMixin
     final chatHistory = [
       {'role': 'user', 'content': "Give me a brief health insight or recommendation based on my nutrition summary today."},
     ];
+    final prefs = Provider.of<PreferencesProvider>(context, listen: false);
     final aiResponse = await AIService().sendCoachMessage(
       chatHistory: chatHistory,
       name: userProfile.name,
@@ -3944,13 +3880,14 @@ class _CoachScreenState extends State<CoachScreen> with TickerProviderStateMixin
       waterIntakeL: waterIntakeL,
       bloodType: bloodType,
       isDiabetic: isDiabetic,
-      specialInstruction: 'For this health insight, respond as a concise list of 3-5 bullet points. Each point should be a short, actionable tip or observation. Do not use paragraphs.'
+      specialInstruction: 'For this health insight, respond as a concise list of 3-5 bullet points. Each point should be a short, actionable tip or observation. Do not use paragraphs.',
+      language: prefs.language,
     );
     setState(() { _aiHealthInsight = aiResponse ?? "Could not get AI insight."; _loadingInsight = false; });
     // Save to SharedPreferences
-    final prefs = await SharedPreferences.getInstance();
+    final prefs2 = await SharedPreferences.getInstance();
     if (_aiHealthInsight != null) {
-      prefs.setString('last_health_insight', _aiHealthInsight!);
+      prefs2.setString('last_health_insight', _aiHealthInsight!);
     }
   }
 
@@ -3996,7 +3933,7 @@ class _CoachScreenState extends State<CoachScreen> with TickerProviderStateMixin
 
   void _botReply(String userText) async {
     setState(() {
-      _messages.add(_ChatMessage(text: "Yumie is thinking...", isUser: false));
+      _messages.add(_ChatMessage(text: AppLocalizations.of(context)!.yumieThinking, isUser: false));
     });
 
     // 1. Get user profile
@@ -4046,6 +3983,7 @@ class _CoachScreenState extends State<CoachScreen> with TickerProviderStateMixin
     chatHistory.add({'role': 'user', 'content': userText + "\n\nToday's meals: $mealsSummary"});
 
     // 6. Call the AI with full chat history
+    final prefs = Provider.of<PreferencesProvider>(context, listen: false);
     final aiResponse = await AIService().sendCoachMessage(
       chatHistory: chatHistory,
       name: userProfile.name,
@@ -4060,6 +3998,7 @@ class _CoachScreenState extends State<CoachScreen> with TickerProviderStateMixin
       waterIntakeL: waterIntakeL,
       bloodType: bloodType,
       isDiabetic: isDiabetic,
+      language: prefs.language,
     );
 
     setState(() {
@@ -4112,9 +4051,9 @@ class _CoachScreenState extends State<CoachScreen> with TickerProviderStateMixin
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('yumie', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black, fontSize: 22)),
+                    Text(AppLocalizations.of(context)!.yumie, style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black, fontSize: 22)),
                     SizedBox(height: 2),
-                    Text('Ask about meals, nutrition, or get personalized advice', style: TextStyle(fontSize: 13, color: Colors.grey[500])),
+                    Text(AppLocalizations.of(context)!.askAboutMeals, style: TextStyle(fontSize: 13, color: Colors.grey[500])),
                   ],
                 ),
               ],
@@ -4143,7 +4082,7 @@ class _CoachScreenState extends State<CoachScreen> with TickerProviderStateMixin
                         borderRadius: BorderRadius.circular(18),
                       ),
                       child: Center(
-                        child: Text('Chat', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16, color: _tabIndex == 0 ? Colors.black : Colors.grey[500])),
+                        child: Text(AppLocalizations.of(context)!.chat, style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16, color: _tabIndex == 0 ? Colors.black : Colors.grey[500])),
                       ),
                     ),
                   ),
@@ -4162,7 +4101,7 @@ class _CoachScreenState extends State<CoachScreen> with TickerProviderStateMixin
                         borderRadius: BorderRadius.circular(18),
                       ),
                       child: Center(
-                        child: Text('Insights', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16, color: _tabIndex == 1 ? Colors.black : Colors.grey[500])),
+                        child: Text(AppLocalizations.of(context)!.insights, style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16, color: _tabIndex == 1 ? Colors.black : Colors.grey[500])),
                       ),
                     ),
                   ),
@@ -4182,18 +4121,18 @@ class _CoachScreenState extends State<CoachScreen> with TickerProviderStateMixin
                       setState(() {
                         _messages.clear();
                         _messages.add(_ChatMessage(
-                          text: "Hello! I'm Yumie, your nutrition coach. How can I help you today?\n\nAsk Yumie about healthy recipes, meal plans, or nutrition tips!",
+                          text: AppLocalizations.of(context)!.coachWelcome,
                           isUser: false,
                           quickReplies: [
-                            'What should I eat today?',
-                            'Analyze my last meal',
-                            'Help me plan my week',
+                            AppLocalizations.of(context)!.coachQuick1,
+                            AppLocalizations.of(context)!.coachQuick2,
+                            AppLocalizations.of(context)!.coachQuick3,
                           ],
                         ));
                       });
                     },
                     icon: Icon(Icons.refresh, size: 18),
-                    label: Text('Clear Chat'),
+                    label: Text(AppLocalizations.of(context)!.clearChat),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: kPrimaryGreen,
                       foregroundColor: Colors.white,
@@ -4222,6 +4161,8 @@ class _CoachScreenState extends State<CoachScreen> with TickerProviderStateMixin
                         itemBuilder: (context, i) {
                           final msg = _messages[i];
                           final isUser = msg.isUser;
+                          final prefs = Provider.of<PreferencesProvider>(context, listen: false);
+                          final isArabic = prefs.language == 'ar';
                           return TweenAnimationBuilder<double>(
                             tween: Tween<double>(begin: 0, end: 1),
                             duration: Duration(milliseconds: 400),
@@ -4230,11 +4171,15 @@ class _CoachScreenState extends State<CoachScreen> with TickerProviderStateMixin
                               child: Transform.translate(
                                 offset: Offset(0, (1 - value) * 20),
                                 child: Column(
-                                  crossAxisAlignment: isUser ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+                                  crossAxisAlignment: isUser
+                                      ? (isArabic ? CrossAxisAlignment.end : CrossAxisAlignment.end)
+                                      : (isArabic ? CrossAxisAlignment.start : CrossAxisAlignment.start),
                                   children: [
                                     if (!isUser)
                                       Container(
-                                        margin: EdgeInsets.only(bottom: 8, left: 8, right: 48),
+                                        margin: isArabic
+                                            ? EdgeInsets.only(bottom: 8, right: 8, left: 48)
+                                            : EdgeInsets.only(bottom: 8, left: 8, right: 48),
                                         padding: EdgeInsets.all(18),
                                         decoration: BoxDecoration(
                                           color: Colors.white,
@@ -4244,7 +4189,10 @@ class _CoachScreenState extends State<CoachScreen> with TickerProviderStateMixin
                                         child: Column(
                                           crossAxisAlignment: CrossAxisAlignment.start,
                                           children: [
-                                            Text(removeMarkdown(msg.text), style: TextStyle(fontSize: 17, color: Colors.black)),
+                                            Directionality(
+                                              textDirection: isArabic ? TextDirection.rtl : TextDirection.ltr,
+                                              child: Text(removeMarkdown(msg.text), style: TextStyle(fontSize: 17, color: Colors.black)),
+                                            ),
                                             if (msg.quickReplies.isNotEmpty) ...[
                                               SizedBox(height: 14),
                                               Wrap(
@@ -4261,14 +4209,19 @@ class _CoachScreenState extends State<CoachScreen> with TickerProviderStateMixin
                                       ),
                                     if (isUser)
                                       Container(
-                                        margin: EdgeInsets.only(bottom: 8, right: 8, left: 48),
+                                        margin: isArabic
+                                            ? EdgeInsets.only(bottom: 8, left: 8, right: 48)
+                                            : EdgeInsets.only(bottom: 8, right: 8, left: 48),
                                         padding: EdgeInsets.symmetric(vertical: 14, horizontal: 18),
                                         decoration: BoxDecoration(
                                           color: kPrimaryGreen,
                                           borderRadius: BorderRadius.circular(18),
                                           boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.08), blurRadius: 8, offset: Offset(0, 2))],
                                         ),
-                                        child: Text(removeMarkdown(msg.text), style: TextStyle(fontSize: 17, color: Colors.white)),
+                                        child: Directionality(
+                                          textDirection: isArabic ? TextDirection.rtl : TextDirection.ltr,
+                                          child: Text(removeMarkdown(msg.text), style: TextStyle(fontSize: 17, color: Colors.white)),
+                                        ),
                                       ),
                                     SizedBox(height: 6),
                                   ],
@@ -4312,12 +4265,12 @@ class _CoachScreenState extends State<CoachScreen> with TickerProviderStateMixin
                                           child: Column(
                                             crossAxisAlignment: CrossAxisAlignment.start,
                                             children: [
-                                              Text('Nutrition Summary', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20)),
+                                              Text(AppLocalizations.of(context)!.nutritionSummary, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20)),
                                               SizedBox(height: 18),
                                               Row(
                                                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                                 children: [
-                                                  Text('Calories', style: TextStyle(fontSize: 16)),
+                                                  Text(AppLocalizations.of(context)!.calories, style: TextStyle(fontSize: 16)),
                                                   Text('$totalCalories / $dailyCalorieGoal', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16)),
                                                 ],
                                               ),
@@ -4345,7 +4298,7 @@ class _CoachScreenState extends State<CoachScreen> with TickerProviderStateMixin
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Text('Health Insights', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20)),
+                                    Text(AppLocalizations.of(context)!.healthInsights, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20)),
                                     SizedBox(height: 14),
                                     _loadingInsight
                                       ? Center(
@@ -4387,7 +4340,7 @@ class _CoachScreenState extends State<CoachScreen> with TickerProviderStateMixin
                                           );
                                         },
                                       )
-                                          : Text('No insight available.', style: TextStyle(fontSize: 16, color: Colors.grey[800])),
+                                          : Text(AppLocalizations.of(context)!.noInsightAvailable, style: TextStyle(fontSize: 16, color: Colors.grey[800])),
                                     SizedBox(height: 10),
                                     OutlinedButton(
                                       onPressed: _fetchAIHealthInsight,
@@ -4400,7 +4353,7 @@ class _CoachScreenState extends State<CoachScreen> with TickerProviderStateMixin
                                       child: Row(
                                         mainAxisAlignment: MainAxisAlignment.center,
                                         children: [
-                                          Text('Refresh Insight', style: TextStyle(fontWeight: FontWeight.w600)),
+                                          Text(AppLocalizations.of(context)!.refreshInsight, style: TextStyle(fontWeight: FontWeight.w600)),
                                           SizedBox(width: 8),
                                           Icon(Icons.refresh, size: 20),
                                         ],
@@ -4428,9 +4381,14 @@ class _CoachScreenState extends State<CoachScreen> with TickerProviderStateMixin
                                           color: kPrimaryGreen.withOpacity(0.08),
                                           borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
                                         ),
-                                        child: Text('Common Questions', style: TextStyle(fontWeight: FontWeight.w600, color: kPrimaryGreen, fontSize: 18)),
+                                        child: Text(AppLocalizations.of(context)!.commonQuestions, style: TextStyle(fontWeight: FontWeight.w600, color: kPrimaryGreen, fontSize: 18)),
                                       ),
-                                      ...['Dinner ideas', 'Calorie check', 'Protein snacks', 'Diet tips'].map((q) => TweenAnimationBuilder<double>(
+                                      ...[
+                                        AppLocalizations.of(context)!.dinnerIdeas,
+                                        AppLocalizations.of(context)!.calorieCheck,
+                                        AppLocalizations.of(context)!.proteinSnacks,
+                                        AppLocalizations.of(context)!.dietTips,
+                                      ].map((q) => TweenAnimationBuilder<double>(
                                         tween: Tween<double>(begin: 0, end: 1),
                                         duration: Duration(milliseconds: 400),
                                         builder: (context, value, child) => Opacity(
@@ -4480,7 +4438,7 @@ class _CoachScreenState extends State<CoachScreen> with TickerProviderStateMixin
                       child: TextField(
                         controller: _controller,
                         decoration: InputDecoration(
-                          hintText: 'Type your message...',
+                          hintText: AppLocalizations.of(context)!.typeYourMessage,
                           border: InputBorder.none,
                           contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                         ),
@@ -4678,7 +4636,7 @@ class _FoodScreenState extends State<FoodScreen> with TickerProviderStateMixin {
   DateTime? _cachedDate;
 
   Future<List<Map<String, dynamic>>?> _getOrFetchAIMeals() async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = Provider.of<PreferencesProvider>(context, listen: false);
     final period = _currentMealPeriod;
     final today = DateTime.now();
     final dateKey = '${today.year}-${today.month}-${today.day}';
@@ -4688,7 +4646,7 @@ class _FoodScreenState extends State<FoodScreen> with TickerProviderStateMixin {
       return _cachedAIMeals[cacheKey]!;
     }
     // Try to load from SharedPreferences
-    final cachedJson = prefs.getString(cacheKey);
+    final cachedJson = prefs is PreferencesProvider ? null : await SharedPreferences.getInstance().then((sp) => sp.getString(cacheKey));
     if (cachedJson != null) {
       final List<dynamic> decoded = jsonDecode(cachedJson);
       final meals = decoded.cast<Map<String, dynamic>>();
@@ -4698,9 +4656,11 @@ class _FoodScreenState extends State<FoodScreen> with TickerProviderStateMixin {
       return meals;
     }
     // Fetch from AI
-    final meals = await AIService().getSuggestedMeals(mealPeriod: period);
+    final language = prefs.language;
+    final meals = await AIService().getSuggestedMeals(mealPeriod: period, language: language);
     if (meals != null) {
-      prefs.setString(cacheKey, jsonEncode(meals));
+      final sp = await SharedPreferences.getInstance();
+      sp.setString(cacheKey, jsonEncode(meals));
       _cachedAIMeals[cacheKey] = meals;
       _cachedPeriodKey = cacheKey;
       _cachedDate = today;
@@ -4757,13 +4717,33 @@ class _FoodScreenState extends State<FoodScreen> with TickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
+    final localizations = AppLocalizations.of(context)!;
+    final List<String> localizedMealTypes = [
+      localizations.breakfast,
+      localizations.lunch,
+      localizations.dinner,
+      localizations.snack,
+    ];
+    String getCurrentMealLabel() {
+      final period = _currentMealPeriod;
+      switch (period) {
+        case 'breakfast':
+          return localizations.breakfast;
+        case 'lunch':
+          return localizations.lunch;
+        case 'dinner':
+          return localizations.dinner;
+        default:
+          return localizations.snack;
+      }
+    }
     return Scaffold(
       backgroundColor: const Color(0xFFF9FAFB),
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
         leading: null,
-        title: const Text('Food', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
+        title: Text(localizations.food, style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
         centerTitle: false,
       ),
       body: Column(
@@ -4784,7 +4764,7 @@ class _FoodScreenState extends State<FoodScreen> with TickerProviderStateMixin {
                         borderRadius: BorderRadius.circular(18),
                       ),
                       child: Center(
-                        child: Text('My Meals', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16, color: _tabIndex == 0 ? Colors.black : Colors.grey[500])),
+                        child: Text(localizations.myMeals, style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16, color: _tabIndex == 0 ? Colors.black : Colors.grey[500])),
                       ),
                     ),
                   ),
@@ -4799,7 +4779,7 @@ class _FoodScreenState extends State<FoodScreen> with TickerProviderStateMixin {
                         borderRadius: BorderRadius.circular(18),
                       ),
                       child: Center(
-                        child: Text('Suggested Meals', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16, color: _tabIndex == 1 ? Colors.black : Colors.grey[500])),
+                        child: Text(localizations.suggestedMeals, style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16, color: _tabIndex == 1 ? Colors.black : Colors.grey[500])),
                       ),
                     ),
                   ),
@@ -4826,7 +4806,7 @@ class _FoodScreenState extends State<FoodScreen> with TickerProviderStateMixin {
                         borderRadius: BorderRadius.circular(16),
                         border: Border.all(color: kPrimaryGreen, width: 1.5),
                       ),
-                      child: Text('Weekly', style: TextStyle(fontWeight: FontWeight.bold, color: _calendarView == 'week' ? Colors.white : kPrimaryGreen)),
+                      child: Text(localizations.weekly, style: TextStyle(fontWeight: FontWeight.bold, color: _calendarView == 'week' ? Colors.white : kPrimaryGreen)),
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -4842,12 +4822,12 @@ class _FoodScreenState extends State<FoodScreen> with TickerProviderStateMixin {
                         borderRadius: BorderRadius.circular(16),
                         border: Border.all(color: kPrimaryGreen, width: 1.5),
                       ),
-                      child: Text('Monthly', style: TextStyle(fontWeight: FontWeight.bold, color: _calendarView == 'month' ? Colors.white : kPrimaryGreen)),
-                    ), // Close Container for 'Monthly'
-                  ), // Close GestureDetector for 'Monthly'
-                ], // Close children of Row
-              ), // Close Row
-            ), // Close Padding
+                      child: Text(localizations.monthly, style: TextStyle(fontWeight: FontWeight.bold, color: _calendarView == 'month' ? Colors.white : kPrimaryGreen)),
+                    ),
+                  ),
+                ],
+              ),
+            ),
           // Animated tab content
           Expanded(
             child: AnimatedSwitcher(
@@ -4909,7 +4889,7 @@ class _FoodScreenState extends State<FoodScreen> with TickerProviderStateMixin {
                           padding: const EdgeInsets.only(top: 8, bottom: 8),
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                            children: List.generate(_foodMealTypes.length, (i) {
+                            children: List.generate(localizedMealTypes.length, (i) {
                               final selected = i == _selectedFoodMealTypeIndex;
                               return Expanded(
                                 child: GestureDetector(
@@ -4924,7 +4904,7 @@ class _FoodScreenState extends State<FoodScreen> with TickerProviderStateMixin {
                                     ),
                                     child: Center(
                                       child: Text(
-                                        _foodMealTypes[i],
+                                        localizedMealTypes[i],
                                         style: TextStyle(
                                           color: selected ? Colors.white : Colors.grey[700],
                                           fontWeight: FontWeight.w600,
@@ -4947,7 +4927,7 @@ class _FoodScreenState extends State<FoodScreen> with TickerProviderStateMixin {
                               final meals = snapshot.data!;
                               final filteredMeals = meals.where((m) => m.mealType.toLowerCase() == _foodMealTypes[_selectedFoodMealTypeIndex].toLowerCase()).toList();
                               if (filteredMeals.isEmpty) {
-                                return const Center(child: Text('No meals logged for this day.', style: TextStyle(color: Colors.grey)));
+                                return Center(child: Text(localizations.noMealsLoggedForThisDay, style: TextStyle(color: Colors.grey)));
                               }
                               return ListView.builder(
                                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
@@ -4990,7 +4970,7 @@ class _FoodScreenState extends State<FoodScreen> with TickerProviderStateMixin {
                               if (snapshot.hasError || !snapshot.hasData || snapshot.data == null) {
                                 return Padding(
                                   padding: const EdgeInsets.all(32),
-                                  child: Center(child: Text('Could not load AI meal suggestions. Please try again later.', style: TextStyle(color: Colors.grey[600], fontSize: 16))),
+                                  child: Center(child: Text(localizations.noMealsLoggedForThisDay, style: TextStyle(color: Colors.grey[600], fontSize: 16))),
                                 );
                               }
                               final meals = snapshot.data!;
@@ -5000,7 +4980,7 @@ class _FoodScreenState extends State<FoodScreen> with TickerProviderStateMixin {
                                   children: [
                                     Padding(
                                       padding: const EdgeInsets.fromLTRB(20, 18, 20, 0),
-                                      child: Text(_currentMealLabel, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 22)),
+                                      child: Text(getCurrentMealLabel(), style: TextStyle(fontWeight: FontWeight.bold, fontSize: 22)),
                                     ),
                                     ...List.generate(meals.length, (i) {
                                       final meal = meals[i];
@@ -5028,26 +5008,35 @@ class _FoodScreenState extends State<FoodScreen> with TickerProviderStateMixin {
                                                 children: [
                                                   // Meal image
                                                   FutureBuilder<String?>(
-                                                    future: meal['image'] != null && meal['image'].toString().isNotEmpty
-                                                      ? Future.value(meal['image'])
-                                                      : PexelsService.fetchMealImage(meal['meal_name'] as String? ?? ''),
+                                                    future: PexelsService.fetchMealImage(meal['meal_name'] as String? ?? '', locale: Locale(AppLocalizations.of(context)!.localeName)),
                                                     builder: (context, snapshot) {
+                                                      if (snapshot.connectionState == ConnectionState.waiting) {
+                                                        return ClipRRect(
+                                                          borderRadius: BorderRadius.circular(16),
+                                                          child: Container(
+                                                            width: 70,
+                                                            height: 70,
+                                                            color: Colors.grey[200],
+                                                            child: Center(child: CircularProgressIndicator(strokeWidth: 2, color: kPrimaryGreen)),
+                                                          ),
+                                                        );
+                                                      }
                                                       final imageUrl = snapshot.data;
                                                       return ClipRRect(
                                                         borderRadius: BorderRadius.circular(16),
                                                         child: imageUrl != null
-                                                          ? Image.network(
-                                                              imageUrl,
-                                                              width: 70,
-                                                              height: 70,
-                                                              fit: BoxFit.cover,
-                                                            )
-                                                          : Container(
-                                                              width: 70,
-                                                              height: 70,
-                                                              color: Colors.grey[200],
-                                                              child: Icon(Icons.fastfood, color: Colors.grey[400]),
-                                                            ),
+                                                            ? Image.network(
+                                                                imageUrl,
+                                                                width: 70,
+                                                                height: 70,
+                                                                fit: BoxFit.cover,
+                                                              )
+                                                            : Container(
+                                                                width: 70,
+                                                                height: 70,
+                                                                color: Colors.grey[200],
+                                                                child: Icon(Icons.fastfood, color: Colors.grey[400]),
+                                                              ),
                                                       );
                                                     },
                                                   ),
@@ -5192,10 +5181,19 @@ class _FoodMealCardState extends State<_FoodMealCard> {
             children: [
               // Meal image
               FutureBuilder<String?>(
-                future: meal.imageUrl != null && meal.imageUrl!.isNotEmpty
-                    ? Future.value(meal.imageUrl)
-                    : PexelsService.fetchMealImage(meal.name),
+                future: PexelsService.fetchMealImage(meal.name, locale: Locale(AppLocalizations.of(context)!.localeName)),
                 builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return ClipRRect(
+                      borderRadius: BorderRadius.circular(16),
+                      child: Container(
+                        width: 70,
+                        height: 70,
+                        color: Colors.grey[200],
+                        child: Center(child: CircularProgressIndicator(strokeWidth: 2, color: kPrimaryGreen)),
+                      ),
+                    );
+                  }
                   final imageUrl = snapshot.data;
                   return ClipRRect(
                     borderRadius: BorderRadius.circular(16),
@@ -5228,14 +5226,20 @@ class _FoodMealCardState extends State<_FoodMealCard> {
                       ],
                     ),
                     const SizedBox(height: 2),
-                    Text(meal.name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                    Text(
+                      meal.name,
+                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      textDirection: AppLocalizations.of(context)!.localeName.startsWith('ar') ? TextDirection.rtl : TextDirection.ltr,
+                    ),
                     const SizedBox(height: 6),
-                    Row(
+                    Wrap(
+                      spacing: 6,
+                      runSpacing: 2,
                       children: [
                         _MacroTag(label: 'P', value: '${meal.protein}g', color: kSecondaryBlue),
-                        const SizedBox(width: 6),
                         _MacroTag(label: 'C', value: '${meal.carbs}g', color: kAccentOrange),
-                        const SizedBox(width: 6),
                         _MacroTag(label: 'F', value: '${meal.fat}g', color: kWarningRed),
                       ],
                     ),
@@ -5244,12 +5248,13 @@ class _FoodMealCardState extends State<_FoodMealCard> {
               ),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
+                mainAxisAlignment: MainAxisAlignment.start,
                 children: [
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    mainAxisAlignment: MainAxisAlignment.start,
                     children: [
                       Text('${meal.calories}', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
-                      const SizedBox(width: 2),
                       Text('cal', style: TextStyle(color: Colors.grey[600], fontSize: 13)),
                       IconButton(
                         icon: Icon(Icons.delete, color: Colors.redAccent, size: 22),
@@ -5656,19 +5661,34 @@ class SettingsPage extends StatelessWidget {
               child: Column(
         children: [
           SwitchListTile(
-                    title: Text('Dark Mode', style: TextStyle(fontWeight: FontWeight.w600)),
-            subtitle: Text('Enable dark theme'),
+                    title: Text(AppLocalizations.of(context)!.darkMode, style: TextStyle(fontWeight: FontWeight.w600)),
+            subtitle: Text(AppLocalizations.of(context)!.enableDarkTheme),
             value: prefs.darkMode,
             onChanged: (v) => prefs.setDarkMode(v),
             secondary: Icon(Icons.dark_mode),
           ),
                   Divider(height: 1, thickness: 1, indent: 16, endIndent: 16),
           SwitchListTile(
-                    title: Text('Use Metric Units', style: TextStyle(fontWeight: FontWeight.w600)),
-            subtitle: Text('kg/cm or lb/ft'),
+                    title: Text(AppLocalizations.of(context)!.useMetricUnits, style: TextStyle(fontWeight: FontWeight.w600)),
+            subtitle: Text(AppLocalizations.of(context)!.unitsSubtitle),
             value: prefs.useMetric,
             onChanged: (v) => prefs.setUnits(v),
             secondary: Icon(Icons.straighten),
+          ),
+                  Divider(height: 1, thickness: 1, indent: 16, endIndent: 16),
+          ListTile(
+            leading: Icon(Icons.language),
+            title: Text(AppLocalizations.of(context)!.language, style: TextStyle(fontWeight: FontWeight.w600)),
+            subtitle: Text(AppLocalizations.of(context)!.selectLanguage),
+            trailing: DropdownButton<String>(
+              value: prefs.language,
+              items: [
+                DropdownMenuItem(value: 'en', child: Text('English')),
+                DropdownMenuItem(value: 'ar', child: Text('Arabic')),
+                DropdownMenuItem(value: 'es', child: Text('Spanish')),
+              ],
+              onChanged: (v) => prefs.setLanguage(v!),
+            ),
           ),
                 ],
               ),
@@ -5682,32 +5702,32 @@ class SettingsPage extends StatelessWidget {
               child: Column(
                 children: [
                   SwitchListTile(
-                    title: Text('Meal Logging Prompts', style: TextStyle(fontWeight: FontWeight.w600)),
-                    subtitle: Text('Get reminders to log your meals'),
+                    title: Text(AppLocalizations.of(context)!.mealLoggingPrompts, style: TextStyle(fontWeight: FontWeight.w600)),
+                    subtitle: Text(AppLocalizations.of(context)!.mealLoggingPromptsSubtitle),
                     value: prefs.mealLoggingPrompts,
                     onChanged: (v) => prefs.setMealLoggingPrompts(v),
                     secondary: Icon(Icons.restaurant),
                   ),
                   Divider(height: 1, thickness: 1, indent: 16, endIndent: 16),
                   SwitchListTile(
-                    title: Text('Water Intake Reminders', style: TextStyle(fontWeight: FontWeight.w600)),
-                    subtitle: Text('Get reminders to drink water'),
+                    title: Text(AppLocalizations.of(context)!.waterIntakeReminders, style: TextStyle(fontWeight: FontWeight.w600)),
+                    subtitle: Text(AppLocalizations.of(context)!.waterIntakeRemindersSubtitle),
                     value: prefs.waterIntakeReminders,
                     onChanged: (v) => prefs.setWaterIntakeReminders(v),
                     secondary: Icon(Icons.water_drop),
                   ),
                   Divider(height: 1, thickness: 1, indent: 16, endIndent: 16),
                   SwitchListTile(
-                    title: Text('Mindful Walks Reminders', style: TextStyle(fontWeight: FontWeight.w600)),
-                    subtitle: Text('Get reminders to take a mindful walk'),
+                    title: Text(AppLocalizations.of(context)!.mindfulWalksReminders, style: TextStyle(fontWeight: FontWeight.w600)),
+                    subtitle: Text(AppLocalizations.of(context)!.mindfulWalksRemindersSubtitle),
                     value: prefs.mindfulWalksReminders,
                     onChanged: (v) => prefs.setMindfulWalksReminders(v),
                     secondary: Icon(Icons.directions_walk),
                   ),
                   Divider(height: 1, thickness: 1, indent: 16, endIndent: 16),
                   SwitchListTile(
-                    title: Text('Moment of Calm After Meals', style: TextStyle(fontWeight: FontWeight.w600)),
-                    subtitle: Text('Show a calming popup after logging a meal'),
+                    title: Text(AppLocalizations.of(context)!.momentOfCalmAfterMeals, style: TextStyle(fontWeight: FontWeight.w600)),
+                    subtitle: Text(AppLocalizations.of(context)!.momentOfCalmAfterMealsSubtitle),
                     value: prefs.momentOfCalmReminders,
                     onChanged: (v) => prefs.setMomentOfCalmReminders(v),
                     secondary: Icon(Icons.self_improvement),
@@ -5764,7 +5784,7 @@ class _HealthAwarenessPageState extends State<HealthAwarenessPage> {
         'lastUpdated': DateTime.now(),
       });
       setState(() => _saving = false);
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Health awareness updated!')));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(AppLocalizations.of(context)!.healthAwarenessUpdated)));
       Navigator.pop(context);
     }
   }
@@ -5773,7 +5793,7 @@ class _HealthAwarenessPageState extends State<HealthAwarenessPage> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Scaffold(
-      appBar: AppBar(title: Text('Health Awareness')),
+      appBar: AppBar(title: Text(AppLocalizations.of(context)!.healthAwareness)),
       body: _saving
           ? Center(child: CircularProgressIndicator())
           : Padding(
@@ -5781,7 +5801,7 @@ class _HealthAwarenessPageState extends State<HealthAwarenessPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Blood Type', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20)),
+                  Text(AppLocalizations.of(context)!.bloodType, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20)),
                   SizedBox(height: 12),
                   Wrap(
                     spacing: 12,
@@ -5801,12 +5821,12 @@ class _HealthAwarenessPageState extends State<HealthAwarenessPage> {
                     }).toList(),
                   ),
                   SizedBox(height: 32),
-                  Text('Are you diabetic?', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20)),
+                  Text(AppLocalizations.of(context)!.areYouDiabetic, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20)),
                   SizedBox(height: 12),
                   Row(
                     children: [
                       ChoiceChip(
-                        label: Row(children: [Icon(Icons.check_circle, color: Colors.green), SizedBox(width: 6), Text('Yes')]),
+                        label: Row(children: [Icon(Icons.check_circle, color: Colors.green), SizedBox(width: 6), Text(AppLocalizations.of(context)!.yes)]),
                         selected: _isDiabetic == true,
                         selectedColor: Colors.green.withOpacity(0.18),
                         onSelected: (selected) => setState(() => _isDiabetic = true),
@@ -5817,7 +5837,7 @@ class _HealthAwarenessPageState extends State<HealthAwarenessPage> {
                       ),
                       SizedBox(width: 18),
                       ChoiceChip(
-                        label: Row(children: [Icon(Icons.cancel, color: Colors.red), SizedBox(width: 6), Text('No')]),
+                        label: Row(children: [Icon(Icons.cancel, color: Colors.red), SizedBox(width: 6), Text(AppLocalizations.of(context)!.no)]),
                         selected: _isDiabetic == false,
                         selectedColor: Colors.red.withOpacity(0.18),
                         onSelected: (selected) => setState(() => _isDiabetic = false),
@@ -5833,7 +5853,7 @@ class _HealthAwarenessPageState extends State<HealthAwarenessPage> {
                     width: double.infinity,
                     child: ElevatedButton(
                       onPressed: (_bloodType != null && _isDiabetic != null && !_saving) ? _save : null,
-                      child: Text('Save'),
+                      child: Text(AppLocalizations.of(context)!.save),
                     ),
                   ),
                 ],
@@ -5934,4 +5954,11 @@ String removeMarkdown(String text) {
       .replaceAll(RegExp(r'__(.*?)__'), r'')
       .replaceAll(RegExp(r'\*(.*?)\*'), r'')
       .replaceAll(RegExp(r'_(.*?)_'), r'');
+}
+
+// Add this helper function to main.dart
+Locale _getLocale(String code) {
+  if (code == 'ar') return const Locale('ar');
+  if (code == 'es') return const Locale('es');
+  return const Locale('en');
 }

@@ -5,6 +5,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'main.dart';
 import 'services/user_service.dart';
 import 'services/ai_service.dart';
+import 'l10n/app_localizations.dart';
 
 class NutritionalPlanPage extends StatefulWidget {
   @override
@@ -83,9 +84,10 @@ class _NutritionalPlanPageState extends State<NutritionalPlanPage> {
   Widget build(BuildContext context) {
     final prefs = Provider.of<PreferencesProvider>(context);
     final useMetric = prefs.useMetric;
+    final localizations = AppLocalizations.of(context)!;
     if (isLoading || userData == null) {
       return Scaffold(
-        appBar: AppBar(title: Text('Nutritional Plan')),
+        appBar: AppBar(title: Text(localizations.nutritionalPlan)),
         body: Center(child: CircularProgressIndicator()),
       );
     }
@@ -113,7 +115,7 @@ class _NutritionalPlanPageState extends State<NutritionalPlanPage> {
       heightDisplay = "${feet}'${inches}\" ft";
     }
     return Scaffold(
-      appBar: AppBar(title: Text('Nutritional Plan')),
+      appBar: AppBar(title: Text(localizations.nutritionalPlan)),
       body: SingleChildScrollView(
         padding: EdgeInsets.all(18),
         child: Column(
@@ -128,10 +130,10 @@ class _NutritionalPlanPageState extends State<NutritionalPlanPage> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
-                    _SummaryItem(label: 'BMI', value: bmi.toStringAsFixed(1)),
-                    _SummaryItem(label: 'Age', value: '$age'),
-                    _SummaryItem(label: 'Weight', value: '${displayWeight.toStringAsFixed(1)} $weightUnit'),
-                    _SummaryItem(label: 'Target', value: '${useMetric ? targetWeight.toStringAsFixed(1) : (targetWeight * 2.20462).toStringAsFixed(1)} $weightUnit'),
+                    _SummaryItem(label: localizations.bmi, value: bmi.toStringAsFixed(1)),
+                    _SummaryItem(label: localizations.age, value: '$age'),
+                    _SummaryItem(label: localizations.weight, value: '${displayWeight.toStringAsFixed(1)} $weightUnit'),
+                    _SummaryItem(label: localizations.target, value: '${useMetric ? targetWeight.toStringAsFixed(1) : (targetWeight * 2.20462).toStringAsFixed(1)} $weightUnit'),
                   ],
                 ),
               ),
@@ -139,7 +141,7 @@ class _NutritionalPlanPageState extends State<NutritionalPlanPage> {
             SizedBox(height: 18),
             // Editable Cards
             _EditableCard(
-              label: 'Age',
+              label: localizations.age,
               value: '$age',
               isEditing: editingField == 'age',
               onTap: () => _startEdit('age'),
@@ -153,7 +155,7 @@ class _NutritionalPlanPageState extends State<NutritionalPlanPage> {
                   : null,
             ),
             _EditableCard(
-              label: 'Weight',
+              label: localizations.weight,
               value: '${displayWeight.toStringAsFixed(1)} $weightUnit',
               isEditing: editingField == 'weight',
               onTap: () => _startEdit('weight'),
@@ -168,7 +170,7 @@ class _NutritionalPlanPageState extends State<NutritionalPlanPage> {
                   : null,
             ),
             _EditableCard(
-              label: 'Height',
+              label: localizations.height,
               value: heightDisplay,
               isEditing: editingField == 'height',
               onTap: () => _startEdit('height'),
@@ -188,7 +190,7 @@ class _NutritionalPlanPageState extends State<NutritionalPlanPage> {
                   : null,
             ),
             _EditableCard(
-              label: 'Target Weight',
+              label: localizations.targetWeight,
               value: '${useMetric ? targetWeight.toStringAsFixed(1) : (targetWeight * 2.20462).toStringAsFixed(1)} $weightUnit',
               isEditing: editingField == 'targetWeight',
               onTap: () => _startEdit('targetWeight'),
@@ -203,8 +205,8 @@ class _NutritionalPlanPageState extends State<NutritionalPlanPage> {
                   : null,
             ),
             _EditableCard(
-              label: 'Calorie Goal',
-              value: calories != null ? '$calories kcal' : 'Not set',
+              label: localizations.calorieGoal,
+              value: calories != null ? '$calories kcal' : localizations.notSet,
               isEditing: editingField == 'dailyCalorieGoal',
               onTap: () => _startEdit('dailyCalorieGoal'),
               editor: editingField == 'dailyCalorieGoal'
@@ -218,8 +220,8 @@ class _NutritionalPlanPageState extends State<NutritionalPlanPage> {
                   : null,
             ),
             _EditableCard(
-              label: 'Protein Goal',
-              value: protein != null ? '$protein g' : 'Not set',
+              label: localizations.proteinGoal,
+              value: protein != null ? '$protein g' : localizations.notSet,
               isEditing: editingField == 'proteinGoal',
               onTap: () => _startEdit('proteinGoal'),
               editor: editingField == 'proteinGoal'
@@ -233,8 +235,8 @@ class _NutritionalPlanPageState extends State<NutritionalPlanPage> {
                   : null,
             ),
             _EditableCard(
-              label: 'Carb Goal',
-              value: carbs != null ? '$carbs g' : 'Not set',
+              label: localizations.carbGoal,
+              value: carbs != null ? '$carbs g' : localizations.notSet,
               isEditing: editingField == 'carbsGoal',
               onTap: () => _startEdit('carbsGoal'),
               editor: editingField == 'carbsGoal'
@@ -248,8 +250,8 @@ class _NutritionalPlanPageState extends State<NutritionalPlanPage> {
                   : null,
             ),
             _EditableCard(
-              label: 'Fat Goal',
-              value: fat != null ? '$fat g' : 'Not set',
+              label: localizations.fatGoal,
+              value: fat != null ? '$fat g' : localizations.notSet,
               isEditing: editingField == 'fatGoal',
               onTap: () => _startEdit('fatGoal'),
               editor: editingField == 'fatGoal'
@@ -263,7 +265,7 @@ class _NutritionalPlanPageState extends State<NutritionalPlanPage> {
                   : null,
             ),
             _EditableCard(
-              label: 'Water Intake',
+              label: localizations.waterIntake,
               value: userData!['waterIntake'] ?? '-',
               isEditing: editingField == 'waterIntake',
               onTap: () => _startEdit('waterIntake'),
@@ -284,18 +286,18 @@ class _NutritionalPlanPageState extends State<NutritionalPlanPage> {
                 if (hasChanges)
                   OutlinedButton.icon(
                     icon: Icon(Icons.undo),
-                    label: Text('Undo'),
+                    label: Text(localizations.undo),
                     onPressed: _undoChanges,
                   ),
                 if (editingField != null)
                   OutlinedButton.icon(
                     icon: Icon(Icons.cancel),
-                    label: Text('Cancel'),
+                    label: Text(localizations.cancel),
                     onPressed: _cancelEdit,
                   ),
                 ElevatedButton.icon(
                   icon: isSaving ? SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)) : Icon(Icons.save),
-                  label: Text('Save'),
+                  label: Text(localizations.save),
                   onPressed: hasChanges && !isSaving ? _saveChanges : null,
                 ),
               ],

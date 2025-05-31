@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'l10n/app_localizations.dart';
 
 class ScanPaywallPage extends StatelessWidget {
   final VoidCallback onUpgrade;
@@ -33,18 +34,18 @@ class ScanPaywallPage extends StatelessWidget {
                   const SizedBox(height: 32),
                   Icon(Icons.emoji_events, color: Colors.amber, size: 80), // King crown icon
                   const SizedBox(height: 16),
-                  const Text(
-                    'Upgrade to Premium',
-                    style: TextStyle(
+                  Text(
+                    AppLocalizations.of(context)!.upgradeToPremium,
+                    style: const TextStyle(
                       color: Colors.white,
                       fontSize: 28,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
                   const SizedBox(height: 8),
-                  const Text(
-                    'Get unlimited scans and more!',
-                    style: TextStyle(
+                  Text(
+                    AppLocalizations.of(context)!.getUnlimitedScans,
+                    style: const TextStyle(
                       color: Colors.white70,
                       fontSize: 18,
                     ),
@@ -52,9 +53,9 @@ class ScanPaywallPage extends StatelessWidget {
                   const SizedBox(height: 32),
                   ElevatedButton.icon(
                     icon: Icon(Icons.workspace_premium, color: Colors.amber, size: 32),
-                    label: const Padding(
-                      padding: EdgeInsets.symmetric(vertical: 16, horizontal: 8),
-                      child: Text('Upgrade Plan', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+                    label: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
+                      child: Text(AppLocalizations.of(context)!.upgradePlan, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
                     ),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.black,
@@ -78,7 +79,7 @@ class ScanPaywallPage extends StatelessWidget {
                             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                             padding: const EdgeInsets.symmetric(vertical: 16),
                           ),
-                          child: const Text('Discard', style: TextStyle(fontSize: 16)),
+                          child: Text(AppLocalizations.of(context)!.discard, style: const TextStyle(fontSize: 16)),
                         ),
                       ),
                       const SizedBox(width: 16),
@@ -93,7 +94,7 @@ class ScanPaywallPage extends StatelessWidget {
                             elevation: 4,
                             shadowColor: Colors.black.withOpacity(0.3),
                           ),
-                          child: const Text('Watch Ad for Scan', style: TextStyle(fontSize: 16)),
+                          child: Text(AppLocalizations.of(context)!.watchAdForScan, style: const TextStyle(fontSize: 16)),
                         ),
                       ),
                     ],
