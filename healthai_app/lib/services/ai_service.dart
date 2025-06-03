@@ -1,33 +1,41 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'dart:io';
+import 'package:cloud_functions/cloud_functions.dart';
 
 class AIService {
+  final _functions = FirebaseFunctions.instanceFor(region: 'us-central1');
+
   // TODO: Move this to secure storage or env variable in production
   static const String _openAIApiKey = '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';
   static const String _apiUrl = 'https://api.openai.com/v1/chat/completions';
 
   Future<String?> sendMessage(String message, {String model = 'gpt-4o-mini'}) async {
-    final headers = {
-      'Content-Type': 'application/json',
-      'Authorization': 'Bearer $_openAIApiKey',
-    };
-    final body = jsonEncode({
-      'model': model,
-      'messages': [
-        {'role': 'system', 'content': 'You are Yumie, a friendly nutrition and wellness coach. Respond in clear, friendly, plain English. Avoid Markdown formatting (like **bold** or lists) unless the user specifically asks for it.'},
-        {'role': 'user', 'content': message},
-      ],
-      'max_tokens': 1024,
-      'temperature': 0.7,
-    });
-    final response = await http.post(Uri.parse(_apiUrl), headers: headers, body: body);
-    if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);
-      final content = data['choices'][0]['message']['content'];
-      return content;
-    } else {
-      print('AI API error: ${response.statusCode} ${response.body}');
+    try {
+      final url = 'https://us-central1-healthai-0001.cloudfunctions.net/openaiProxyCallable';
+      final response = await http.post(
+        Uri.parse(url),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'model': model,
+          'messages': [
+            {'role': 'system', 'content': 'You are Yumie, a friendly nutrition and wellness coach. Respond in clear, friendly, plain English. Avoid Markdown formatting (like **bold** or lists) unless the user specifically asks for it.'},
+            {'role': 'user', 'content': message},
+          ],
+          'max_tokens': 1024,
+          'temperature': 0.7,
+        }),
+      );
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        final content = data['choices'][0]['message']['content'];
+        return content;
+      } else {
+        print('AI API error: ${response.statusCode} ${response.body}');
+        return null;
+      }
+    } catch (e) {
+      print('AI API error: $e');
       return null;
     }
   }
@@ -50,42 +58,49 @@ class AIService {
     String? specialInstruction,
     String language = 'en',
   }) async {
-    final headers = {
-      'Content-Type': 'application/json',
-      'Authorization': 'Bearer $_openAIApiKey',
-    };
-    final systemPrompt = buildYumiePrompt(
-      name: name,
-      age: age,
-      heightCm: heightCm,
-      weightKg: weightKg,
-      calorieGoal: calorieGoal,
-      caloriesConsumed: caloriesConsumed,
-      proteinG: proteinG,
-      carbsG: carbsG,
-      fatG: fatG,
-      waterIntakeL: waterIntakeL,
-      bloodType: bloodType,
-      isDiabetic: isDiabetic,
-      specialInstruction: specialInstruction,
-      language: language,
-    );
-    final messages = [
-      {'role': 'system', 'content': systemPrompt},
-      ...chatHistory,
-    ];
-    final body = jsonEncode({
-      'model': model,
-      'messages': messages,
-      'max_tokens': 1024,
-      'temperature': 0.7,
-    });
-    final response = await http.post(Uri.parse(_apiUrl), headers: headers, body: body);
-    if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);
-      return data['choices'][0]['message']['content'] as String?;
-    } else {
-      print('OpenAI error: ${response.body}');
+    try {
+      final systemPrompt = buildYumiePrompt(
+        name: name,
+        age: age,
+        heightCm: heightCm,
+        weightKg: weightKg,
+        calorieGoal: calorieGoal,
+        caloriesConsumed: caloriesConsumed,
+        proteinG: proteinG,
+        carbsG: carbsG,
+        fatG: fatG,
+        waterIntakeL: waterIntakeL,
+        bloodType: bloodType,
+        isDiabetic: isDiabetic,
+        specialInstruction: specialInstruction,
+        language: language,
+      );
+
+      final messages = [
+        {'role': 'system', 'content': systemPrompt},
+        ...chatHistory,
+      ];
+
+      final url = 'https://us-central1-healthai-0001.cloudfunctions.net/openaiProxyCallable';
+      final response = await http.post(
+        Uri.parse(url),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'model': model,
+          'messages': messages,
+          'max_tokens': 1024,
+          'temperature': 0.7,
+        }),
+      );
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return data['choices'][0]['message']['content'] as String?;
+      } else {
+        print('OpenAI error: ${response.statusCode} ${response.body}');
+        return null;
+      }
+    } catch (e) {
+      print('OpenAI error: $e');
       return null;
     }
   }
@@ -238,6 +253,7 @@ Carbs: 250
 
   /// Analyze a meal image and return food name, macros, and ingredients.
   Future<Map<String, dynamic>?> analyzeMealImage(File imageFile, {String language = 'en'}) async {
+    final url = 'https://us-central1-healthai-0001.cloudfunctions.net/openaiProxyCallable';
     final bytes = await imageFile.readAsBytes();
     final base64Image = base64Encode(bytes);
     final dataUrl = 'data:image/jpeg;base64,$base64Image';
@@ -257,26 +273,25 @@ You are a nutrition AI. Given this photo of a meal, return a JSON object with:
 - ingredients: array of strings
 Respond ONLY with valid JSON.$languageInstruction
 ''';
-    final headers = {
-      'Content-Type': 'application/json',
-      'Authorization': 'Bearer $_openAIApiKey',
-    };
-    final body = jsonEncode({
-      'model': 'gpt-4o-mini',
-      'messages': [
-        {'role': 'system', 'content': prompt},
-        {
-          'role': 'user',
-          'content': [
-            {'type': 'text', 'text': prompt},
-            {'type': 'image_url', 'image_url': {'url': dataUrl}},
-          ]
-        },
-      ],
-      'max_tokens': 512,
-      'temperature': 0.3,
-    });
-    final response = await http.post(Uri.parse(_apiUrl), headers: headers, body: body);
+    final response = await http.post(
+      Uri.parse(url),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'model': 'gpt-4o-mini',
+        'messages': [
+          {'role': 'system', 'content': prompt},
+          {
+            'role': 'user',
+            'content': [
+              {'type': 'text', 'text': prompt},
+              {'type': 'image_url', 'image_url': {'url': dataUrl}},
+            ]
+          },
+        ],
+        'max_tokens': 512,
+        'temperature': 0.3,
+      }),
+    );
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
       final content = data['choices'][0]['message']['content'];
@@ -284,13 +299,14 @@ Respond ONLY with valid JSON.$languageInstruction
       final result = jsonDecode(jsonString);
       return result as Map<String, dynamic>;
     } else {
-      print('AI meal scan error: ${response.statusCode} ${response.body}');
+      print('AI meal scan error: \\${response.statusCode} \\${response.body}');
       return null;
     }
   }
 
   /// Analyze a fridge image and return a list of detected items.
   Future<List<String>?> analyzeFridgeImage(File imageFile, {String language = 'en'}) async {
+    final url = 'https://us-central1-healthai-0001.cloudfunctions.net/openaiProxyCallable';
     final bytes = await imageFile.readAsBytes();
     final base64Image = base64Encode(bytes);
     final dataUrl = 'data:image/jpeg;base64,$base64Image';
@@ -303,26 +319,25 @@ Respond ONLY with valid JSON.$languageInstruction
     final prompt = '''
 You are a kitchen assistant AI. Given this photo of a fridge, return a JSON array of all visible food items (ingredients). Respond ONLY with a JSON array of strings.$languageInstruction
 ''';
-    final headers = {
-      'Content-Type': 'application/json',
-      'Authorization': 'Bearer $_openAIApiKey',
-    };
-    final body = jsonEncode({
-      'model': 'gpt-4o-mini',
-      'messages': [
-        {'role': 'system', 'content': prompt},
-        {
-          'role': 'user',
-          'content': [
-            {'type': 'text', 'text': prompt},
-            {'type': 'image_url', 'image_url': {'url': dataUrl}},
-          ]
-        },
-      ],
-      'max_tokens': 512,
-      'temperature': 0.3,
-    });
-    final response = await http.post(Uri.parse(_apiUrl), headers: headers, body: body);
+    final response = await http.post(
+      Uri.parse(url),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'model': 'gpt-4o-mini',
+        'messages': [
+          {'role': 'system', 'content': prompt},
+          {
+            'role': 'user',
+            'content': [
+              {'type': 'text', 'text': prompt},
+              {'type': 'image_url', 'image_url': {'url': dataUrl}},
+            ]
+          },
+        ],
+        'max_tokens': 512,
+        'temperature': 0.3,
+      }),
+    );
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
       final content = data['choices'][0]['message']['content'];
@@ -331,11 +346,11 @@ You are a kitchen assistant AI. Given this photo of a fridge, return a JSON arra
         final items = jsonDecode(jsonString);
         return (items as List).map((e) => e.toString()).toList();
       } catch (e) {
-        print('Failed to parse fridge scan JSON: $e\n$content');
+        print('Failed to parse fridge scan JSON: $e\\n$content');
         return null;
       }
     } else {
-      print('AI fridge scan error: ${response.statusCode} ${response.body}');
+      print('AI fridge scan error: \\${response.statusCode} \\${response.body}');
       return null;
     }
   }
@@ -346,6 +361,7 @@ You are a kitchen assistant AI. Given this photo of a fridge, return a JSON arra
     required Map<String, dynamic> userProfile,
     String language = 'en',
   }) async {
+    final url = 'https://us-central1-healthai-0001.cloudfunctions.net/openaiProxyCallable';
     String languageInstruction = '';
     if (language == 'ar') {
       languageInstruction = '\nRespond in Modern Standard Arabic.';
@@ -363,37 +379,37 @@ You are a nutrition AI. Given this user profile: ${jsonEncode(userProfile)} and 
 - fat: integer
 Respond ONLY with valid JSON.$languageInstruction
 ''';
-    final headers = {
-      'Content-Type': 'application/json',
-      'Authorization': 'Bearer $_openAIApiKey',
-    };
-    final body = jsonEncode({
-      'model': 'gpt-4o-mini',
-      'messages': [
-        {'role': 'system', 'content': prompt},
-        {'role': 'user', 'content': prompt},
-      ],
-      'max_tokens': 512,
-      'temperature': 0.5,
-    });
-    final response = await http.post(Uri.parse(_apiUrl), headers: headers, body: body);
+    final response = await http.post(
+      Uri.parse(url),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'model': 'gpt-4o-mini',
+        'messages': [
+          {'role': 'system', 'content': prompt},
+          {'role': 'user', 'content': prompt},
+        ],
+        'max_tokens': 512,
+        'temperature': 0.5,
+      }),
+    );
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
       final content = data['choices'][0]['message']['content'];
       try {
         return jsonDecode(content);
       } catch (e) {
-        print('Failed to parse generated meal JSON: $e\n$content');
+        print('Failed to parse generated meal JSON: $e\\n$content');
         return null;
       }
     } else {
-      print('AI generate meal error: ${response.statusCode} ${response.body}');
+      print('AI generate meal error: \\${response.statusCode} \\${response.body}');
       return null;
     }
   }
 
   /// Get AI-powered suggested meals for a given meal period
   Future<List<Map<String, dynamic>>?> getSuggestedMeals({required String mealPeriod, String language = 'en'}) async {
+    final url = 'https://us-central1-healthai-0001.cloudfunctions.net/openaiProxyCallable';
     String languageInstruction = '';
     if (language == 'ar') {
       languageInstruction = '\nRespond in Modern Standard Arabic.';
@@ -413,20 +429,19 @@ You are a nutrition AI. Suggest 3 healthy $mealPeriod meals. For each meal, prov
 - recipe: array of steps (strings)
 Respond ONLY with a JSON array of 3 objects, no extra text, no explanations, no markdown.$languageInstruction
 ''';
-    final headers = {
-      'Content-Type': 'application/json',
-      'Authorization': 'Bearer $_openAIApiKey',
-    };
-    final body = jsonEncode({
-      'model': 'gpt-4o-mini',
-      'messages': [
-        {'role': 'system', 'content': prompt},
-        {'role': 'user', 'content': prompt},
-      ],
-      'max_tokens': 900,
-      'temperature': 0.7,
-    });
-    final response = await http.post(Uri.parse(_apiUrl), headers: headers, body: body);
+    final response = await http.post(
+      Uri.parse(url),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'model': 'gpt-4o-mini',
+        'messages': [
+          {'role': 'system', 'content': prompt},
+          {'role': 'user', 'content': prompt},
+        ],
+        'max_tokens': 900,
+        'temperature': 0.7,
+      }),
+    );
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
       final content = data['choices'][0]['message']['content'];
@@ -441,7 +456,7 @@ Respond ONLY with a JSON array of 3 objects, no extra text, no explanations, no 
         }
         return null;
       } catch (e) {
-        print('Failed to parse AI suggested meals JSON: $e\n$content');
+        print('Failed to parse AI suggested meals JSON: $e\\n$content');
         return null;
       }
     } else {

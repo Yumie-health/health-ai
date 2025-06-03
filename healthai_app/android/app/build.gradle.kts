@@ -20,8 +20,8 @@ android {
     kotlinOptions {
         jvmTarget = "17"
         freeCompilerArgs += listOf("-Xjvm-default=all")
-        apiVersion = "1.9"
-        languageVersion = "1.9"
+        apiVersion = "1.8"
+        languageVersion = "1.8"
     }
 
     defaultConfig {
@@ -33,6 +33,7 @@ android {
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+        multiDexEnabled = true
     }
 
     buildTypes {
@@ -42,9 +43,14 @@ android {
             signingConfig = signingConfigs.getByName("debug")
         }
     }
+
+    lint {
+        disable += "InvalidPackage"
+    }
 }
 
 dependencies {
     // Add other Firebase dependencies as needed
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.0.4")
+    implementation("androidx.multidex:multidex:2.0.1")
 }

@@ -7,7 +7,7 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  firebase_core: ^3.13.1
+  firebase_core: ^2.32.0
   firebase_auth: ^5.5.4
   cloud_firestore: ^5.6.8
   provider: ^6.1.2
@@ -35,7 +35,8 @@ dependencies:
   flutter_native_splash: ^2.4.6
   table_calendar: ^3.0.9 
   firebase_analytics: ^11.4.6
-  firebase_messaging: ^15.2.6
+  firebase_messaging: ^14.7.10
+  cloud_functions: ^4.7.6
 
 flutter_native_splash:
   color: "#4CAF50"

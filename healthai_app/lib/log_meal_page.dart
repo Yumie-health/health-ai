@@ -5,7 +5,6 @@ import 'models/meal.dart';
 import 'services/meal_service.dart';
 import 'main.dart'; // For color constants and _MacroTag
 import 'models/custom_meal.dart';
-import 'package:fluttertoast/fluttertoast.dart';
 import 'l10n/app_localizations.dart';
 import 'services/pexels_service.dart';
 
@@ -205,13 +204,16 @@ class _LogMealPageState extends State<LogMealPage> with TickerProviderStateMixin
       if (mounted) {
         await _showCalmPopupIfNeeded(() {
           Navigator.of(context).pop();
-          Fluttertoast.showToast(
-            msg: AppLocalizations.of(context)!.mealSaved,
-            toastLength: Toast.LENGTH_SHORT,
-            gravity: ToastGravity.CENTER,
-            backgroundColor: Colors.black87,
-            textColor: Colors.white,
-            fontSize: 20.0,
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(AppLocalizations.of(context)!.mealSaved),
+              backgroundColor: Colors.black87,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+              duration: Duration(seconds: 2),
+            ),
           );
         });
       }
@@ -1130,7 +1132,7 @@ class _ExpandableMealTileState extends State<_ExpandableMealTile> {
                     child: Icon(widget.icon, color: widget.iconColor),
                   )
                 : FutureBuilder<String?>(
-                    future: PexelsService.fetchMealImage(widget.name),
+                    future: PexelsService.staticFetchMealImage(widget.name),
                     builder: (context, snapshot) {
                       if (snapshot.connectionState == ConnectionState.waiting) {
                         return CircleAvatar(

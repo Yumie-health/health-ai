@@ -2505,8 +2505,8 @@ class _MealCardModernState extends State<_MealCardModern> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Meal image
-              FutureBuilder<String?>(
-                future: PexelsService.fetchMealImage(meal.name, locale: Locale(AppLocalizations.of(context)!.localeName)),
+              FutureBuilder<String?> (
+                future: PexelsService.staticFetchMealImage(meal.name, locale: Locale(AppLocalizations.of(context)!.localeName)),
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
                     return ClipRRect(
@@ -5007,8 +5007,8 @@ class _FoodScreenState extends State<FoodScreen> with TickerProviderStateMixin {
                                                 crossAxisAlignment: CrossAxisAlignment.start,
                                                 children: [
                                                   // Meal image
-                                                  FutureBuilder<String?>(
-                                                    future: PexelsService.fetchMealImage(meal['meal_name'] as String? ?? '', locale: Locale(AppLocalizations.of(context)!.localeName)),
+                                                  FutureBuilder<String?> (
+                                                    future: PexelsService.staticFetchMealImage(meal['meal_name'] as String? ?? '', locale: Locale(AppLocalizations.of(context)!.localeName)),
                                                     builder: (context, snapshot) {
                                                       if (snapshot.connectionState == ConnectionState.waiting) {
                                                         return ClipRRect(
@@ -5180,8 +5180,8 @@ class _FoodMealCardState extends State<_FoodMealCard> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Meal image
-              FutureBuilder<String?>(
-                future: PexelsService.fetchMealImage(meal.name, locale: Locale(AppLocalizations.of(context)!.localeName)),
+              FutureBuilder<String?> (
+                future: PexelsService.staticFetchMealImage(meal.name, locale: Locale(AppLocalizations.of(context)!.localeName)),
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
                     return ClipRRect(

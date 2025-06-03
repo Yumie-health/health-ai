@@ -8,7 +8,6 @@ import 'package:lottie/lottie.dart';
 import 'services/ai_service.dart';
 import 'package:provider/provider.dart';
 import 'main.dart'; // For PreferencesProvider and kPrimaryGreen
-import 'package:fluttertoast/fluttertoast.dart';
 import 'package:flutter/foundation.dart';
 import 'l10n/app_localizations.dart';
 
@@ -197,14 +196,14 @@ class _ScanResultPageState extends State<ScanResultPage> {
       if (user == null) throw Exception('Not signed in');
       String? imageUrl;
       if (widget.imagePath.isNotEmpty && File(widget.imagePath).existsSync()) {
-      final file = File(widget.imagePath);
-      final fileName = 'meal_${DateTime.now().millisecondsSinceEpoch}.jpg';
-        final ref = FirebaseStorage.instance.ref().child('meal_images/${user.uid}/$fileName');
-      final uploadTask = await ref.putFile(file);
-      if (uploadTask.state == TaskState.success) {
-        imageUrl = await ref.getDownloadURL();
-      } else {
-        throw Exception('Image upload failed');
+        final file = File(widget.imagePath);
+        final fileName = 'meal_${DateTime.now().millisecondsSinceEpoch}.jpg';
+        final ref = FirebaseStorage.instance.ref().child('meal_images/${user.uid}/$fileName');
+        final uploadTask = await ref.putFile(file);
+        if (uploadTask.state == TaskState.success) {
+          imageUrl = await ref.getDownloadURL();
+        } else {
+          throw Exception('Image upload failed');
         }
       } else {
         imageUrl = 'assets/meal_icon.png';
@@ -226,15 +225,18 @@ class _ScanResultPageState extends State<ScanResultPage> {
       setState(() { _ingredients.clear(); });
       if (mounted) {
         await _showCalmPopupIfNeeded(() {
-        Navigator.of(context).popUntil((route) => route.isFirst);
-        Fluttertoast.showToast(
-          msg: "🎉 Meal saved!",
-          toastLength: Toast.LENGTH_SHORT,
-          gravity: ToastGravity.CENTER,
-          backgroundColor: Colors.black87,
-          textColor: Colors.white,
-          fontSize: 20.0,
-        );
+          Navigator.of(context).popUntil((route) => route.isFirst);
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('🎉 Meal saved!'),
+              backgroundColor: Colors.black87,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+              duration: Duration(seconds: 2),
+            ),
+          );
         });
       }
     } catch (e) {
