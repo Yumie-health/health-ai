@@ -14,11 +14,11 @@
       },
       "oauth_client": [
         {
-          "client_id": "389852437815-776ccdb9i0rmgbesmp6lhh3973r9vc58.apps.googleusercontent.com",
+          "client_id": "389852437815-aj3vma2gof6nnmfsmf556l315d36hhvq.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
             "package_name": "com.example.healthai_app",
-            "certificate_hash": "80b0e235eb79ce446b244a941b455588b901aa9e"
+            "certificate_hash": "271770e61ff471e6b5c26dd53332985cdc7f75e5"
           }
         },
         {

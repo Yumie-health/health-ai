@@ -758,6 +758,24 @@ class _AuthScreenState extends State<AuthScreen> {
         if (!doc.exists) {
           await userService.createInitialUserProfile(user.email ?? '', '');
         }
+        // Check if onboarding is complete (mimic Google sign-in logic)
+        final data = doc.data() as Map<String, dynamic>?;
+        final hasCompletedOnboarding = data != null &&
+            data['age'] != null &&
+            data['height'] != null &&
+            data['weight'] != null &&
+            data['targetWeight'] != null &&
+            data['activityLevel'] != null &&
+            data['dailyCalorieGoal'] != null;
+        setState(() => message = 'Sign in successful!');
+        if (mounted) {
+          if (!hasCompletedOnboarding) {
+            Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => OnboardingFlowPage()));
+          } else {
+            Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => MainNavScreen()));
+          }
+        }
+        return;
       }
       setState(() => message = 'Sign in successful!');
     } catch (e) {
