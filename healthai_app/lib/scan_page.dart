@@ -12,6 +12,7 @@ import 'scan_result_fridge_page.dart';
 import 'scan_paywall_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'l10n/app_localizations.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 
 class ScanPage extends StatefulWidget {
   const ScanPage({Key? key}) : super(key: key);
@@ -29,11 +30,14 @@ class _ScanPageState extends State<ScanPage> {
   Rect? _frameRect;
   double _frameBorderRadius = 32;
   bool _isFridgeMode = false;
+  RewardedAd? _rewardedAd;
+  bool _isRewardedAdLoaded = false;
 
   @override
   void initState() {
     super.initState();
     _initCamera();
+    _loadRewardedAd(() {});
   }
 
   @override
@@ -117,20 +121,22 @@ class _ScanPageState extends State<ScanPage> {
               Navigator.of(context).pop();
             },
             onWatchAd: (paywallContext) async {
-              await _incrementScanCount();
-              if (_isFridgeMode) {
-                Navigator.of(paywallContext).pushReplacement(
-                  MaterialPageRoute(
-                    builder: (_) => ScanResultFridgePage(imagePath: croppedFile.path),
-                  ),
-                );
-              } else {
-                Navigator.of(paywallContext).pushReplacement(
-                  MaterialPageRoute(
-                    builder: (_) => ScanResultPage(imagePath: croppedFile.path),
-                  ),
-                );
-              }
+              await _showRewardedAd(paywallContext, () async {
+                await _incrementScanCount();
+                if (_isFridgeMode) {
+                  Navigator.of(paywallContext).pushReplacement(
+                    MaterialPageRoute(
+                      builder: (_) => ScanResultFridgePage(imagePath: croppedFile.path),
+                    ),
+                  );
+                } else {
+                  Navigator.of(paywallContext).pushReplacement(
+                    MaterialPageRoute(
+                      builder: (_) => ScanResultPage(imagePath: croppedFile.path),
+                    ),
+                  );
+                }
+              });
             },
             onDiscard: () {
               Navigator.of(context).popUntil((route) => route.isFirst);
@@ -179,6 +185,56 @@ class _ScanPageState extends State<ScanPage> {
         ),
       );
       }
+    }
+  }
+
+  void _loadRewardedAd(VoidCallback onAdLoaded) {
+    RewardedAd.load(
+      adUnitId: 'ca-app-pub-3940256099942544/5224354917', // Official test rewarded ad unit
+      request: AdRequest(),
+      rewardedAdLoadCallback: RewardedAdLoadCallback(
+        onAdLoaded: (ad) {
+          _rewardedAd = ad;
+          _isRewardedAdLoaded = true;
+          onAdLoaded();
+        },
+        onAdFailedToLoad: (error) {
+          _isRewardedAdLoaded = false;
+          _rewardedAd = null;
+        },
+      ),
+    );
+  }
+
+  Future<void> _showRewardedAd(BuildContext context, VoidCallback onRewardEarned) async {
+    if (_isRewardedAdLoaded && _rewardedAd != null) {
+      _rewardedAd!.fullScreenContentCallback = FullScreenContentCallback(
+        onAdDismissedFullScreenContent: (ad) {
+          ad.dispose();
+          _isRewardedAdLoaded = false;
+          _rewardedAd = null;
+          _loadRewardedAd(() {}); // Preload next ad
+        },
+        onAdFailedToShowFullScreenContent: (ad, error) {
+          ad.dispose();
+          _isRewardedAdLoaded = false;
+          _rewardedAd = null;
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Ad failed to show. Please try again.')),
+          );
+          _loadRewardedAd(() {});
+        },
+      );
+      _rewardedAd!.show(
+        onUserEarnedReward: (ad, reward) {
+          onRewardEarned();
+        },
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Ad not loaded yet. Please try again.')),
+      );
+      _loadRewardedAd(() {});
     }
   }
 

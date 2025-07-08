@@ -3,10 +3,11 @@ import 'package:provider/provider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'models/meal.dart';
 import 'services/meal_service.dart';
-import 'main.dart'; // For color constants and _MacroTag
 import 'models/custom_meal.dart';
 import 'l10n/app_localizations.dart';
 import 'services/pexels_service.dart';
+import 'providers/preferences_provider.dart';
+import 'utils/constants.dart';
 
 class LogMealPage extends StatefulWidget {
   const LogMealPage({Key? key}) : super(key: key);

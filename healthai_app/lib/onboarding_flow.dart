@@ -362,12 +362,7 @@ class _OnboardingFlowPageState extends State<OnboardingFlowPage> with SingleTick
                     final user = await getCurrentUser();
                     if (user != null) {
                       final now = DateTime.now();
-                        print('[DEBUG] aiNutritionPlan: '
-                            'calories=${aiNutritionPlan!["calories"]}, '
-                            'protein=${aiNutritionPlan!["protein"]}, '
-                            'fat=${aiNutritionPlan!["fat"]}, '
-                            'carbs=${aiNutritionPlan!["carbs"]}');
-                        print('[DEBUG] About to write to Firestore...');
+
                         try {
                           final Map<String, bool> remindersMap = {
                             'mealLoggingPrompts': selectedReminders.contains('Meal Logging Prompts'),
@@ -384,9 +379,9 @@ class _OnboardingFlowPageState extends State<OnboardingFlowPage> with SingleTick
                         'hasCompletedOnboarding': true,
                             'reminders': remindersMap, // Save reminders as a map of booleans
                       }, SetOptions(merge: true));
-                          print('[DEBUG] Firestore write complete');
+
                         } catch (e) {
-                          print('[ERROR] Firestore write failed: $e');
+                          // Handle error silently
                         }
                         // Wait for Firestore to update
                         bool updated = false;
@@ -500,7 +495,7 @@ class _OnboardingFlowPageState extends State<OnboardingFlowPage> with SingleTick
         targetWeightKg: targetWeightKg,
         eatingHabits: selectedReminders, // pass reminders if needed
       );
-      print('[DEBUG] AI plan generated: $plan');
+
       if (plan == null) throw Exception("AI did not return a plan");
       // Ensure at least 7 seconds of loading
       final elapsed = DateTime.now().difference(start).inMilliseconds;

@@ -48,6 +48,50 @@
           ]
         }
       }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:389852437815:android:1bacbb39ab081b47e54eb2",
+        "android_client_info": {
+          "package_name": "com.yumie.healthai"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "389852437815-gpq4l0qjevsdd562e8o2k1862eiqs388.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.yumie.healthai",
+            "certificate_hash": "271770e61ff471e6b5c26dd53332985cdc7f75e5"
+          }
+        },
+        {
+          "client_id": "389852437815-3e026b99jvv3g0n0bjlmvo33vfp085vi.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAruFGOQ5D8HF_0bMOSS4ajw0Cicc7MBAI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "389852437815-3e026b99jvv3g0n0bjlmvo33vfp085vi.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "389852437815-c2q4pgj30ubamsdho567bkfdnlvkvls4.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.healthaiapp"
+              }
+            }
+          ]
+        }
+      }
     }
   ],
   "configuration_version": "1"

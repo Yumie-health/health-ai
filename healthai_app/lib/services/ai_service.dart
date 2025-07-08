@@ -2,16 +2,21 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'dart:io';
 import 'package:cloud_functions/cloud_functions.dart';
+import 'error_handler.dart';
+import 'logging_service.dart';
 
 class AIService {
   final _functions = FirebaseFunctions.instanceFor(region: 'us-central1');
 
-  // TODO: Move this to secure storage or env variable in production
-  static const String _openAIApiKey = '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';
+  // API key is securely stored in Firebase Functions
   static const String _apiUrl = 'https://api.openai.com/v1/chat/completions';
 
   Future<String?> sendMessage(String message, {String model = 'gpt-4o-mini'}) async {
+    final stopwatch = Stopwatch()..start();
+    
     try {
+      log.info('Sending AI message', {'model': model, 'message_length': message.length});
+      
       final url = 'https://us-central1-healthai-0001.cloudfunctions.net/openaiProxyCallable';
       final response = await http.post(
         Uri.parse(url),
@@ -26,16 +31,22 @@ class AIService {
           'temperature': 0.7,
         }),
       );
+      
+      stopwatch.stop();
+      log.logPerformance('AI message request', stopwatch.elapsed);
+      
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         final content = data['choices'][0]['message']['content'];
+        log.info('AI message response successful', {'response_length': content.length});
         return content;
       } else {
-        print('AI API error: ${response.statusCode} ${response.body}');
+        log.error('AI message request failed', 'HTTP ${response.statusCode}: ${response.body}');
         return null;
       }
     } catch (e) {
-      print('AI API error: $e');
+      stopwatch.stop();
+      log.error('AI message request error', e);
       return null;
     }
   }
@@ -58,7 +69,17 @@ class AIService {
     String? specialInstruction,
     String language = 'en',
   }) async {
+    final stopwatch = Stopwatch()..start();
+    
     try {
+      log.info('Sending coach message', {
+        'name': name,
+        'age': age,
+        'calorie_goal': calorieGoal,
+        'calories_consumed': caloriesConsumed,
+        'language': language,
+      });
+      
       final systemPrompt = buildYumiePrompt(
         name: name,
         age: age,
@@ -92,15 +113,22 @@ class AIService {
           'temperature': 0.7,
         }),
       );
+      
+      stopwatch.stop();
+      log.logPerformance('Coach message request', stopwatch.elapsed);
+      
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        return data['choices'][0]['message']['content'] as String?;
+        final content = data['choices'][0]['message']['content'] as String?;
+        log.info('Coach message response successful', {'response_length': content?.length ?? 0});
+        return content;
       } else {
-        print('OpenAI error: ${response.statusCode} ${response.body}');
+        log.error('Coach message request failed', 'HTTP ${response.statusCode}: ${response.body}');
         return null;
       }
     } catch (e) {
-      print('OpenAI error: $e');
+      stopwatch.stop();
+      log.error('Coach message request error', e);
       return null;
     }
   }
@@ -225,7 +253,7 @@ Carbs: 250
 ''';
     final response = await sendMessage(prompt);
     if (response == null) return null;
-    print('[AI RAW RESPONSE] $response');
+
     // Parse the response for numbers (simple regex, can be improved)
     final caloriesMatch = RegExp(r'Calories:\s*([\d,]+)').firstMatch(response);
     final proteinMatch = RegExp(r'Protein:\s*(\d+)').firstMatch(response);
@@ -299,7 +327,6 @@ Respond ONLY with valid JSON.$languageInstruction
       final result = jsonDecode(jsonString);
       return result as Map<String, dynamic>;
     } else {
-      print('AI meal scan error: \\${response.statusCode} \\${response.body}');
       return null;
     }
   }
@@ -346,11 +373,9 @@ You are a kitchen assistant AI. Given this photo of a fridge, return a JSON arra
         final items = jsonDecode(jsonString);
         return (items as List).map((e) => e.toString()).toList();
       } catch (e) {
-        print('Failed to parse fridge scan JSON: $e\\n$content');
         return null;
       }
     } else {
-      print('AI fridge scan error: \\${response.statusCode} \\${response.body}');
       return null;
     }
   }
@@ -398,11 +423,9 @@ Respond ONLY with valid JSON.$languageInstruction
       try {
         return jsonDecode(content);
       } catch (e) {
-        print('Failed to parse generated meal JSON: $e\\n$content');
         return null;
       }
     } else {
-      print('AI generate meal error: \\${response.statusCode} \\${response.body}');
       return null;
     }
   }
@@ -456,11 +479,9 @@ Respond ONLY with a JSON array of 3 objects, no extra text, no explanations, no 
         }
         return null;
       } catch (e) {
-        print('Failed to parse AI suggested meals JSON: $e\\n$content');
         return null;
       }
     } else {
-      print('AI suggested meals error: \\${response.statusCode} \\${response.body}');
       return null;
     }
   }

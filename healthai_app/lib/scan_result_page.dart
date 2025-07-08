@@ -7,9 +7,10 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:lottie/lottie.dart';
 import 'services/ai_service.dart';
 import 'package:provider/provider.dart';
-import 'main.dart'; // For PreferencesProvider and kPrimaryGreen
-import 'package:flutter/foundation.dart';
 import 'l10n/app_localizations.dart';
+import 'providers/preferences_provider.dart';
+import 'utils/constants.dart';
+import 'package:flutter/foundation.dart';
 
 class ScanResultPage extends StatefulWidget {
   final String imagePath;
@@ -252,8 +253,7 @@ class _ScanResultPageState extends State<ScanResultPage> {
     final prefs = Provider.of<PreferencesProvider>(context, listen: false);
     final language = prefs.language;
     final result = await aiService.analyzeMealImage(File(widget.imagePath), language: language);
-    print('AI meal scan result:');
-    print(result);
+
     if (result != null) {
       setState(() {
         _foodNameController.text = result['food_name']?.toString() ?? '';

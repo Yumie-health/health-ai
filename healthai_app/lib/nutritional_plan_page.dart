@@ -2,10 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'main.dart';
 import 'services/user_service.dart';
 import 'services/ai_service.dart';
 import 'l10n/app_localizations.dart';
+import 'providers/preferences_provider.dart';
+import 'utils/constants.dart';
 
 class NutritionalPlanPage extends StatefulWidget {
   @override

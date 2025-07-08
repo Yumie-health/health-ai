@@ -9,8 +9,9 @@ import 'package:lottie/lottie.dart';
 import 'services/ai_service.dart';
 import './generated_meal_fridge_page.dart';
 import 'package:provider/provider.dart';
-import 'main.dart'; // For PreferencesProvider and kPrimaryGreen
 import 'l10n/app_localizations.dart';
+import 'providers/preferences_provider.dart';
+import 'utils/constants.dart';
 
 class ScanResultFridgePage extends StatefulWidget {
   final String imagePath;

@@ -30,252 +30,38 @@ import 'services/pexels_service.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:firebase_analytics/observer.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:timezone/data/latest.dart' as tz;
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'l10n/app_localizations.dart';
-
-// Define the color palette
-const Color kPrimaryGreen = Color(0xFF4CAF50); // Soft green
-const Color kAccentOrange = Color(0xFFFFA726); // Bright orange
-const Color kAccentYellow = Color(0xFFFFEB3B); // Bright yellow
-const Color kSecondaryBlue = Color(0xFF2196F3); // Cool blue
-const Color kBackgroundWhite = Color(0xFFFFFFFF); // Clean white
-const Color kWarningRed = Color(0xFFFF7043); // Orange/Red for warnings
-const Color kContainerGrey = Color(0xFFF5F5F5); // Light grey for containers
+import 'utils/constants.dart';
+import 'providers/preferences_provider.dart';
+import 'utils/onboarding_helper.dart';
+import 'services/logging_service.dart';
+import 'utils/validation.dart';
+import 'services/error_handler.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 
 // Initialize FlutterLocalNotificationsPlugin
 final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
 
-// Preferences Provider
-class PreferencesProvider extends ChangeNotifier {
-  bool _darkMode = false;
-  bool _useMetric = true;
-  bool _mealLoggingPrompts = false;
-  bool _waterIntakeReminders = false;
-  bool _mindfulWalksReminders = false;
-  bool _momentOfCalmReminders = false;
-  String _language = 'en';
-
-  bool get darkMode => _darkMode;
-  bool get useMetric => _useMetric;
-  bool get mealLoggingPrompts => _mealLoggingPrompts;
-  bool get waterIntakeReminders => _waterIntakeReminders;
-  bool get mindfulWalksReminders => _mindfulWalksReminders;
-  bool get momentOfCalmReminders => _momentOfCalmReminders;
-  String get language => _language;
-
-  PreferencesProvider() {
-    _loadPrefs();
-  }
-
-  Future<void> _loadPrefs() async {
-    final prefs = await SharedPreferences.getInstance();
-    _darkMode = prefs.getBool('darkMode') ?? false;
-    _useMetric = prefs.getBool('useMetric') ?? true;
-    _mealLoggingPrompts = prefs.getBool('mealLoggingPrompts') ?? false;
-    _waterIntakeReminders = prefs.getBool('waterIntakeReminders') ?? false;
-    _mindfulWalksReminders = prefs.getBool('mindfulWalksReminders') ?? false;
-    _momentOfCalmReminders = prefs.getBool('momentOfCalmReminders') ?? false;
-    _language = prefs.getString('language') ?? 'en';
-    notifyListeners();
-  }
-
-  Future<void> setDarkMode(bool value) async {
-    final prefs = await SharedPreferences.getInstance();
-    _darkMode = value;
-    await prefs.setBool('darkMode', value);
-    notifyListeners();
-  }
-
-  Future<void> setUnits(bool useMetric) async {
-    final prefs = await SharedPreferences.getInstance();
-    _useMetric = useMetric;
-    await prefs.setBool('useMetric', useMetric);
-    notifyListeners();
-  }
-
-  Future<void> setMealLoggingPrompts(bool value) async {
-    final prefs = await SharedPreferences.getInstance();
-    _mealLoggingPrompts = value;
-    await prefs.setBool('mealLoggingPrompts', value);
-    notifyListeners();
-    if (value) {
-      await _scheduleMealLoggingPrompts();
-    } else {
-      await _cancelMealLoggingPrompts();
-    }
-  }
-
-  Future<void> setWaterIntakeReminders(bool value) async {
-    final prefs = await SharedPreferences.getInstance();
-    _waterIntakeReminders = value;
-    await prefs.setBool('waterIntakeReminders', value);
-    notifyListeners();
-    if (value) {
-      await _scheduleWaterIntakeReminders();
-    } else {
-      await _cancelWaterIntakeReminders();
-    }
-  }
-
-  Future<void> setMindfulWalksReminders(bool value) async {
-    final prefs = await SharedPreferences.getInstance();
-    _mindfulWalksReminders = value;
-    await prefs.setBool('mindfulWalksReminders', value);
-    notifyListeners();
-    if (value) {
-      await _scheduleMindfulWalksReminders();
-    } else {
-      await _cancelMindfulWalksReminders();
-    }
-  }
-
-  Future<void> setMomentOfCalmReminders(bool value) async {
-    final prefs = await SharedPreferences.getInstance();
-    _momentOfCalmReminders = value;
-    await prefs.setBool('momentOfCalmReminders', value);
-    notifyListeners();
-    // Placeholder: actual popup logic should be triggered before meal logging
-  }
-
-  Future<void> setLanguage(String language) async {
-    final prefs = await SharedPreferences.getInstance();
-    _language = language;
-    await prefs.setString('language', language);
-    notifyListeners();
-  }
-
-  // --- Notification scheduling helpers ---
-  Future<void> _scheduleMealLoggingPrompts() async {
-    final times = [
-      [8, 0],   // Breakfast
-      [13, 0],  // Lunch
-      [19, 0],  // Dinner
-      [22, 0],  // Night/Snack
-    ];
-    final mealLabels = [
-      'Breakfast Time!',
-      'Lunch Time!',
-      'Dinner Time!',
-      'Snack Time!',
-    ];
-    for (int i = 0; i < times.length; i++) {
-      await flutterLocalNotificationsPlugin.zonedSchedule(
-        2000 + i,
-        mealLabels[i],
-        'Remember to log your meal!',
-        _nextInstanceOfTime(times[i][0], times[i][1]),
-        const NotificationDetails(
-          android: AndroidNotificationDetails('meal_channel', 'Meal Logging', importance: Importance.max, priority: Priority.high),
-          iOS: DarwinNotificationDetails(),
-        ),
-        androidAllowWhileIdle: true,
-        uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
-        matchDateTimeComponents: DateTimeComponents.time,
-      );
-    }
-  }
-  Future<void> _cancelMealLoggingPrompts() async {
-    for (int i = 0; i < 4; i++) {
-      await flutterLocalNotificationsPlugin.cancel(2000 + i);
-    }
-  }
-
-  Future<void> _scheduleWaterIntakeReminders() async {
-    final times = [9, 12, 15, 18, 21];
-    for (int i = 0; i < times.length; i++) {
-      await flutterLocalNotificationsPlugin.zonedSchedule(
-        3000 + i,
-        'Hydration Reminder',
-        'Drink some water! 💧',
-        _nextInstanceOfTime(times[i], 0),
-        const NotificationDetails(
-          android: AndroidNotificationDetails('water_channel', 'Water Intake', importance: Importance.max, priority: Priority.high),
-          iOS: DarwinNotificationDetails(),
-        ),
-        androidAllowWhileIdle: true,
-        uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
-        matchDateTimeComponents: DateTimeComponents.time,
-      );
-    }
-  }
-  Future<void> _cancelWaterIntakeReminders() async {
-    for (int i = 0; i < 5; i++) {
-      await flutterLocalNotificationsPlugin.cancel(3000 + i);
-    }
-  }
-
-  Future<void> _scheduleMindfulWalksReminders() async {
-    await flutterLocalNotificationsPlugin.zonedSchedule(
-      4001,
-      'Mindful Walk',
-      'Take a mindful walk today!',
-      _nextInstanceOfTime(18, 0),
-      const NotificationDetails(
-        android: AndroidNotificationDetails('walk_channel', 'Mindful Walks', importance: Importance.max, priority: Priority.high),
-        iOS: DarwinNotificationDetails(),
-      ),
-      androidAllowWhileIdle: true,
-      uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
-      matchDateTimeComponents: DateTimeComponents.time,
-    );
-  }
-  Future<void> _cancelMindfulWalksReminders() async {
-    await flutterLocalNotificationsPlugin.cancel(4001);
-  }
-
-  // --- Helper functions for scheduling ---
-  tz.TZDateTime _nextInstanceOfTime(int hour, int minute) {
-    final now = tz.TZDateTime.now(tz.local);
-    var scheduled = tz.TZDateTime(tz.local, now.year, now.month, now.day, hour, minute);
-    if (scheduled.isBefore(now)) {
-      scheduled = scheduled.add(Duration(days: 1));
-    }
-    return scheduled;
-  }
-
-  tz.TZDateTime _nextInstanceOfWeekday(int hour, int minute, int weekday) {
-    tz.TZDateTime scheduled = _nextInstanceOfTime(hour, minute);
-    while (scheduled.weekday != weekday) {
-      scheduled = scheduled.add(Duration(days: 1));
-    }
-    return scheduled;
-  }
-
-  // Water Intake Reminders: Call this after a meal is logged
-  Future<void> scheduleWaterReminderAfterMeal({required DateTime mealTime, required bool waterGoalReached}) async {
-    if (!_waterIntakeReminders || waterGoalReached) return;
-    final scheduledTime = mealTime.add(Duration(minutes: 20));
-    final id = scheduledTime.millisecondsSinceEpoch % 1000000 + 3000; // unique id
-    await flutterLocalNotificationsPlugin.zonedSchedule(
-      id,
-      'Drink Water',
-      'Don\'t forget to drink water and log your intake!',
-      tz.TZDateTime.from(scheduledTime, tz.local),
-      const NotificationDetails(
-        android: AndroidNotificationDetails('water_channel', 'Water Intake', importance: Importance.max, priority: Priority.high),
-        iOS: DarwinNotificationDetails(),
-      ),
-      androidAllowWhileIdle: true,
-      uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
-    );
-  }
-
-  // Moment of Calm: Call this after a meal is logged if toggle is on
-  bool get momentOfCalmEnabled => _momentOfCalmReminders;
-}
-
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   // Handle background message
-  print('Handling a background message: ${message.messageId}');
 }
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  
+  await Firebase.initializeApp(); // <-- Initialize Firebase first!
+
+  MobileAds.instance.initialize(); // Initialize AdMob
+
+  // Initialize logging service
+  log.initialize(); // Now it's safe to use logging/analytics
+  log.info('App starting up');
+  
   tz.initializeTimeZones(); // Initialize time zones for scheduled notifications
-  await Firebase.initializeApp();
 
   // Set up background message handler
   FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
@@ -621,10 +407,9 @@ class MyApp extends StatelessWidget {
 
               final userData = userSnapshot.data!.data() as Map<String, dynamic>?;
               // Use a single boolean flag for onboarding completion
-              final hasCompletedOnboarding = userData != null &&
-                  userData['hasCompletedOnboarding'] == true;
+              final onboardingCompleted = hasCompletedOnboarding(userData);
 
-              if (!hasCompletedOnboarding) {
+              if (!onboardingCompleted) {
                 return OnboardingFlowPage();
               }
 
@@ -704,16 +489,10 @@ class _AuthScreenState extends State<AuthScreen> {
         }
         // Check if onboarding is complete
         final data = doc.data() as Map<String, dynamic>?;
-        final hasCompletedOnboarding = data != null &&
-            data['age'] != null &&
-            data['height'] != null &&
-            data['weight'] != null &&
-            data['targetWeight'] != null &&
-            data['activityLevel'] != null &&
-            data['dailyCalorieGoal'] != null;
+        final onboardingCompleted = hasCompletedOnboarding(data);
         setState(() => isLoading = false);
         if (mounted) {
-          if (!hasCompletedOnboarding) {
+          if (!onboardingCompleted) {
             Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => OnboardingFlowPage()));
           } else {
             Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => MainNavScreen()));
@@ -731,12 +510,10 @@ class _AuthScreenState extends State<AuthScreen> {
 
   void _handleAppleSignIn() {
     // TODO: Implement Apple sign-in
-    print('Apple sign-in tapped');
   }
 
   void _handleSamsungSignIn() {
     // TODO: Implement Samsung sign-in
-    print('Samsung sign-in tapped');
   }
 
   Future<void> signIn() async {
@@ -744,12 +521,40 @@ class _AuthScreenState extends State<AuthScreen> {
       isLoading = true;
       message = '';
     });
+
+    // Input validation
+    final email = emailController.text.trim();
+    final password = passwordController.text;
+
+    if (!ValidationUtils.isValidEmail(email)) {
+      setState(() {
+        isLoading = false;
+        message = 'Please enter a valid email address';
+      });
+      ValidationUtils.showValidationError(context, 'Please enter a valid email address');
+      return;
+    }
+
+    if (password.isEmpty) {
+      setState(() {
+        isLoading = false;
+        message = 'Password is required';
+      });
+      ValidationUtils.showValidationError(context, 'Password is required');
+      return;
+    }
+
     try {
+      log.info('User attempting sign in', {'email': email});
+      
       await FirebaseAuth.instance.signInWithEmailAndPassword(
-        email: emailController.text.trim(),
-        password: passwordController.text,
+        email: email,
+        password: password,
       );
+      
       await analytics.logLogin(loginMethod: 'email');
+      log.logUserAction('sign_in_successful', {'method': 'email'});
+      
       // Check if user profile exists, if not, create it
       final userService = UserService();
       final user = FirebaseAuth.instance.currentUser;
@@ -760,16 +565,10 @@ class _AuthScreenState extends State<AuthScreen> {
         }
         // Check if onboarding is complete (mimic Google sign-in logic)
         final data = doc.data() as Map<String, dynamic>?;
-        final hasCompletedOnboarding = data != null &&
-            data['age'] != null &&
-            data['height'] != null &&
-            data['weight'] != null &&
-            data['targetWeight'] != null &&
-            data['activityLevel'] != null &&
-            data['dailyCalorieGoal'] != null;
+        final onboardingCompleted = hasCompletedOnboarding(data);
         setState(() => message = 'Sign in successful!');
         if (mounted) {
-          if (!hasCompletedOnboarding) {
+          if (!onboardingCompleted) {
             Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => OnboardingFlowPage()));
           } else {
             Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => MainNavScreen()));
@@ -779,7 +578,9 @@ class _AuthScreenState extends State<AuthScreen> {
       }
       setState(() => message = 'Sign in successful!');
     } catch (e) {
-      setState(() => message = 'Error: $e');
+      final errorMessage = errorHandler.handleAuthError(e);
+      setState(() => message = errorMessage);
+      log.error('Sign in failed', e);
       await analytics.logEvent(name: 'login_failed', parameters: {'method': 'email', 'error': e.toString()});
     } finally {
       setState(() => isLoading = false);
@@ -791,36 +592,68 @@ class _AuthScreenState extends State<AuthScreen> {
       isLoading = true;
       message = '';
     });
+
+    // Input validation
+    final email = emailController.text.trim();
     final password = passwordController.text;
-    final hasUppercase = password.contains(RegExp(r'[A-Z]'));
-    final hasSpecial = password.contains(RegExp(r'[!@#\$%^&*(),.?":{}|<>]'));
-    if (!hasUppercase || !hasSpecial) {
+    final name = nameController.text.trim();
+
+    if (!ValidationUtils.isValidEmail(email)) {
       setState(() {
         isLoading = false;
-        message = 'Password must contain at least one uppercase letter and one special character.';
+        message = 'Please enter a valid email address';
       });
+      ValidationUtils.showValidationError(context, 'Please enter a valid email address');
       return;
     }
+
+    final passwordError = ValidationUtils.validatePassword(password);
+    if (passwordError != null) {
+      setState(() {
+        isLoading = false;
+        message = passwordError;
+      });
+      ValidationUtils.showValidationError(context, passwordError);
+      return;
+    }
+
+    final nameError = ValidationUtils.validateName(name);
+    if (nameError != null) {
+      setState(() {
+        isLoading = false;
+        message = nameError;
+      });
+      ValidationUtils.showValidationError(context, nameError);
+      return;
+    }
+
     try {
+      log.info('User attempting sign up', {'email': email, 'name': name});
+      
       await FirebaseAuth.instance.createUserWithEmailAndPassword(
-        email: emailController.text.trim(),
+        email: email,
         password: password,
       );
+      
       await analytics.logSignUp(signUpMethod: 'email');
+      log.logUserAction('sign_up_successful', {'method': 'email'});
+      
       // Create a full user profile
       final userService = UserService();
-      await userService.createInitialUserProfile(
-        emailController.text.trim(),
-        nameController.text.trim(),
-      );
+      await userService.createInitialUserProfile(email, name);
+      
       setState(() => message = 'Sign up successful!');
+      ValidationUtils.showSuccessMessage(context, 'Account created successfully!');
+      
       // Show onboarding after sign up
       final user = FirebaseAuth.instance.currentUser;
       if (user != null && mounted) {
         Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => OnboardingFlowPage()));
       }
     } catch (e) {
-      setState(() => message = 'Error: $e');
+      final errorMessage = errorHandler.handleAuthError(e);
+      setState(() => message = errorMessage);
+      log.error('Sign up failed', e);
       await analytics.logEvent(name: 'signup_failed', parameters: {'method': 'email', 'error': e.toString()});
     } finally {
       setState(() => isLoading = false);
@@ -2722,7 +2555,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     if (picked == null) return;
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
-    print('[DEBUG] Picked file path: \'${picked.path}\'');
+    
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -2731,21 +2564,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
     try {
       final ref = FirebaseStorage.instance.ref().child('profile_pics/${user.uid}.jpg');
       final file = File(picked.path);
-      print('[DEBUG] Uploading file to: profile_pics/${user.uid}.jpg');
       final uploadTask = await ref.putFile(file);
-      print('[DEBUG] UploadTask state: \'${uploadTask.state}\'');
       if (uploadTask.state != TaskState.success) {
         throw Exception('Upload failed: \'${uploadTask.state}\'');
       }
-      print('[DEBUG] Upload successful, fetching download URL...');
-      final url = await ref.getDownloadURL();
-      print('[DEBUG] Download URL: $url');
+              final url = await ref.getDownloadURL();
       await _userService.updateUserPhotoUrl(url);
       await user.updatePhotoURL(url);
       setState(() {}); // Refresh UI
-    } catch (e, stack) {
-      print('[DEBUG] Error during profile picture upload: $e');
-      print('[DEBUG] Stack trace: $stack');
+          } catch (e, stack) {
+        // Handle error silently
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to update photo: $e')));
     } finally {
       Navigator.of(context, rootNavigator: true).pop();
@@ -2775,35 +2603,27 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 final newName = controller.text.trim();
                 if (newName.isEmpty) {
                   setState(() { error = 'Name cannot be empty'; });
-                  print('[DEBUG] Name is empty, aborting save.');
-                  return;
-                }
-                Navigator.pop(dialogContext); // Close the input dialog
-                print('[DEBUG] Opening loading dialog...');
+                                  return;
+              }
+              Navigator.pop(dialogContext); // Close the input dialog
                 showDialog(
                   context: parentContext,
                   barrierDismissible: false,
                   builder: (context) => const Center(child: CircularProgressIndicator()),
                 );
                 try {
-                  print('[DEBUG] Attempting to update Firestore name...');
                   // Update Firestore
                   final snap = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
                   final data = snap.data();
                   if (data != null) {
                     await FirebaseFirestore.instance.collection('users').doc(user.uid).update({'name': newName, 'lastUpdated': DateTime.now()});
                   }
-                  print('[DEBUG] Firestore name updated. Attempting to update Firebase Auth displayName...');
                   // Update Auth
                   await user.updateDisplayName(newName);
-                  print('[DEBUG] Firebase Auth displayName updated.');
                   didUpdate = true;
                 } catch (e, stack) {
-                  print('[DEBUG] Error updating profile name: $e');
-                  print('[DEBUG] Stack trace: $stack');
                   if (mounted) ScaffoldMessenger.of(parentContext).showSnackBar(SnackBar(content: Text('Failed to update name: $e')));
                 } finally {
-                  print('[DEBUG] Closing loading dialog.');
                   await Future.delayed(const Duration(milliseconds: 100));
                   Navigator.of(parentContext, rootNavigator: true).maybePop();
                   if (didUpdate && mounted) setState(() {}); // Only refresh parent if needed
@@ -3549,7 +3369,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                         SizedBox(height: 16),
                                         InkWell(
                                           onTap: () async {
-                                            print('DEBUG: Email InkWell tapped');
+                                    
                                             final Uri emailLaunchUri = Uri(
                                               scheme: 'mailto',
                                               path: 'support@healthai.com',
@@ -3560,7 +3380,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                             if (await canLaunchUrl(emailLaunchUri)) {
                                               await launchUrl(emailLaunchUri);
                                             } else {
-                                              print('DEBUG: Could not launch email client');
                                               showDialog(
                                                 context: context,
                                                 builder: (context) => AlertDialog(
@@ -3602,12 +3421,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                         SizedBox(height: 16),
                                         ElevatedButton(
                                           onPressed: () async {
-                                            print('DEBUG: Test web URL button tapped');
                                             final Uri webUri = Uri.parse('https://google.com');
                                             if (await canLaunchUrl(webUri)) {
                                               await launchUrl(webUri);
                                             } else {
-                                              print('DEBUG: Could not launch web URL');
                                               showDialog(
                                                 context: context,
                                                 builder: (context) => AlertDialog(
@@ -3628,7 +3445,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                         SizedBox(height: 8),
                                         ElevatedButton(
                                           onPressed: () async {
-                                            print('DEBUG: Test simple mailto button tapped');
                                             final Uri emailLaunchUri = Uri(
                                               scheme: 'mailto',
                                               path: 'support@healthai.com',
@@ -3636,7 +3452,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                             if (await canLaunchUrl(emailLaunchUri)) {
                                               await launchUrl(emailLaunchUri);
                                             } else {
-                                              print('DEBUG: Could not launch simple mailto');
                                               showDialog(
                                                 context: context,
                                                 builder: (context) => AlertDialog(
@@ -5003,7 +4818,7 @@ class _FoodScreenState extends State<FoodScreen> with TickerProviderStateMixin {
                                     ...List.generate(meals.length, (i) {
                                       final meal = meals[i];
                                       // Log the image URL for debugging
-                                      print('[AI SUGGESTED MEAL IMAGE] ${meal['image']}');
+                              
                                       return Padding(
                                         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24), // increased from 20
                                         child: Stack(
