@@ -4,12 +4,16 @@ import 'dart:io';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'error_handler.dart';
 import 'logging_service.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class AIService {
   final _functions = FirebaseFunctions.instanceFor(region: 'us-central1');
 
   // API key is securely stored in Firebase Functions
   static const String _apiUrl = 'https://api.openai.com/v1/chat/completions';
+
+  static const _suggestedMealsCacheKey = 'suggested_meals_cache';
+  static const _suggestedMealsCacheTimeKey = 'suggested_meals_cache_time';
 
   Future<String?> sendMessage(String message, {String model = 'gpt-4o-mini'}) async {
     final stopwatch = Stopwatch()..start();
@@ -430,8 +434,30 @@ Respond ONLY with valid JSON.$languageInstruction
     }
   }
 
-  /// Get AI-powered suggested meals for a given meal period
+  /// Get AI-powered suggested meals for a given meal period, with persistent cache
   Future<List<Map<String, dynamic>>?> getSuggestedMeals({required String mealPeriod, String language = 'en'}) async {
+    final prefs = await SharedPreferences.getInstance();
+    final cacheKey = '$_suggestedMealsCacheKey");${mealPeriod}_$language';
+    final cacheTimeKey = '$_suggestedMealsCacheTimeKey");${mealPeriod}_$language';
+    final now = DateTime.now();
+
+    // Check cache (valid for current period only)
+    final cachedData = prefs.getString(cacheKey);
+    final cachedTimeStr = prefs.getString(cacheTimeKey);
+    if (cachedData != null && cachedTimeStr != null) {
+      final cachedTime = DateTime.tryParse(cachedTimeStr);
+      if (cachedTime != null) {
+        // Only use cache if still in the same period (e.g., breakfast)
+        if (_isSameMealPeriod(now, cachedTime, mealPeriod)) {
+          try {
+            final meals = List<Map<String, dynamic>>.from(jsonDecode(cachedData));
+            return meals;
+          } catch (_) {}
+        }
+      }
+    }
+
+    // Fetch new data if no valid cache
     final url = 'https://us-central1-healthai-0001.cloudfunctions.net/openaiProxyCallable';
     String languageInstruction = '';
     if (language == 'ar') {
@@ -469,12 +495,14 @@ Respond ONLY with a JSON array of 3 objects, no extra text, no explanations, no 
       final data = jsonDecode(response.body);
       final content = data['choices'][0]['message']['content'];
       try {
-        // Try to extract JSON array if wrapped in code block
         final codeBlockRegex = RegExp(r'```(?:json)?\s*([\s\S]*?)\s*```', multiLine: true, caseSensitive: false);
         final match = codeBlockRegex.firstMatch(content);
         final jsonString = match != null ? match.group(1)!.trim() : content.trim();
         final meals = jsonDecode(jsonString);
         if (meals is List) {
+          // Save to cache
+          await prefs.setString(cacheKey, jsonEncode(meals));
+          await prefs.setString(cacheTimeKey, now.toIso8601String());
           return meals.cast<Map<String, dynamic>>();
         }
         return null;
@@ -484,5 +512,32 @@ Respond ONLY with a JSON array of 3 objects, no extra text, no explanations, no 
     } else {
       return null;
     }
+  }
+
+  // Helper to check if two DateTimes are in the same meal period
+  bool _isSameMealPeriod(DateTime now, DateTime cached, String period) {
+    // You can customize this logic based on your meal period time windows
+    // Example: breakfast = 5-11, lunch = 11-16, dinner = 16-21, snacks = rest
+    int hourNow = now.hour;
+    int hourCached = cached.hour;
+    String periodNow = _getMealPeriod(hourNow);
+    String periodCached = _getMealPeriod(hourCached);
+    return periodNow == periodCached && period == periodNow;
+  }
+
+  String _getMealPeriod(int hour) {
+    if (hour >= 5 && hour < 11) return 'breakfast';
+    if (hour >= 11 && hour < 16) return 'lunch';
+    if (hour >= 16 && hour < 21) return 'dinner';
+    return 'snacks';
+  }
+
+  // Optionally, add a method to clear cache for a period (e.g., on manual refresh)
+  Future<void> clearSuggestedMealsCache(String mealPeriod, String language) async {
+    final prefs = await SharedPreferences.getInstance();
+    final cacheKey = '$_suggestedMealsCacheKey");${mealPeriod}_$language';
+    final cacheTimeKey = '$_suggestedMealsCacheTimeKey");${mealPeriod}_$language';
+    await prefs.remove(cacheKey);
+    await prefs.remove(cacheTimeKey);
   }
 } 
