@@ -1,4 +1,4 @@
-package com.example.healthai_app
+package com.yumie.healthai
 
 import io.flutter.embedding.android.FlutterActivity
 
