@@ -31,7 +31,7 @@ class LoggingService {
       _logger.i(message);
     }
     if (data != null) {
-      _analytics.logEvent(name: 'app_info', parameters: data);
+      _analytics.logEvent(name: 'app_info', parameters: data.cast<String, Object>());
     }
   }
 
@@ -43,7 +43,7 @@ class LoggingService {
       _logger.w(message);
     }
     if (data != null) {
-      _analytics.logEvent(name: 'app_warning', parameters: data);
+      _analytics.logEvent(name: 'app_warning', parameters: data.cast<String, Object>());
     }
   }
 
@@ -55,7 +55,7 @@ class LoggingService {
       parameters: {
         'message': message,
         'error': error?.toString() ?? 'Unknown error',
-      },
+      }.cast<String, Object>(),
     );
   }
 
@@ -80,7 +80,7 @@ class LoggingService {
       parameters: {
         'action': action,
         ...?parameters,
-      },
+      }.cast<String, Object>(),
     );
   }
 
@@ -95,10 +95,10 @@ class LoggingService {
     
     if (error != null) {
       _logger.e('API Error: $endpoint - ${data.toString()}');
-      _analytics.logEvent(name: 'api_error', parameters: data);
+      _analytics.logEvent(name: 'api_error', parameters: data.cast<String, Object>());
     } else {
       _logger.i('API Call: $endpoint - ${data.toString()}');
-      _analytics.logEvent(name: 'api_call', parameters: data);
+      _analytics.logEvent(name: 'api_call', parameters: data.cast<String, Object>());
     }
   }
 
@@ -110,7 +110,7 @@ class LoggingService {
       parameters: {
         'operation': operation,
         'duration_ms': duration.inMilliseconds,
-      },
+      }.cast<String, Object>(),
     );
   }
 }
