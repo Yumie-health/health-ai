@@ -20,8 +20,8 @@ android {
     kotlinOptions {
         jvmTarget = "17"
         freeCompilerArgs += listOf("-Xjvm-default=all")
-        apiVersion = "1.8"
-        languageVersion = "1.8"
+        apiVersion = "1.9"
+        languageVersion = "1.9"
     }
 
     defaultConfig {
@@ -51,6 +51,6 @@ android {
 
 dependencies {
     // Add other Firebase dependencies as needed
-    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.0.4")
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
     implementation("androidx.multidex:multidex:2.0.1")
 }
