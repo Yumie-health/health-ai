@@ -13,6 +13,7 @@ import 'scan_paywall_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'l10n/app_localizations.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
+import 'services/subscription_service.dart';
 
 class ScanPage extends StatefulWidget {
   const ScanPage({Key? key}) : super(key: key);
@@ -56,6 +57,13 @@ class _ScanPageState extends State<ScanPage> {
   }
 
   Future<bool> _shouldShowPaywall() async {
+    // Check if user is premium first
+    final subscriptionService = SubscriptionService();
+    final isPremium = await subscriptionService.isPremiumUser();
+    if (isPremium) {
+      return false; // Premium users don't see paywall
+    }
+    
     final prefs = await SharedPreferences.getInstance();
     final today = DateTime.now();
     final lastScanDate = prefs.getString('lastScanDate');

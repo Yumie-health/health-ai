@@ -71,6 +71,7 @@ dependencies:
   camera: ^0.10.6
   share_plus: ^10.0.0
   logging: ^1.2.0
+  pay: ^3.2.1
   flutter_localizations:
     sdk: flutter
 

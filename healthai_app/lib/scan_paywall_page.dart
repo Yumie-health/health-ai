@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'l10n/app_localizations.dart';
+import 'subscription_page.dart';
 
 class ScanPaywallPage extends StatelessWidget {
   final VoidCallback onUpgrade;
@@ -65,7 +66,13 @@ class ScanPaywallPage extends StatelessWidget {
                       elevation: 8,
                       shadowColor: Colors.black.withOpacity(0.5),
                     ),
-                    onPressed: onUpgrade,
+                    onPressed: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (context) => SubscriptionPage(),
+                        ),
+                      );
+                    },
                   ),
                   const SizedBox(height: 40),
                   Row(
