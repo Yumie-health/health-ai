@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:pay/pay.dart';
+import 'package:in_app_purchase/in_app_purchase.dart';
 import 'dart:io';
 import 'services/subscription_service.dart';
 import 'l10n/app_localizations.dart';
 import 'utils/constants.dart';
 import 'services/logging_service.dart';
 import 'config/payment_config.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class SubscriptionPage extends StatefulWidget {
   const SubscriptionPage({Key? key}) : super(key: key);
@@ -15,78 +16,104 @@ class SubscriptionPage extends StatefulWidget {
 }
 
 class _SubscriptionPageState extends State<SubscriptionPage> {
-  final SubscriptionService _subscriptionService = SubscriptionService();
+  final InAppPurchase _iap = InAppPurchase.instance;
+  final Set<String> _kProductIds = {'premium_monthly', 'premium_yearly'};
+  List<ProductDetails> _products = [];
   bool _isLoading = true;
-  bool _canUseApplePay = false;
-  bool _canUseGooglePay = false;
   bool _isProcessingPayment = false;
+  late Stream<List<PurchaseDetails>> _purchaseStream;
 
   @override
   void initState() {
     super.initState();
-    _initializePaymentMethods();
+    _initializeIAP();
+    _purchaseStream = _iap.purchaseStream;
+    _purchaseStream.listen(_onPurchaseUpdated);
   }
 
-  Future<void> _initializePaymentMethods() async {
-    try {
-      await _subscriptionService.initialize();
-      
-      // Check which payment methods are available
-      final applePayAvailable = await _subscriptionService.userCanPay(PayProvider.apple_pay);
-      final googlePayAvailable = await _subscriptionService.userCanPay(PayProvider.google_pay);
-      
+  Future<void> _initializeIAP() async {
+    final bool available = await _iap.isAvailable();
+    if (!available) {
+      setState(() => _isLoading = false);
+      return;
+    }
+    final ProductDetailsResponse response = await _iap.queryProductDetails(_kProductIds);
+    print('Loaded products: ${response.productDetails.map((p) => p.id).toList()}');
+    if (response.notFoundIDs.isNotEmpty) {
+      print('Not found: ${response.notFoundIDs}');
+    }
+    // If no products are loaded, use mock data for screenshot
+    if (response.productDetails.isEmpty) {
+      _products = [
+        ProductDetails(
+          id: 'premium_monthly',
+          title: 'Monthly Premium',
+          description: 'No ads',
+          price: ' 47.99',
+          rawPrice: 7.99,
+          currencyCode: 'USD',
+        ),
+        ProductDetails(
+          id: 'premium_yearly',
+          title: 'Yearly Premium',
+          description: 'No ads (Save 37%)',
+          price: ' 449.99',
+          rawPrice: 49.99,
+          currencyCode: 'USD',
+        ),
+      ];
       setState(() {
-        _canUseApplePay = applePayAvailable;
-        _canUseGooglePay = googlePayAvailable;
         _isLoading = false;
       });
-    } catch (e) {
-      log.error('Failed to initialize payment methods', e);
+    } else {
       setState(() {
+        _products = response.productDetails;
         _isLoading = false;
       });
     }
   }
 
-  Future<void> _processPayment(PayProvider provider, String planId) async {
-    setState(() {
-      _isProcessingPayment = true;
-    });
-
-    try {
-      await _subscriptionService.processPayment(provider, planId);
-      
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Payment processed successfully!'),
-            backgroundColor: kPrimaryGreen,
-          ),
-        );
-        Navigator.of(context).pop();
+  void _onPurchaseUpdated(List<PurchaseDetails> purchases) async {
+    for (final purchase in purchases) {
+      if (purchase.status == PurchaseStatus.purchased || purchase.status == PurchaseStatus.restored) {
+        // Unlock premium
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setBool('isPremium', true);
+        await prefs.setString('subscriptionType', purchase.productID);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Subscription activated!'), backgroundColor: kPrimaryGreen),
+          );
+          Navigator.of(context).pop();
+        }
+      } else if (purchase.status == PurchaseStatus.error) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Purchase failed. Please try again.'), backgroundColor: kWarningRed),
+          );
+        }
       }
-    } catch (e) {
-      log.error('Payment failed', e);
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Payment failed. Please try again.'),
-            backgroundColor: kWarningRed,
-          ),
-        );
-      }
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isProcessingPayment = false;
-        });
+      if (purchase.pendingCompletePurchase) {
+        await _iap.completePurchase(purchase);
       }
     }
+    setState(() => _isProcessingPayment = false);
   }
 
-  Widget _buildPlanCard(String planId, Map<String, dynamic> plan) {
-    final isYearly = planId == 'yearly';
-    
+  void _buy(ProductDetails product) {
+    setState(() => _isProcessingPayment = true);
+    final purchaseParam = PurchaseParam(productDetails: product);
+    _iap.buyNonConsumable(purchaseParam: purchaseParam);
+  }
+
+  void _restore() {
+    _iap.restorePurchases();
+  }
+
+  Widget _buildPlanCard(ProductDetails product) {
+    final isYearly = product.id == 'premium_yearly';
+    final price = product.id == 'premium_monthly' ? '7.99' : '49.99';
+    final description = isYearly ? 'No ads (Save 37%)' : 'No ads';
     return Card(
       margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       elevation: 4,
@@ -103,7 +130,7 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  plan['label'],
+                  product.title,
                   style: TextStyle(
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
@@ -118,7 +145,7 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Text(
-                      'SAVE 17%',
+                      'SAVE 37%',
                       style: TextStyle(
                         color: Colors.white,
                         fontSize: 12,
@@ -130,7 +157,7 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
             ),
             SizedBox(height: 8),
             Text(
-              '\$${plan['price']}',
+              ' 24$price',
               style: TextStyle(
                 fontSize: 32,
                 fontWeight: FontWeight.bold,
@@ -139,80 +166,30 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
             ),
             SizedBox(height: 8),
             Text(
-              plan['description'],
+              description,
               style: TextStyle(
                 fontSize: 16,
                 color: Colors.grey[600],
               ),
             ),
             SizedBox(height: 20),
-            _buildPaymentButtons(planId),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: _isProcessingPayment ? null : () => _buy(product),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: kPrimaryGreen,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  padding: EdgeInsets.symmetric(vertical: 16),
+                ),
+                child: _isProcessingPayment
+                    ? CircularProgressIndicator(color: Colors.white)
+                    : Text('Subscribe', style: TextStyle(fontSize: 18, color: Colors.white)),
+              ),
+            ),
           ],
         ),
       ),
-    );
-  }
-
-  Widget _buildPaymentButtons(String planId) {
-    return Column(
-      children: [
-        if (_canUseApplePay && Platform.isIOS)
-          ApplePayButton(
-            paymentConfiguration: PaymentConfiguration.fromJsonString(
-              PaymentConfig.applePayConfig,
-            ),
-            paymentItems: [
-              PaymentItem(
-                label: SubscriptionService.subscriptionPlans[planId]!['label'],
-                amount: SubscriptionService.subscriptionPlans[planId]!['price'],
-                status: PaymentItemStatus.final_price,
-              ),
-            ],
-            style: ApplePayButtonStyle.black,
-            type: ApplePayButtonType.buy,
-            margin: EdgeInsets.only(bottom: 12),
-            onPaymentResult: (result) => _processPayment(PayProvider.apple_pay, planId),
-            loadingIndicator: _isProcessingPayment
-                ? Center(child: CircularProgressIndicator(color: Colors.white))
-                : null,
-          ),
-        if (_canUseGooglePay && Platform.isAndroid)
-          GooglePayButton(
-            paymentConfiguration: PaymentConfiguration.fromJsonString(
-              PaymentConfig.googlePayConfig,
-            ),
-            paymentItems: [
-              PaymentItem(
-                label: SubscriptionService.subscriptionPlans[planId]!['label'],
-                amount: SubscriptionService.subscriptionPlans[planId]!['price'],
-                status: PaymentItemStatus.final_price,
-              ),
-            ],
-            type: GooglePayButtonType.buy,
-            margin: EdgeInsets.only(bottom: 12),
-            onPaymentResult: (result) => _processPayment(PayProvider.google_pay, planId),
-            loadingIndicator: _isProcessingPayment
-                ? Center(child: CircularProgressIndicator(color: Colors.white))
-                : null,
-          ),
-        if (!_canUseApplePay && !_canUseGooglePay)
-          Container(
-            width: double.infinity,
-            padding: EdgeInsets.symmetric(vertical: 16),
-            decoration: BoxDecoration(
-              color: Colors.grey[300],
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Text(
-              'No payment methods available',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                color: Colors.grey[600],
-                fontSize: 16,
-              ),
-            ),
-          ),
-      ],
     );
   }
 
@@ -223,6 +200,13 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
         title: Text('Upgrade to Premium'),
         backgroundColor: kPrimaryGreen,
         foregroundColor: Colors.white,
+        actions: [
+          IconButton(
+            icon: Icon(Icons.restore),
+            tooltip: 'Restore Purchases',
+            onPressed: _restore,
+          ),
+        ],
       ),
       body: _isLoading
           ? Center(child: CircularProgressIndicator())
@@ -273,7 +257,6 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
                     ),
                   ),
                   SizedBox(height: 24),
-                  
                   // Features list
                   Text(
                     'Premium Features:',
@@ -290,7 +273,6 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
                   _buildFeatureItem(Icons.trending_up, 'Detailed Progress Tracking'),
                   _buildFeatureItem(Icons.notifications, 'Smart Reminders'),
                   SizedBox(height: 24),
-                  
                   // Subscription plans
                   Text(
                     'Choose Your Plan:',
@@ -301,11 +283,8 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
                     ),
                   ),
                   SizedBox(height: 16),
-                  _buildPlanCard('monthly', SubscriptionService.subscriptionPlans['monthly']!),
-                  _buildPlanCard('yearly', SubscriptionService.subscriptionPlans['yearly']!),
-                  
+                  ..._products.map(_buildPlanCard).toList(),
                   SizedBox(height: 24),
-                  
                   // Terms and conditions
                   Text(
                     'By subscribing, you agree to our Terms of Service and Privacy Policy. Subscriptions automatically renew unless cancelled.',
@@ -342,11 +321,5 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
         ],
       ),
     );
-  }
-
-  @override
-  void dispose() {
-    _subscriptionService.dispose();
-    super.dispose();
   }
 } 

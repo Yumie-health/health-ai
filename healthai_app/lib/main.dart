@@ -59,13 +59,9 @@ void main() async {
   try {
     print('Firebase initialized');
 
-    print('Loading Remote Config...');
-    await PaymentConfig.loadFromRemoteConfig();
-    print('Remote Config loaded');
-
-    print('Initializing SubscriptionService...');
-    await SubscriptionService().initialize();
-    print('SubscriptionService initialized');
+    // print('Initializing SubscriptionService...');
+    // await SubscriptionService().initialize();
+    // print('SubscriptionService initialized');
 
     MobileAds.instance.initialize(); // Initialize AdMob
 
