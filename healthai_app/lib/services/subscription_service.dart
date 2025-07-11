@@ -22,16 +22,15 @@ class SubscriptionService {
   static const Map<String, Map<String, dynamic>> subscriptionPlans = PaymentConfig.subscriptionPlans;
 
   // Payment configurations
-  static const String _applePayConfig = PaymentConfig.applePayConfig;
-  static const String _googlePayConfig = PaymentConfig.googlePayConfig;
+  // Use PaymentConfig.applePayConfig and PaymentConfig.googlePayConfig directly in the code where needed.
 
   Future<void> initialize() async {
     if (_isInitialized) return;
 
     try {
       // Initialize payment configurations
-      final applePayConfig = PaymentConfiguration.fromJsonString(_applePayConfig);
-      final googlePayConfig = PaymentConfiguration.fromJsonString(_googlePayConfig);
+      final applePayConfig = PaymentConfiguration.fromJsonString(PaymentConfig.applePayConfig);
+      final googlePayConfig = PaymentConfiguration.fromJsonString(PaymentConfig.googlePayConfig);
 
       _payClient = Pay({
         PayProvider.apple_pay: applePayConfig,

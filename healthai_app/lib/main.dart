@@ -42,6 +42,8 @@ import 'services/logging_service.dart';
 import 'utils/validation.dart';
 import 'services/error_handler.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
+import 'config/payment_config.dart';
+import 'services/subscription_service.dart';
 
 // Initialize FlutterLocalNotificationsPlugin
 final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
@@ -52,38 +54,63 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
-  await Firebase.initializeApp(); // <-- Initialize Firebase first!
+  await Firebase.initializeApp(); // FIRST: Initialize Firebase
+  log.initialize(); // THEN: Initialize logging service
+  try {
+    print('Firebase initialized');
 
-  MobileAds.instance.initialize(); // Initialize AdMob
+    print('Loading Remote Config...');
+    await PaymentConfig.loadFromRemoteConfig();
+    print('Remote Config loaded');
 
-  // Initialize logging service
-  log.initialize(); // Now it's safe to use logging/analytics
-  log.info('App starting up');
-  
-  tz.initializeTimeZones(); // Initialize time zones for scheduled notifications
+    print('Initializing SubscriptionService...');
+    await SubscriptionService().initialize();
+    print('SubscriptionService initialized');
 
-  // Set up background message handler
-  FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+    MobileAds.instance.initialize(); // Initialize AdMob
 
-  // Local notifications setup
-  const AndroidInitializationSettings initializationSettingsAndroid =
-      AndroidInitializationSettings('@mipmap/ic_launcher');
-  final InitializationSettings initializationSettings = InitializationSettings(
-    android: initializationSettingsAndroid,
-    iOS: DarwinInitializationSettings(),
-  );
-  await flutterLocalNotificationsPlugin.initialize(initializationSettings);
+    runApp(
+      ChangeNotifierProvider(
+        create: (_) => PreferencesProvider(),
+        child: const HealthAIApp(),
+      ),
+    );
+  } catch (e, stack) {
+    print('Startup error: $e');
+    runApp(ErrorScreen(error: e.toString()));
+  }
+}
 
-  // Request notification permissions (especially for iOS)
-  await FirebaseMessaging.instance.requestPermission();
+class ErrorScreen extends StatelessWidget {
+  final String error;
+  const ErrorScreen({super.key, required this.error});
 
-  runApp(
-    ChangeNotifierProvider(
-      create: (_) => PreferencesProvider(),
-      child: const HealthAIApp(),
-    ),
-  );
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      home: Scaffold(
+        backgroundColor: Colors.white,
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(32.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.error_outline, color: Colors.red, size: 64),
+                SizedBox(height: 24),
+                Text('Startup Error', style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold)),
+                SizedBox(height: 16),
+                Text(error, style: TextStyle(fontSize: 16, color: Colors.black54), textAlign: TextAlign.center),
+                SizedBox(height: 32),
+                Text('Please check your network connection or contact support.',
+                  style: TextStyle(fontSize: 16, color: Colors.black45), textAlign: TextAlign.center),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 class HealthAIApp extends StatelessWidget {
