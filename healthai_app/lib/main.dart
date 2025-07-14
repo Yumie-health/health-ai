@@ -45,6 +45,84 @@ import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'config/payment_config.dart';
 import 'services/subscription_service.dart';
 
+// Custom TextField with floating Done button for iOS
+class _NumericTextField extends StatefulWidget {
+  final TextEditingController controller;
+  final String? hintText;
+  final InputDecoration? decoration;
+  final Function(String)? onChanged;
+  final bool enabled;
+
+  const _NumericTextField({
+    required this.controller,
+    this.hintText,
+    this.decoration,
+    this.onChanged,
+    this.enabled = true,
+  });
+
+  @override
+  State<_NumericTextField> createState() => _NumericTextFieldState();
+}
+
+class _NumericTextFieldState extends State<_NumericTextField> {
+  final FocusNode _focusNode = FocusNode();
+  bool _isFocused = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _focusNode.addListener(_onFocusChange);
+  }
+
+  void _onFocusChange() {
+    setState(() {
+      _isFocused = _focusNode.hasFocus;
+    });
+  }
+
+  void _onCheckmarkTap() {
+    FocusScope.of(context).unfocus();
+  }
+
+  @override
+  void dispose() {
+    _focusNode.removeListener(_onFocusChange);
+    _focusNode.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return TextField(
+      controller: widget.controller,
+      focusNode: _focusNode,
+      keyboardType: TextInputType.number,
+      enabled: widget.enabled,
+      onChanged: widget.onChanged,
+      decoration: (widget.decoration ?? InputDecoration(
+        hintText: widget.hintText,
+        contentPadding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
+        filled: true,
+        fillColor: kPrimaryGreen.withOpacity(0.07),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: BorderSide.none,
+        ),
+      )).copyWith(
+        suffixIcon: _isFocused && Theme.of(context).platform == TargetPlatform.iOS
+            ? IconButton(
+                icon: Icon(Icons.check, color: kPrimaryGreen, size: 20),
+                onPressed: _onCheckmarkTap,
+                padding: EdgeInsets.zero,
+                constraints: BoxConstraints(minWidth: 40, minHeight: 40),
+              )
+            : null,
+      ),
+    );
+  }
+}
+
 // Initialize FlutterLocalNotificationsPlugin
 final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
 
@@ -378,6 +456,7 @@ class _SplashOrAppState extends State<SplashOrApp> with SingleTickerProviderStat
                           fontWeight: FontWeight.bold,
                           letterSpacing: 2,
                           fontFamily: 'Montserrat',
+                          decoration: TextDecoration.none,
                           shadows: [
                             Shadow(
                               color: Colors.black.withOpacity(0.18),
@@ -1284,10 +1363,9 @@ class _FoodLogFormState extends State<FoodLogForm> {
           decoration: const InputDecoration(labelText: 'Food Name'),
         ),
         const SizedBox(height: 8),
-        TextField(
+        _NumericTextField(
           controller: caloriesController,
           decoration: const InputDecoration(labelText: 'Calories'),
-          keyboardType: TextInputType.number,
         ),
         const SizedBox(height: 8),
         ElevatedButton(
@@ -1779,7 +1857,7 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(AppLocalizations.of(context)!.welcomeBack, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 26, color: Colors.black)),
+                            Text(_currentGreeting, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 26, color: Colors.black)),
                             const SizedBox(height: 4),
                             Text(AppLocalizations.of(context)!.trackNutritionToday, style: TextStyle(color: Colors.grey[500], fontSize: 16)),
                           ],
@@ -2038,7 +2116,6 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
                               child: _QuickActionCard(
                                 icon: Icons.camera_alt,
                                 label: AppLocalizations.of(context)!.logMeal,
-                                subtitle: AppLocalizations.of(context)!.trackYourFood,
                                 color: kPrimaryGreen,
                                 onTap: () {
                                   Navigator.of(context).push(
@@ -2054,7 +2131,6 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
                               child: _QuickActionCard(
                                 icon: Icons.qr_code_scanner,
                                 label: AppLocalizations.of(context)!.scan,
-                                subtitle: AppLocalizations.of(context)!.analyzeYourFood,
                                 color: kSecondaryBlue,
                                 onTap: () {
                                   Navigator.of(context).push(
@@ -2250,10 +2326,9 @@ class _CircularCalories extends StatelessWidget {
 class _QuickActionCard extends StatefulWidget {
   final IconData icon;
   final String label;
-  final String subtitle;
   final Color color;
   final VoidCallback onTap;
-  const _QuickActionCard({required this.icon, required this.label, required this.subtitle, required this.color, required this.onTap});
+  const _QuickActionCard({required this.icon, required this.label, required this.color, required this.onTap});
   @override
   State<_QuickActionCard> createState() => _QuickActionCardState();
 }
@@ -2325,12 +2400,6 @@ class _QuickActionCardState extends State<_QuickActionCard> with SingleTickerPro
                     Text(
                       widget.label,
                       style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    Text(
-                      widget.subtitle,
-                      style: TextStyle(color: Colors.grey[500], fontSize: 13),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -2694,9 +2763,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   style: TextStyle(color: theme.textTheme.bodyLarge?.color),
                 ),
                 const SizedBox(height: 12),
-                TextField(
+                _NumericTextField(
                   controller: ageController,
-                  keyboardType: TextInputType.number,
                   decoration: InputDecoration(
                     labelText: 'Age',
                     prefixIcon: Icon(Icons.cake, color: theme.iconTheme.color),
@@ -2705,12 +2773,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
                     labelStyle: TextStyle(color: theme.textTheme.bodyLarge?.color),
                   ),
-                  style: TextStyle(color: theme.textTheme.bodyLarge?.color),
                 ),
                 const SizedBox(height: 12),
-                TextField(
+                _NumericTextField(
                   controller: heightController,
-                  keyboardType: TextInputType.number,
                   decoration: InputDecoration(
                     labelText: 'Height (cm)',
                     prefixIcon: Icon(Icons.height, color: theme.iconTheme.color),
@@ -2719,12 +2785,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
                     labelStyle: TextStyle(color: theme.textTheme.bodyLarge?.color),
                   ),
-                  style: TextStyle(color: theme.textTheme.bodyLarge?.color),
                 ),
                 const SizedBox(height: 12),
-                TextField(
+                _NumericTextField(
                   controller: weightController,
-                  keyboardType: TextInputType.number,
                   decoration: InputDecoration(
                     labelText: 'Current Weight (kg)',
                     prefixIcon: Icon(Icons.monitor_weight, color: theme.iconTheme.color),
@@ -2733,7 +2797,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
                     labelStyle: TextStyle(color: theme.textTheme.bodyLarge?.color),
                   ),
-                  style: TextStyle(color: theme.textTheme.bodyLarge?.color),
                 ),
                 const SizedBox(height: 24),
                 Row(
@@ -2814,24 +2877,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              TextField(
+              _NumericTextField(
                 decoration: const InputDecoration(labelText: 'Daily Calorie Goal'),
-                keyboardType: TextInputType.number,
                 controller: caloriesController,
               ),
-              TextField(
+              _NumericTextField(
                 decoration: const InputDecoration(labelText: 'Protein Goal (g)'),
-                keyboardType: TextInputType.number,
                 controller: proteinController,
               ),
-              TextField(
+              _NumericTextField(
                 decoration: const InputDecoration(labelText: 'Carbs Goal (g)'),
-                keyboardType: TextInputType.number,
                 controller: carbsController,
               ),
-              TextField(
+              _NumericTextField(
                 decoration: const InputDecoration(labelText: 'Fat Goal (g)'),
-                keyboardType: TextInputType.number,
                 controller: fatController,
               ),
             ],
@@ -2953,31 +3012,36 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                                 ],
                                               ),
                                               SizedBox(height: 18),
-                                              Row(
-                                                mainAxisAlignment: MainAxisAlignment.center,
+                                              Column(
                                                 children: [
-                                                  ElevatedButton.icon(
-                                                    icon: Icon(Icons.upload),
-                                                    label: Text(AppLocalizations.of(context)!.uploadNew),
-                                                    onPressed: () async {
-                                                      Navigator.pop(context);
-                                                      await _changeProfilePicture();
-                                                    },
-                                                  ),
-                                                  if (profile != null && profile.photoUrl.isNotEmpty) ...[
-                                                    SizedBox(width: 12),
-                                                    OutlinedButton.icon(
-                                                      icon: Icon(Icons.delete),
-                                                      label: Text(AppLocalizations.of(context)!.delete),
+                                                  SizedBox(
+                                                    width: double.infinity,
+                                                    child: ElevatedButton.icon(
+                                                      icon: Icon(Icons.upload),
+                                                      label: Text(AppLocalizations.of(context)!.uploadNew),
                                                       onPressed: () async {
                                                         Navigator.pop(context);
-                                                        final user = FirebaseAuth.instance.currentUser;
-                                                        if (user != null) {
-                                                          await FirebaseFirestore.instance.collection('users').doc(user.uid).update({'photoUrl': ''});
-                                                          await user.updatePhotoURL('');
-                                                          setState(() {});
-                                                        }
+                                                        await _changeProfilePicture();
                                                       },
+                                                    ),
+                                                  ),
+                                                  if (profile != null && profile.photoUrl.isNotEmpty) ...[
+                                                    SizedBox(height: 12),
+                                                    SizedBox(
+                                                      width: double.infinity,
+                                                      child: OutlinedButton.icon(
+                                                        icon: Icon(Icons.delete),
+                                                        label: Text(AppLocalizations.of(context)!.delete),
+                                                        onPressed: () async {
+                                                          Navigator.pop(context);
+                                                          final user = FirebaseAuth.instance.currentUser;
+                                                          if (user != null) {
+                                                            await FirebaseFirestore.instance.collection('users').doc(user.uid).update({'photoUrl': ''});
+                                                            await user.updatePhotoURL('');
+                                                            setState(() {});
+                                                          }
+                                                        },
+                                                      ),
                                                     ),
                                                   ],
                                                 ],
@@ -3024,24 +3088,30 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               ),
                               const SizedBox(width: 18),
                               Expanded(
-                                child: Row(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Text(userName, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 22)),
-                                    IconButton(
-                                      icon: Icon(Icons.edit, color: kPrimaryGreen, size: 20),
-                                      tooltip: AppLocalizations.of(context)!.editName,
-                                      onPressed: () => _changeProfileName(userName),
+                                    Row(
+                                      children: [
+                                        Text(userName, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 22)),
+                                        IconButton(
+                                          icon: Icon(Icons.edit, color: kPrimaryGreen, size: 20),
+                                          tooltip: AppLocalizations.of(context)!.editName,
+                                          onPressed: () => _changeProfileName(userName),
+                                        ),
+                                      ],
                                     ),
-                                    const SizedBox(width: 10),
-                                    if (isPremium)
+                                    if (isPremium) ...[
+                                      SizedBox(height: 4),
                                       Container(
                                         padding: EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                                         decoration: BoxDecoration(
                                           color: kPrimaryGreen.withOpacity(0.10),
                                           borderRadius: BorderRadius.circular(12),
                                         ),
-                                        child: Text('Premium', style: TextStyle(color: kPrimaryGreen, fontWeight: FontWeight.w600)),
+                                        child: Text('Premium', style: TextStyle(color: kPrimaryGreen, fontWeight: FontWeight.w600, fontSize: 12)),
                                       ),
+                                    ],
                                   ],
                                 ),
                               ),
@@ -3392,25 +3462,97 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                         SizedBox(height: 16),
                                         InkWell(
                                           onTap: () async {
-                                    
-                                            final Uri emailLaunchUri = Uri(
-                                              scheme: 'mailto',
-                                              path: 'support@healthai.com',
-                                              queryParameters: {
-                                                'subject': 'HealthAI Support Request',
-                                              },
-                                            );
-                                            if (await canLaunchUrl(emailLaunchUri)) {
-                                              await launchUrl(emailLaunchUri);
-                                            } else {
+                                            try {
+                                              // Try multiple email URI formats for better Android compatibility
+                                              final List<Uri> emailUris = [
+                                                Uri(
+                                                  scheme: 'mailto',
+                                                  path: 'support@healthai.com',
+                                                  queryParameters: {
+                                                    'subject': 'HealthAI Support Request',
+                                                  },
+                                                ),
+                                                Uri.parse('mailto:support@healthai.com?subject=HealthAI Support Request'),
+                                                Uri.parse('mailto:support@healthai.com'),
+                                              ];
+
+                                              bool launched = false;
+                                              for (final uri in emailUris) {
+                                                if (await canLaunchUrl(uri)) {
+                                                  await launchUrl(uri, mode: LaunchMode.externalApplication);
+                                                  launched = true;
+                                                  break;
+                                                }
+                                              }
+
+                                              if (!launched) {
+                                                // Fallback: show email address for manual copying
+                                                showDialog(
+                                                  context: context,
+                                                  builder: (context) => AlertDialog(
+                                                    title: Text('Email Client Not Found'),
+                                                    content: Column(
+                                                      mainAxisSize: MainAxisSize.min,
+                                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                                      children: [
+                                                        Text('No email app found on your device.'),
+                                                        SizedBox(height: 12),
+                                                        Text('Please copy the email address:'),
+                                                        SizedBox(height: 8),
+                                                        Container(
+                                                          padding: EdgeInsets.all(12),
+                                                          decoration: BoxDecoration(
+                                                            color: Colors.grey[100],
+                                                            borderRadius: BorderRadius.circular(8),
+                                                            border: Border.all(color: Colors.grey[300]!),
+                                                          ),
+                                                          child: Row(
+                                                            children: [
+                                                              Expanded(
+                                                                child: Text(
+                                                                  'support@healthai.com',
+                                                                  style: TextStyle(
+                                                                    fontFamily: 'monospace',
+                                                                    fontSize: 16,
+                                                                    fontWeight: FontWeight.w600,
+                                                                  ),
+                                                                ),
+                                                              ),
+                                                              IconButton(
+                                                                icon: Icon(Icons.copy, color: kPrimaryGreen),
+                                                                onPressed: () {
+                                                                  Clipboard.setData(ClipboardData(text: 'support@healthai.com'));
+                                                                  ScaffoldMessenger.of(context).showSnackBar(
+                                                                    SnackBar(content: Text('Email address copied to clipboard')),
+                                                                  );
+                                                                  Navigator.pop(context);
+                                                                },
+                                                                tooltip: 'Copy email address',
+                                                              ),
+                                                            ],
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                    actions: [
+                                                      TextButton(
+                                                        onPressed: () => Navigator.pop(context),
+                                                        child: Text('OK'),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                );
+                                              }
+                                            } catch (e) {
+                                              // Show fallback dialog if all attempts fail
                                               showDialog(
                                                 context: context,
                                                 builder: (context) => AlertDialog(
                                                   title: Text('Error'),
-                                                  content: Text('Could not launch email client'),
+                                                  content: Text('Could not launch email client. Please copy the email address manually.'),
                                                   actions: [
                                                     TextButton(
-                                                      onPressed: () => Navigator.of(context).pop(),
+                                                      onPressed: () => Navigator.pop(context),
                                                       child: Text('OK'),
                                                     ),
                                                   ],
@@ -3440,57 +3582,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                               ],
                                             ),
                                           ),
-                                        ),
-                                        SizedBox(height: 16),
-                                        ElevatedButton(
-                                          onPressed: () async {
-                                            final Uri webUri = Uri.parse('https://google.com');
-                                            if (await canLaunchUrl(webUri)) {
-                                              await launchUrl(webUri);
-                                            } else {
-                                              showDialog(
-                                                context: context,
-                                                builder: (context) => AlertDialog(
-                                                  title: Text('Error'),
-                                                  content: Text('Could not launch web URL'),
-                                                  actions: [
-                                                    TextButton(
-                                                      onPressed: () => Navigator.of(context).pop(),
-                                                      child: Text('OK'),
-                                                    ),
-                                                  ],
-                                                ),
-                                              );
-                                            }
-                                          },
-                                          child: Text(AppLocalizations.of(context)!.testWebURL),
-                                        ),
-                                        SizedBox(height: 8),
-                                        ElevatedButton(
-                                          onPressed: () async {
-                                            final Uri emailLaunchUri = Uri(
-                                              scheme: 'mailto',
-                                              path: 'support@healthai.com',
-                                            );
-                                            if (await canLaunchUrl(emailLaunchUri)) {
-                                              await launchUrl(emailLaunchUri);
-                                            } else {
-                                              showDialog(
-                                                context: context,
-                                                builder: (context) => AlertDialog(
-                                                  title: Text('Error'),
-                                                  content: Text('Could not launch simple mailto'),
-                                                  actions: [
-                                                    TextButton(
-                                                      onPressed: () => Navigator.of(context).pop(),
-                                                      child: Text('OK'),
-                                                    ),
-                                                  ],
-                                                ),
-                                              );
-                                            }
-                                          },
-                                          child: Text(AppLocalizations.of(context)!.testSimpleMailto),
                                         ),
                                         SizedBox(height: 24),
                                         Row(
@@ -4383,67 +4474,8 @@ class _FoodScreenState extends State<FoodScreen> with TickerProviderStateMixin {
   int _tabIndex = 0; // 0: My Meals, 1: Suggested Meals
   final MealService _mealService = MealService();
 
-  // Sample recipe data
-  final List<Map<String, dynamic>> _allRecipes = [
-    {
-      'image': 'https://images.unsplash.com/photo-1504674900247-0877df9cc836',
-      'title': 'Grilled Salmon Bowl',
-      'time': '25 mins',
-      'calories': 420,
-      'tags': ['High Protein', 'Omega-3'],
-      'mealType': 'Breakfast',
-    },
-    {
-      'image': 'https://images.unsplash.com/photo-1464306076886-debca5e8a6b0',
-      'title': 'Vegetable Stir Fry',
-      'time': '20 mins',
-      'calories': 350,
-      'tags': ['Vegetarian', 'Quick'],
-      'mealType': 'Lunch',
-    },
-    {
-      'image': 'https://images.unsplash.com/photo-1502741338009-cac2772e18bc',
-      'title': 'Mediterranean Quinoa Bowl',
-      'time': '30 mins',
-      'calories': 380,
-      'tags': ['Vegetarian', 'Fiber'],
-      'mealType': 'Dinner',
-    },
-    {
-      'image': 'https://images.unsplash.com/photo-1519864600265-abb23847ef2c',
-      'title': 'Chicken Avocado Wrap',
-      'time': '15 mins',
-      'calories': 410,
-      'tags': ['High Protein', 'Quick'],
-      'mealType': 'Lunch',
-    },
-    {
-      'image': 'https://images.unsplash.com/photo-1506089676908-3592f7389d4d',
-      'title': 'Berry Yogurt Parfait',
-      'time': '10 mins',
-      'calories': 220,
-      'tags': ['Vegetarian', 'Breakfast'],
-      'mealType': 'Breakfast',
-    },
-    {
-      'image': 'https://images.unsplash.com/photo-1467003909585-2f8a72700288',
-      'title': 'Tofu Buddha Bowl',
-      'time': '28 mins',
-      'calories': 340,
-      'tags': ['Vegan', 'High Protein'],
-      'mealType': 'Dinner',
-    },
-    {
-      'image': 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd',
-      'title': 'Egg & Avocado Toast',
-      'time': '12 mins',
-      'calories': 260,
-      'tags': ['Vegetarian', 'Breakfast'],
-      'mealType': 'Breakfast',
-    },
-  ];
-
-  List<Map<String, dynamic>> _shuffledRecipes = [];
+  // AI-powered suggested meals (no longer hardcoded)
+  List<Map<String, dynamic>> _aiMeals = [];
 
   // Helper to get current meal period
   String get _currentMealPeriod {
@@ -4466,11 +4498,6 @@ class _FoodScreenState extends State<FoodScreen> with TickerProviderStateMixin {
       default:
         return 'Healthy Snacks! 🌙';
     }
-  }
-
-  List<Map<String, dynamic>> get _filteredRecipesByTime {
-    final period = _currentMealPeriod;
-    return _shuffledRecipes.where((r) => (r['mealType'] ?? '').toLowerCase() == period).toList();
   }
 
   late AnimationController _tabController;
@@ -4532,7 +4559,7 @@ class _FoodScreenState extends State<FoodScreen> with TickerProviderStateMixin {
     _myMealsController = AnimationController(vsync: this, duration: Duration(milliseconds: 500));
     _suggestedController = AnimationController(vsync: this, duration: Duration(milliseconds: 500));
     _selectedDay = DateTime.now();
-    _shuffleRecipes();
+    _refreshAIMeals();
     _calendarController.forward();
     _myMealsController.forward();
     _suggestedController.forward();
@@ -4547,18 +4574,15 @@ class _FoodScreenState extends State<FoodScreen> with TickerProviderStateMixin {
     super.dispose();
   }
 
-  void _shuffleRecipes() {
-    setState(() {
-      _shuffledRecipes = List<Map<String, dynamic>>.from(_allRecipes)..shuffle();
-    });
+  Future<void> _refreshAIMeals() async {
+    final meals = await _getOrFetchAIMeals();
+    if (meals != null) {
+      setState(() {
+        _aiMeals = meals;
+      });
+    }
     _suggestedController.reset();
     _suggestedController.forward();
-  }
-
-
-  Future<void> _onRefresh() async {
-    _shuffleRecipes();
-    await Future.delayed(const Duration(milliseconds: 400));
   }
 
   void _onTabChanged(int index) {
@@ -4812,186 +4836,183 @@ class _FoodScreenState extends State<FoodScreen> with TickerProviderStateMixin {
                       opacity: _suggestedController,
                       child: SlideTransition(
                         position: Tween<Offset>(begin: Offset(0, 0.06), end: Offset.zero).animate(_suggestedController),
-                        child: RefreshIndicator(
-                          onRefresh: _onRefresh,
-                          child: FutureBuilder<List<Map<String, dynamic>>?>(
-                            future: _getOrFetchAIMeals(),
-                            builder: (context, snapshot) {
-                              if (snapshot.connectionState == ConnectionState.waiting) {
-                                return SizedBox(
-                                  height: 320,
-                                  child: Center(child: CircularProgressIndicator()),
-                                );
-                              }
-                              if (snapshot.hasError || !snapshot.hasData || snapshot.data == null) {
-                                return Padding(
-                                  padding: const EdgeInsets.all(32),
-                                  child: Center(child: Text(localizations.noMealsLoggedForThisDay, style: TextStyle(color: Colors.grey[600], fontSize: 16))),
-                                );
-                              }
-                              final meals = snapshot.data!;
-                              return SafeArea(
-                                child: ListView(
-                                  padding: const EdgeInsets.only(left: 0, right: 0, top: 0, bottom: 24),
-                                  children: [
-                                    Padding(
-                                      padding: const EdgeInsets.fromLTRB(20, 18, 20, 0),
-                                      child: Text(getCurrentMealLabel(), style: TextStyle(fontWeight: FontWeight.bold, fontSize: 22)),
-                                    ),
-                                    ...List.generate(meals.length, (i) {
-                                      final meal = meals[i];
-                                      // Log the image URL for debugging
-                              
-                                      return Padding(
-                                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24), // increased from 20
-                                        child: Stack(
-                                          children: [
-                                            Container(
-                                              padding: const EdgeInsets.fromLTRB(0, 24, 48, 24), // <-- increased top and bottom padding
-                                              decoration: BoxDecoration(
-                                                color: Colors.white,
-                                                borderRadius: BorderRadius.circular(20),
-                                                boxShadow: [
-                                                  BoxShadow(
-                                                    color: Colors.black.withOpacity(0.04),
-                                                    blurRadius: 10,
-                                                    offset: const Offset(0, 4),
-                                                  ),
-                                                ],
-                                              ),
-                                              child: Row(
-                                                crossAxisAlignment: CrossAxisAlignment.start,
-                                                children: [
-                                                  // Meal image
-                                                  FutureBuilder<String?> (
-                                                    future: PexelsService.staticFetchMealImage(meal['meal_name'] as String? ?? '', locale: Locale(AppLocalizations.of(context)!.localeName)),
-                                                    builder: (context, snapshot) {
-                                                      if (snapshot.connectionState == ConnectionState.waiting) {
-                                                        return ClipRRect(
-                                                          borderRadius: BorderRadius.circular(16),
-                                                          child: Container(
-                                                            width: 70,
-                                                            height: 70,
-                                                            color: Colors.grey[200],
-                                                            child: Center(child: CircularProgressIndicator(strokeWidth: 2, color: kPrimaryGreen)),
-                                                          ),
-                                                        );
-                                                      }
-                                                      final imageUrl = snapshot.data;
+                        child: FutureBuilder<List<Map<String, dynamic>>?>(
+                          future: _getOrFetchAIMeals(),
+                          builder: (context, snapshot) {
+                            if (snapshot.connectionState == ConnectionState.waiting) {
+                              return SizedBox(
+                                height: 320,
+                                child: Center(child: CircularProgressIndicator()),
+                              );
+                            }
+                            if (snapshot.hasError || !snapshot.hasData || snapshot.data == null) {
+                              return Padding(
+                                padding: const EdgeInsets.all(32),
+                                child: Center(child: Text(localizations.noMealsLoggedForThisDay, style: TextStyle(color: Colors.grey[600], fontSize: 16))),
+                              );
+                            }
+                            final meals = snapshot.data!;
+                            return SafeArea(
+                              child: ListView(
+                                padding: const EdgeInsets.only(left: 0, right: 0, top: 0, bottom: 24),
+                                children: [
+                                  Padding(
+                                    padding: const EdgeInsets.fromLTRB(20, 18, 20, 0),
+                                    child: Text(_currentMealLabel, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 22)),
+                                  ),
+                                  ...List.generate(meals.length, (i) {
+                                    final meal = meals[i];
+                                    // Log the image URL for debugging
+                            
+                                    return Padding(
+                                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24), // increased from 20
+                                      child: Stack(
+                                        children: [
+                                          Container(
+                                            padding: const EdgeInsets.fromLTRB(0, 24, 48, 24), // <-- increased top and bottom padding
+                                            decoration: BoxDecoration(
+                                              color: Colors.white,
+                                              borderRadius: BorderRadius.circular(20),
+                                              boxShadow: [
+                                                BoxShadow(
+                                                  color: Colors.black.withOpacity(0.04),
+                                                  blurRadius: 10,
+                                                  offset: const Offset(0, 4),
+                                                ),
+                                              ],
+                                            ),
+                                            child: Row(
+                                              crossAxisAlignment: CrossAxisAlignment.start,
+                                              children: [
+                                                // Meal image
+                                                FutureBuilder<String?> (
+                                                  future: PexelsService.staticFetchMealImage(meal['meal_name'] as String? ?? '', locale: Locale(AppLocalizations.of(context)!.localeName)),
+                                                  builder: (context, snapshot) {
+                                                    if (snapshot.connectionState == ConnectionState.waiting) {
                                                       return ClipRRect(
                                                         borderRadius: BorderRadius.circular(16),
-                                                        child: imageUrl != null
-                                                            ? Image.network(
-                                                                imageUrl,
-                                                                width: 70,
-                                                                height: 70,
-                                                                fit: BoxFit.cover,
-                                                              )
-                                                            : Container(
-                                                                width: 70,
-                                                                height: 70,
-                                                                color: Colors.grey[200],
-                                                                child: Icon(Icons.fastfood, color: Colors.grey[400]),
-                                                              ),
+                                                        child: Container(
+                                                          width: 70,
+                                                          height: 70,
+                                                          color: Colors.grey[200],
+                                                          child: Center(child: CircularProgressIndicator(strokeWidth: 2, color: kPrimaryGreen)),
+                                                        ),
                                                       );
-                                                    },
-                                                  ),
-                                                  const SizedBox(width: 14),
-                                                  // Meal info
-                                                  Expanded(
-                                                    child: Column(
-                                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                                      mainAxisAlignment: MainAxisAlignment.center,
-                                                      children: [
-                                                        Row(
-                                                          children: [
-                                                            Expanded(
+                                                    }
+                                                    final imageUrl = snapshot.data;
+                                                    return ClipRRect(
+                                                      borderRadius: BorderRadius.circular(16),
+                                                      child: imageUrl != null
+                                                          ? Image.network(
+                                                              imageUrl,
+                                                              width: 70,
+                                                              height: 70,
+                                                              fit: BoxFit.cover,
+                                                            )
+                                                          : Container(
+                                                              width: 70,
+                                                              height: 70,
+                                                              color: Colors.grey[200],
+                                                              child: Icon(Icons.fastfood, color: Colors.grey[400]),
+                                                            ),
+                                                    );
+                                                  },
+                                                ),
+                                                const SizedBox(width: 14),
+                                                // Meal info
+                                                Expanded(
+                                                  child: Column(
+                                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                                    mainAxisAlignment: MainAxisAlignment.center,
+                                                    children: [
+                                                      Row(
+                                                        children: [
+                                                          Expanded(
+                                                            child: Text(
+                                                              meal['meal_name'] as String? ?? '',
+                                                              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                                                              maxLines: 1,
+                                                              overflow: TextOverflow.ellipsis,
+                                                            ),
+                                                          ),
+                                                          const SizedBox(width: 8),
+                                                          Text(
+                                                            '${meal['calories']} cal',
+                                                            style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
+                                                            maxLines: 1,
+                                                            overflow: TextOverflow.ellipsis,
+                                                          ),
+                                                        ],
+                                                      ),
+                                                      const SizedBox(height: 8),
+                                                      Text(meal['time'] as String? ?? '5 mins', style: TextStyle(color: Colors.grey[600], fontSize: 15)),
+                                                      const SizedBox(height: 8),
+                                                      Wrap(
+                                                        spacing: 8,
+                                                        runSpacing: 4,
+                                                        children: [
+                                                          for (final tag in (meal['benefits'] as List<dynamic>? ?? []))
+                                                            Container(
+                                                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                                              decoration: BoxDecoration(
+                                                                color: Colors.orange[50],
+                                                                borderRadius: BorderRadius.circular(10),
+                                                              ),
                                                               child: Text(
-                                                                meal['meal_name'] as String? ?? '',
-                                                                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                                                                tag.toString(),
+                                                                style: TextStyle(color: Colors.orange[700], fontWeight: FontWeight.w500, fontSize: 13),
                                                                 maxLines: 1,
                                                                 overflow: TextOverflow.ellipsis,
                                                               ),
                                                             ),
-                                                            const SizedBox(width: 8),
-                                                            Text(
-                                                              '${meal['calories']} cal',
-                                                              style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
-                                                              maxLines: 1,
-                                                              overflow: TextOverflow.ellipsis,
-                                                            ),
-                                                          ],
-                                                        ),
-                                                        const SizedBox(height: 8),
-                                                        Text(meal['time'] as String? ?? '5 mins', style: TextStyle(color: Colors.grey[600], fontSize: 15)),
-                                                        const SizedBox(height: 8),
-                                                        Wrap(
-                                                          spacing: 8,
-                                                          runSpacing: 4,
-                                                          children: [
-                                                            for (final tag in (meal['benefits'] as List<dynamic>? ?? []))
-                                                              Container(
-                                                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                                                                decoration: BoxDecoration(
-                                                                  color: Colors.orange[50],
-                                                                  borderRadius: BorderRadius.circular(10),
-                                                                ),
-                                                                child: Text(
-                                                                  tag.toString(),
-                                                                  style: TextStyle(color: Colors.orange[700], fontWeight: FontWeight.w500, fontSize: 13),
-                                                                  maxLines: 1,
-                                                                  overflow: TextOverflow.ellipsis,
-                                                                ),
-                                                              ),
-                                                          ],
-                                                        ),
-                                                      ],
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
-                                            ),
-                                            Positioned(
-                                              bottom: 18,
-                                              right: 18,
-                                              child: Material(
-                                                color: Colors.transparent,
-                                                child: InkWell(
-                                                  borderRadius: BorderRadius.circular(20),
-                                                  onTap: () {
-                                                    Navigator.of(context).push(
-                                                      MaterialPageRoute(
-                                                        builder: (_) => GeneratedMealFromFridgePage(meal: meal),
+                                                        ],
                                                       ),
-                                                    );
-                                                  },
-                                                  child: Container(
-                                                    decoration: BoxDecoration(
-                                                      color: Colors.green,
-                                                      borderRadius: BorderRadius.circular(20),
-                                                      boxShadow: [
-                                                        BoxShadow(
-                                                          color: Colors.green.withOpacity(0.12),
-                                                          blurRadius: 6,
-                                                          offset: Offset(0, 2),
-                                                        ),
-                                                      ],
-                                                    ),
-                                                    padding: const EdgeInsets.all(8),
-                                                    child: Icon(Icons.add, color: Colors.white, size: 24),
+                                                    ],
                                                   ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                          Positioned(
+                                            bottom: 18,
+                                            right: 18,
+                                            child: Material(
+                                              color: Colors.transparent,
+                                              child: InkWell(
+                                                borderRadius: BorderRadius.circular(20),
+                                                onTap: () {
+                                                  Navigator.of(context).push(
+                                                    MaterialPageRoute(
+                                                      builder: (_) => GeneratedMealFromFridgePage(meal: meal),
+                                                    ),
+                                                  );
+                                                },
+                                                child: Container(
+                                                  decoration: BoxDecoration(
+                                                    color: Colors.green,
+                                                    borderRadius: BorderRadius.circular(20),
+                                                    boxShadow: [
+                                                      BoxShadow(
+                                                        color: Colors.green.withOpacity(0.12),
+                                                        blurRadius: 6,
+                                                        offset: Offset(0, 2),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                  padding: const EdgeInsets.all(8),
+                                                  child: Icon(Icons.add, color: Colors.white, size: 24),
                                                 ),
                                               ),
                                             ),
-                                          ],
-                                        ),
-                                      );
-                                    }).toList(),
-                                  ],
-                                ),
-                              );
-                            },
-                          ),
+                                          ),
+                                        ],
+                                      ),
+                                    );
+                                  }).toList(),
+                                ],
+                              ),
+                            );
+                          },
                         ),
                       ),
                     ),
@@ -5351,16 +5372,7 @@ class _FabActionButton extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(label, style: TextStyle(fontWeight: FontWeight.w600, fontSize: 15, color: color)),
-                Container(
-                  margin: const EdgeInsets.only(top: 2),
-                  height: 4,
-                  width: 32,
-                  decoration: BoxDecoration(
-                    color: Color(0xFFFFF176), // Light yellow
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
+                Text(label, style: TextStyle(fontWeight: FontWeight.w600, fontSize: 15, color: color, decoration: TextDecoration.none)),
               ],
             ),
           ],
@@ -5504,94 +5516,96 @@ class SettingsPage extends StatelessWidget {
     final prefs = Provider.of<PreferencesProvider>(context);
     return Scaffold(
       appBar: AppBar(title: Text('Settings')),
-      body: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 24),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Preferences', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 22)),
+              SizedBox(height: 18),
+              Card(
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+                elevation: 2,
+                child: Column(
           children: [
-            Text('Preferences', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 22)),
-            SizedBox(height: 18),
-            Card(
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-              elevation: 2,
-              child: Column(
-        children: [
-          SwitchListTile(
-                    title: Text(AppLocalizations.of(context)!.darkMode, style: TextStyle(fontWeight: FontWeight.w600)),
-            subtitle: Text(AppLocalizations.of(context)!.enableDarkTheme),
-            value: prefs.darkMode,
-            onChanged: (v) => prefs.setDarkMode(v),
-            secondary: Icon(Icons.dark_mode),
-          ),
-                  Divider(height: 1, thickness: 1, indent: 16, endIndent: 16),
-          SwitchListTile(
-                    title: Text(AppLocalizations.of(context)!.useMetricUnits, style: TextStyle(fontWeight: FontWeight.w600)),
-            subtitle: Text(AppLocalizations.of(context)!.unitsSubtitle),
-            value: prefs.useMetric,
-            onChanged: (v) => prefs.setUnits(v),
-            secondary: Icon(Icons.straighten),
-          ),
-                  Divider(height: 1, thickness: 1, indent: 16, endIndent: 16),
-          ListTile(
-            leading: Icon(Icons.language),
-            title: Text(AppLocalizations.of(context)!.language, style: TextStyle(fontWeight: FontWeight.w600)),
-            subtitle: Text(AppLocalizations.of(context)!.selectLanguage),
-            trailing: DropdownButton<String>(
-              value: prefs.language,
-              items: [
-                DropdownMenuItem(value: 'en', child: Text('English')),
-                DropdownMenuItem(value: 'ar', child: Text('Arabic')),
-                DropdownMenuItem(value: 'es', child: Text('Spanish')),
-              ],
-              onChanged: (v) => prefs.setLanguage(v!),
+            SwitchListTile(
+                      title: Text(AppLocalizations.of(context)!.darkMode, style: TextStyle(fontWeight: FontWeight.w600)),
+              subtitle: Text(AppLocalizations.of(context)!.enableDarkTheme),
+              value: prefs.darkMode,
+              onChanged: (v) => prefs.setDarkMode(v),
+              secondary: Icon(Icons.dark_mode),
             ),
-          ),
+                    Divider(height: 1, thickness: 1, indent: 16, endIndent: 16),
+            SwitchListTile(
+                      title: Text(AppLocalizations.of(context)!.useMetricUnits, style: TextStyle(fontWeight: FontWeight.w600)),
+              subtitle: Text(AppLocalizations.of(context)!.unitsSubtitle),
+              value: prefs.useMetric,
+              onChanged: (v) => prefs.setUnits(v),
+              secondary: Icon(Icons.straighten),
+            ),
+                    Divider(height: 1, thickness: 1, indent: 16, endIndent: 16),
+            ListTile(
+              leading: Icon(Icons.language),
+              title: Text(AppLocalizations.of(context)!.language, style: TextStyle(fontWeight: FontWeight.w600)),
+              subtitle: Text(AppLocalizations.of(context)!.selectLanguage),
+              trailing: DropdownButton<String>(
+                value: prefs.language,
+                items: [
+                  DropdownMenuItem(value: 'en', child: Text('English')),
+                  DropdownMenuItem(value: 'ar', child: Text('Arabic')),
+                  DropdownMenuItem(value: 'es', child: Text('Spanish')),
                 ],
+                onChanged: (v) => prefs.setLanguage(v!),
               ),
             ),
-            SizedBox(height: 32),
-            Text('Habit Notifications', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 22)),
-            SizedBox(height: 18),
-            Card(
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-              elevation: 2,
-              child: Column(
-                children: [
-                  SwitchListTile(
-                    title: Text(AppLocalizations.of(context)!.mealLoggingPrompts, style: TextStyle(fontWeight: FontWeight.w600)),
-                    subtitle: Text(AppLocalizations.of(context)!.mealLoggingPromptsSubtitle),
-                    value: prefs.mealLoggingPrompts,
-                    onChanged: (v) => prefs.setMealLoggingPrompts(v),
-                    secondary: Icon(Icons.restaurant),
-                  ),
-                  Divider(height: 1, thickness: 1, indent: 16, endIndent: 16),
-                  SwitchListTile(
-                    title: Text(AppLocalizations.of(context)!.waterIntakeReminders, style: TextStyle(fontWeight: FontWeight.w600)),
-                    subtitle: Text(AppLocalizations.of(context)!.waterIntakeRemindersSubtitle),
-                    value: prefs.waterIntakeReminders,
-                    onChanged: (v) => prefs.setWaterIntakeReminders(v),
-                    secondary: Icon(Icons.water_drop),
-                  ),
-                  Divider(height: 1, thickness: 1, indent: 16, endIndent: 16),
-                  SwitchListTile(
-                    title: Text(AppLocalizations.of(context)!.mindfulWalksReminders, style: TextStyle(fontWeight: FontWeight.w600)),
-                    subtitle: Text(AppLocalizations.of(context)!.mindfulWalksRemindersSubtitle),
-                    value: prefs.mindfulWalksReminders,
-                    onChanged: (v) => prefs.setMindfulWalksReminders(v),
-                    secondary: Icon(Icons.directions_walk),
-                  ),
-                  Divider(height: 1, thickness: 1, indent: 16, endIndent: 16),
-                  SwitchListTile(
-                    title: Text(AppLocalizations.of(context)!.momentOfCalmAfterMeals, style: TextStyle(fontWeight: FontWeight.w600)),
-                    subtitle: Text(AppLocalizations.of(context)!.momentOfCalmAfterMealsSubtitle),
-                    value: prefs.momentOfCalmReminders,
-                    onChanged: (v) => prefs.setMomentOfCalmReminders(v),
-                    secondary: Icon(Icons.self_improvement),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
-          ],
+              SizedBox(height: 32),
+              Text('Habit Notifications', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 22)),
+              SizedBox(height: 18),
+              Card(
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+                elevation: 2,
+                child: Column(
+                  children: [
+                    SwitchListTile(
+                      title: Text(AppLocalizations.of(context)!.mealLoggingPrompts, style: TextStyle(fontWeight: FontWeight.w600)),
+                      subtitle: Text(AppLocalizations.of(context)!.mealLoggingPromptsSubtitle),
+                      value: prefs.mealLoggingPrompts,
+                      onChanged: (v) => prefs.setMealLoggingPrompts(v),
+                      secondary: Icon(Icons.restaurant),
+                    ),
+                    Divider(height: 1, thickness: 1, indent: 16, endIndent: 16),
+                    SwitchListTile(
+                      title: Text(AppLocalizations.of(context)!.waterIntakeReminders, style: TextStyle(fontWeight: FontWeight.w600)),
+                      subtitle: Text(AppLocalizations.of(context)!.waterIntakeRemindersSubtitle),
+                      value: prefs.waterIntakeReminders,
+                      onChanged: (v) => prefs.setWaterIntakeReminders(v),
+                      secondary: Icon(Icons.water_drop),
+                    ),
+                    Divider(height: 1, thickness: 1, indent: 16, endIndent: 16),
+                    SwitchListTile(
+                      title: Text(AppLocalizations.of(context)!.mindfulWalksReminders, style: TextStyle(fontWeight: FontWeight.w600)),
+                      subtitle: Text(AppLocalizations.of(context)!.mindfulWalksRemindersSubtitle),
+                      value: prefs.mindfulWalksReminders,
+                      onChanged: (v) => prefs.setMindfulWalksReminders(v),
+                      secondary: Icon(Icons.directions_walk),
+                    ),
+                    Divider(height: 1, thickness: 1, indent: 16, endIndent: 16),
+                    SwitchListTile(
+                      title: Text(AppLocalizations.of(context)!.momentOfCalmAfterMeals, style: TextStyle(fontWeight: FontWeight.w600)),
+                      subtitle: Text(AppLocalizations.of(context)!.momentOfCalmAfterMealsSubtitle),
+                      value: prefs.momentOfCalmReminders,
+                      onChanged: (v) => prefs.setMomentOfCalmReminders(v),
+                      secondary: Icon(Icons.self_improvement),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -5817,4 +5831,13 @@ Locale _getLocale(String code) {
   if (code == 'ar') return const Locale('ar');
   if (code == 'es') return const Locale('es');
   return const Locale('en');
+}
+
+// Helper to get current greeting based on time of day
+String get _currentGreeting {
+  final hour = DateTime.now().hour;
+  if (hour >= 5 && hour < 11) return 'Good morning ☀️';
+  if (hour >= 11 && hour < 16) return 'Good afternoon 🌤️';
+  if (hour >= 16 && hour < 21) return 'Good evening 🌇';
+  return 'Good night 🌙';
 }

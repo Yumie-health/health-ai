@@ -466,7 +466,13 @@ Respond ONLY with valid JSON.$languageInstruction
       languageInstruction = '\nRespond in Spanish.';
     }
     final prompt = '''
-You are a nutrition AI. Suggest 3 healthy $mealPeriod meals. For each meal, provide:
+You are a nutrition AI. Suggest 3 healthy $mealPeriod meals with maximum diversity and variety. Each meal should be completely different from the others in terms of:
+- Cuisine type (e.g., Mediterranean, Asian, Mexican, Italian, American, etc.)
+- Main ingredients (avoid repeating the same primary proteins or grains)
+- Cooking methods (baked, grilled, sautéed, raw, etc.)
+- Flavor profiles (sweet, savory, spicy, tangy, etc.)
+
+For each meal, provide:
 - meal_name: string (max 30 characters)
 - time: string (e.g. "10 mins")
 - benefits: array of 2 short strings (e.g. ["High Protein", "Low Sugar"])
@@ -476,7 +482,8 @@ You are a nutrition AI. Suggest 3 healthy $mealPeriod meals. For each meal, prov
 - carbs: integer
 - ingredients: array of strings
 - recipe: array of steps (strings)
-Respond ONLY with a JSON array of 3 objects, no extra text, no explanations, no markdown.$languageInstruction
+
+Ensure each meal is unique and offers different nutritional benefits. Respond ONLY with a JSON array of 3 objects, no extra text, no explanations, no markdown.$languageInstruction
 ''';
     final response = await http.post(
       Uri.parse(url),

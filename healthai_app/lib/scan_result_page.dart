@@ -12,6 +12,84 @@ import 'providers/preferences_provider.dart';
 import 'utils/constants.dart';
 import 'package:flutter/foundation.dart';
 
+// Custom TextField with floating Done button for iOS
+class _NumericTextField extends StatefulWidget {
+  final TextEditingController controller;
+  final String? hintText;
+  final InputDecoration? decoration;
+  final Function(String)? onChanged;
+  final bool enabled;
+
+  const _NumericTextField({
+    required this.controller,
+    this.hintText,
+    this.decoration,
+    this.onChanged,
+    this.enabled = true,
+  });
+
+  @override
+  State<_NumericTextField> createState() => _NumericTextFieldState();
+}
+
+class _NumericTextFieldState extends State<_NumericTextField> {
+  final FocusNode _focusNode = FocusNode();
+  bool _isFocused = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _focusNode.addListener(_onFocusChange);
+  }
+
+  void _onFocusChange() {
+    setState(() {
+      _isFocused = _focusNode.hasFocus;
+    });
+  }
+
+  void _onCheckmarkTap() {
+    FocusScope.of(context).unfocus();
+  }
+
+  @override
+  void dispose() {
+    _focusNode.removeListener(_onFocusChange);
+    _focusNode.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return TextField(
+      controller: widget.controller,
+      focusNode: _focusNode,
+      keyboardType: TextInputType.number,
+      enabled: widget.enabled,
+      onChanged: widget.onChanged,
+      decoration: (widget.decoration ?? InputDecoration(
+        hintText: widget.hintText,
+        contentPadding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
+        filled: true,
+        fillColor: kPrimaryGreen.withOpacity(0.07),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: BorderSide.none,
+        ),
+      )).copyWith(
+        suffixIcon: _isFocused && Theme.of(context).platform == TargetPlatform.iOS
+            ? IconButton(
+                icon: Icon(Icons.check, color: kPrimaryGreen, size: 20),
+                onPressed: _onCheckmarkTap,
+                padding: EdgeInsets.zero,
+                constraints: BoxConstraints(minWidth: 40, minHeight: 40),
+              )
+            : null,
+      ),
+    );
+  }
+}
+
 class ScanResultPage extends StatefulWidget {
   final String imagePath;
   final Map<String, dynamic>? prefill;
@@ -551,9 +629,8 @@ class _ScanResultPageState extends State<ScanResultPage> {
           ],
         ),
         const SizedBox(height: 6),
-        TextField(
+        _NumericTextField(
           controller: controller,
-          keyboardType: TextInputType.number,
           decoration: InputDecoration(
             filled: true,
             fillColor: color.withOpacity(0.06),
