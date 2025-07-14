@@ -4,7 +4,7 @@
       "source": "functions/functions",
       "codebase": "default",
       "platform": "gcfv1",
-      "runtime": "nodejs18",
+      "runtime": "nodejs20",
       "region": "us-central1",
       "ignore": [
         "node_modules",
