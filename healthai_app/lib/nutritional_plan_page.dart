@@ -71,7 +71,27 @@ class _NutritionalPlanPageState extends State<NutritionalPlanPage> {
     setState(() => isSaving = true);
     final user = FirebaseAuth.instance.currentUser;
     if (user != null && userData != null) {
+      // Check if weight was changed
+      final originalWeight = originalData?['weight']?.toDouble() ?? 0.0;
+      final newWeight = userData!['weight']?.toDouble() ?? 0.0;
+      final weightChange = newWeight - originalWeight;
+      
+      // Update the user data
       await FirebaseFirestore.instance.collection('users').doc(user.uid).update(userData!);
+      
+      // If weight changed, also update the weight change tracking
+      if (weightChange != 0) {
+        // Get current total weight change
+        final currentTotalChange = originalData?['totalWeightChange']?.toDouble() ?? 0.0;
+        final newTotalChange = currentTotalChange + weightChange;
+        
+        await FirebaseFirestore.instance.collection('users').doc(user.uid).update({
+          'lastWeightChange': weightChange,
+          'lastWeightUpdate': DateTime.now(),
+          'totalWeightChange': newTotalChange,
+        });
+      }
+      
       setState(() {
         originalData = Map<String, dynamic>.from(userData!);
         editingField = null;
@@ -154,6 +174,12 @@ class _NutritionalPlanPageState extends State<NutritionalPlanPage> {
                       onChanged: (v) => _updateField('age', v),
                     )
                   : null,
+              hasChanges: hasChanges,
+              isSaving: isSaving,
+              onUndo: _undoChanges,
+              onCancel: _cancelEdit,
+              onSave: _saveChanges,
+              localizations: localizations,
             ),
             _EditableCard(
               label: localizations.weight,
@@ -169,6 +195,12 @@ class _NutritionalPlanPageState extends State<NutritionalPlanPage> {
                       onChanged: (v) => _updateField('weight', useMetric ? v : v / 2.20462),
                     )
                   : null,
+              hasChanges: hasChanges,
+              isSaving: isSaving,
+              onUndo: _undoChanges,
+              onCancel: _cancelEdit,
+              onSave: _saveChanges,
+              localizations: localizations,
             ),
             _EditableCard(
               label: localizations.height,
@@ -189,6 +221,12 @@ class _NutritionalPlanPageState extends State<NutritionalPlanPage> {
                           onChanged: (ft, inch) => _updateField('height', (ft * 12 + inch) * 2.54),
                         ))
                   : null,
+              hasChanges: hasChanges,
+              isSaving: isSaving,
+              onUndo: _undoChanges,
+              onCancel: _cancelEdit,
+              onSave: _saveChanges,
+              localizations: localizations,
             ),
             _EditableCard(
               label: localizations.targetWeight,
@@ -204,6 +242,12 @@ class _NutritionalPlanPageState extends State<NutritionalPlanPage> {
                       onChanged: (v) => _updateField('targetWeight', useMetric ? v : v / 2.20462),
                     )
                   : null,
+              hasChanges: hasChanges,
+              isSaving: isSaving,
+              onUndo: _undoChanges,
+              onCancel: _cancelEdit,
+              onSave: _saveChanges,
+              localizations: localizations,
             ),
             _EditableCard(
               label: localizations.calorieGoal,
@@ -219,6 +263,12 @@ class _NutritionalPlanPageState extends State<NutritionalPlanPage> {
                       onChanged: (v) => _updateField('dailyCalorieGoal', v.round()),
                     )
                   : null,
+              hasChanges: hasChanges,
+              isSaving: isSaving,
+              onUndo: _undoChanges,
+              onCancel: _cancelEdit,
+              onSave: _saveChanges,
+              localizations: localizations,
             ),
             _EditableCard(
               label: localizations.proteinGoal,
@@ -234,6 +284,12 @@ class _NutritionalPlanPageState extends State<NutritionalPlanPage> {
                       onChanged: (v) => _updateField('proteinGoal', v.round()),
                     )
                   : null,
+              hasChanges: hasChanges,
+              isSaving: isSaving,
+              onUndo: _undoChanges,
+              onCancel: _cancelEdit,
+              onSave: _saveChanges,
+              localizations: localizations,
             ),
             _EditableCard(
               label: localizations.carbGoal,
@@ -249,6 +305,12 @@ class _NutritionalPlanPageState extends State<NutritionalPlanPage> {
                       onChanged: (v) => _updateField('carbsGoal', v.round()),
                     )
                   : null,
+              hasChanges: hasChanges,
+              isSaving: isSaving,
+              onUndo: _undoChanges,
+              onCancel: _cancelEdit,
+              onSave: _saveChanges,
+              localizations: localizations,
             ),
             _EditableCard(
               label: localizations.fatGoal,
@@ -264,6 +326,12 @@ class _NutritionalPlanPageState extends State<NutritionalPlanPage> {
                       onChanged: (v) => _updateField('fatGoal', v.round()),
                     )
                   : null,
+              hasChanges: hasChanges,
+              isSaving: isSaving,
+              onUndo: _undoChanges,
+              onCancel: _cancelEdit,
+              onSave: _saveChanges,
+              localizations: localizations,
             ),
             _EditableCard(
               label: localizations.waterIntake,
@@ -279,29 +347,12 @@ class _NutritionalPlanPageState extends State<NutritionalPlanPage> {
                       onChanged: (v) => _updateField('waterIntake', v.toStringAsFixed(1) + 'L'),
                     )
                   : null,
-            ),
-            SizedBox(height: 28),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                if (hasChanges)
-                  OutlinedButton.icon(
-                    icon: Icon(Icons.undo),
-                    label: Text(localizations.undo),
-                    onPressed: _undoChanges,
-                  ),
-                if (editingField != null)
-                  OutlinedButton.icon(
-                    icon: Icon(Icons.cancel),
-                    label: Text(localizations.cancel),
-                    onPressed: _cancelEdit,
-                  ),
-                ElevatedButton.icon(
-                  icon: isSaving ? SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)) : Icon(Icons.save),
-                  label: Text(localizations.save),
-                  onPressed: hasChanges && !isSaving ? _saveChanges : null,
-                ),
-              ],
+              hasChanges: hasChanges,
+              isSaving: isSaving,
+              onUndo: _undoChanges,
+              onCancel: _cancelEdit,
+              onSave: _saveChanges,
+              localizations: localizations,
             ),
           ],
         ),
@@ -333,7 +384,28 @@ class _EditableCard extends StatelessWidget {
   final VoidCallback onTap;
   final Widget? editor;
   final Widget? trailing;
-  const _EditableCard({required this.label, required this.value, required this.isEditing, required this.onTap, this.editor, this.trailing});
+  final bool hasChanges;
+  final bool isSaving;
+  final VoidCallback? onUndo;
+  final VoidCallback? onCancel;
+  final VoidCallback? onSave;
+  final AppLocalizations localizations;
+  
+  const _EditableCard({
+    required this.label, 
+    required this.value, 
+    required this.isEditing, 
+    required this.onTap, 
+    this.editor, 
+    this.trailing,
+    required this.hasChanges,
+    required this.isSaving,
+    this.onUndo,
+    this.onCancel,
+    this.onSave,
+    required this.localizations,
+  });
+  
   @override
   Widget build(BuildContext context) {
     return Card(
@@ -368,6 +440,32 @@ class _EditableCard extends StatelessWidget {
               isEditing && editor != null
                   ? editor!
                   : Text(value, style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black)),
+              // Action buttons that appear under the card when editing
+              if (isEditing) ...[
+                SizedBox(height: 16),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    if (hasChanges)
+                      OutlinedButton.icon(
+                        icon: Icon(Icons.undo),
+                        label: Text(localizations.undo),
+                        onPressed: onUndo,
+                      ),
+                    if (onCancel != null)
+                      OutlinedButton.icon(
+                        icon: Icon(Icons.cancel),
+                        label: Text(localizations.cancel),
+                        onPressed: onCancel,
+                      ),
+                    ElevatedButton.icon(
+                      icon: isSaving ? SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)) : Icon(Icons.save),
+                      label: Text(localizations.save),
+                      onPressed: hasChanges && !isSaving ? onSave : null,
+                    ),
+                  ],
+                ),
+              ],
             ],
           ),
         ),

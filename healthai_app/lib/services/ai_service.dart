@@ -21,7 +21,7 @@ class AIService {
     try {
       log.info('Sending AI message', {'model': model, 'message_length': message.length});
       
-      final url = 'https://us-central1-healthai-0001.cloudfunctions.net/openaiProxyCallable';
+      final url = 'https://openaiproxycallable-jlkcfxcyrq-uc.a.run.app';
       final response = await http.post(
         Uri.parse(url),
         headers: {'Content-Type': 'application/json'},
@@ -106,7 +106,7 @@ class AIService {
         ...chatHistory,
       ];
 
-      final url = 'https://us-central1-healthai-0001.cloudfunctions.net/openaiProxyCallable';
+      final url = 'https://openaiproxycallable-jlkcfxcyrq-uc.a.run.app';
       final response = await http.post(
         Uri.parse(url),
         headers: {'Content-Type': 'application/json'},
@@ -285,7 +285,7 @@ Carbs: 250
 
   /// Analyze a meal image and return food name, macros, and ingredients.
   Future<Map<String, dynamic>?> analyzeMealImage(File imageFile, {String language = 'en'}) async {
-    final url = 'https://us-central1-healthai-0001.cloudfunctions.net/openaiProxyCallable';
+    final url = 'https://openaiproxycallable-jlkcfxcyrq-uc.a.run.app';
     final bytes = await imageFile.readAsBytes();
     final base64Image = base64Encode(bytes);
     final dataUrl = 'data:image/jpeg;base64,$base64Image';
@@ -337,7 +337,7 @@ Respond ONLY with valid JSON.$languageInstruction
 
   /// Analyze a fridge image and return a list of detected items.
   Future<List<String>?> analyzeFridgeImage(File imageFile, {String language = 'en'}) async {
-    final url = 'https://us-central1-healthai-0001.cloudfunctions.net/openaiProxyCallable';
+    final url = 'https://openaiproxycallable-jlkcfxcyrq-uc.a.run.app';
     final bytes = await imageFile.readAsBytes();
     final base64Image = base64Encode(bytes);
     final dataUrl = 'data:image/jpeg;base64,$base64Image';
@@ -390,7 +390,7 @@ You are a kitchen assistant AI. Given this photo of a fridge, return a JSON arra
     required Map<String, dynamic> userProfile,
     String language = 'en',
   }) async {
-    final url = 'https://us-central1-healthai-0001.cloudfunctions.net/openaiProxyCallable';
+    final url = 'https://openaiproxycallable-jlkcfxcyrq-uc.a.run.app';
     String languageInstruction = '';
     if (language == 'ar') {
       languageInstruction = '\nRespond in Modern Standard Arabic.';
@@ -437,8 +437,8 @@ Respond ONLY with valid JSON.$languageInstruction
   /// Get AI-powered suggested meals for a given meal period, with persistent cache
   Future<List<Map<String, dynamic>>?> getSuggestedMeals({required String mealPeriod, String language = 'en'}) async {
     final prefs = await SharedPreferences.getInstance();
-    final cacheKey = '$_suggestedMealsCacheKey");${mealPeriod}_$language';
-    final cacheTimeKey = '$_suggestedMealsCacheTimeKey");${mealPeriod}_$language';
+    final cacheKey = '$_suggestedMealsCacheKey${mealPeriod}_$language';
+    final cacheTimeKey = '$_suggestedMealsCacheTimeKey${mealPeriod}_$language';
     final now = DateTime.now();
 
     // Check cache (valid for current period only)
@@ -458,7 +458,7 @@ Respond ONLY with valid JSON.$languageInstruction
     }
 
     // Fetch new data if no valid cache
-    final url = 'https://us-central1-healthai-0001.cloudfunctions.net/openaiProxyCallable';
+    final url = 'https://openaiproxycallable-jlkcfxcyrq-uc.a.run.app';
     String languageInstruction = '';
     if (language == 'ar') {
       languageInstruction = '\nRespond in Modern Standard Arabic.';
@@ -542,8 +542,8 @@ Ensure each meal is unique and offers different nutritional benefits. Respond ON
   // Optionally, add a method to clear cache for a period (e.g., on manual refresh)
   Future<void> clearSuggestedMealsCache(String mealPeriod, String language) async {
     final prefs = await SharedPreferences.getInstance();
-    final cacheKey = '$_suggestedMealsCacheKey");${mealPeriod}_$language';
-    final cacheTimeKey = '$_suggestedMealsCacheTimeKey");${mealPeriod}_$language';
+    final cacheKey = '$_suggestedMealsCacheKey${mealPeriod}_$language';
+    final cacheTimeKey = '$_suggestedMealsCacheTimeKey${mealPeriod}_$language';
     await prefs.remove(cacheKey);
     await prefs.remove(cacheTimeKey);
   }

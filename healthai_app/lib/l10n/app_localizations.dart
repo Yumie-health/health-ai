@@ -109,17 +109,7 @@ abstract class AppLocalizations {
   /// **'Preferences'**
   String get preferences;
 
-  /// No description provided for @darkMode.
-  ///
-  /// In en, this message translates to:
-  /// **'Dark Mode'**
-  String get darkMode;
 
-  /// No description provided for @enableDarkTheme.
-  ///
-  /// In en, this message translates to:
-  /// **'Enable dark theme'**
-  String get enableDarkTheme;
 
   /// No description provided for @useMetricUnits.
   ///

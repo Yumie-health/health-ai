@@ -8,7 +8,6 @@ final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin = FlutterL
 
 // Preferences Provider
 class PreferencesProvider extends ChangeNotifier {
-  bool _darkMode = false;
   bool _useMetric = true;
   bool _mealLoggingPrompts = false;
   bool _waterIntakeReminders = false;
@@ -16,7 +15,6 @@ class PreferencesProvider extends ChangeNotifier {
   bool _momentOfCalmReminders = false;
   String _language = 'en';
 
-  bool get darkMode => _darkMode;
   bool get useMetric => _useMetric;
   bool get mealLoggingPrompts => _mealLoggingPrompts;
   bool get waterIntakeReminders => _waterIntakeReminders;
@@ -30,20 +28,12 @@ class PreferencesProvider extends ChangeNotifier {
 
   Future<void> _loadPrefs() async {
     final prefs = await SharedPreferences.getInstance();
-    _darkMode = prefs.getBool('darkMode') ?? false;
     _useMetric = prefs.getBool('useMetric') ?? true;
     _mealLoggingPrompts = prefs.getBool('mealLoggingPrompts') ?? false;
     _waterIntakeReminders = prefs.getBool('waterIntakeReminders') ?? false;
     _mindfulWalksReminders = prefs.getBool('mindfulWalksReminders') ?? false;
     _momentOfCalmReminders = prefs.getBool('momentOfCalmReminders') ?? false;
     _language = prefs.getString('language') ?? 'en';
-    notifyListeners();
-  }
-
-  Future<void> setDarkMode(bool value) async {
-    final prefs = await SharedPreferences.getInstance();
-    _darkMode = value;
-    await prefs.setBool('darkMode', value);
     notifyListeners();
   }
 

@@ -12,6 +12,7 @@ class UserProfile {
   final int carbsGoal; // in grams
   final int fatGoal; // in grams
   final double targetWeight; // in kg
+  final double startingWeight; // in kg - the initial weight when user first started
   final DateTime createdAt;
   final DateTime lastUpdated;
   final String photoUrl;
@@ -30,6 +31,7 @@ class UserProfile {
     required this.carbsGoal,
     required this.fatGoal,
     required this.targetWeight,
+    required this.startingWeight,
     required this.createdAt,
     required this.lastUpdated,
     this.photoUrl = '',
@@ -49,6 +51,7 @@ class UserProfile {
       'carbsGoal': carbsGoal,
       'fatGoal': fatGoal,
       'targetWeight': targetWeight,
+      'startingWeight': startingWeight,
       'createdAt': createdAt,
       'lastUpdated': lastUpdated,
       'photoUrl': photoUrl,
@@ -71,6 +74,7 @@ class UserProfile {
       carbsGoal: data['carbsGoal'] ?? 250,
       fatGoal: data['fatGoal'] ?? 70,
       targetWeight: (data['targetWeight'] ?? 0).toDouble(),
+      startingWeight: (data['startingWeight'] ?? data['weight'] ?? 0).toDouble(), // Default to current weight if not set
       createdAt: (data['createdAt'] as Timestamp).toDate(),
       lastUpdated: (data['lastUpdated'] as Timestamp).toDate(),
       photoUrl: data['photoUrl'] ?? '',

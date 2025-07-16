@@ -21,6 +21,10 @@ import 'package:url_launcher/url_launcher.dart';
 import 'onboarding_flow.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:sign_in_with_apple/sign_in_with_apple.dart';
+import 'dart:convert';
+import 'dart:math';
+import 'package:crypto/crypto.dart';
 import 'services/ai_service.dart';
 import 'package:lottie/lottie.dart';
 import 'generated_meal_fridge_page.dart';
@@ -44,6 +48,7 @@ import 'services/error_handler.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'config/payment_config.dart';
 import 'services/subscription_service.dart';
+import 'subscription_page.dart';
 
 // Custom TextField with floating Done button for iOS
 class _NumericTextField extends StatefulWidget {
@@ -132,8 +137,32 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(); // FIRST: Initialize Firebase
+  
+  // Initialize Firebase with explicit auth domain
+  await Firebase.initializeApp(
+    options: FirebaseOptions(
+      apiKey: 'AIzaSyDgo9inWvcAGhfbJhuifQ4uczcetzNubwY',
+      appId: '1:389852437815:ios:364ea4121cfb0571e54eb2',
+      messagingSenderId: '389852437815',
+      projectId: 'healthai-0001',
+      authDomain: 'healthai-0001.firebaseapp.com',
+      storageBucket: 'healthai-0001.firebasestorage.app',
+      iosClientId: '389852437815-mkmkkvh4rfonvcml0n71qrmirf3ebire.apps.googleusercontent.com',
+      iosBundleId: 'com.yumie.healthai',
+    ),
+  );
+  
+  // Verify Firebase configuration
+  print('Firebase initialized with project: ${Firebase.app().options.projectId}');
+  print('Firebase auth domain: ${Firebase.app().options.authDomain}');
+  print('Firebase iOS bundle ID: ${Firebase.app().options.iosBundleId}');
+  
   log.initialize(); // THEN: Initialize logging service
+  
+  // Force Firebase to use the correct project
+  print('Firebase project ID: ${Firebase.app().options.projectId}');
+  print('Firebase app name: ${Firebase.app().name}');
+  print('Firebase options: ${Firebase.app().options}');
   try {
     print('Firebase initialized');
 
@@ -348,7 +377,7 @@ class HealthAIApp extends StatelessWidget {
         iconTheme: const IconThemeData(color: Colors.white),
         dividerColor: Colors.white24,
       ),
-      themeMode: prefs.darkMode ? ThemeMode.dark : ThemeMode.light,
+              themeMode: ThemeMode.light,
       home: const SplashOrApp(),
     );
   }
@@ -562,7 +591,7 @@ class _AuthScreenState extends State<AuthScreen> {
     }
   }
 
-  void _handleGoogleSignIn() async {
+  Future<void> _handleGoogleSignIn() async {
     setState(() => isLoading = true);
     try {
       final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
@@ -610,12 +639,164 @@ class _AuthScreenState extends State<AuthScreen> {
     }
   }
 
-  void _handleAppleSignIn() {
-    // TODO: Implement Apple sign-in
+  Future<void> _handleAppleSignIn() async {
+    setState(() => isLoading = true);
+    try {
+      log.info('User attempting Apple sign-in');
+      
+      // Generate a random nonce for security (matches Firebase docs)
+      final nonce = _generateNonce();
+      log.info('Generated nonce: ${nonce.substring(0, 10)}...');
+      
+      // Request Apple Sign In with SHA256 hash of nonce (matches Firebase docs)
+      log.info('Requesting Apple ID credential with hashed nonce...');
+      final credential = await SignInWithApple.getAppleIDCredential(
+        scopes: [
+          AppleIDAuthorizationScopes.email,
+          AppleIDAuthorizationScopes.fullName,
+        ],
+        nonce: _sha256ofString(nonce), // Send SHA256 hash to Apple
+      );
+      log.info('Apple ID credential received successfully');
+      
+      // Validate the response (matches Firebase docs approach)
+      if (credential.identityToken == null) {
+        throw Exception('Apple Sign-In failed: No identity token received');
+      }
+      
+      log.info('Creating Firebase OAuth credential with raw nonce...');
+      log.info('Identity token length: ${credential.identityToken?.length ?? 0}');
+      log.info('Raw nonce: $nonce');
+      log.info('Hashed nonce sent to Apple: ${_sha256ofString(nonce)}');
+      
+      // Create OAuth credential with raw nonce (matches Firebase docs)
+      final oauthCredential = OAuthProvider("apple").credential(
+        idToken: credential.identityToken,
+        rawNonce: nonce, // Use raw nonce for Firebase validation
+      );
+      
+      // Sign in to Firebase
+      log.info('Signing in to Firebase with Apple credential...');
+      log.info('Firebase Auth instance: ${FirebaseAuth.instance.app.name}');
+      log.info('Firebase Auth app options: ${FirebaseAuth.instance.app.options}');
+      log.info('Firebase Auth current user: ${FirebaseAuth.instance.currentUser?.uid}');
+      log.info('Firebase project ID: ${FirebaseAuth.instance.app.options.projectId}');
+      log.info('Firebase auth domain: ${FirebaseAuth.instance.app.options.authDomain}');
+      
+      // Additional debugging info
+      log.info('OAuth provider: apple');
+      log.info('ID token present: ${credential.identityToken != null}');
+      log.info('Raw nonce length: ${nonce.length}');
+      log.info('Full name: ${credential.givenName} ${credential.familyName}');
+      log.info('Email: ${credential.email}');
+      
+      final userCredential = await FirebaseAuth.instance.signInWithCredential(oauthCredential);
+      final user = userCredential.user;
+      
+      if (user != null) {
+        await analytics.logLogin(loginMethod: 'apple');
+        log.logUserAction('sign_in_successful', {'method': 'apple'});
+        
+        // Check if user profile exists, if not, create it
+        final userService = UserService();
+        final doc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
+        if (!doc.exists) {
+          // Create user profile with Apple data
+          final displayName = credential.givenName != null && credential.familyName != null
+              ? '${credential.givenName} ${credential.familyName}'
+              : user.displayName ?? '';
+          await userService.createInitialUserProfile(user.email ?? '', displayName);
+        }
+        
+        // Check if onboarding is complete
+        final data = doc.data() as Map<String, dynamic>?;
+        final onboardingCompleted = hasCompletedOnboarding(data);
+        
+        setState(() => message = 'Apple sign-in successful!');
+        if (mounted) {
+          if (!onboardingCompleted) {
+            Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => OnboardingFlowPage()));
+          } else {
+            Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => MainNavScreen()));
+          }
+        }
+      }
+    } catch (e) {
+      setState(() => isLoading = false);
+      log.error('Apple sign-in failed with error: $e');
+      log.error('Error type: ${e.runtimeType}');
+      
+      // Enhanced error logging based on Firebase documentation
+      if (e.toString().contains('Invalid OAuth response')) {
+        log.error('OAuth response error - check Firebase Console Apple Sign-In configuration');
+        log.error('Verify Services ID, Team ID, Key ID, and Private Key are correct');
+      }
+      if (e.toString().contains('internal-error')) {
+        log.error('Firebase internal error - check configuration:');
+        log.error('1. Apple Sign-In enabled in Firebase Console');
+        log.error('2. Services ID: com.yumie.healthai.signin');
+        log.error('3. Team ID: BT7WG9ZHD3');
+        log.error('4. Key ID: CLV527A2J9');
+        log.error('5. Private key properly configured');
+      }
+      if (e.toString().contains('localhost')) {
+        log.error('Firebase redirecting to localhost - auth domain configuration issue');
+        log.error('Check Firebase Console auth domain settings');
+      }
+      if (e.toString().contains('MissingOrInvalidNonce')) {
+        log.error('Nonce validation failed - check SHA256 hashing implementation');
+        log.error('Make sure nonce is properly hashed before sending to Apple');
+      }
+      
+      await analytics.logEvent(name: 'login_failed', parameters: {'method': 'apple', 'error': e.toString()});
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Apple sign-in failed: $e')),
+      );
+    }
   }
 
-  void _handleSamsungSignIn() {
-    // TODO: Implement Samsung sign-in
+  /// Generates a cryptographically secure random nonce, to be included in a
+  /// credential request. This matches the Firebase documentation approach.
+  String _generateNonce([int length = 32]) {
+    const charset = '0123456789ABCDEFGHIJKLMNOPQRSTUVXYZabcdefghijklmnopqrstuvwxyz-._';
+    final random = Random.secure();
+    return List.generate(length, (_) => charset[random.nextInt(charset.length)]).join();
+  }
+
+  /// Returns the sha256 hash of [input] in hex notation.
+  /// This matches the Firebase documentation approach for Apple Sign-In.
+  String _sha256ofString(String input) {
+    final bytes = utf8.encode(input);
+    final digest = sha256.convert(bytes);
+    return digest.toString();
+  }
+
+  Future<void> _handleSamsungSignIn() async {
+    setState(() => isLoading = true);
+    try {
+      log.info('User attempting Samsung sign-in');
+      
+      // For Samsung Sign In, we'll use a custom implementation
+      // This would typically involve Samsung's SDK, but for now we'll show a message
+      // In a real implementation, you would integrate Samsung's authentication SDK
+      
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Samsung Sign In requires Samsung SDK integration. Please use Google Sign In for now.'),
+          duration: Duration(seconds: 3),
+        ),
+      );
+      
+      // For now, we'll redirect to Google Sign In as a fallback
+      await _handleGoogleSignIn();
+      
+    } catch (e) {
+      setState(() => isLoading = false);
+      await analytics.logEvent(name: 'login_failed', parameters: {'method': 'samsung', 'error': e.toString()});
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Samsung sign-in failed: $e')),
+      );
+    }
   }
 
   Future<void> signIn() async {
@@ -1128,9 +1309,10 @@ class _StartupProfileScreenState extends State<StartupProfileScreen> {
         proteinGoal: int.parse(proteinController.text),
         carbsGoal: int.parse(carbsController.text),
         fatGoal: int.parse(fatController.text),
+        targetWeight: double.parse(weightController.text),
+        startingWeight: double.parse(weightController.text), // Set starting weight to initial weight
         createdAt: now,
         lastUpdated: now,
-        targetWeight: double.parse(weightController.text),
       );
       await FirebaseFirestore.instance.collection('users').doc(widget.user.uid).set(profile.toMap());
       if (mounted) {
@@ -1549,6 +1731,65 @@ class _MainNavScreenState extends State<MainNavScreen> with TickerProviderStateM
     Navigator.of(context).push(MaterialPageRoute(builder: (_) => const ScanPage()));
   }
 
+  void _navigateToWeightLog() async {
+    setState(() {
+      _fabExpanded = false;
+      _showFabActions = false;
+    });
+    
+    double? weightChange = await showDialog<double>(
+      context: context,
+      builder: (context) => _WeightLogDialog(),
+    );
+    
+    if (weightChange != null) {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user != null) {
+        final doc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
+        final data = doc.data() ?? {};
+        final double currentWeight = (data['weight'] ?? 0.0).toDouble();
+        final double newWeight = currentWeight + weightChange;
+        
+        // Get the current total weight change
+        final double currentTotalChange = (data['totalWeightChange'] ?? 0.0).toDouble();
+        final double newTotalChange = currentTotalChange + weightChange;
+        
+        await FirebaseFirestore.instance.collection('users').doc(user.uid).update({
+          'weight': newWeight,
+          'lastWeightChange': weightChange,
+          'lastWeightUpdate': DateTime.now(),
+          'totalWeightChange': newTotalChange,
+        });
+      }
+    }
+  }
+
+  void _navigateToWaterLog() async {
+    setState(() {
+      _fabExpanded = false;
+      _showFabActions = false;
+    });
+    
+    // Show water log dialog
+    int? amount = await showDialog<int>(
+      context: context,
+      builder: (context) => _WaterLogSliderDialog(),
+    );
+    if (amount != null) {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user != null) {
+        final doc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
+        final data = doc.data() ?? {};
+        final int prev = (data['waterLoggedMl'] ?? 0) as int;
+        final int newAmount = prev + amount;
+        await FirebaseFirestore.instance.collection('users').doc(user.uid).update({
+          'waterLoggedMl': newAmount < 0 ? 0 : newAmount,
+          'lastUpdated': DateTime.now(),
+        });
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Stack(
@@ -1601,7 +1842,7 @@ class _MainNavScreenState extends State<MainNavScreen> with TickerProviderStateM
                             selected: _selectedIndex == 1,
                             onTap: () => _onItemTapped(1),
                           ),
-                          SizedBox(width: 64), // Space for FAB
+                          SizedBox(width: 56), // Space for FAB
                           _AnimatedNavBarItem(
                             icon: Icons.chat_bubble_outline,
                             label: AppLocalizations.of(context)!.coach,
@@ -1617,17 +1858,20 @@ class _MainNavScreenState extends State<MainNavScreen> with TickerProviderStateM
                           ),
                         ],
                       ),
+                      // FAB positioned in the center of the footer
+                      Positioned(
+                        top: 7,
+                        child: _AnimatedFab(
+                          expanded: _fabExpanded,
+                          onTap: () => _onItemTapped(2),
+                        ),
+                      ),
                     ],
                   ),
                 ),
               ),
             ),
           ),
-          floatingActionButton: _AnimatedFab(
-              expanded: _fabExpanded,
-              onTap: () => _onItemTapped(2),
-            ),
-          floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
         ),
         // Overlay for Log/Scan
         if (_fabExpanded)
@@ -1642,19 +1886,47 @@ class _MainNavScreenState extends State<MainNavScreen> with TickerProviderStateM
                     if (_showFabActions)
                       Positioned(
                         bottom: 120, // Adjust for raised FAB
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
                           children: [
-                            _FabActionButton(
-                              label: AppLocalizations.of(context)!.log,
-                              icon: Icons.edit,
-                              onTap: _navigateToLog,
+                            // First row: Weight and Water (small buttons)
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                _FabActionButton(
+                                  label: 'Weight',
+                                  icon: Icons.monitor_weight,
+                                  onTap: _navigateToWeightLog,
+                                  isLarge: false,
+                                ),
+                                const SizedBox(width: 40),
+                                _FabActionButton(
+                                  label: 'Water',
+                                  icon: Icons.water_drop,
+                                  onTap: _navigateToWaterLog,
+                                  isLarge: false,
+                                ),
+                              ],
                             ),
-                            const SizedBox(width: 32),
-                            _FabActionButton(
-                              label: AppLocalizations.of(context)!.scan,
-                              icon: Icons.camera_alt,
-                              onTap: _navigateToScan,
+                            const SizedBox(height: 20),
+                            // Second row: Log and Scan (big buttons)
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                _FabActionButton(
+                                  label: AppLocalizations.of(context)!.log,
+                                  icon: Icons.edit,
+                                  onTap: _navigateToLog,
+                                  isLarge: true,
+                                ),
+                                const SizedBox(width: 40),
+                                _FabActionButton(
+                                  label: AppLocalizations.of(context)!.scan,
+                                  icon: Icons.camera_alt,
+                                  onTap: _navigateToScan,
+                                  isLarge: true,
+                                ),
+                              ],
                             ),
                           ],
                         ),
@@ -1751,8 +2023,8 @@ class _AnimatedFabState extends State<_AnimatedFab> with SingleTickerProviderSta
         return GestureDetector(
           onTap: widget.onTap,
           child: Container(
-            width: 64,
-            height: 64,
+            width: 56,
+            height: 56,
             decoration: BoxDecoration(
               color: color,
               shape: BoxShape.circle,
@@ -1765,7 +2037,7 @@ class _AnimatedFabState extends State<_AnimatedFab> with SingleTickerProviderSta
               ],
             ),
             child: Center(
-              child: Icon(icon, color: iconColor, size: 32),
+              child: Icon(icon, color: iconColor, size: 28),
             ),
           ),
         );
@@ -1801,6 +2073,7 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
     _quickActionsController = AnimationController(vsync: this, duration: const Duration(milliseconds: 700));
     _mealsController = AnimationController(vsync: this, duration: const Duration(milliseconds: 700));
     _playEntranceAnimationsIfNeeded();
+    _checkAndResetWaterIntake();
   }
 
   void _playEntranceAnimationsIfNeeded() {
@@ -1821,6 +2094,27 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
       _summaryController.value = 1.0;
       _quickActionsController.value = 1.0;
       _mealsController.value = 1.0;
+    }
+  }
+
+  // Check and reset water intake daily
+  Future<void> _checkAndResetWaterIntake() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+    
+    final prefs = await SharedPreferences.getInstance();
+    final lastWaterResetKey = 'last_water_reset_${user.uid}';
+    final lastResetDate = prefs.getString(lastWaterResetKey);
+    final today = DateTime.now();
+    final todayStr = '${today.year}-${today.month}-${today.day}';
+    
+    // If it's a new day, reset water intake
+    if (lastResetDate != todayStr) {
+      await FirebaseFirestore.instance.collection('users').doc(user.uid).update({
+        'waterLoggedMl': 0,
+        'lastUpdated': DateTime.now(),
+      });
+      await prefs.setString(lastWaterResetKey, todayStr);
     }
   }
 
@@ -2008,7 +2302,7 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
                                         ),
                                       ),
                                       // Water Intake Tracker
-                                      StreamBuilder<UserProfile?>(
+                                      StreamBuilder<UserProfile?> (
                                         stream: _userService.getCurrentUserProfile(),
                                         builder: (context, userSnap) {
                                           if (!userSnap.hasData) return SizedBox.shrink();
@@ -2018,44 +2312,30 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
                                           final int waterGoalMl = (waterGoal * 1000).round();
                                           final int waterLoggedMl = userProfile.waterLoggedMl ?? 0;
                                           final double percent = (waterLoggedMl / waterGoalMl).clamp(0.0, 1.0);
-                                          return Padding(
+                                          return Container(
                                             padding: const EdgeInsets.only(top: 12.0),
-                                            child: Row(
+                                            height: 56,
+                                            child: Stack(
+                                              alignment: Alignment.centerLeft,
                                               children: [
-                                                Icon(Icons.water_drop, color: Colors.blue[400]),
-                                                SizedBox(width: 10),
-                                                Expanded(
-                                                  child: LinearProgressIndicator(
-                                                    value: percent,
-                                                    backgroundColor: Colors.blue[50],
-                                                    color: Colors.blue[400],
-                                                    minHeight: 8,
-                                                  ),
+                                                // Progress bar and text
+                                                Row(
+                                                  children: [
+                                                    Icon(Icons.water_drop, color: Colors.blue[400]),
+                                                    SizedBox(width: 10),
+                                                    Expanded(
+                                                      child: LinearProgressIndicator(
+                                                        value: percent,
+                                                        backgroundColor: Colors.blue[50],
+                                                        color: Colors.blue[400],
+                                                        minHeight: 8,
+                                                      ),
+                                                    ),
+                                                    SizedBox(width: 12),
+                                                                      Text('${(waterLoggedMl / 1000).toStringAsFixed(1)} / $waterGoalStr', style: TextStyle(fontWeight: FontWeight.bold)),
+                                                  ],
                                                 ),
-                                                SizedBox(width: 12),
-                                                Text('${(waterLoggedMl / 1000).toStringAsFixed(1)} / $waterGoalStr', style: TextStyle(fontWeight: FontWeight.bold)),
-                                                IconButton(
-                                                  icon: Icon(Icons.add_circle, color: Colors.blue[400]),
-                                                  tooltip: 'Log water',
-                                                  onPressed: () async {
-                                                    int? amount = await showDialog<int>(
-                                                      context: context,
-                                                      builder: (context) => _WaterLogSliderDialog(),
-                                                    );
-                                                    if (amount != null && amount > 0) {
-                                                      final user = FirebaseAuth.instance.currentUser;
-                                                      if (user != null) {
-                                                        final doc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
-                                                        final data = doc.data() ?? {};
-                                                        final int prev = (data['waterLoggedMl'] ?? 0) as int;
-                                                        await FirebaseFirestore.instance.collection('users').doc(user.uid).update({
-                                                          'waterLoggedMl': prev + amount,
-                                                          'lastUpdated': DateTime.now(),
-                                                        });
-                                                      }
-                                                    }
-                                                  },
-                                                ),
+                                                
                                               ],
                                             ),
                                           );
@@ -2447,39 +2727,73 @@ class _MealCardModernState extends State<_MealCardModern> {
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Meal image
-              FutureBuilder<String?> (
-                future: PexelsService.staticFetchMealImage(meal.name, locale: Locale(AppLocalizations.of(context)!.localeName)),
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return ClipRRect(
-                      borderRadius: BorderRadius.circular(16),
-                      child: Container(
+              // Meal image - prioritize user's photo over Pexels
+              ClipRRect(
+                borderRadius: BorderRadius.circular(16),
+                child: meal.imageUrl != null
+                    ? Image.network(
+                        meal.imageUrl!,
                         width: 70,
                         height: 70,
-                        color: Colors.grey[200],
-                        child: Center(child: CircularProgressIndicator(strokeWidth: 2, color: kPrimaryGreen)),
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) {
+                          // Fallback to Pexels if user's image fails to load
+                          return FutureBuilder<String?>(
+                            future: PexelsService.staticFetchMealImage(meal.name, locale: Locale(AppLocalizations.of(context)!.localeName)),
+                            builder: (context, snapshot) {
+                              if (snapshot.connectionState == ConnectionState.waiting) {
+                                return Container(
+                                  width: 70,
+                                  height: 70,
+                                  color: Colors.grey[200],
+                                  child: Center(child: CircularProgressIndicator(strokeWidth: 2, color: kPrimaryGreen)),
+                                );
+                              }
+                              final imageUrl = snapshot.data;
+                              return imageUrl != null
+                                  ? Image.network(
+                                      imageUrl,
+                                      width: 70,
+                                      height: 70,
+                                      fit: BoxFit.cover,
+                                    )
+                                  : Container(
+                                      width: 70,
+                                      height: 70,
+                                      color: Colors.grey[200],
+                                      child: Icon(Icons.fastfood, color: Colors.grey[400]),
+                                    );
+                            },
+                          );
+                        },
+                      )
+                    : FutureBuilder<String?>(
+                        future: PexelsService.staticFetchMealImage(meal.name, locale: Locale(AppLocalizations.of(context)!.localeName)),
+                        builder: (context, snapshot) {
+                          if (snapshot.connectionState == ConnectionState.waiting) {
+                            return Container(
+                              width: 70,
+                              height: 70,
+                              color: Colors.grey[200],
+                              child: Center(child: CircularProgressIndicator(strokeWidth: 2, color: kPrimaryGreen)),
+                            );
+                          }
+                          final imageUrl = snapshot.data;
+                          return imageUrl != null
+                              ? Image.network(
+                                  imageUrl,
+                                  width: 70,
+                                  height: 70,
+                                  fit: BoxFit.cover,
+                                )
+                              : Container(
+                                  width: 70,
+                                  height: 70,
+                                  color: Colors.grey[200],
+                                  child: Icon(Icons.fastfood, color: Colors.grey[400]),
+                                );
+                        },
                       ),
-                    );
-                  }
-                  final imageUrl = snapshot.data;
-                  return ClipRRect(
-                    borderRadius: BorderRadius.circular(16),
-                    child: imageUrl != null
-                        ? Image.network(
-                            imageUrl,
-                            width: 70,
-                            height: 70,
-                            fit: BoxFit.cover,
-                          )
-                        : Container(
-                            width: 70,
-                            height: 70,
-                            color: Colors.grey[200],
-                            child: Icon(Icons.fastfood, color: Colors.grey[400]),
-                          ),
-                  );
-                },
               ),
               const SizedBox(width: 14),
               Expanded(
@@ -2729,11 +3043,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
+  Future<bool> _isPremiumUser() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool('isPremium') ?? false;
+  }
+
   void _showEditProfileDialog(UserProfile profile) {
     final nameController = TextEditingController(text: profile.name);
-    final ageController = TextEditingController(text: profile.age.toString());
-    final heightController = TextEditingController(text: profile.height.toString());
+    final startingWeightController = TextEditingController(text: profile.startingWeight.toString());
     final weightController = TextEditingController(text: profile.weight.toString());
+    final targetWeightController = TextEditingController(text: profile.targetWeight.toString());
 
     showDialog(
       context: context,
@@ -2764,22 +3083,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
                 const SizedBox(height: 12),
                 _NumericTextField(
-                  controller: ageController,
+                  controller: startingWeightController,
                   decoration: InputDecoration(
-                    labelText: 'Age',
-                    prefixIcon: Icon(Icons.cake, color: theme.iconTheme.color),
-                    filled: true,
-                    fillColor: theme.cardColor,
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
-                    labelStyle: TextStyle(color: theme.textTheme.bodyLarge?.color),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                _NumericTextField(
-                  controller: heightController,
-                  decoration: InputDecoration(
-                    labelText: 'Height (cm)',
-                    prefixIcon: Icon(Icons.height, color: theme.iconTheme.color),
+                    labelText: 'Starting Weight (kg)',
+                    prefixIcon: Icon(Icons.trending_up, color: theme.iconTheme.color),
                     filled: true,
                     fillColor: theme.cardColor,
                     border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
@@ -2792,6 +3099,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   decoration: InputDecoration(
                     labelText: 'Current Weight (kg)',
                     prefixIcon: Icon(Icons.monitor_weight, color: theme.iconTheme.color),
+                    filled: true,
+                    fillColor: theme.cardColor,
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                    labelStyle: TextStyle(color: theme.textTheme.bodyLarge?.color),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                _NumericTextField(
+                  controller: targetWeightController,
+                  decoration: InputDecoration(
+                    labelText: 'Target Weight (kg)',
+                    prefixIcon: Icon(Icons.flag, color: theme.iconTheme.color),
                     filled: true,
                     fillColor: theme.cardColor,
                     border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
@@ -2819,16 +3138,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             id: profile.id,
                             email: profile.email,
                             name: nameController.text,
-                            age: int.parse(ageController.text),
-                            height: double.parse(heightController.text),
+                            age: profile.age, // Keep existing age
+                            height: profile.height, // Keep existing height
                             weight: double.parse(weightController.text),
                             dailyCalorieGoal: profile.dailyCalorieGoal,
                             proteinGoal: profile.proteinGoal,
                             carbsGoal: profile.carbsGoal,
                             fatGoal: profile.fatGoal,
+                            targetWeight: double.parse(targetWeightController.text),
+                            startingWeight: double.parse(startingWeightController.text),
                             createdAt: profile.createdAt,
                             lastUpdated: DateTime.now(),
-                            targetWeight: profile.targetWeight,
                           );
                           await _userService.updateUserProfile(updatedProfile);
                           if (mounted) {
@@ -2934,7 +3254,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final bool isPremium = true;
     final int userLevel = 8;
 
     return Scaffold(
@@ -2955,6 +3274,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     padding: const EdgeInsets.fromLTRB(24, 24, 24, 8),
                     child: Text(AppLocalizations.of(context)!.profile, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 28)),
                   ),
+
                   Divider(height: 1, thickness: 1, color: Colors.grey[200]),
                   // Profile Card
                   Padding(
@@ -3101,17 +3421,30 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                         ),
                                       ],
                                     ),
-                                    if (isPremium) ...[
-                                      SizedBox(height: 4),
-                                      Container(
-                                        padding: EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                                        decoration: BoxDecoration(
-                                          color: kPrimaryGreen.withOpacity(0.10),
-                                          borderRadius: BorderRadius.circular(12),
-                                        ),
-                                        child: Text('Premium', style: TextStyle(color: kPrimaryGreen, fontWeight: FontWeight.w600, fontSize: 12)),
-                                      ),
-                                    ],
+                                    SizedBox(height: 4),
+                                    FutureBuilder<bool>(
+                                      future: _isPremiumUser(),
+                                      builder: (context, snapshot) {
+                                        final isPremium = snapshot.data ?? false;
+                                        return Container(
+                                          padding: EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                          decoration: BoxDecoration(
+                                            color: isPremium 
+                                                ? kPrimaryGreen.withOpacity(0.10)
+                                                : Colors.grey.withOpacity(0.10),
+                                            borderRadius: BorderRadius.circular(12),
+                                          ),
+                                          child: Text(
+                                            isPremium ? 'Premium' : 'Freemium', 
+                                            style: TextStyle(
+                                              color: isPremium ? kPrimaryGreen : Colors.grey[600], 
+                                              fontWeight: FontWeight.w600, 
+                                              fontSize: 12
+                                            )
+                                          ),
+                                        );
+                                      },
+                                    ),
                                   ],
                                 ),
                               ),
@@ -3165,11 +3498,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                         child: Column(
                                           mainAxisSize: MainAxisSize.min,
                                           children: [
-                                            Icon(Icons.cake, color: kPrimaryGreen, size: 26),
+                                            Icon(Icons.trending_up, color: kPrimaryGreen, size: 26),
                                             SizedBox(height: 6),
-                                            Text(AppLocalizations.of(context)!.age, style: TextStyle(color: kPrimaryGreen, fontWeight: FontWeight.w600, fontSize: 15)),
+                                            Text('Starting Weight', style: TextStyle(color: kPrimaryGreen, fontWeight: FontWeight.w600, fontSize: 15), textAlign: TextAlign.center),
                                             SizedBox(height: 2),
-                                            Text('${profile.age}', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Colors.black)),
+                                            Text('${useMetric ? profile.startingWeight : (profile.startingWeight * 2.20462).toStringAsFixed(1)} ${useMetric ? 'kg' : 'lb'}', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Colors.black)),
                                           ],
                                         ),
                                       ),
@@ -3187,6 +3520,53 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                             Text(AppLocalizations.of(context)!.weight, style: TextStyle(color: kPrimaryGreen, fontWeight: FontWeight.w600, fontSize: 15)),
                                             SizedBox(height: 2),
                                             Text('${weight.toStringAsFixed(1)} $weightUnit', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Colors.black)),
+                                            // Weight change indicator
+                                            Consumer<PreferencesProvider>(
+                                              builder: (context, prefs, child) {
+                                                final useMetric = prefs.useMetric;
+                                                return FutureBuilder<DocumentSnapshot>(
+                                                  future: FirebaseFirestore.instance.collection('users').doc(FirebaseAuth.instance.currentUser?.uid).get(),
+                                                  builder: (context, snapshot) {
+                                                    if (snapshot.hasData && snapshot.data != null) {
+                                                      final data = snapshot.data!.data() as Map<String, dynamic>?;
+                                                      final totalWeightChange = data?['totalWeightChange'] as double?;
+                                                      final lastWeightUpdate = data?['lastWeightUpdate'] as Timestamp?;
+                                                      
+                                                      if (totalWeightChange != null && totalWeightChange != 0 && lastWeightUpdate != null) {
+                                                        final daysSinceUpdate = DateTime.now().difference(lastWeightUpdate.toDate()).inDays;
+                                                        if (daysSinceUpdate <= 7) { // Show for last 7 days
+                                                          final isPositive = totalWeightChange > 0;
+                                                          final color = isPositive ? Colors.red : Colors.blue;
+                                                          final sign = isPositive ? '+' : '';
+                                                          
+                                                          // Convert to user's preferred unit
+                                                          final displayWeightChange = useMetric ? totalWeightChange : (totalWeightChange * 2.20462);
+                                                          final unit = useMetric ? 'kg' : 'lb';
+                                                          
+                                                          return Container(
+                                                            margin: EdgeInsets.only(top: 2),
+                                                            padding: EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                                            decoration: BoxDecoration(
+                                                              color: color.withOpacity(0.1),
+                                                              borderRadius: BorderRadius.circular(8),
+                                                            ),
+                                                            child: Text(
+                                                              '$sign${displayWeightChange.toStringAsFixed(1)}$unit',
+                                                              style: TextStyle(
+                                                                color: color,
+                                                                fontWeight: FontWeight.bold,
+                                                                fontSize: 12,
+                                                              ),
+                                                            ),
+                                                          );
+                                                        }
+                                                      }
+                                                    }
+                                                    return SizedBox.shrink();
+                                                  },
+                                                );
+                                              },
+                                            ),
                                           ],
                                         ),
                                       ),
@@ -3199,11 +3579,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                         child: Column(
                                           mainAxisSize: MainAxisSize.min,
                                           children: [
-                                            Icon(Icons.height, color: kPrimaryGreen, size: 26),
+                                            Icon(Icons.flag, color: kPrimaryGreen, size: 26),
                                             SizedBox(height: 6),
-                                            Text(AppLocalizations.of(context)!.height, style: TextStyle(color: kPrimaryGreen, fontWeight: FontWeight.w600, fontSize: 15)),
+                                            Text('Target Weight', style: TextStyle(color: kPrimaryGreen, fontWeight: FontWeight.w600, fontSize: 15), textAlign: TextAlign.center),
                                             SizedBox(height: 2),
-                                            Text(heightDisplay, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Colors.black)),
+                                            Text('${useMetric ? profile.targetWeight : (profile.targetWeight * 2.20462).toStringAsFixed(1)} ${useMetric ? 'kg' : 'lb'}', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Colors.black)),
                                           ],
                                         ),
                                       ),
@@ -3259,21 +3639,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               Navigator.of(context).push(MaterialPageRoute(builder: (context) => SettingsPage()));
                             },
                           ),
-                          Divider(height: 1, color: Colors.grey[200]),
-                          _ProfileMenuTile(
-                            icon: Icons.tune,
-                            label: AppLocalizations.of(context)!.planSettings,
-                            onTap: () {
-                              showDialog(
-                                context: context,
-                                builder: (context) => AlertDialog(
-                                  title: Text(AppLocalizations.of(context)!.planSettings),
-                                  content: Text(AppLocalizations.of(context)!.featureComingSoon),
-                                  actions: [TextButton(onPressed: () => Navigator.pop(context), child: Text(AppLocalizations.of(context)!.ok))],
-                                ),
-                              );
-                            },
-                          ),
+
                           Divider(height: 1, color: Colors.grey[200]),
                           _ProfileMenuTile(
                             icon: Icons.star_rate,
@@ -3703,6 +4069,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
       ),
     );
   }
+
+
 }
 
 // Helper widget for menu tiles
@@ -3742,9 +4110,16 @@ class _CoachScreenState extends State<CoachScreen> with TickerProviderStateMixin
   static bool _hasAnimatedEntrance = false;
 
   List<_ChatMessage> _messages = [];
+  int _messageCount = 0; // Track user messages sent
+  static const int _maxFreeMessages = 10; // Free message limit
 
   String? _aiHealthInsight;
   bool _loadingInsight = false;
+  int? _lastInsightCalories; // Track calories when last insight was generated
+  String? _lastInsightMealPeriod; // Track meal period when last insight was generated
+  
+  // Scroll to bottom button state
+  bool _showScrollToBottomButton = false;
 
   @override
   void initState() {
@@ -3761,29 +4136,195 @@ class _CoachScreenState extends State<CoachScreen> with TickerProviderStateMixin
       vsync: this,
       duration: const Duration(milliseconds: 600),
     );
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      setState(() {
-        _messages = [
-          _ChatMessage(
-            text: AppLocalizations.of(context)!.coachWelcome,
-            isUser: false,
-            quickReplies: [
-              AppLocalizations.of(context)!.coachQuick1,
-              AppLocalizations.of(context)!.coachQuick2,
-              AppLocalizations.of(context)!.coachQuick3,
-            ],
-          ),
-        ];
-      });
-    });
+    _loadChatHistory();
+    _loadMessageCount();
     _playEntranceAnimationsIfNeeded();
     _loadLastInsight();
+    // Add scroll listener to track scroll position
+    _scrollController.addListener(_onScrollChanged);
+    // Check initial scroll position after layout
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _checkInitialScrollState();
+    });
+  }
+
+  // Check if user is premium
+  Future<bool> _isPremiumUser() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool('isPremium') ?? false;
+  }
+
+  // Load message count from SharedPreferences
+  Future<void> _loadMessageCount() async {
+    final prefs = await SharedPreferences.getInstance();
+    final today = DateTime.now();
+    final todayStr = '${today.year}-${today.month}-${today.day}';
+    final messageCountKey = 'message_count_$todayStr';
+    
+    setState(() {
+      _messageCount = prefs.getInt(messageCountKey) ?? 0;
+    });
+  }
+
+  // Save message count to SharedPreferences
+  Future<void> _saveMessageCount() async {
+    final prefs = await SharedPreferences.getInstance();
+    final today = DateTime.now();
+    final todayStr = '${today.year}-${today.month}-${today.day}';
+    final messageCountKey = 'message_count_$todayStr';
+    
+    await prefs.setInt(messageCountKey, _messageCount);
+  }
+
+  // Get message counter color based on remaining messages
+  Color _getMessageCounterColor() {
+    final remainingMessages = _maxFreeMessages - _messageCount;
+    if (remainingMessages >= 7) {
+      return kPrimaryGreen; // Green for 7-10 messages remaining
+    } else if (remainingMessages >= 3) {
+      return Colors.orange; // Orange for 3-6 messages remaining
+    } else {
+      return Colors.red; // Red for 0-2 messages remaining
+    }
+  }
+
+  // Load chat history from SharedPreferences
+  Future<void> _loadChatHistory() async {
+    final prefs = await SharedPreferences.getInstance();
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      _initializeWelcomeMessage();
+      return;
+    }
+    
+    final chatKey = 'chat_history_${user.uid}';
+    final chatJson = prefs.getString(chatKey);
+    
+    if (chatJson != null) {
+      try {
+        final List<dynamic> decoded = jsonDecode(chatJson);
+        final messages = decoded.map((msg) => _ChatMessage(
+          text: msg['text'],
+          isUser: msg['isUser'],
+          quickReplies: List<String>.from(msg['quickReplies'] ?? []),
+        )).toList();
+        
+        setState(() {
+          _messages = messages;
+        });
+        // Check scroll state after messages are loaded
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          _checkInitialScrollState();
+        });
+      } catch (e) {
+        // If there's an error parsing, initialize with welcome message
+        _initializeWelcomeMessage();
+      }
+    } else {
+      _initializeWelcomeMessage();
+    }
+  }
+
+  // Initialize with welcome message
+  void _initializeWelcomeMessage() {
+    setState(() {
+      _messages = [
+        _ChatMessage(
+          text: AppLocalizations.of(context)!.coachWelcome,
+          isUser: false,
+          quickReplies: [
+            AppLocalizations.of(context)!.coachQuick1,
+            AppLocalizations.of(context)!.coachQuick2,
+            AppLocalizations.of(context)!.coachQuick3,
+          ],
+        ),
+      ];
+    });
+    // Check scroll state after welcome message is initialized
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _checkInitialScrollState();
+    });
+  }
+
+  // Save chat history to SharedPreferences
+  Future<void> _saveChatHistory() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+    
+    final prefs = await SharedPreferences.getInstance();
+    final chatKey = 'chat_history_${user.uid}';
+    
+    final messagesJson = _messages.map((msg) => {
+      'text': msg.text,
+      'isUser': msg.isUser,
+      'quickReplies': msg.quickReplies,
+    }).toList();
+    
+    await prefs.setString(chatKey, jsonEncode(messagesJson));
+  }
+
+  // Clear chat history from SharedPreferences
+  Future<void> _clearChatHistory() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+    
+    final prefs = await SharedPreferences.getInstance();
+    final chatKey = 'chat_history_${user.uid}';
+    await prefs.remove(chatKey);
+  }
+
+  // Check if insights need to be refreshed based on calorie changes or meal period changes
+  Future<void> _checkAndRefreshInsights() async {
+    final meals = await MealService().getTodayMeals().first;
+    final currentCalories = meals.fold(0, (sum, m) => sum + m.calories);
+    final currentMealPeriod = _getCurrentMealPeriod();
+    
+    // If no previous insight exists, generate one
+    if (_aiHealthInsight == null) {
+      await _fetchAIHealthInsight();
+      return;
+    }
+    
+    // Only refresh if calories have changed significantly (more than 50 calories difference)
+    if (_lastInsightCalories != null && (_lastInsightCalories! - currentCalories).abs() > 50) {
+      await _fetchAIHealthInsight();
+      return;
+    }
+    
+    // Only refresh if meal period has changed AND it's been more than 2 hours since last insight
+    final lastMealPeriod = _getLastInsightMealPeriod();
+    if (lastMealPeriod != null && lastMealPeriod != currentMealPeriod) {
+      // Check if it's been more than 2 hours since last insight
+      final prefs = await SharedPreferences.getInstance();
+      final lastInsightTime = prefs.getInt('last_insight_timestamp');
+      final now = DateTime.now().millisecondsSinceEpoch;
+      if (lastInsightTime == null || (now - lastInsightTime) > (2 * 60 * 60 * 1000)) { // 2 hours in milliseconds
+        await _fetchAIHealthInsight();
+        await prefs.setInt('last_insight_timestamp', now);
+      }
+    }
+  }
+
+  // Helper to get current meal period
+  String _getCurrentMealPeriod() {
+    final hour = DateTime.now().hour;
+    if (hour >= 5 && hour < 11) return 'breakfast';
+    if (hour >= 11 && hour < 16) return 'lunch';
+    if (hour >= 16 && hour < 21) return 'dinner';
+    return 'snack';
+  }
+
+  // Helper to get last insight meal period from SharedPreferences
+  String? _getLastInsightMealPeriod() {
+    return _lastInsightMealPeriod;
   }
 
   Future<void> _loadLastInsight() async {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
       _aiHealthInsight = prefs.getString('last_health_insight');
+      _lastInsightCalories = prefs.getInt('last_insight_calories');
+      _lastInsightMealPeriod = prefs.getString('last_insight_meal_period');
     });
   }
 
@@ -3835,6 +4376,9 @@ class _CoachScreenState extends State<CoachScreen> with TickerProviderStateMixin
     final prefs2 = await SharedPreferences.getInstance();
     if (_aiHealthInsight != null) {
       prefs2.setString('last_health_insight', _aiHealthInsight!);
+      prefs2.setInt('last_insight_calories', caloriesConsumed);
+      prefs2.setString('last_insight_meal_period', _getCurrentMealPeriod());
+      prefs2.setInt('last_insight_timestamp', DateTime.now().millisecondsSinceEpoch);
     }
   }
 
@@ -3864,18 +4408,42 @@ class _CoachScreenState extends State<CoachScreen> with TickerProviderStateMixin
     _chatController.dispose();
     _insightsController.dispose();
     _controller.dispose();
+    _scrollController.removeListener(_onScrollChanged);
     _scrollController.dispose();
     super.dispose();
   }
 
-  void _sendMessage(String text) {
+  void _sendMessage(String text) async {
     if (text.trim().isEmpty) return;
+    
+    final isPremium = await _isPremiumUser();
+    
+    // Check message limit for free users
+    if (!isPremium && _messageCount >= _maxFreeMessages) {
+      // Show subscription prompt instead of sending message
+      _showSubscriptionPrompt();
+      return;
+    }
+    
     setState(() {
       _messages.add(_ChatMessage(text: text, isUser: true));
+      if (!isPremium) {
+        _messageCount++;
+      }
     });
     _controller.clear();
-    _scrollToBottom();
+    // Don't auto-scroll - let user control with button
+    _saveChatHistory(); // Save after user message
+    _saveMessageCount(); // Save message count
     Future.delayed(Duration(milliseconds: 400), () => _botReply(text));
+  }
+
+  void _showSubscriptionPrompt() {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => SubscriptionPage(),
+      ),
+    );
   }
 
   void _botReply(String userText) async {
@@ -3952,19 +4520,46 @@ class _CoachScreenState extends State<CoachScreen> with TickerProviderStateMixin
       _messages.removeLast();
       _messages.add(_ChatMessage(text: aiResponse ?? "Sorry, I couldn't get a response.", isUser: false));
     });
-    _scrollToBottom();
+    // Don't auto-scroll - let user control with button
+    _saveChatHistory(); // Save after AI response
+  }
+
+
+
+  void _onScrollChanged() {
+    if (!_scrollController.hasClients) return;
+    
+    final position = _scrollController.position;
+    final isAtBottom = position.pixels >= position.maxScrollExtent - 50; // Consider at bottom when within 50px
+    
+    setState(() {
+      // If there are messages and we're not at bottom, show scroll button
+      // If no messages or we're at bottom, show send button
+      _showScrollToBottomButton = _messages.length > 1 && !isAtBottom;
+    });
+  }
+
+  void _checkInitialScrollState() {
+    if (!_scrollController.hasClients) return;
+    
+    final position = _scrollController.position;
+    final isAtBottom = position.pixels >= position.maxScrollExtent - 50;
+    
+    setState(() {
+      // If there are messages and we're not at bottom, show scroll button
+      // If no messages or we're at bottom, show send button
+      _showScrollToBottomButton = _messages.length > 1 && !isAtBottom;
+    });
   }
 
   void _scrollToBottom() {
-    Future.delayed(Duration(milliseconds: 100), () {
-      if (_scrollController.hasClients) {
-        _scrollController.animateTo(
-          _scrollController.position.maxScrollExtent,
-          duration: Duration(milliseconds: 300),
-          curve: Curves.easeOut,
-        );
-      }
-    });
+    if (_scrollController.hasClients) {
+      _scrollController.animateTo(
+        _scrollController.position.maxScrollExtent,
+        duration: Duration(milliseconds: 300),
+        curve: Curves.easeOut,
+      );
+    }
   }
 
   @override
@@ -4021,6 +4616,11 @@ class _CoachScreenState extends State<CoachScreen> with TickerProviderStateMixin
                     onTap: () {
                       setState(() => _tabIndex = 0);
                       _tabController.forward(from: 0.0);
+                      _chatController.forward(from: 0.0);
+                      // Check scroll position when switching to chat tab
+                      WidgetsBinding.instance.addPostFrameCallback((_) {
+                        _checkInitialScrollState();
+                      });
                     },
                     child: Container(
                       padding: EdgeInsets.symmetric(vertical: 12),
@@ -4039,7 +4639,11 @@ class _CoachScreenState extends State<CoachScreen> with TickerProviderStateMixin
                     onTap: () {
                       setState(() => _tabIndex = 1);
                       _tabController.forward(from: 0.0);
-                      // _fetchAIHealthInsight(); // Removed to prevent auto-refresh on tab switch
+                      _insightsController.forward(from: 0.0);
+                      // Only check for refresh if no insight exists yet
+                      if (_aiHealthInsight == null) {
+                        _checkAndRefreshInsights();
+                      }
                     },
                     child: Container(
                       padding: EdgeInsets.symmetric(vertical: 12),
@@ -4064,7 +4668,8 @@ class _CoachScreenState extends State<CoachScreen> with TickerProviderStateMixin
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
                   ElevatedButton.icon(
-                    onPressed: () {
+                    onPressed: () async {
+                      await _clearChatHistory(); // Clear from SharedPreferences
                       setState(() {
                         _messages.clear();
                         _messages.add(_ChatMessage(
@@ -4288,24 +4893,7 @@ class _CoachScreenState extends State<CoachScreen> with TickerProviderStateMixin
                                         },
                                       )
                                           : Text(AppLocalizations.of(context)!.noInsightAvailable, style: TextStyle(fontSize: 16, color: Colors.grey[800])),
-                                    SizedBox(height: 10),
-                                    OutlinedButton(
-                                      onPressed: _fetchAIHealthInsight,
-                                      style: OutlinedButton.styleFrom(
-                                        foregroundColor: kPrimaryGreen,
-                                        side: BorderSide(color: kPrimaryGreen),
-                                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                                        padding: EdgeInsets.symmetric(vertical: 14),
-                                      ),
-                                      child: Row(
-                                        mainAxisAlignment: MainAxisAlignment.center,
-                                        children: [
-                                          Text(AppLocalizations.of(context)!.refreshInsight, style: TextStyle(fontWeight: FontWeight.w600)),
-                                          SizedBox(width: 8),
-                                          Icon(Icons.refresh, size: 20),
-                                        ],
-                                      ),
-                                    ),
+
                                   ],
                                 ),
                               ),
@@ -4371,42 +4959,99 @@ class _CoachScreenState extends State<CoachScreen> with TickerProviderStateMixin
           ),
           // Input
           if (_tabIndex == 0)
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: Color(0xFFE5E7EB)),
+            Column(
+              children: [
+                // Message counter for free users
+                FutureBuilder<bool>(
+                  future: _isPremiumUser(),
+                  builder: (context, snapshot) {
+                    final isPremium = snapshot.data ?? false;
+                    if (isPremium) return SizedBox.shrink();
+                    
+                    return Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Container(
+                            padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                            decoration: BoxDecoration(
+                              color: _getMessageCounterColor().withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: _getMessageCounterColor(),
+                                width: 1,
+                              ),
+                            ),
+                            child: Text(
+                              'Messages: ${_maxFreeMessages - _messageCount}/$_maxFreeMessages',
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                                color: _getMessageCounterColor(),
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
-                      child: TextField(
-                        controller: _controller,
-                        decoration: InputDecoration(
-                          hintText: AppLocalizations.of(context)!.typeYourMessage,
-                          border: InputBorder.none,
-                          contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                    );
+                  },
+                ),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(color: Color(0xFFE5E7EB)),
+                          ),
+                          child: TextField(
+                            controller: _controller,
+                            decoration: InputDecoration(
+                              hintText: AppLocalizations.of(context)!.typeYourMessage,
+                              border: InputBorder.none,
+                              contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                            ),
+                            onSubmitted: _sendMessage,
+                          ),
                         ),
-                        onSubmitted: _sendMessage,
                       ),
-                    ),
-                  ),
-                  SizedBox(width: 10),
-                  GestureDetector(
-                    onTap: () => _sendMessage(_controller.text),
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: kPrimaryGreen,
-                        borderRadius: BorderRadius.circular(16),
+                      SizedBox(width: 10),
+                      AnimatedSwitcher(
+                        duration: Duration(milliseconds: 200),
+                        child: _showScrollToBottomButton
+                            ? GestureDetector(
+                                key: ValueKey('scroll_button'),
+                                onTap: _scrollToBottom,
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    color: kPrimaryGreen,
+                                    borderRadius: BorderRadius.circular(16),
+                                  ),
+                                  padding: EdgeInsets.all(12),
+                                  child: Icon(Icons.keyboard_arrow_down, color: Colors.white, size: 22),
+                                ),
+                              )
+                            : GestureDetector(
+                                key: ValueKey('send_button'),
+                                onTap: () => _sendMessage(_controller.text),
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    color: kPrimaryGreen,
+                                    borderRadius: BorderRadius.circular(16),
+                                  ),
+                                  padding: EdgeInsets.all(12),
+                                  child: Icon(Icons.send, color: Colors.white, size: 22),
+                                ),
+                              ),
                       ),
-                      padding: EdgeInsets.all(12),
-                      child: Icon(Icons.send, color: Colors.white, size: 22),
-                    ),
+                    ],
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
         ],
       ),
@@ -4529,7 +5174,7 @@ class _FoodScreenState extends State<FoodScreen> with TickerProviderStateMixin {
       return _cachedAIMeals[cacheKey]!;
     }
     // Try to load from SharedPreferences
-    final cachedJson = prefs is PreferencesProvider ? null : await SharedPreferences.getInstance().then((sp) => sp.getString(cacheKey));
+    final cachedJson = await SharedPreferences.getInstance().then((sp) => sp.getString(cacheKey));
     if (cachedJson != null) {
       final List<dynamic> decoded = jsonDecode(cachedJson);
       final meals = decoded.cast<Map<String, dynamic>>();
@@ -4584,6 +5229,25 @@ class _FoodScreenState extends State<FoodScreen> with TickerProviderStateMixin {
     _suggestedController.reset();
     _suggestedController.forward();
   }
+  
+  // Method to force refresh meals (for manual refresh)
+  Future<void> _forceRefreshAIMeals() async {
+    // Clear cache for current period
+    final prefs = Provider.of<PreferencesProvider>(context, listen: false);
+    final period = _currentMealPeriod;
+    final language = prefs.language;
+    await AIService().clearSuggestedMealsCache(period, language);
+    
+    // Clear in-memory cache
+    final today = DateTime.now();
+    final dateKey = '${today.year}-${today.month}-${today.day}';
+    final cacheKey = 'ai_meals_${period}_$dateKey';
+    _cachedAIMeals.remove(cacheKey);
+    _cachedPeriodKey = null;
+    
+    // Fetch fresh meals
+    await _refreshAIMeals();
+  }
 
   void _onTabChanged(int index) {
     setState(() => _tabIndex = index);
@@ -4591,6 +5255,7 @@ class _FoodScreenState extends State<FoodScreen> with TickerProviderStateMixin {
     if (index == 0) {
       _myMealsController.forward(from: 0.0);
     } else {
+      // Only trigger animation, don't refresh meals
       _suggestedController.forward(from: 0.0);
     }
   }
@@ -4619,26 +5284,56 @@ class _FoodScreenState extends State<FoodScreen> with TickerProviderStateMixin {
     }
     return Scaffold(
       backgroundColor: const Color(0xFFF9FAFB),
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        leading: null,
-        title: Text(localizations.food, style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
-        centerTitle: false,
+      appBar: PreferredSize(
+        preferredSize: Size.fromHeight(80),
+        child: AppBar(
+          backgroundColor: Colors.white,
+          elevation: 0,
+          leading: null,
+          title: Padding(
+            padding: EdgeInsets.only(left: 16, right: 0),
+            child: Row(
+              children: [
+                Container(
+                  decoration: BoxDecoration(
+                    color: kPrimaryGreen.withOpacity(0.12),
+                    shape: BoxShape.circle,
+                  ),
+                  padding: EdgeInsets.all(4),
+                  child: Image.asset(
+                    'assets/logo.png',
+                    width: 48,
+                    height: 48,
+                    fit: BoxFit.contain,
+                  ),
+                ),
+                SizedBox(width: 10),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(localizations.food, style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black, fontSize: 22)),
+                    SizedBox(height: 2),
+                    Text('Track your nutrition', style: TextStyle(fontSize: 13, color: Colors.grey[500])),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          titleSpacing: 0,
+        ),
       ),
       body: Column(
         children: [
-          // Tabs
+          // TabBar
           Container(
             color: Colors.transparent,
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             child: Row(
               children: [
                 Expanded(
                   child: GestureDetector(
                     onTap: () => _onTabChanged(0),
                     child: Container(
-                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      padding: EdgeInsets.symmetric(vertical: 12),
                       decoration: BoxDecoration(
                         color: _tabIndex == 0 ? Colors.white : Colors.transparent,
                         borderRadius: BorderRadius.circular(18),
@@ -4653,7 +5348,7 @@ class _FoodScreenState extends State<FoodScreen> with TickerProviderStateMixin {
                   child: GestureDetector(
                     onTap: () => _onTabChanged(1),
                     child: Container(
-                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      padding: EdgeInsets.symmetric(vertical: 12),
                       decoration: BoxDecoration(
                         color: _tabIndex == 1 ? Colors.white : Colors.transparent,
                         borderRadius: BorderRadius.circular(18),
@@ -4667,47 +5362,7 @@ class _FoodScreenState extends State<FoodScreen> with TickerProviderStateMixin {
               ],
             ),
           ),
-          // Add Weekly/Monthly toggle above calendar
-          if (_tabIndex == 0)
-            Padding(
-              padding: const EdgeInsets.only(top: 8, bottom: 0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  GestureDetector(
-                    onTap: () => setState(() {
-                      _calendarView = 'week';
-                      _calendarFormat = CalendarFormat.week;
-                    }),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 8),
-                      decoration: BoxDecoration(
-                        color: _calendarView == 'week' ? kPrimaryGreen : Colors.white,
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: kPrimaryGreen, width: 1.5),
-                      ),
-                      child: Text(localizations.weekly, style: TextStyle(fontWeight: FontWeight.bold, color: _calendarView == 'week' ? Colors.white : kPrimaryGreen)),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  GestureDetector(
-                    onTap: () => setState(() {
-                      _calendarView = 'month';
-                      _calendarFormat = CalendarFormat.month;
-                    }),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 8),
-                      decoration: BoxDecoration(
-                        color: _calendarView == 'month' ? kPrimaryGreen : Colors.white,
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: kPrimaryGreen, width: 1.5),
-                      ),
-                      child: Text(localizations.monthly, style: TextStyle(fontWeight: FontWeight.bold, color: _calendarView == 'month' ? Colors.white : kPrimaryGreen)),
-                    ),
-                  ),
-                ],
-              ),
-            ),
+
           // Animated tab content
           Expanded(
             child: AnimatedSwitcher(
@@ -4884,7 +5539,7 @@ class _FoodScreenState extends State<FoodScreen> with TickerProviderStateMixin {
                                             child: Row(
                                               crossAxisAlignment: CrossAxisAlignment.start,
                                               children: [
-                                                // Meal image
+                                                // Meal image - AI suggested meals use Pexels since they don't have user photos
                                                 FutureBuilder<String?> (
                                                   future: PexelsService.staticFetchMealImage(meal['meal_name'] as String? ?? '', locale: Locale(AppLocalizations.of(context)!.localeName)),
                                                   builder: (context, snapshot) {
@@ -5056,39 +5711,73 @@ class _FoodMealCardState extends State<_FoodMealCard> {
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Meal image
-              FutureBuilder<String?> (
-                future: PexelsService.staticFetchMealImage(meal.name, locale: Locale(AppLocalizations.of(context)!.localeName)),
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return ClipRRect(
-                      borderRadius: BorderRadius.circular(16),
-                      child: Container(
+              // Meal image - prioritize user's photo over Pexels
+              ClipRRect(
+                borderRadius: BorderRadius.circular(16),
+                child: meal.imageUrl != null
+                    ? Image.network(
+                        meal.imageUrl!,
                         width: 70,
                         height: 70,
-                        color: Colors.grey[200],
-                        child: Center(child: CircularProgressIndicator(strokeWidth: 2, color: kPrimaryGreen)),
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) {
+                          // Fallback to Pexels if user's image fails to load
+                          return FutureBuilder<String?>(
+                            future: PexelsService.staticFetchMealImage(meal.name, locale: Locale(AppLocalizations.of(context)!.localeName)),
+                            builder: (context, snapshot) {
+                              if (snapshot.connectionState == ConnectionState.waiting) {
+                                return Container(
+                                  width: 70,
+                                  height: 70,
+                                  color: Colors.grey[200],
+                                  child: Center(child: CircularProgressIndicator(strokeWidth: 2, color: kPrimaryGreen)),
+                                );
+                              }
+                              final imageUrl = snapshot.data;
+                              return imageUrl != null
+                                  ? Image.network(
+                                      imageUrl,
+                                      width: 70,
+                                      height: 70,
+                                      fit: BoxFit.cover,
+                                    )
+                                  : Container(
+                                      width: 70,
+                                      height: 70,
+                                      color: Colors.grey[200],
+                                      child: Icon(Icons.fastfood, color: Colors.grey[400]),
+                                    );
+                            },
+                          );
+                        },
+                      )
+                    : FutureBuilder<String?>(
+                        future: PexelsService.staticFetchMealImage(meal.name, locale: Locale(AppLocalizations.of(context)!.localeName)),
+                        builder: (context, snapshot) {
+                          if (snapshot.connectionState == ConnectionState.waiting) {
+                            return Container(
+                              width: 70,
+                              height: 70,
+                              color: Colors.grey[200],
+                              child: Center(child: CircularProgressIndicator(strokeWidth: 2, color: kPrimaryGreen)),
+                            );
+                          }
+                          final imageUrl = snapshot.data;
+                          return imageUrl != null
+                              ? Image.network(
+                                  imageUrl,
+                                  width: 70,
+                                  height: 70,
+                                  fit: BoxFit.cover,
+                                )
+                              : Container(
+                                  width: 70,
+                                  height: 70,
+                                  color: Colors.grey[200],
+                                  child: Icon(Icons.fastfood, color: Colors.grey[400]),
+                                );
+                        },
                       ),
-                    );
-                  }
-                  final imageUrl = snapshot.data;
-                  return ClipRRect(
-                    borderRadius: BorderRadius.circular(16),
-                    child: imageUrl != null
-                        ? Image.network(
-                            imageUrl,
-                            width: 70,
-                            height: 70,
-                            fit: BoxFit.cover,
-                          )
-                        : Container(
-                            width: 70,
-                            height: 70,
-                            color: Colors.grey[200],
-                            child: Icon(Icons.fastfood, color: Colors.grey[400]),
-                          ),
-                  );
-                },
               ),
               const SizedBox(width: 14),
               Expanded(
@@ -5342,16 +6031,22 @@ class _FabActionButton extends StatelessWidget {
   final String label;
   final IconData icon;
   final VoidCallback onTap;
-  const _FabActionButton({required this.label, required this.icon, required this.onTap});
+  final bool isLarge;
+  const _FabActionButton({required this.label, required this.icon, required this.onTap, this.isLarge = false});
 
   @override
   Widget build(BuildContext context) {
     // Both Log and Scan use kPrimaryGreen
     Color color = kPrimaryGreen;
+    final iconSize = isLarge ? 24.0 : 18.0;
+    final fontSize = isLarge ? 16.0 : 14.0;
+    final horizontalPadding = isLarge ? 24.0 : 18.0;
+    final verticalPadding = isLarge ? 16.0 : 12.0;
+    
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+        padding: EdgeInsets.symmetric(horizontal: horizontalPadding, vertical: verticalPadding),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(16),
@@ -5366,13 +6061,13 @@ class _FabActionButton extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, color: color, size: 20),
+            Icon(icon, color: color, size: iconSize),
             const SizedBox(width: 8),
             Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(label, style: TextStyle(fontWeight: FontWeight.w600, fontSize: 15, color: color, decoration: TextDecoration.none)),
+                Text(label, style: TextStyle(fontWeight: FontWeight.w600, fontSize: fontSize, color: color, decoration: TextDecoration.none)),
               ],
             ),
           ],
@@ -5529,14 +6224,7 @@ class SettingsPage extends StatelessWidget {
                 elevation: 2,
                 child: Column(
           children: [
-            SwitchListTile(
-                      title: Text(AppLocalizations.of(context)!.darkMode, style: TextStyle(fontWeight: FontWeight.w600)),
-              subtitle: Text(AppLocalizations.of(context)!.enableDarkTheme),
-              value: prefs.darkMode,
-              onChanged: (v) => prefs.setDarkMode(v),
-              secondary: Icon(Icons.dark_mode),
-            ),
-                    Divider(height: 1, thickness: 1, indent: 16, endIndent: 16),
+
             SwitchListTile(
                       title: Text(AppLocalizations.of(context)!.useMetricUnits, style: TextStyle(fontWeight: FontWeight.w600)),
               subtitle: Text(AppLocalizations.of(context)!.unitsSubtitle),
@@ -5733,6 +6421,112 @@ class _HealthAwarenessPageState extends State<HealthAwarenessPage> {
   }
 }
 
+// Weight Log Dialog
+class _WeightLogDialog extends StatefulWidget {
+  @override
+  State<_WeightLogDialog> createState() => _WeightLogDialogState();
+}
+
+class _WeightLogDialogState extends State<_WeightLogDialog> {
+  double _value = 0.5; // default 0.5kg
+  final double _min = 0.1;
+  final double _max = 10.0;
+  final double _step = 0.1;
+  bool _isAdd = true;
+  
+  // Convert values based on user's unit preference
+  double _getDisplayValue(double kgValue, bool useMetric) {
+    return useMetric ? kgValue : (kgValue * 2.20462);
+  }
+  
+  double _getKgValue(double displayValue, bool useMetric) {
+    return useMetric ? displayValue : (displayValue / 2.20462);
+  }
+  
+  String _getUnit(bool useMetric) {
+    return useMetric ? 'kg' : 'lb';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final prefs = Provider.of<PreferencesProvider>(context);
+    final useMetric = prefs.useMetric;
+    final displayValue = _getDisplayValue(_value, useMetric);
+    final displayMin = _getDisplayValue(_min, useMetric);
+    final displayMax = _getDisplayValue(_max, useMetric);
+    final unit = _getUnit(useMetric);
+    
+    return AlertDialog(
+      title: Text('Log Weight Change'),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              ChoiceChip(
+                label: Text('Gained'),
+                selected: _isAdd,
+                selectedColor: Colors.red[100],
+                onSelected: (selected) => setState(() => _isAdd = true),
+                labelStyle: TextStyle(
+                  color: _isAdd ? Colors.red[700] : Colors.black,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              SizedBox(width: 12),
+              ChoiceChip(
+                label: Text('Lost'),
+                selected: !_isAdd,
+                selectedColor: Colors.blue[100],
+                onSelected: (selected) => setState(() => _isAdd = false),
+                labelStyle: TextStyle(
+                  color: !_isAdd ? Colors.blue[700] : Colors.black,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: 18),
+          Text('${displayValue.toStringAsFixed(1)}$unit', style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: _isAdd ? Colors.red[400] : Colors.blue[400])),
+          SizedBox(height: 16),
+          Slider(
+            value: displayValue,
+            min: displayMin,
+            max: displayMax,
+            divisions: ((displayMax - displayMin) / _getDisplayValue(_step, useMetric)).round(),
+            onChanged: (v) => setState(() => _value = _getKgValue(double.parse(v.toStringAsFixed(1)), useMetric)),
+            activeColor: _isAdd ? Colors.red : Colors.blue,
+            inactiveColor: Colors.grey[300],
+            thumbColor: _isAdd ? Colors.red : Colors.blue,
+          ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text('${displayMin.toStringAsFixed(1)}$unit'),
+              Text('${displayMax.toStringAsFixed(1)}$unit'),
+            ],
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: Text('Cancel'),
+        ),
+        ElevatedButton(
+          onPressed: () => Navigator.of(context).pop(_isAdd ? _value : -_value),
+          child: Text(_isAdd ? 'Gained' : 'Lost'),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: _isAdd ? Colors.red : Colors.blue,
+            foregroundColor: Colors.white,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
 // Add this widget at the end of the file or in a suitable place
 class _WaterLogSliderDialog extends StatefulWidget {
   @override
@@ -5745,6 +6539,27 @@ class _WaterLogSliderDialogState extends State<_WaterLogSliderDialog> {
   final double _max = 2.0;
   final double _step = 0.1;
   bool _isAdd = true;
+  int _currentWaterLogged = 0;
+  bool _hasWaterLogged = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadCurrentWaterLogged();
+  }
+
+  Future<void> _loadCurrentWaterLogged() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      final doc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
+      final data = doc.data() ?? {};
+      final waterLogged = data['waterLoggedMl'] ?? 0;
+      setState(() {
+        _currentWaterLogged = waterLogged;
+        _hasWaterLogged = waterLogged > 0;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -5766,17 +6581,19 @@ class _WaterLogSliderDialogState extends State<_WaterLogSliderDialog> {
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              SizedBox(width: 12),
-              ChoiceChip(
-                label: Text('Remove'),
-                selected: !_isAdd,
-                selectedColor: Colors.red[100],
-                onSelected: (selected) => setState(() => _isAdd = false),
-                labelStyle: TextStyle(
-                  color: !_isAdd ? Colors.red[700] : Colors.black,
-                  fontWeight: FontWeight.bold,
+              if (_hasWaterLogged) ...[
+                SizedBox(width: 12),
+                ChoiceChip(
+                  label: Text('Remove'),
+                  selected: !_isAdd,
+                  selectedColor: Colors.red[100],
+                  onSelected: (selected) => setState(() => _isAdd = false),
+                  labelStyle: TextStyle(
+                    color: !_isAdd ? Colors.red[700] : Colors.black,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
-              ),
+              ],
             ],
           ),
           SizedBox(height: 18),
@@ -5784,17 +6601,18 @@ class _WaterLogSliderDialogState extends State<_WaterLogSliderDialog> {
           SizedBox(height: 16),
           Slider(
             value: _value,
-            min: _min,
-            max: _max,
-            divisions: ((_max - _min) / _step).round(),
-            label: '${_value.toStringAsFixed(2)}L',
+            min: _isAdd ? _min : 0.1,
+            max: _isAdd ? _max : (_currentWaterLogged / 1000.0).clamp(0.1, _max),
+            divisions: _isAdd 
+                ? ((_max - _min) / _step).round()
+                : (((_currentWaterLogged / 1000.0).clamp(0.1, _max) - 0.1) / _step).round(),
             onChanged: (v) => setState(() => _value = double.parse(v.toStringAsFixed(2))),
           ),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('${_min.toStringAsFixed(1)}L'),
-              Text('${_max.toStringAsFixed(1)}L'),
+              Text(_isAdd ? '${_min.toStringAsFixed(1)}L' : '0.1L'),
+              Text(_isAdd ? '${_max.toStringAsFixed(1)}L' : '${(_currentWaterLogged / 1000.0).clamp(0.1, _max).toStringAsFixed(1)}L'),
             ],
           ),
         ],
@@ -5831,13 +6649,13 @@ Locale _getLocale(String code) {
   if (code == 'ar') return const Locale('ar');
   if (code == 'es') return const Locale('es');
   return const Locale('en');
-}
+  }
 
-// Helper to get current greeting based on time of day
-String get _currentGreeting {
-  final hour = DateTime.now().hour;
-  if (hour >= 5 && hour < 11) return 'Good morning ☀️';
-  if (hour >= 11 && hour < 16) return 'Good afternoon 🌤️';
-  if (hour >= 16 && hour < 21) return 'Good evening 🌇';
-  return 'Good night 🌙';
-}
+  // Helper to get current greeting based on time of day
+  String get _currentGreeting {
+    final hour = DateTime.now().hour;
+    if (hour >= 5 && hour < 11) return 'Good morning ☀️';
+    if (hour >= 11 && hour < 16) return 'Good afternoon 🌤️';
+    if (hour >= 16 && hour < 21) return 'Good evening 🌇';
+    return 'Good night 🌙';
+  }

@@ -15,7 +15,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get preferences => 'التفضيلات';
 
   @override
-  String get darkMode => 'الوضع الداكن';
+
 
   @override
   String get enableDarkTheme => 'تفعيل الوضع الداكن';

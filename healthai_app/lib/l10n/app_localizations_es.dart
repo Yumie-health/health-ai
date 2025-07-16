@@ -15,7 +15,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get preferences => 'Preferencias';
 
   @override
-  String get darkMode => 'Modo oscuro';
+
 
   @override
   String get enableDarkTheme => 'Activar tema oscuro';
