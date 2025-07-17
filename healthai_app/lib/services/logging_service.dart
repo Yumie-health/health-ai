@@ -1,5 +1,5 @@
 import 'package:logger/logger.dart';
-import 'package:firebase_analytics/firebase_analytics.dart';
+// import 'package:firebase_analytics/firebase_analytics.dart';  // Removed due to Kotlin conflicts
 
 class LoggingService {
   static final LoggingService _instance = LoggingService._internal();
@@ -7,7 +7,7 @@ class LoggingService {
   LoggingService._internal();
 
   late final Logger _logger;
-  late final FirebaseAnalytics _analytics;
+  // late final FirebaseAnalytics _analytics;  // Removed due to Kotlin conflicts
 
   void initialize() {
     _logger = Logger(
@@ -20,7 +20,7 @@ class LoggingService {
         printTime: true,
       ),
     );
-    _analytics = FirebaseAnalytics.instance;
+    // _analytics = FirebaseAnalytics.instance;  // Removed due to Kotlin conflicts
   }
 
   // Info logging
@@ -30,9 +30,9 @@ class LoggingService {
     } else {
       _logger.i(message);
     }
-    if (data != null) {
-      _analytics.logEvent(name: 'app_info', parameters: data.cast<String, Object>());
-    }
+    // if (data != null) {
+    //   _analytics.logEvent(name: 'app_info', parameters: data.cast<String, Object>());
+    // }  // Removed due to Kotlin conflicts
   }
 
   // Warning logging
@@ -42,21 +42,21 @@ class LoggingService {
     } else {
       _logger.w(message);
     }
-    if (data != null) {
-      _analytics.logEvent(name: 'app_warning', parameters: data.cast<String, Object>());
-    }
+    // if (data != null) {
+    //   _analytics.logEvent(name: 'app_warning', parameters: data.cast<String, Object>());
+    // }  // Removed due to Kotlin conflicts
   }
 
   // Error logging
   void error(String message, [dynamic error, StackTrace? stackTrace]) {
     _logger.e(message, error: error, stackTrace: stackTrace);
-    _analytics.logEvent(
-      name: 'app_error',
-      parameters: {
-        'message': message,
-        'error': error?.toString() ?? 'Unknown error',
-      }.cast<String, Object>(),
-    );
+    // _analytics.logEvent(
+    //   name: 'app_error',
+    //   parameters: {
+    //     'message': message,
+    //     'error': error?.toString() ?? 'Unknown error',
+    //   }.cast<String, Object>(),
+    // );  // Removed due to Kotlin conflicts
   }
 
   // Debug logging (only in debug mode)
@@ -75,13 +75,13 @@ class LoggingService {
     } else {
       _logger.i('User Action: $action');
     }
-    _analytics.logEvent(
-      name: 'user_action',
-      parameters: {
-        'action': action,
-        ...?parameters,
-      }.cast<String, Object>(),
-    );
+    // _analytics.logEvent(
+    //   name: 'user_action',
+    //   parameters: {
+    //     'action': action,
+    //     ...?parameters,
+    //   }.cast<String, Object>(),
+    // );  // Removed due to Kotlin conflicts
   }
 
   // API call logging
@@ -95,23 +95,23 @@ class LoggingService {
     
     if (error != null) {
       _logger.e('API Error: $endpoint - ${data.toString()}');
-      _analytics.logEvent(name: 'api_error', parameters: data.cast<String, Object>());
+      // _analytics.logEvent(name: 'api_error', parameters: data.cast<String, Object>());  // Removed due to Kotlin conflicts
     } else {
       _logger.i('API Call: $endpoint - ${data.toString()}');
-      _analytics.logEvent(name: 'api_call', parameters: data.cast<String, Object>());
+      // _analytics.logEvent(name: 'api_call', parameters: data.cast<String, Object>());  // Removed due to Kotlin conflicts
     }
   }
 
   // Performance logging
   void logPerformance(String operation, Duration duration) {
     _logger.i('Performance: $operation took ${duration.inMilliseconds}ms');
-    _analytics.logEvent(
-      name: 'performance',
-      parameters: {
-        'operation': operation,
-        'duration_ms': duration.inMilliseconds,
-      }.cast<String, Object>(),
-    );
+    // _analytics.logEvent(
+    //   name: 'performance',
+    //   parameters: {
+    //     'operation': operation,
+    //     'duration_ms': duration.inMilliseconds,
+    //   }.cast<String, Object>(),
+    // );  // Removed due to Kotlin conflicts
   }
 }
 

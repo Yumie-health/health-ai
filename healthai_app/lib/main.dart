@@ -31,8 +31,8 @@ import 'generated_meal_fridge_page.dart';
 import 'package:flutter/services.dart';
 import 'dart:convert';
 import 'services/pexels_service.dart';
-import 'package:firebase_analytics/firebase_analytics.dart';
-import 'package:firebase_analytics/observer.dart';
+// import 'package:firebase_analytics/firebase_analytics.dart';  // Removed due to Kotlin conflicts
+// import 'package:firebase_analytics/observer.dart';  // Removed due to Kotlin conflicts
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:timezone/data/latest.dart' as tz;
@@ -168,19 +168,8 @@ void main() async {
   // For Android, permissions are handled automatically by the plugin
   // For iOS, permissions are requested during initialization via DarwinInitializationSettings
   
-  // Initialize Firebase with explicit auth domain
-  await Firebase.initializeApp(
-    options: FirebaseOptions(
-      apiKey: 'AIzaSyDgo9inWvcAGhfbJhuifQ4uczcetzNubwY',
-      appId: '1:389852437815:ios:364ea4121cfb0571e54eb2',
-      messagingSenderId: '389852437815',
-      projectId: 'healthai-0001',
-      authDomain: 'healthai-0001.firebaseapp.com',
-      storageBucket: 'healthai-0001.firebasestorage.app',
-      iosClientId: '389852437815-mkmkkvh4rfonvcml0n71qrmirf3ebire.apps.googleusercontent.com',
-      iosBundleId: 'com.yumie.healthai',
-    ),
-  );
+  // Initialize Firebase - Android will use google-services.json, iOS will use the options
+  await Firebase.initializeApp();
   
   // Verify Firebase configuration
   print('Firebase initialized with project: ${Firebase.app().options.projectId}');
@@ -252,12 +241,11 @@ class HealthAIApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final prefs = Provider.of<PreferencesProvider>(context);
-    final FirebaseAnalytics analytics = FirebaseAnalytics.instance;
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'HealthAI App',
       navigatorObservers: [
-        FirebaseAnalyticsObserver(analytics: analytics),
+        // FirebaseAnalyticsObserver removed due to Kotlin conflicts
       ],
       // Localization setup
       supportedLocales: const [
@@ -434,14 +422,21 @@ class _SplashOrAppState extends State<SplashOrApp> with SingleTickerProviderStat
 
   Future<void> _waitForAppReady() async {
     final minSplash = Future.delayed(const Duration(milliseconds: 350));
-    await Firebase.initializeApp();
     User? user;
-    await for (final u in FirebaseAuth.instance.authStateChanges()) {
-      user = u;
-      break;
-    }
-    if (user != null) {
-      final doc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
+    try {
+      await for (final u in FirebaseAuth.instance.authStateChanges()) {
+        user = u;
+        break;
+      }
+      if (user != null) {
+        try {
+          await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
+        } catch (e, stack) {
+          print('Firestore user doc fetch failed: $e');
+        }
+      }
+    } catch (e, stack) {
+      print('Auth state or Firestore error: $e');
     }
     await minSplash;
     if (mounted) {
@@ -603,7 +598,7 @@ class _AuthScreenState extends State<AuthScreen> {
   bool isSamsung = false;
   bool isIOS = Platform.isIOS;
   bool isAndroid = Platform.isAndroid;
-  final FirebaseAnalytics analytics = FirebaseAnalytics.instance;
+  // final FirebaseAnalytics analytics = FirebaseAnalytics.instance;  // Removed due to Kotlin conflicts
 
   @override
   void initState() {
@@ -635,7 +630,7 @@ class _AuthScreenState extends State<AuthScreen> {
         idToken: googleAuth.idToken,
       );
       final userCredential = await FirebaseAuth.instance.signInWithCredential(credential);
-      await analytics.logLogin(loginMethod: 'google');
+      // await analytics.logLogin(loginMethod: 'google');  // Removed due to Kotlin conflicts
       final userService = UserService();
       final user = FirebaseAuth.instance.currentUser;
       if (user != null) {
@@ -662,7 +657,7 @@ class _AuthScreenState extends State<AuthScreen> {
       }
     } catch (e) {
       setState(() => isLoading = false);
-      await analytics.logEvent(name: 'login_failed', parameters: {'method': 'google', 'error': e.toString()});
+      // await analytics.logEvent(name: 'login_failed', parameters: {'method': 'google', 'error': e.toString()});  // Removed due to Kotlin conflicts
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Google sign-in failed: $e')),
       );
@@ -724,7 +719,7 @@ class _AuthScreenState extends State<AuthScreen> {
       final user = userCredential.user;
       
       if (user != null) {
-        await analytics.logLogin(loginMethod: 'apple');
+        // await analytics.logLogin(loginMethod: 'apple');  // Removed due to Kotlin conflicts
         log.logUserAction('sign_in_successful', {'method': 'apple'});
         
         // Check if user profile exists, if not, create it
@@ -778,7 +773,7 @@ class _AuthScreenState extends State<AuthScreen> {
         log.error('Make sure nonce is properly hashed before sending to Apple');
       }
       
-      await analytics.logEvent(name: 'login_failed', parameters: {'method': 'apple', 'error': e.toString()});
+      // await analytics.logEvent(name: 'login_failed', parameters: {'method': 'apple', 'error': e.toString()});  // Removed due to Kotlin conflicts
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Apple sign-in failed: $e')),
       );
@@ -822,7 +817,7 @@ class _AuthScreenState extends State<AuthScreen> {
       
     } catch (e) {
       setState(() => isLoading = false);
-      await analytics.logEvent(name: 'login_failed', parameters: {'method': 'samsung', 'error': e.toString()});
+      // await analytics.logEvent(name: 'login_failed', parameters: {'method': 'samsung', 'error': e.toString()});  // Removed due to Kotlin conflicts
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Samsung sign-in failed: $e')),
       );
@@ -865,7 +860,7 @@ class _AuthScreenState extends State<AuthScreen> {
         password: password,
       );
       
-      await analytics.logLogin(loginMethod: 'email');
+      // await analytics.logLogin(loginMethod: 'email');  // Removed due to Kotlin conflicts
       log.logUserAction('sign_in_successful', {'method': 'email'});
       
       // Check if user profile exists, if not, create it
@@ -894,7 +889,7 @@ class _AuthScreenState extends State<AuthScreen> {
       final errorMessage = errorHandler.handleAuthError(e);
       setState(() => message = errorMessage);
       log.error('Sign in failed', e);
-      await analytics.logEvent(name: 'login_failed', parameters: {'method': 'email', 'error': e.toString()});
+      // await analytics.logEvent(name: 'login_failed', parameters: {'method': 'email', 'error': e.toString()});  // Removed due to Kotlin conflicts
     } finally {
       setState(() => isLoading = false);
     }
@@ -948,7 +943,7 @@ class _AuthScreenState extends State<AuthScreen> {
         password: password,
       );
       
-      await analytics.logSignUp(signUpMethod: 'email');
+      // await analytics.logSignUp(signUpMethod: 'email');  // Removed due to Kotlin conflicts
       log.logUserAction('sign_up_successful', {'method': 'email'});
       
       // Create a full user profile
@@ -967,7 +962,7 @@ class _AuthScreenState extends State<AuthScreen> {
       final errorMessage = errorHandler.handleAuthError(e);
       setState(() => message = errorMessage);
       log.error('Sign up failed', e);
-      await analytics.logEvent(name: 'signup_failed', parameters: {'method': 'email', 'error': e.toString()});
+      // await analytics.logEvent(name: 'signup_failed', parameters: {'method': 'email', 'error': e.toString()});  // Removed due to Kotlin conflicts
     } finally {
       setState(() => isLoading = false);
     }
@@ -3098,9 +3093,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   void _showEditProfileDialog(UserProfile profile) {
     final nameController = TextEditingController(text: profile.name);
-    final startingWeightController = TextEditingController(text: profile.startingWeight.toString());
-    final weightController = TextEditingController(text: profile.weight.toString());
-    final targetWeightController = TextEditingController(text: profile.targetWeight.toString());
+    final startingWeightController = TextEditingController(text: profile.startingWeight.toStringAsFixed(1));
+    final weightController = TextEditingController(text: profile.weight.toStringAsFixed(1));
+    final targetWeightController = TextEditingController(text: profile.targetWeight.toStringAsFixed(1));
 
     showDialog(
       context: context,
@@ -3140,6 +3135,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
                     labelStyle: TextStyle(color: theme.textTheme.bodyLarge?.color),
                   ),
+                  enabled: profile.startingWeight == 0.0, // Only allow editing if not set
                 ),
                 const SizedBox(height: 12),
                 _NumericTextField(
@@ -3182,6 +3178,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ElevatedButton(
                       onPressed: () async {
                         try {
+                          // Only update startingWeight if it was not set before
                           final updatedProfile = UserProfile(
                             id: profile.id,
                             email: profile.email,
@@ -3194,7 +3191,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             carbsGoal: profile.carbsGoal,
                             fatGoal: profile.fatGoal,
                             targetWeight: double.parse(targetWeightController.text),
-                            startingWeight: double.parse(startingWeightController.text),
+                            startingWeight: profile.startingWeight == 0.0 ? double.parse(startingWeightController.text) : profile.startingWeight,
                             createdAt: profile.createdAt,
                             lastUpdated: DateTime.now(),
                           );
@@ -3550,7 +3547,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                             SizedBox(height: 6),
                                             Text('Starting Weight', style: TextStyle(color: kPrimaryGreen, fontWeight: FontWeight.w600, fontSize: 15), textAlign: TextAlign.center),
                                             SizedBox(height: 2),
-                                            Text('${useMetric ? profile.startingWeight : (profile.startingWeight * 2.20462).toStringAsFixed(1)} ${useMetric ? 'kg' : 'lb'}', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Colors.black)),
+                                            Text('${useMetric ? profile.startingWeight.toStringAsFixed(1) : (profile.startingWeight * 2.20462).toStringAsFixed(1)} ${useMetric ? 'kg' : 'lb'}', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Colors.black)),
                                           ],
                                         ),
                                       ),
@@ -3631,7 +3628,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                             SizedBox(height: 6),
                                             Text('Target Weight', style: TextStyle(color: kPrimaryGreen, fontWeight: FontWeight.w600, fontSize: 15), textAlign: TextAlign.center),
                                             SizedBox(height: 2),
-                                            Text('${useMetric ? profile.targetWeight : (profile.targetWeight * 2.20462).toStringAsFixed(1)} ${useMetric ? 'kg' : 'lb'}', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Colors.black)),
+                                            Text('${useMetric ? profile.targetWeight.toStringAsFixed(1) : (profile.targetWeight * 2.20462).toStringAsFixed(1)} ${useMetric ? 'kg' : 'lb'}', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Colors.black)),
                                           ],
                                         ),
                                       ),

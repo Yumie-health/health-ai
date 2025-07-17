@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart'; // For RenderRepaintBoundary
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
-import 'package:image_gallery_saver/image_gallery_saver.dart';
 import 'scan_result_page.dart';
 import '../l10n/app_localizations.dart';
 
@@ -31,28 +30,28 @@ class _GeneratedMealFromFridgePageState extends State<GeneratedMealFromFridgePag
       Uint8List pngBytes = byteData!.buffer.asUint8List();
       
       // Save to photo gallery
-      final result = await ImageGallerySaver.saveImage(
-        pngBytes,
-        quality: 100,
-        name: 'meal_screenshot_${DateTime.now().millisecondsSinceEpoch}',
-      );
+      // final result = await ImageGallerySaver.saveImage(
+      //   pngBytes,
+      //   quality: 100,
+      //   name: 'meal_screenshot_${DateTime.now().millisecondsSinceEpoch}',
+      // );
       
-      if (result['isSuccess'] == true) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Screenshot saved to photo gallery!'),
-            action: SnackBarAction(
-              label: 'Share',
-              onPressed: () {
-                // Create a temporary file for sharing
-                _shareScreenshot(pngBytes);
-              },
-            ),
-          ),
-        );
-      } else {
-        throw Exception('Failed to save to gallery');
-      }
+      // if (result['isSuccess'] == true) {
+      //   ScaffoldMessenger.of(context).showSnackBar(
+      //     SnackBar(
+      //       content: Text('Screenshot saved to photo gallery!'),
+      //       action: SnackBarAction(
+      //         label: 'Share',
+      //         onPressed: () {
+      //           // Create a temporary file for sharing
+      //           _shareScreenshot(pngBytes);
+      //         },
+      //       ),
+      //     ),
+      //   );
+      // } else {
+      //   throw Exception('Failed to save to gallery');
+      // }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -105,12 +104,6 @@ class _GeneratedMealFromFridgePageState extends State<GeneratedMealFromFridgePag
         backgroundColor: Colors.white,
         elevation: 0,
         actions: [
-          if (!_hideButtons)
-            IconButton(
-              icon: Icon(Icons.camera_alt, color: Colors.green),
-              tooltip: 'Screenshot',
-              onPressed: _takeScreenshot,
-            ),
         ],
       ),
       body: RepaintBoundary(

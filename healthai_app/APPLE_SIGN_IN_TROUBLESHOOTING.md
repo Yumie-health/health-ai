@@ -119,3 +119,4 @@ The updated code now includes:
 - [Firebase Apple Sign-In Documentation](https://firebase.google.com/docs/auth/ios/apple)
 - [Apple Developer Documentation](https://developer.apple.com/documentation/sign_in_with_apple)
 - [Flutter sign_in_with_apple Package](https://pub.dev/packages/sign_in_with_apple) 
+

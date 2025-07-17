@@ -61,7 +61,7 @@ dependencies:
   flutter_launcher_icons: ^0.14.3
   flutter_native_splash: ^2.4.6
   table_calendar: ^3.0.9 
-  firebase_analytics: ^11.5.2
+  # firebase_analytics: ^11.4.1  # Removed due to Kotlin version conflicts
   firebase_messaging: ^15.2.9
   cloud_functions: ^5.6.1
   google_sign_in: ^6.1.5
@@ -69,9 +69,8 @@ dependencies:
   crypto: ^3.0.3
   firebase_storage: ^12.4.9
   image_picker: ^1.1.1
-  camera: ^0.11.2
+  camera: ^0.10.5+9
   share_plus: ^11.0.0
-  image_gallery_saver: ^2.0.3
   logging: ^1.2.0
   flutter_localizations:
     sdk: flutter
