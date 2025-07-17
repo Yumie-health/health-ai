@@ -115,7 +115,7 @@ class _NumericTextFieldState extends State<_NumericTextField> {
           borderSide: BorderSide.none,
         ),
       )).copyWith(
-        suffixIcon: _isFocused && Theme.of(context).platform == TargetPlatform.iOS
+        suffixIcon: _isFocused
             ? IconButton(
                 icon: Icon(Icons.check, color: kPrimaryGreen, size: 20),
                 onPressed: _onCheckmarkTap,
@@ -163,6 +163,69 @@ void main() async {
       print('Notification tapped: ${response.payload}');
     },
   );
+
+  // Create Android notification channels for proper Android notifications
+  const AndroidNotificationChannel mealChannel = AndroidNotificationChannel(
+    'meal_channel',
+    'Meal Logging',
+    description: 'Notifications for meal logging reminders',
+    importance: Importance.max,
+    playSound: true,
+    enableVibration: true,
+  );
+
+  const AndroidNotificationChannel waterChannel = AndroidNotificationChannel(
+    'water_channel',
+    'Water Intake',
+    description: 'Notifications for water intake reminders',
+    importance: Importance.max,
+    playSound: true,
+    enableVibration: true,
+  );
+
+  const AndroidNotificationChannel walkChannel = AndroidNotificationChannel(
+    'walk_channel',
+    'Mindful Walks',
+    description: 'Notifications for mindful walk reminders',
+    importance: Importance.max,
+    playSound: true,
+    enableVibration: true,
+  );
+
+  const AndroidNotificationChannel testChannel = AndroidNotificationChannel(
+    'test_channel',
+    'Test Notifications',
+    description: 'Test notifications for debugging',
+    importance: Importance.max,
+    playSound: true,
+    enableVibration: true,
+  );
+
+  const AndroidNotificationChannel backgroundChannel = AndroidNotificationChannel(
+    'background_channel',
+    'Background Notifications',
+    description: 'Notifications that work when app is closed',
+    importance: Importance.max,
+    playSound: true,
+    enableVibration: true,
+  );
+
+  // Create the channels
+  await flutterLocalNotificationsPlugin
+      .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
+      ?.createNotificationChannel(mealChannel);
+  await flutterLocalNotificationsPlugin
+      .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
+      ?.createNotificationChannel(waterChannel);
+  await flutterLocalNotificationsPlugin
+      .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
+      ?.createNotificationChannel(walkChannel);
+  await flutterLocalNotificationsPlugin
+      .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
+      ?.createNotificationChannel(testChannel);
+  await flutterLocalNotificationsPlugin
+      .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
+      ?.createNotificationChannel(backgroundChannel);
 
   // Request notification permissions
   // For Android, permissions are handled automatically by the plugin

@@ -219,7 +219,7 @@ class _SearchableMealInputState extends State<SearchableMealInput> {
                 borderRadius: BorderRadius.circular(14),
                 borderSide: BorderSide.none,
               ),
-              suffixIcon: _isFocused && Theme.of(context).platform == TargetPlatform.iOS
+              suffixIcon: _isFocused
                   ? IconButton(
                       icon: Icon(Icons.check, color: kPrimaryGreen, size: 20),
                       onPressed: _onCheckmarkTap,
@@ -420,7 +420,7 @@ class _NumericTextFieldState extends State<_NumericTextField> {
           borderSide: BorderSide.none,
         ),
       )).copyWith(
-        suffixIcon: _isFocused && Theme.of(context).platform == TargetPlatform.iOS
+        suffixIcon: _isFocused
             ? IconButton(
                 icon: Icon(Icons.check, color: kPrimaryGreen, size: 20),
                 onPressed: _onCheckmarkTap,

@@ -626,8 +626,8 @@ List 5 foods similar to "$query".$foodTypeInstruction For each, give name, calor
       languageInstruction = '\nRespond in Spanish.';
     }
     final prompt = '''
-You are a nutrition AI expert. Analyze this food/drink image and return a JSON object with:
-- food_name: string (be specific and descriptive)
+You are a nutrition AI expert with EXTREME attention to detail. Analyze this food/drink image with meticulous care and return a JSON object with:
+- food_name: string (be extremely specific and descriptive, include brand names if visible)
 - calories: integer (per 100g for ingredients/meals, per 8 fl oz for drinks)
 - protein: integer (grams per 100g for ingredients/meals, per 8 fl oz for drinks)
 - carbs: integer (grams per 100g for ingredients/meals, per 8 fl oz for drinks)
@@ -635,26 +635,46 @@ You are a nutrition AI expert. Analyze this food/drink image and return a JSON o
 - ingredients: array of strings (main ingredients only)
 - food_type: string (must be one of: "ingredient", "meal", "drink")
 
-CRITICAL RULES:
-1. For DRINKS (coffee, tea, smoothies, juices, sodas, energy drinks):
-   - Recognize coffee shop drinks (Starbucks, Dunkin, etc.)
-   - Recognize smoothies, juices, milkshakes, energy drinks
-   - Use realistic calorie ranges: coffee 0-50 cal, smoothies 100-300 cal, milkshakes 200-500 cal
-   - Base serving: 8 fl oz (240ml) for most drinks
+CRITICAL ANALYSIS RULES:
+1. EXAMINE THE IMAGE WITH EXTREME CARE:
+   - Look for nutrition labels, ingredient lists, and serving size information
+   - Read any visible text, numbers, or nutritional information
+   - Pay attention to brand names, product names, and specific details
+   - If you see a nutrition label, use those exact values
+   - If you see "160 calories" on a bottle, use 160 calories
 
-2. For INGREDIENTS (fruits, vegetables, nuts, single items):
-   - Count multiple items (e.g., "3 bananas" not "1 banana")
+2. For DRINKS (coffee, tea, smoothies, juices, sodas, energy drinks):
+   - Look for nutrition labels on bottles/cans
+   - Recognize specific brands (Coca-Cola, Pepsi, Starbucks, etc.)
+   - Use exact calorie values if visible on packaging
+   - Base serving: 8 fl oz (240ml) for most drinks
+   - If nutrition info is visible, use those exact numbers
+
+3. For INGREDIENTS (fruits, vegetables, nuts, single items):
+   - Count multiple items accurately (e.g., "3 bananas" not "1 banana")
+   - Look for packaging labels with nutrition info
    - Use realistic calorie ranges: fruits 30-80 cal, vegetables 10-50 cal, nuts 500-700 cal
    - Be specific about quantity in food_name
 
-3. For MEALS (prepared dishes, cooked food):
-   - Recognize restaurant dishes, fast food, home-cooked meals
+4. For MEALS (prepared dishes, cooked food):
+   - Look for restaurant packaging, nutrition labels
+   - Recognize specific dishes and brands
    - Use realistic calorie ranges: light meals 200-400 cal, regular meals 400-800 cal, heavy meals 800-1200 cal
+   - If nutrition info is visible, use those exact values
 
-4. ACCURATE NUTRITION DATA:
-   - Research and provide realistic nutrition values
+5. ACCURATE NUTRITION DATA:
+   - ALWAYS prioritize visible nutrition labels and packaging information
+   - If you see "160 calories" on a bottle, use 160 calories exactly
    - Do NOT guess or use placeholder values
    - Consider portion sizes and preparation methods
+   - If nutrition info is unclear, provide realistic estimates based on similar products
+
+6. EXTREME ATTENTION TO DETAIL:
+   - Read every visible word, number, and label
+   - Look for serving size information
+   - Check for brand names and product names
+   - Examine the entire image carefully before responding
+   - If you see nutritional information, use it exactly as shown
 
 Respond ONLY with valid JSON.$languageInstruction
 ''';

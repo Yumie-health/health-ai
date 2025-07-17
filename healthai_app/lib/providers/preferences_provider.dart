@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/timezone.dart' as tz;
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 // Initialize FlutterLocalNotificationsPlugin
 final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
@@ -29,11 +31,39 @@ class PreferencesProvider extends ChangeNotifier {
   Future<void> _loadPrefs() async {
     final prefs = await SharedPreferences.getInstance();
     _useMetric = prefs.getBool('useMetric') ?? true;
+    _language = prefs.getString('language') ?? 'en';
+    
+    // Load reminder settings from SharedPreferences first
     _mealLoggingPrompts = prefs.getBool('mealLoggingPrompts') ?? false;
     _waterIntakeReminders = prefs.getBool('waterIntakeReminders') ?? false;
     _mindfulWalksReminders = prefs.getBool('mindfulWalksReminders') ?? false;
     _momentOfCalmReminders = prefs.getBool('momentOfCalmReminders') ?? false;
-    _language = prefs.getString('language') ?? 'en';
+    
+    // Also check Firestore for reminder settings (as backup)
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user != null) {
+        final doc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
+        final data = doc.data();
+        if (data != null && data['reminders'] != null) {
+          final reminders = data['reminders'] as Map<String, dynamic>;
+          _mealLoggingPrompts = reminders['mealLoggingPrompts'] ?? _mealLoggingPrompts;
+          _waterIntakeReminders = reminders['waterIntakeReminders'] ?? _waterIntakeReminders;
+          _mindfulWalksReminders = reminders['mindfulWalksReminders'] ?? _mindfulWalksReminders;
+          _momentOfCalmReminders = reminders['momentOfCalmReminders'] ?? _momentOfCalmReminders;
+          
+          // Update SharedPreferences with Firestore values
+          await prefs.setBool('mealLoggingPrompts', _mealLoggingPrompts);
+          await prefs.setBool('waterIntakeReminders', _waterIntakeReminders);
+          await prefs.setBool('mindfulWalksReminders', _mindfulWalksReminders);
+          await prefs.setBool('momentOfCalmReminders', _momentOfCalmReminders);
+        }
+      }
+    } catch (e) {
+      // If Firestore fails, use SharedPreferences values
+      print('Failed to load reminders from Firestore: $e');
+    }
+    
     notifyListeners();
   }
 
@@ -48,6 +78,20 @@ class PreferencesProvider extends ChangeNotifier {
     final prefs = await SharedPreferences.getInstance();
     _mealLoggingPrompts = value;
     await prefs.setBool('mealLoggingPrompts', value);
+    
+    // Also save to Firestore
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user != null) {
+        await FirebaseFirestore.instance.collection('users').doc(user.uid).update({
+          'reminders.mealLoggingPrompts': value,
+          'lastUpdated': DateTime.now(),
+        });
+      }
+    } catch (e) {
+      print('Failed to save meal logging prompts to Firestore: $e');
+    }
+    
     notifyListeners();
     if (value) {
       await _scheduleMealLoggingPrompts();
@@ -60,6 +104,20 @@ class PreferencesProvider extends ChangeNotifier {
     final prefs = await SharedPreferences.getInstance();
     _waterIntakeReminders = value;
     await prefs.setBool('waterIntakeReminders', value);
+    
+    // Also save to Firestore
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user != null) {
+        await FirebaseFirestore.instance.collection('users').doc(user.uid).update({
+          'reminders.waterIntakeReminders': value,
+          'lastUpdated': DateTime.now(),
+        });
+      }
+    } catch (e) {
+      print('Failed to save water intake reminders to Firestore: $e');
+    }
+    
     notifyListeners();
     if (value) {
       await _scheduleWaterIntakeReminders();
@@ -72,6 +130,20 @@ class PreferencesProvider extends ChangeNotifier {
     final prefs = await SharedPreferences.getInstance();
     _mindfulWalksReminders = value;
     await prefs.setBool('mindfulWalksReminders', value);
+    
+    // Also save to Firestore
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user != null) {
+        await FirebaseFirestore.instance.collection('users').doc(user.uid).update({
+          'reminders.mindfulWalksReminders': value,
+          'lastUpdated': DateTime.now(),
+        });
+      }
+    } catch (e) {
+      print('Failed to save mindful walks reminders to Firestore: $e');
+    }
+    
     notifyListeners();
     if (value) {
       await _scheduleMindfulWalksReminders();
@@ -84,6 +156,20 @@ class PreferencesProvider extends ChangeNotifier {
     final prefs = await SharedPreferences.getInstance();
     _momentOfCalmReminders = value;
     await prefs.setBool('momentOfCalmReminders', value);
+    
+    // Also save to Firestore
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user != null) {
+        await FirebaseFirestore.instance.collection('users').doc(user.uid).update({
+          'reminders.momentOfCalmReminders': value,
+          'lastUpdated': DateTime.now(),
+        });
+      }
+    } catch (e) {
+      print('Failed to save moment of calm reminders to Firestore: $e');
+    }
+    
     notifyListeners();
     // Placeholder: actual popup logic should be triggered before meal logging
   }
