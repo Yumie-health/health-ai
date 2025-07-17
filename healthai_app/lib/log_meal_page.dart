@@ -6,8 +6,285 @@ import 'services/meal_service.dart';
 import 'models/custom_meal.dart';
 import 'l10n/app_localizations.dart';
 import 'services/pexels_service.dart';
+import 'services/ai_service.dart';
 import 'providers/preferences_provider.dart';
 import 'utils/constants.dart';
+
+// Searchable meal input with dropdown suggestions
+class SearchableMealInput extends StatefulWidget {
+  final TextEditingController controller;
+  final Function(String name, int calories, int protein, int carbs, int fat)? onMealSelected;
+  final String hintText;
+
+  const SearchableMealInput({
+    Key? key,
+    required this.controller,
+    this.onMealSelected,
+    required this.hintText,
+  }) : super(key: key);
+
+  @override
+  State<SearchableMealInput> createState() => _SearchableMealInputState();
+}
+
+class _SearchableMealInputState extends State<SearchableMealInput> {
+  final FocusNode _focusNode = FocusNode();
+  final AIService _aiService = AIService();
+  bool _isFocused = false;
+  bool _showDropdown = false;
+  bool _isSearching = false;
+  List<Map<String, dynamic>> _searchResults = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _focusNode.addListener(_onFocusChange);
+    widget.controller.addListener(_onTextChanged);
+  }
+
+  void _onFocusChange() {
+    setState(() {
+      _isFocused = _focusNode.hasFocus;
+      // Only hide dropdown if we lose focus AND we're not currently searching
+      if (!_focusNode.hasFocus && !_isSearching) {
+        _showDropdown = false;
+      }
+    });
+  }
+
+  void _onTextChanged() {
+    // No-op: do not reset dropdown or results on text change
+  }
+
+  Future<void> _performSearch(String query) async {
+    if (_isSearching) return; // Prevent multiple simultaneous searches
+    
+    print('🔍 Starting search for: $query'); // Debug log
+    
+    setState(() {
+      _isSearching = true;
+      _showDropdown = true; // Always show dropdown when starting search
+    });
+
+    try {
+      print('🔍 Calling AI service...'); // Debug log
+      // Use a faster, simpler AI prompt for quicker results
+      final results = await _aiService.searchFoodItemsFast(query);
+      print('🔍 AI returned ${results.length} results'); // Debug log
+      
+      if (mounted) {
+        setState(() {
+          _searchResults = results;
+          _showDropdown = true; // Keep dropdown visible even if no results
+          _isSearching = false;
+        });
+        print('🔍 Updated UI with ${results.length} results, dropdown visible: $_showDropdown'); // Debug log
+      }
+    } catch (e) {
+      print('🔍 Search error: $e'); // Debug log
+      if (mounted) {
+        setState(() {
+          _searchResults = [];
+          _showDropdown = true; // Keep dropdown visible to show error state
+          _isSearching = false;
+        });
+      }
+    }
+  }
+
+  void _selectMeal(Map<String, dynamic> meal) {
+    widget.controller.text = meal['name'];
+    widget.onMealSelected?.call(
+      meal['name'],
+      (meal['calories'] as num).toInt(),
+      (meal['protein'] as num).toInt(),
+      (meal['carbs'] as num).toInt(),
+      (meal['fat'] as num).toInt(),
+    );
+    setState(() {
+      _showDropdown = false; // Only hide when a result is selected
+      _searchResults = [];
+    });
+    _focusNode.unfocus(); // Only unfocus when a result is selected
+  }
+
+  void _onCheckmarkTap() {
+    final query = widget.controller.text.trim();
+    if (query.length >= 2) {
+      print('🔍 Checkmark tapped, query: $query'); // Debug log
+      _performSearch(query);
+    }
+    // Do not unfocus here - keep focus to maintain dropdown visibility
+  }
+
+  @override
+  void dispose() {
+    _focusNode.removeListener(_onFocusChange);
+    widget.controller.removeListener(_onTextChanged);
+    _focusNode.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () {
+        // Close dropdown when tapping outside
+        if (_showDropdown && !_isSearching) {
+          setState(() {
+            _showDropdown = false;
+            _searchResults = [];
+          });
+        }
+      },
+      child: Column(
+        children: [
+          TextField(
+            controller: widget.controller,
+            focusNode: _focusNode,
+            decoration: InputDecoration(
+              hintText: widget.hintText,
+              filled: true,
+              fillColor: const Color(0xFFF5F5F5),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(14),
+                borderSide: BorderSide.none,
+              ),
+              suffixIcon: _isFocused && Theme.of(context).platform == TargetPlatform.iOS
+                  ? IconButton(
+                      icon: Icon(Icons.check, color: kPrimaryGreen, size: 20),
+                      onPressed: _onCheckmarkTap,
+                      padding: EdgeInsets.zero,
+                      constraints: BoxConstraints(minWidth:40, minHeight: 40),
+                    )
+                  : null,
+            ),
+          ),
+        if (_showDropdown)
+          Container(
+            margin: EdgeInsets.only(top: 4),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: kPrimaryGreen.withOpacity(0.2)),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.1),
+                  blurRadius: 8,
+                  offset: Offset(0, 4),
+                ),
+              ],
+            ),
+            constraints: BoxConstraints(maxHeight: 200),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Header with close button
+                Container(
+                  padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: kPrimaryGreen.withOpacity(0.05),
+                    borderRadius: BorderRadius.only(
+                      topLeft: Radius.circular(14),
+                      topRight: Radius.circular(14),
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        AppLocalizations.of(context)!.searchResults,
+                        style: TextStyle(
+                          fontWeight: FontWeight.w600,
+                          color: kPrimaryGreen,
+                          fontSize: 12,
+                        ),
+                      ),
+                      IconButton(
+                        icon: Icon(Icons.close, color: Colors.grey[600], size: 16),
+                        onPressed: () {
+                          setState(() {
+                            _showDropdown = false;
+                            _searchResults = [];
+                            _isSearching = false;
+                          });
+                        },
+                        padding: EdgeInsets.zero,
+                        constraints: BoxConstraints(minWidth: 24, minHeight: 24),
+                      ),
+                    ],
+                  ),
+                ),
+                // Content
+                Flexible(
+                  child: _isSearching
+                      ? Padding(
+                          padding: EdgeInsets.all(16),
+                          child: Row(
+                            children: [
+                              SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: kPrimaryGreen,
+                                ),
+                              ),
+                              SizedBox(width: 12),
+                              Expanded(
+                                child: Text(
+                                  AppLocalizations.of(context)!.searchingFor + ' "${widget.controller.text.trim()}"...',
+                                  style: TextStyle(
+                                    color: Colors.grey[600],
+                                    fontSize: 14,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        )
+                      : _searchResults.isEmpty
+                          ? Padding(
+                              padding: EdgeInsets.all(16),
+                              child: Text(
+                                AppLocalizations.of(context)!.noResultsFoundFor + ' "${widget.controller.text.trim()}"',
+                                style: TextStyle(
+                                  color: Colors.grey[600],
+                                  fontSize: 14,
+                                ),
+                              ),
+                            )
+                          : ListView.builder(
+                              shrinkWrap: true,
+                              itemCount: _searchResults.length,
+                              itemBuilder: (context, index) {
+                                final meal = _searchResults[index];
+                                return ListTile(
+                                  title: Text(
+                                    meal['name'],
+                                    style: TextStyle(fontWeight: FontWeight.w600),
+                                  ),
+                                  subtitle: Text(
+                                    '${meal['calories']} cal • ${meal['protein']}g protein • ${meal['carbs']}g carbs • ${meal['fat']}g fat',
+                                    style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                                  ),
+                                  leading: CircleAvatar(
+                                    backgroundColor: kPrimaryGreen.withOpacity(0.1),
+                                    child: Icon(Icons.restaurant, color: kPrimaryGreen, size: 20),
+                                  ),
+                                  onTap: () => _selectMeal(meal),
+                                );
+                              },
+                            ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
 
 // Custom TextField with floating Done button for iOS
 class _NumericTextField extends StatefulWidget {
@@ -1028,17 +1305,18 @@ class _LogMealPageState extends State<LogMealPage> with TickerProviderStateMixin
                       ],
                     ),
                     const SizedBox(height: 8),
-                    TextField(
+                    SearchableMealInput(
                       controller: _foodNameController,
-                      decoration: InputDecoration(
-                        hintText: AppLocalizations.of(context)!.searchOrEnterFoodName,
-                        filled: true,
-                        fillColor: const Color(0xFFF5F5F5),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(14),
-                          borderSide: BorderSide.none,
-                        ),
-                      ),
+                      hintText: AppLocalizations.of(context)!.searchOrEnterFoodName,
+                      onMealSelected: (name, calories, protein, carbs, fat) {
+                        setState(() {
+                          _foodNameController.text = name;
+                          _caloriesController.text = calories.toString();
+                          _proteinController.text = protein.toString();
+                          _carbsController.text = carbs.toString();
+                          _fatController.text = fat.toString();
+                        });
+                      },
                     ),
                   ],
                 ),

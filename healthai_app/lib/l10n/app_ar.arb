@@ -154,5 +154,8 @@
   "watchAdForScan": "شاهد إعلانًا للمسح",
   "generateMeal": "إنشاء وجبة",
   "detectedFridgeItems": "العناصر المكتشفة في الثلاجة",
-  "noFridgeItemsDetected": "لم يتم اكتشاف عناصر في الثلاجة."
+  "noFridgeItemsDetected": "لم يتم اكتشاف عناصر في الثلاجة.",
+  "searchResults": "نتائج البحث",
+  "searchingFor": "البحث عن",
+  "noResultsFoundFor": "لم يتم العثور على نتائج لـ"
 } 

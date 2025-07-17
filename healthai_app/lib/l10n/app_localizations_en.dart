@@ -15,7 +15,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get preferences => 'Preferences';
 
   @override
-
+  String get darkMode => 'Dark Mode';
 
   @override
   String get enableDarkTheme => 'Enable dark theme';
@@ -475,4 +475,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get noFridgeItemsDetected => 'No fridge items detected.';
+
+  @override
+  String get searchResults => 'Search Results';
+
+  @override
+  String get searchingFor => 'Searching for';
+
+  @override
+  String get noResultsFoundFor => 'No results found for';
 }

@@ -15,7 +15,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get preferences => 'Preferencias';
 
   @override
-
+  String get darkMode => 'Modo oscuro';
 
   @override
   String get enableDarkTheme => 'Activar tema oscuro';
@@ -471,8 +471,17 @@ class AppLocalizationsEs extends AppLocalizations {
   String get generateMeal => 'Generar comida';
 
   @override
-  String get detectedFridgeItems => 'Elementos detectados en el refrigerador';
+  String get detectedFridgeItems => 'Elementos de Refrigerador Detectados';
 
   @override
   String get noFridgeItemsDetected => 'No se detectaron elementos en el refrigerador.';
+
+  @override
+  String get searchResults => 'Resultados de Búsqueda';
+
+  @override
+  String get searchingFor => 'Buscando';
+
+  @override
+  String get noResultsFoundFor => 'No se encontraron resultados para';
 }

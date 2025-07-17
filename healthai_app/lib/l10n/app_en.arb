@@ -154,5 +154,8 @@
   "watchAdForScan": "Watch Ad for Scan",
   "generateMeal": "Generate Meal",
   "detectedFridgeItems": "Detected Fridge Items",
-  "noFridgeItemsDetected": "No fridge items detected."
+  "noFridgeItemsDetected": "No fridge items detected.",
+  "searchResults": "Search Results",
+  "searchingFor": "Searching for",
+  "noResultsFoundFor": "No results found for"
 } 

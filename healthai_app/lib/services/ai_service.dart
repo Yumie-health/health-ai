@@ -198,80 +198,279 @@ Respond in a motivating and friendly tone, like a helpful nutrition buddy. If th
 
   Future<Map<String, int>?> getNutritionPlanRecommendation({
     required int age,
-    required String sex,
-    required int heightFt,
-    required int heightIn,
-    required int weightLb,
-    required String goal,
-    required String activityLevel,
+    required int heightCm,
+    required double weightKg,
+    required int calorieGoal,
+    required int proteinGoal,
+    required int carbsGoal,
+    required int fatGoal,
     required String bloodType,
     required bool isDiabetic,
-    String? waterIntake,
-    String? motivation,
-    double? targetWeightKg,
-    List<String>? eatingHabits,
+    String language = 'en',
   }) async {
+    final stopwatch = Stopwatch()..start();
+    
+    try {
+      log.info('Getting nutrition plan recommendation', {
+        'age': age,
+        'calorie_goal': calorieGoal,
+        'language': language,
+      });
+
     final prompt = '''
-You are Yumie, a smart nutrition AI trained to create personalized daily intake plans based on individual health data.
+Given the following user profile, provide a personalized nutrition plan recommendation:
 
-Use the following user inputs from the onboarding flow:
+- Age: $age
+- Height: ${(heightCm / 2.54).round()} inches
+- Weight: ${(weightKg * 2.20462).round()} lbs
+- Daily calorie goal: $calorieGoal kcal
+- Protein goal: ${proteinGoal}g
+- Carbs goal: ${carbsGoal}g
+- Fat goal: ${fatGoal}g
+- Blood Type: $bloodType
+- Diabetic: ${isDiabetic ? 'Yes' : 'No'}
 
-Age: $age
-Sex: $sex
-Height: $heightFt ft $heightIn in
-Weight: $weightLb lb
-Goal: $goal
-Activity Level: $activityLevel
-Blood Type: $bloodType
-Diabetic: ${isDiabetic ? 'Yes' : 'No'}
-${waterIntake != null ? "Water Intake: $waterIntake" : ""}
-${motivation != null ? "Motivation: $motivation" : ""}
-${targetWeightKg != null ? "Target Weight: ${(targetWeightKg * 2.20462).round()} lb" : ""}
-${eatingHabits != null && eatingHabits.isNotEmpty ? "Eating Habits:\n${eatingHabits.map((h) => "- $h").join('\n')}" : ""}
+Provide a JSON response with the following structure:
+{
+  "breakfast": {
+    "calories": <number>,
+    "protein": <number>,
+    "carbs": <number>,
+    "fat": <number>
+  },
+  "lunch": {
+    "calories": <number>,
+    "protein": <number>,
+    "carbs": <number>,
+    "fat": <number>
+  },
+  "dinner": {
+    "calories": <number>,
+    "protein": <number>,
+    "carbs": <number>,
+    "fat": <number>
+  },
+  "snack": {
+    "calories": <number>,
+    "protein": <number>,
+    "carbs": <number>,
+    "fat": <number>
+  }
+}
 
-Based on this information:
-- Calculate Total Daily Energy Expenditure (TDEE) using Mifflin-St Jeor formula.
-- Adjust caloric target according to their goal:
-  - Weight Loss: TDEE - 500 kcal
-  - Muscle Gain: TDEE + 300 kcal
-  - Maintenance: TDEE
-- Distribute macros based on standard ratios (or adjust smartly):
-  - Protein: 1g per pound of body weight (or 1.2g if muscle gain)
-  - Fat: 0.3–0.4g per pound
-  - Carbs = Remaining calories / 4
-- Consider their eating habits and motivation when suggesting meal timing and composition
-- Account for their target weight in the calorie deficit/surplus calculation
-- Adjust recommendations based on their blood type and diabetic status
-
-Output ONLY like this (no extra text, no units, no emojis, no explanations):
-Calories: <number>
-Protein: <number>
-Fat: <number>
-Carbs: <number>
-
-Example:
-Calories: 2200
-Protein: 120
-Fat: 70
-Carbs: 250
+Only return the JSON, no additional text.
 ''';
-    final response = await sendMessage(prompt);
-    if (response == null) return null;
 
-    // Parse the response for numbers (simple regex, can be improved)
-    final caloriesMatch = RegExp(r'Calories:\s*([\d,]+)').firstMatch(response);
-    final proteinMatch = RegExp(r'Protein:\s*(\d+)').firstMatch(response);
-    final fatMatch = RegExp(r'Fat:\s*(\d+)').firstMatch(response);
-    final carbsMatch = RegExp(r'Carbs:\s*(\d+)').firstMatch(response);
-    if (caloriesMatch == null || proteinMatch == null || fatMatch == null || carbsMatch == null) {
+      final response = await sendMessage(prompt, model: 'gpt-4o-mini');
+      
+      stopwatch.stop();
+      log.logPerformance('Nutrition plan recommendation', stopwatch.elapsed);
+      
+      if (response != null) {
+        try {
+          final data = jsonDecode(response);
+          log.info('Nutrition plan recommendation successful');
+          return Map<String, int>.from(data);
+        } catch (e) {
+          log.error('Failed to parse nutrition plan JSON', e);
+          return null;
+        }
+      } else {
+        log.error('Nutrition plan recommendation failed', 'No response from AI');
+        return null;
+      }
+    } catch (e) {
+      stopwatch.stop();
+      log.error('Nutrition plan recommendation error', e);
       return null;
     }
-    return {
-      'calories': int.parse(caloriesMatch.group(1)!.replaceAll(',', '')),
-      'protein': int.parse(proteinMatch.group(1)!),
-      'fat': int.parse(fatMatch.group(1)!),
-      'carbs': int.parse(carbsMatch.group(1)!),
-    };
+  }
+
+  /// Get nutritional information for a food item using AI
+  Future<Map<String, dynamic>?> getFoodNutrition(String foodName) async {
+    final stopwatch = Stopwatch()..start();
+    
+    try {
+      log.info('Getting nutrition for food', {'food_name': foodName});
+
+      final prompt = '''
+Provide nutritional information for "$foodName" per 100g serving.
+
+Return ONLY a JSON object with this exact structure:
+{
+  "name": "$foodName",
+  "calories": <number>,
+  "protein": <number>,
+  "carbs": <number>,
+  "fat": <number>
+}
+
+Use standard nutritional databases. Only return the JSON, no additional text or explanations.
+''';
+
+      final response = await sendMessage(prompt, model: 'gpt-4o-mini');
+      
+      stopwatch.stop();
+      log.logPerformance('Food nutrition lookup', stopwatch.elapsed);
+      
+      if (response != null) {
+        try {
+          final data = jsonDecode(response);
+          log.info('Food nutrition lookup successful', {'food_name': foodName});
+          return Map<String, dynamic>.from(data);
+        } catch (e) {
+          log.error('Failed to parse food nutrition JSON', e);
+          return null;
+        }
+      } else {
+        log.error('Food nutrition lookup failed', 'No response from AI');
+        return null;
+      }
+    } catch (e) {
+      stopwatch.stop();
+      log.error('Food nutrition lookup error', e);
+      return null;
+    }
+  }
+
+  /// Search for food items that match the query
+  Future<List<Map<String, dynamic>>> searchFoodItems(String query) async {
+    final stopwatch = Stopwatch()..start();
+    
+    try {
+      log.info('Searching for food items', {'query': query});
+
+      final prompt = '''
+Search for food items that match "$query". Return a list of 5-10 relevant food items.
+
+Return ONLY a JSON array with this exact structure:
+[
+  {
+    "name": "<food name>",
+    "calories": <number per 100g>,
+    "protein": <number per 100g>,
+    "carbs": <number per 100g>,
+    "fat": <number per 100g>
+  }
+]
+
+Include common variations and similar foods. Only return the JSON array, no additional text.
+''';
+
+      final response = await sendMessage(prompt, model: 'gpt-4o-mini');
+      
+      stopwatch.stop();
+      log.logPerformance('Food search', stopwatch.elapsed);
+      
+      if (response != null) {
+        try {
+          final data = jsonDecode(response);
+          final List<dynamic> results = data;
+          log.info('Food search successful', {'query': query, 'results_count': results.length});
+          return results.map((item) => Map<String, dynamic>.from(item)).toList();
+        } catch (e) {
+          log.error('Failed to parse food search JSON', e);
+          return [];
+        }
+      } else {
+        log.error('Food search failed', 'No response from AI');
+        return [];
+      }
+    } catch (e) {
+      stopwatch.stop();
+      log.error('Food search error', e);
+      return [];
+    }
+  }
+
+  /// Fast food search with minimal prompt for speed
+  Future<List<Map<String, dynamic>>> searchFoodItemsFast(String query) async {
+    final stopwatch = Stopwatch()..start();
+    try {
+      print('🤖 AI: Starting fast search for: $query'); // Debug log
+      log.info('Fast searching for food items', {'query': query});
+      String prompt = '''
+List 5 foods for "$query". The first result MUST be the exact food "$query" (if it exists), followed by 4 similar foods. For each, give name, calories, protein, carbs, fat per 100g. Respond ONLY with a valid JSON array, no explanation, no text, no code block, just the array. Example:
+[
+  {"name": "$query", "calories": 32, "protein": 0.7, "carbs": 7.7, "fat": 0.3},
+  {"name": "Raspberry", "calories": 52, "protein": 1.2, "carbs": 12, "fat": 0.7},
+  {"name": "Blackberry", "calories": 43, "protein": 1.4, "carbs": 10, "fat": 0.5},
+  {"name": "Blueberry", "calories": 57, "protein": 0.7, "carbs": 14, "fat": 0.3},
+  {"name": "Gooseberry", "calories": 44, "protein": 1.0, "carbs": 10, "fat": 0.6}
+]
+''';
+      print('🤖 AI: Sending prompt to AI...'); // Debug log
+      String? response = await sendMessage(prompt, model: 'gpt-4o-mini');
+      print('🤖 AI: Got response: '+(response?.substring(0, 100) ?? "null")+'...'); // Debug log
+      stopwatch.stop();
+      log.logPerformance('Fast food search', stopwatch.elapsed);
+      List<Map<String, dynamic>>? parsedResults;
+      if (response != null) {
+        parsedResults = _tryParseFoodJson(response);
+        if (parsedResults == null) {
+          // Retry with even stricter prompt
+          print('🤖 AI: First response not valid JSON, retrying with stricter prompt...');
+          String retryPrompt = '''
+List 5 foods similar to "$query". For each, give name, calories, protein, carbs, fat per 100g. Respond ONLY with a valid JSON array, no explanation, no text, no code block, just the array. DO NOT SAY ANYTHING ELSE. DO NOT USE MARKDOWN. JUST THE ARRAY.''';
+          response = await sendMessage(retryPrompt, model: 'gpt-4o-mini');
+          print('🤖 AI: Retry response: '+(response?.substring(0, 100) ?? "null")+'...'); // Debug log
+          parsedResults = response != null ? _tryParseFoodJson(response) : null;
+        }
+        if (parsedResults != null) {
+          print('🤖 AI: Parsed '+parsedResults.length.toString()+' results'); // Debug log
+          log.info('Fast food search successful', {'query': query, 'results_count': parsedResults.length});
+          return parsedResults;
+        } else {
+          print('🤖 AI: JSON parse error after retry'); // Debug log
+          log.error('Failed to parse fast food search JSON after retry', response);
+          return [];
+        }
+      } else {
+        print('🤖 AI: No response from AI'); // Debug log
+        log.error('Fast food search failed', 'No response from AI');
+        return [];
+      }
+    } catch (e) {
+      stopwatch.stop();
+      print('🤖 AI: Search error: $e'); // Debug log
+      log.error('Fast food search error', e);
+      return [];
+    }
+  }
+
+  List<Map<String, dynamic>>? _tryParseFoodJson(String response) {
+    try {
+      // Try direct JSON parse
+      final data = jsonDecode(response);
+      if (data is List) {
+        return data.map((item) => Map<String, dynamic>.from(item)).toList();
+      }
+    } catch (_) {}
+    // Try extracting from code block
+    final codeBlockRegex = RegExp(r'```(?:json)?\s*([\s\S]*?)\s*```', multiLine: true, caseSensitive: false);
+    final match = codeBlockRegex.firstMatch(response);
+    if (match != null) {
+      final jsonString = match.group(1)!.trim();
+      try {
+        final data = jsonDecode(jsonString);
+        if (data is List) {
+          return data.map((item) => Map<String, dynamic>.from(item)).toList();
+        }
+      } catch (_) {}
+    }
+    // Try extracting first array in text
+    final arrayRegex = RegExp(r'(\[\s*{[\s\S]*?}\s*\])', multiLine: true);
+    final arrayMatch = arrayRegex.firstMatch(response);
+    if (arrayMatch != null) {
+      final jsonString = arrayMatch.group(1)!.trim();
+      try {
+        final data = jsonDecode(jsonString);
+        if (data is List) {
+          return data.map((item) => Map<String, dynamic>.from(item)).toList();
+        }
+      } catch (_) {}
+    }
+    return null;
   }
 
   String _extractJson(String response) {

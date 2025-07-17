@@ -209,4 +209,91 @@ class PreferencesProvider extends ChangeNotifier {
 
   // Moment of Calm: Call this after a meal is logged if toggle is on
   bool get momentOfCalmEnabled => _momentOfCalmReminders;
+
+  // --- TESTING FUNCTIONS ---
+  // Call this to test notifications immediately
+  Future<void> testNotifications() async {
+    print('🧪 Testing notifications...');
+    
+    // Test meal logging notification (30 seconds from now)
+    await flutterLocalNotificationsPlugin.zonedSchedule(
+      9991,
+      '🧪 TEST: Meal Logging',
+      'This is a test notification for meal logging!',
+      tz.TZDateTime.now(tz.local).add(Duration(seconds: 30)),
+      const NotificationDetails(
+        android: AndroidNotificationDetails('test_channel', 'Test Notifications', importance: Importance.max, priority: Priority.high),
+        iOS: DarwinNotificationDetails(),
+      ),
+      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+    );
+    
+    // Test water reminder (1 minute from now)
+    await flutterLocalNotificationsPlugin.zonedSchedule(
+      9992,
+      '🧪 TEST: Water Reminder',
+      'This is a test notification for water intake! 💧',
+      tz.TZDateTime.now(tz.local).add(Duration(minutes: 1)),
+      const NotificationDetails(
+        android: AndroidNotificationDetails('test_channel', 'Test Notifications', importance: Importance.max, priority: Priority.high),
+        iOS: DarwinNotificationDetails(),
+      ),
+      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+    );
+    
+    // Test mindful walk (2 minutes from now)
+    await flutterLocalNotificationsPlugin.zonedSchedule(
+      9993,
+      '🧪 TEST: Mindful Walk',
+      'This is a test notification for mindful walks! 🚶‍♀️',
+      tz.TZDateTime.now(tz.local).add(Duration(minutes: 2)),
+      const NotificationDetails(
+        android: AndroidNotificationDetails('test_channel', 'Test Notifications', importance: Importance.max, priority: Priority.high),
+        iOS: DarwinNotificationDetails(),
+      ),
+      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+    );
+    
+    print('✅ Test notifications scheduled! Check your device in 30 seconds, 1 minute, and 2 minutes.');
+  }
+
+  // Cancel all test notifications
+  Future<void> cancelTestNotifications() async {
+    await flutterLocalNotificationsPlugin.cancel(9991);
+    await flutterLocalNotificationsPlugin.cancel(9992);
+    await flutterLocalNotificationsPlugin.cancel(9993);
+    print('✅ Test notifications cancelled!');
+  }
+
+  // Test background notifications (when app is closed)
+  Future<void> testBackgroundNotifications() async {
+    print('🧪 Testing background notifications...');
+    
+    // Schedule notifications for when app is closed
+    await flutterLocalNotificationsPlugin.zonedSchedule(
+      9994,
+      '🔔 Background Test: Meal Logging',
+      'This notification should appear even when app is closed!',
+      tz.TZDateTime.now(tz.local).add(Duration(seconds: 10)),
+      const NotificationDetails(
+        android: AndroidNotificationDetails(
+          'background_channel', 
+          'Background Notifications', 
+          importance: Importance.max, 
+          priority: Priority.high,
+          showWhen: true,
+          enableVibration: true,
+          playSound: true,
+        ),
+        iOS: DarwinNotificationDetails(
+          presentAlert: true,
+          presentBadge: true,
+          presentSound: true,
+        ),
+      ),
+      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+    );
+    
+    print('✅ Background test notification scheduled! Close the app and wait 10 seconds.');
+  }
 } 

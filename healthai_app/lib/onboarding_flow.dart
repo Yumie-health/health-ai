@@ -480,20 +480,75 @@ class _OnboardingFlowPageState extends State<OnboardingFlowPage> with SingleTick
       final bool diabetic = isDiabetic ?? false;
       final String? water = waterIntake;
       final start = DateTime.now();
+      // Calculate personalized nutrition goals based on user data
+      final double weightKg = weightLb / 2.20462;
+      final int heightCm = ((heightFt * 12 + heightIn) * 2.54).round();
+      
+      // Calculate BMR using Mifflin-St Jeor equation
+      double bmr;
+      if (sex.toLowerCase() == 'male') {
+        bmr = 10 * weightKg + 6.25 * heightCm - 5 * age + 5;
+      } else {
+        bmr = 10 * weightKg + 6.25 * heightCm - 5 * age - 161;
+      }
+      
+      // Apply activity multiplier
+      double tdee = bmr;
+      switch (activity.toLowerCase()) {
+        case 'sedentary':
+          tdee = bmr * 1.2;
+          break;
+        case 'lightly active':
+          tdee = bmr * 1.375;
+          break;
+        case 'moderately active':
+          tdee = bmr * 1.55;
+          break;
+        case 'very active':
+          tdee = bmr * 1.725;
+          break;
+        case 'extremely active':
+          tdee = bmr * 1.9;
+          break;
+      }
+      
+      // Adjust calories based on goal
+      int calorieGoal;
+      switch (goal.toLowerCase()) {
+        case 'lose body weight':
+          calorieGoal = (tdee - 500).round();
+          break;
+        case 'gain weight':
+          calorieGoal = (tdee + 300).round();
+          break;
+        case 'build muscle':
+          calorieGoal = (tdee + 200).round();
+          break;
+        default: // maintain or eat healthier
+          calorieGoal = tdee.round();
+      }
+      
+      // Calculate macro goals
+      int proteinGoal;
+      if (goal.toLowerCase() == 'build muscle') {
+        proteinGoal = (weightKg * 2.2).round(); // 1g per lb for muscle building
+      } else {
+        proteinGoal = (weightKg * 1.8).round(); // 0.8g per lb for general health
+      }
+      
+      int fatGoal = (calorieGoal * 0.25 / 9).round(); // 25% of calories from fat
+      int carbsGoal = ((calorieGoal - (proteinGoal * 4) - (fatGoal * 9)) / 4).round(); // Remaining calories from carbs
+      
       final plan = await aiService.getNutritionPlanRecommendation(
         age: age,
-        sex: sex,
-        heightFt: heightFt,
-        heightIn: heightIn,
-        weightLb: weightLb,
-        goal: goal,
-        activityLevel: activity,
+        heightCm: heightCm,
+        weightKg: weightKg,
+        calorieGoal: calorieGoal,
+        proteinGoal: proteinGoal,
+        carbsGoal: carbsGoal,
+        fatGoal: fatGoal,
         bloodType: blood,
         isDiabetic: diabetic,
-        waterIntake: water,
-        motivation: selectedMotivation,
-        targetWeightKg: targetWeightKg,
-        eatingHabits: selectedReminders, // pass reminders if needed
       );
 
       if (plan == null) throw Exception("AI did not return a plan");

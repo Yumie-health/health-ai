@@ -109,7 +109,17 @@ abstract class AppLocalizations {
   /// **'Preferences'**
   String get preferences;
 
+  /// No description provided for @darkMode.
+  ///
+  /// In en, this message translates to:
+  /// **'Dark Mode'**
+  String get darkMode;
 
+  /// No description provided for @enableDarkTheme.
+  ///
+  /// In en, this message translates to:
+  /// **'Enable dark theme'**
+  String get enableDarkTheme;
 
   /// No description provided for @useMetricUnits.
   ///
@@ -1022,6 +1032,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No fridge items detected.'**
   String get noFridgeItemsDetected;
+
+  /// No description provided for @searchResults.
+  ///
+  /// In en, this message translates to:
+  /// **'Search Results'**
+  String get searchResults;
+
+  /// No description provided for @searchingFor.
+  ///
+  /// In en, this message translates to:
+  /// **'Searching for'**
+  String get searchingFor;
+
+  /// No description provided for @noResultsFoundFor.
+  ///
+  /// In en, this message translates to:
+  /// **'No results found for'**
+  String get noResultsFoundFor;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

@@ -153,6 +153,9 @@
   "upgradePlan": "Mejorar plan",
   "watchAdForScan": "Ver anuncio para escanear",
   "generateMeal": "Generar comida",
-  "detectedFridgeItems": "Elementos detectados en el refrigerador",
-  "noFridgeItemsDetected": "No se detectaron elementos en el refrigerador."
+  "detectedFridgeItems": "Elementos de Refrigerador Detectados",
+  "noFridgeItemsDetected": "No se detectaron elementos en el refrigerador.",
+  "searchResults": "Resultados de Búsqueda",
+  "searchingFor": "Buscando",
+  "noResultsFoundFor": "No se encontraron resultados para"
 } 

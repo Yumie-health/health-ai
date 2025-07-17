@@ -15,7 +15,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get preferences => 'التفضيلات';
 
   @override
-
+  String get darkMode => 'الوضع الداكن';
 
   @override
   String get enableDarkTheme => 'تفعيل الوضع الداكن';
@@ -475,4 +475,13 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get noFridgeItemsDetected => 'لم يتم اكتشاف عناصر في الثلاجة.';
+
+  @override
+  String get searchResults => 'نتائج البحث';
+
+  @override
+  String get searchingFor => 'البحث عن';
+
+  @override
+  String get noResultsFoundFor => 'لم يتم العثور على نتائج لـ';
 }

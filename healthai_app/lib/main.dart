@@ -138,6 +138,36 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
+  // Initialize timezone
+  tz.initializeTimeZones();
+  tz.setLocalLocation(tz.getLocation('America/New_York')); // Set default timezone
+  
+  // Initialize local notifications
+  const AndroidInitializationSettings initializationSettingsAndroid =
+      AndroidInitializationSettings('@mipmap/ic_launcher');
+  const DarwinInitializationSettings initializationSettingsIOS =
+      DarwinInitializationSettings(
+    requestAlertPermission: true,
+    requestBadgePermission: true,
+    requestSoundPermission: true,
+  );
+  const InitializationSettings initializationSettings = InitializationSettings(
+    android: initializationSettingsAndroid,
+    iOS: initializationSettingsIOS,
+  );
+  
+  await flutterLocalNotificationsPlugin.initialize(
+    initializationSettings,
+    onDidReceiveNotificationResponse: (NotificationResponse response) {
+      // Handle notification tap
+      print('Notification tapped: ${response.payload}');
+    },
+  );
+
+  // Request notification permissions
+  // For Android, permissions are handled automatically by the plugin
+  // For iOS, permissions are requested during initialization via DarwinInitializationSettings
+  
   // Initialize Firebase with explicit auth domain
   await Firebase.initializeApp(
     options: FirebaseOptions(
@@ -6288,6 +6318,61 @@ class SettingsPage extends StatelessWidget {
                       value: prefs.momentOfCalmReminders,
                       onChanged: (v) => prefs.setMomentOfCalmReminders(v),
                       secondary: Icon(Icons.self_improvement),
+                    ),
+                  ],
+                ),
+              ),
+              SizedBox(height: 32),
+              Text('🧪 Test Notifications', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 22)),
+              SizedBox(height: 18),
+              Card(
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+                elevation: 2,
+                child: Column(
+                  children: [
+                    ListTile(
+                      leading: Icon(Icons.notifications_active, color: Colors.orange),
+                      title: Text('Test All Notifications', style: TextStyle(fontWeight: FontWeight.w600)),
+                      subtitle: Text('Schedule test notifications for 30s, 1min, and 2min from now'),
+                      trailing: ElevatedButton(
+                        onPressed: () {
+                          prefs.testNotifications();
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text('🧪 Test notifications scheduled! Check your device in 30 seconds, 1 minute, and 2 minutes.')),
+                          );
+                        },
+                        child: Text('Test'),
+                      ),
+                    ),
+                    Divider(height: 1, thickness: 1, indent: 16, endIndent: 16),
+                    ListTile(
+                      leading: Icon(Icons.cancel, color: Colors.red),
+                      title: Text('Cancel Test Notifications', style: TextStyle(fontWeight: FontWeight.w600)),
+                      subtitle: Text('Cancel all test notifications'),
+                      trailing: ElevatedButton(
+                        onPressed: () {
+                          prefs.cancelTestNotifications();
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text('✅ Test notifications cancelled!')),
+                          );
+                        },
+                        child: Text('Cancel'),
+                      ),
+                    ),
+                    Divider(height: 1, thickness: 1, indent: 16, endIndent: 16),
+                    ListTile(
+                      leading: Icon(Icons.notifications_active, color: Colors.blue),
+                      title: Text('Test Background Notifications', style: TextStyle(fontWeight: FontWeight.w600)),
+                      subtitle: Text('Schedule notification for 10 seconds, then close app'),
+                      trailing: ElevatedButton(
+                        onPressed: () {
+                          prefs.testBackgroundNotifications();
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text('🔔 Background test scheduled! Close the app and wait 10 seconds.')),
+                          );
+                        },
+                        child: Text('Test Background'),
+                      ),
                     ),
                   ],
                 ),
