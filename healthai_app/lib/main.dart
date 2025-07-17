@@ -2835,6 +2835,24 @@ class _MealCardModernState extends State<_MealCardModern> {
                         Text(meal.mealType.capitalize(), style: TextStyle(color: kPrimaryGreen, fontWeight: FontWeight.w600)),
                         const SizedBox(width: 8),
                         Text(formatTime(meal.timestamp), style: TextStyle(color: Colors.grey[500], fontSize: 13)),
+                        if (meal.quantity != null && meal.quantityUnit != null) ...[
+                          const SizedBox(width: 8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: kPrimaryGreen.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Text(
+                              '${meal.quantity} ${meal.quantityUnit}',
+                              style: TextStyle(
+                                color: kPrimaryGreen,
+                                fontSize: 11,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ],
                       ],
                     ),
                     const SizedBox(height: 2),
@@ -4305,33 +4323,38 @@ class _CoachScreenState extends State<CoachScreen> with TickerProviderStateMixin
 
   // Check if insights need to be refreshed based on calorie changes or meal period changes
   Future<void> _checkAndRefreshInsights() async {
-    final meals = await MealService().getTodayMeals().first;
-    final currentCalories = meals.fold(0, (sum, m) => sum + m.calories);
-    final currentMealPeriod = _getCurrentMealPeriod();
-    
-    // If no previous insight exists, generate one
-    if (_aiHealthInsight == null) {
-      await _fetchAIHealthInsight();
-      return;
-    }
-    
-    // Only refresh if calories have changed significantly (more than 50 calories difference)
-    if (_lastInsightCalories != null && (_lastInsightCalories! - currentCalories).abs() > 50) {
-      await _fetchAIHealthInsight();
-      return;
-    }
-    
-    // Only refresh if meal period has changed AND it's been more than 2 hours since last insight
-    final lastMealPeriod = _getLastInsightMealPeriod();
-    if (lastMealPeriod != null && lastMealPeriod != currentMealPeriod) {
-      // Check if it's been more than 2 hours since last insight
-      final prefs = await SharedPreferences.getInstance();
-      final lastInsightTime = prefs.getInt('last_insight_timestamp');
-      final now = DateTime.now().millisecondsSinceEpoch;
-      if (lastInsightTime == null || (now - lastInsightTime) > (2 * 60 * 60 * 1000)) { // 2 hours in milliseconds
+    try {
+      final meals = await MealService().getTodayMeals().first;
+      final currentCalories = meals.fold(0, (sum, m) => sum + m.calories);
+      final currentMealPeriod = _getCurrentMealPeriod();
+      
+      // If no previous insight exists, generate one
+      if (_aiHealthInsight == null || _aiHealthInsight!.isEmpty) {
         await _fetchAIHealthInsight();
-        await prefs.setInt('last_insight_timestamp', now);
+        return;
       }
+      
+      // Only refresh if calories have changed significantly (more than 50 calories difference)
+      if (_lastInsightCalories != null && (_lastInsightCalories! - currentCalories).abs() > 50) {
+        await _fetchAIHealthInsight();
+        return;
+      }
+      
+      // Only refresh if meal period has changed AND it's been more than 2 hours since last insight
+      final lastMealPeriod = _getLastInsightMealPeriod();
+      if (lastMealPeriod != null && lastMealPeriod != currentMealPeriod) {
+        // Check if it's been more than 2 hours since last insight
+        final prefs = await SharedPreferences.getInstance();
+        final lastInsightTime = prefs.getInt('last_insight_timestamp');
+        final now = DateTime.now().millisecondsSinceEpoch;
+        if (lastInsightTime == null || (now - lastInsightTime) > (2 * 60 * 60 * 1000)) { // 2 hours in milliseconds
+          await _fetchAIHealthInsight();
+          await prefs.setInt('last_insight_timestamp', now);
+        }
+      }
+    } catch (e) {
+      // If there's an error, try to fetch a new insight
+      await _fetchAIHealthInsight();
     }
   }
 
@@ -4670,10 +4693,8 @@ class _CoachScreenState extends State<CoachScreen> with TickerProviderStateMixin
                       setState(() => _tabIndex = 1);
                       _tabController.forward(from: 0.0);
                       _insightsController.forward(from: 0.0);
-                      // Only check for refresh if no insight exists yet
-                      if (_aiHealthInsight == null) {
-                        _checkAndRefreshInsights();
-                      }
+                      // Always check for refresh when insights tab is clicked
+                      _checkAndRefreshInsights();
                     },
                     child: Container(
                       padding: EdgeInsets.symmetric(vertical: 12),
@@ -6550,23 +6571,23 @@ class _WeightLogDialogState extends State<_WeightLogDialog> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               ChoiceChip(
-                label: Text('Gained'),
-                selected: _isAdd,
-                selectedColor: Colors.red[100],
-                onSelected: (selected) => setState(() => _isAdd = true),
-                labelStyle: TextStyle(
-                  color: _isAdd ? Colors.red[700] : Colors.black,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              SizedBox(width: 12),
-              ChoiceChip(
                 label: Text('Lost'),
                 selected: !_isAdd,
                 selectedColor: Colors.blue[100],
                 onSelected: (selected) => setState(() => _isAdd = false),
                 labelStyle: TextStyle(
                   color: !_isAdd ? Colors.blue[700] : Colors.black,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              SizedBox(width: 12),
+              ChoiceChip(
+                label: Text('Gained'),
+                selected: _isAdd,
+                selectedColor: Colors.red[100],
+                onSelected: (selected) => setState(() => _isAdd = true),
+                labelStyle: TextStyle(
+                  color: _isAdd ? Colors.red[700] : Colors.black,
                   fontWeight: FontWeight.bold,
                 ),
               ),

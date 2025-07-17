@@ -157,5 +157,13 @@
   "noFridgeItemsDetected": "No fridge items detected.",
   "searchResults": "Search Results",
   "searchingFor": "Searching for",
-  "noResultsFoundFor": "No results found for"
+  "noResultsFoundFor": "No results found for",
+  "count": "Count",
+  "servings": "Servings",
+  "fluidOunces": "Fluid Ounces",
+  "quantity": "Quantity",
+  "confirm": "Confirm",
+  "ingredient": "Ingredient",
+  "meal": "Meal",
+  "drink": "Drink"
 } 

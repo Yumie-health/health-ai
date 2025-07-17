@@ -1050,6 +1050,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No results found for'**
   String get noResultsFoundFor;
+
+  /// No description provided for @count.
+  ///
+  /// In en, this message translates to:
+  /// **'Count'**
+  String get count;
+
+  /// No description provided for @servings.
+  ///
+  /// In en, this message translates to:
+  /// **'Servings'**
+  String get servings;
+
+  /// No description provided for @fluidOunces.
+  ///
+  /// In en, this message translates to:
+  /// **'Fluid Ounces'**
+  String get fluidOunces;
+
+  /// No description provided for @quantity.
+  ///
+  /// In en, this message translates to:
+  /// **'Quantity'**
+  String get quantity;
+
+  /// No description provided for @confirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm'**
+  String get confirm;
+
+  /// No description provided for @ingredient.
+  ///
+  /// In en, this message translates to:
+  /// **'Ingredient'**
+  String get ingredient;
+
+  /// No description provided for @drink.
+  ///
+  /// In en, this message translates to:
+  /// **'Drink'**
+  String get drink;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

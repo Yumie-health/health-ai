@@ -12,6 +12,9 @@ class Meal {
   final String userId;
   final List<String> ingredients;
   final String? imageUrl;
+  final String? foodType; // ingredient, meal, drink
+  final int? quantity; // count for ingredients, servings for meals, fluid ounces for drinks
+  final String? quantityUnit; // "count", "servings", "fl oz"
 
   Meal({
     required this.id,
@@ -25,6 +28,9 @@ class Meal {
     required this.userId,
     this.ingredients = const [],
     this.imageUrl,
+    this.foodType,
+    this.quantity,
+    this.quantityUnit,
   });
 
   Map<String, dynamic> toMap() {
@@ -39,6 +45,9 @@ class Meal {
       'userId': userId,
       'ingredients': ingredients,
       if (imageUrl != null) 'imageUrl': imageUrl,
+      if (foodType != null) 'foodType': foodType,
+      if (quantity != null) 'quantity': quantity,
+      if (quantityUnit != null) 'quantityUnit': quantityUnit,
     };
   }
 
@@ -62,6 +71,9 @@ class Meal {
       userId: data['userId'] ?? '',
       ingredients: (data['ingredients'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? [],
       imageUrl: data['imageUrl'] as String?,
+      foodType: data['foodType'] as String?,
+      quantity: data['quantity'] as int?,
+      quantityUnit: data['quantityUnit'] as String?,
     );
   }
 } 

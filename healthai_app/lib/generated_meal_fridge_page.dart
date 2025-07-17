@@ -5,8 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart'; // For RenderRepaintBoundary
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:image_gallery_saver/image_gallery_saver.dart';
 import 'scan_result_page.dart';
-import 'package:share_plus/share_plus.dart';
 import '../l10n/app_localizations.dart';
 
 class GeneratedMealFromFridgePage extends StatefulWidget {
@@ -29,25 +29,60 @@ class _GeneratedMealFromFridgePageState extends State<GeneratedMealFromFridgePag
       ui.Image image = await boundary.toImage(pixelRatio: 3.0);
       ByteData? byteData = await image.toByteData(format: ui.ImageByteFormat.png);
       Uint8List pngBytes = byteData!.buffer.asUint8List();
-      final picturesDir = Directory('/storage/emulated/0/Pictures');
-      if (!picturesDir.existsSync()) {
-        await picturesDir.create(recursive: true);
+      
+      // Save to photo gallery
+      final result = await ImageGallerySaver.saveImage(
+        pngBytes,
+        quality: 100,
+        name: 'meal_screenshot_${DateTime.now().millisecondsSinceEpoch}',
+      );
+      
+      if (result['isSuccess'] == true) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Screenshot saved to photo gallery!'),
+            action: SnackBarAction(
+              label: 'Share',
+              onPressed: () {
+                // Create a temporary file for sharing
+                _shareScreenshot(pngBytes);
+              },
+            ),
+          ),
+        );
+      } else {
+        throw Exception('Failed to save to gallery');
       }
-      final filePath = '${picturesDir.path}/meal_screenshot_${DateTime.now().millisecondsSinceEpoch}.png';
-      final file = await File(filePath).writeAsBytes(pngBytes);
+    } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Screenshot saved to Pictures!'),
-          action: SnackBarAction(
-            label: 'Share',
-            onPressed: () => Share.shareXFiles([XFile(file.path)], text: 'Check out this meal!'),
-          ),
+          content: Text('Failed to save screenshot: $e'),
+          backgroundColor: Colors.red,
         ),
       );
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to save screenshot: $e')));
     } finally {
       setState(() => _hideButtons = false);
+    }
+  }
+
+  Future<void> _shareScreenshot(Uint8List pngBytes) async {
+    try {
+      // Create a temporary file for sharing
+      final tempDir = await getTemporaryDirectory();
+      final tempFile = File('${tempDir.path}/meal_screenshot_${DateTime.now().millisecondsSinceEpoch}.png');
+      await tempFile.writeAsBytes(pngBytes);
+      
+      await Share.shareXFiles(
+        [XFile(tempFile.path)],
+        text: 'Check out this meal!',
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to share screenshot: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
     }
   }
 
@@ -145,6 +180,19 @@ class _GeneratedMealFromFridgePageState extends State<GeneratedMealFromFridgePag
                   children: [
                     Expanded(
                       child: ElevatedButton(
+                        onPressed: () => Navigator.of(context).popUntil((route) => route.isFirst),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.red,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                        ),
+                        child: Text(localizations.discard),
+                      ),
+                    ),
+                    SizedBox(width: 16),
+                    Expanded(
+                      child: ElevatedButton(
                         onPressed: () {
                           Navigator.of(context).pushReplacement(
                             MaterialPageRoute(
@@ -169,19 +217,6 @@ class _GeneratedMealFromFridgePageState extends State<GeneratedMealFromFridgePag
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                         ),
                         child: Text(localizations.logMeal),
-                      ),
-                    ),
-                    SizedBox(width: 16),
-                    Expanded(
-                      child: ElevatedButton(
-                        onPressed: () => Navigator.of(context).popUntil((route) => route.isFirst),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.red,
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                        ),
-                        child: Text(localizations.discard),
                       ),
                     ),
                   ],

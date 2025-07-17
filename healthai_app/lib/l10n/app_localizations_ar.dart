@@ -484,4 +484,25 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get noResultsFoundFor => 'لم يتم العثور على نتائج لـ';
+
+  @override
+  String get count => 'Count';
+
+  @override
+  String get servings => 'Servings';
+
+  @override
+  String get fluidOunces => 'Fluid Ounces';
+
+  @override
+  String get quantity => 'Quantity';
+
+  @override
+  String get confirm => 'Confirm';
+
+  @override
+  String get ingredient => 'Ingredient';
+
+  @override
+  String get drink => 'Drink';
 }

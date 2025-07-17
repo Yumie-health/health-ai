@@ -11,6 +11,7 @@ import 'l10n/app_localizations.dart';
 import 'providers/preferences_provider.dart';
 import 'utils/constants.dart';
 import 'package:flutter/foundation.dart';
+import 'widgets/quantity_selection_dialog.dart';
 
 // Custom TextField with floating Done button for iOS
 class _NumericTextField extends StatefulWidget {
@@ -108,15 +109,22 @@ class _ScanResultPageState extends State<ScanResultPage> {
   final TextEditingController _ingredientController = TextEditingController();
   List<String> _ingredients = [];
   String _selectedMealType = 'breakfast';
+  String _selectedFoodType = 'meal'; // ingredient, meal, drink
   bool _isSaving = false;
   String? _error;
   bool _isLoadingAI = true;
+
+  // Quantity tracking
+  String? _foodType;
+  int? _quantity;
+  String? _quantityUnit;
 
   final List<String> _mealTypes = ['breakfast', 'lunch', 'dinner', 'snack'];
 
   @override
   void initState() {
     super.initState();
+    _autoSelectMealType();
     _foodNameController.addListener(() => setState(() {}));
     if (widget.prefill != null) {
       final p = widget.prefill!;
@@ -129,6 +137,21 @@ class _ScanResultPageState extends State<ScanResultPage> {
       _isLoadingAI = false;
     } else {
       _runAIMealScan();
+    }
+  }
+
+  void _autoSelectMealType() {
+    final now = DateTime.now();
+    final hour = now.hour;
+    
+    if (hour >= 5 && hour < 11) {
+      _selectedMealType = 'breakfast';
+    } else if (hour >= 11 && hour < 16) {
+      _selectedMealType = 'lunch';
+    } else if (hour >= 16 && hour < 21) {
+      _selectedMealType = 'dinner';
+    } else {
+      _selectedMealType = 'snack';
     }
   }
 
@@ -159,8 +182,39 @@ class _ScanResultPageState extends State<ScanResultPage> {
     });
   }
 
+  Future<void> _showQuantityDialog() async {
+    final result = await showDialog<Map<String, dynamic>>(
+      context: context,
+      builder: (context) => QuantitySelectionDialog(
+        foodName: _foodNameController.text.trim(),
+        foodType: _selectedFoodType,
+        baseCalories: int.tryParse(_caloriesController.text.trim()) ?? 0,
+        baseProtein: int.tryParse(_proteinController.text.trim()) ?? 0,
+        baseCarbs: int.tryParse(_carbsController.text.trim()) ?? 0,
+        baseFat: int.tryParse(_fatController.text.trim()) ?? 0,
+      ),
+    );
+
+    if (result != null) {
+      setState(() {
+        _quantity = result['quantity'] as int;
+        _quantityUnit = result['unit'] as String;
+      });
+    }
+  }
+
   void _discard() {
     Navigator.of(context).popUntil((route) => route.isFirst);
+  }
+
+  int _extractQuantityFromName(String foodName) {
+    // Extract quantity from food name (e.g., "3 ripe bananas", "2 apples", "1 cup coffee")
+    final regex = RegExp(r'^(\d+)\s+');
+    final match = regex.firstMatch(foodName.toLowerCase());
+    if (match != null) {
+      return int.tryParse(match.group(1) ?? '1') ?? 1;
+    }
+    return 1; // Default to 1 if no quantity found
   }
 
   Future<void> _showCalmPopupIfNeeded(VoidCallback onContinue) async {
@@ -299,6 +353,9 @@ class _ScanResultPageState extends State<ScanResultPage> {
         userId: user.uid,
         ingredients: List<String>.from(_ingredients),
         imageUrl: imageUrl,
+        foodType: _foodType,
+        quantity: _quantity,
+        quantityUnit: _quantityUnit,
       );
       await MealService().addMeal(meal);
       setState(() { _ingredients.clear(); });
@@ -340,6 +397,45 @@ class _ScanResultPageState extends State<ScanResultPage> {
         _carbsController.text = result['carbs']?.toString() ?? '';
         _fatController.text = result['fat']?.toString() ?? '';
         _ingredients = (result['ingredients'] as List?)?.map((e) => e.toString()).toList() ?? [];
+        
+        // Store food type from AI analysis and update UI
+        _foodType = result['food_type']?.toString();
+        if (_foodType != null) {
+          // Update the selected food type in UI based on AI analysis
+          _selectedFoodType = _foodType!;
+          
+          // Extract quantity from food name (e.g., "3 ripe bananas" -> quantity = 3)
+          String foodName = result['food_name']?.toString() ?? '';
+          int extractedQuantity = _extractQuantityFromName(foodName);
+          
+          // Set quantity and unit based on food type
+          switch (_foodType) {
+            case 'ingredient':
+              _quantity = extractedQuantity > 0 ? extractedQuantity : 1;
+              _quantityUnit = 'count';
+              break;
+            case 'meal':
+              _quantity = extractedQuantity > 0 ? extractedQuantity : 1;
+              _quantityUnit = 'servings';
+              break;
+            case 'drink':
+              _quantity = extractedQuantity > 0 ? extractedQuantity : 8; // Default 8 fl oz for drinks
+              _quantityUnit = 'fl oz';
+              break;
+            default:
+              _quantity = extractedQuantity > 0 ? extractedQuantity : 1;
+              _quantityUnit = 'servings';
+          }
+          
+          // Adjust calories based on quantity for drinks
+          if (_foodType == 'drink' && _quantityUnit == 'fl oz') {
+            final baseCalories = int.tryParse(_caloriesController.text) ?? 0;
+            final baseServing = 8; // 8 fl oz base serving
+            final adjustedCalories = (baseCalories * _quantity! / baseServing).round();
+            _caloriesController.text = adjustedCalories.toString();
+          }
+        }
+        
         _isLoadingAI = false;
       });
     } else {
@@ -358,6 +454,93 @@ class _ScanResultPageState extends State<ScanResultPage> {
       'dinner': localizations.dinner,
       'snack': localizations.snack,
     };
+  }
+
+  Widget _buildMealTypeTabs(Map<String, String> mealTypeLabels) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+      children: _mealTypes.map((type) {
+        final selected = _selectedMealType == type;
+        final color = selected ? kPrimaryGreen : Colors.grey[200];
+        final textColor = selected ? Colors.white : Colors.grey[600];
+        return Expanded(
+          child: GestureDetector(
+            onTap: () => setState(() => _selectedMealType = type),
+            child: AnimatedContainer(
+              duration: Duration(milliseconds: 180),
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              decoration: BoxDecoration(
+                color: color,
+                borderRadius: BorderRadius.circular(18),
+                boxShadow: selected
+                    ? [BoxShadow(color: kPrimaryGreen.withOpacity(0.08), blurRadius: 8, offset: Offset(0, 2))]
+                    : [],
+              ),
+              child: Center(
+                child: Text(
+                  mealTypeLabels[type]!,
+                  style: TextStyle(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 18,
+                    color: textColor,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        );
+      }).toList(),
+    );
+  }
+
+  Widget _buildFoodTypeButtons() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+      children: [
+        _buildFoodTypeButton('ingredient', '🥕', AppLocalizations.of(context)!.ingredient),
+        _buildFoodTypeButton('meal', '🍽️', AppLocalizations.of(context)!.meal),
+        _buildFoodTypeButton('drink', '🥤', AppLocalizations.of(context)!.drink),
+      ],
+    );
+  }
+
+  Widget _buildFoodTypeButton(String type, String emoji, String label) {
+    final selected = _selectedFoodType == type;
+    final color = selected ? kPrimaryGreen : Colors.grey[200];
+    final textColor = selected ? Colors.white : Colors.grey[600];
+    
+    return Expanded(
+      child: GestureDetector(
+        onTap: () => setState(() => _selectedFoodType = type),
+        child: AnimatedContainer(
+          duration: Duration(milliseconds: 180),
+          padding: const EdgeInsets.symmetric(vertical: 10),
+          margin: const EdgeInsets.symmetric(horizontal: 4),
+          decoration: BoxDecoration(
+            color: color,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: selected
+                ? [BoxShadow(color: kPrimaryGreen.withOpacity(0.08), blurRadius: 8, offset: Offset(0, 2))]
+                : [],
+          ),
+          child: Column(
+            children: [
+              Text(emoji, style: TextStyle(fontSize: 20)),
+              const SizedBox(height: 4),
+              Text(
+                label,
+                style: TextStyle(
+                  fontWeight: FontWeight.w600,
+                  fontSize: 14,
+                  color: textColor,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   @override
@@ -453,41 +636,15 @@ class _ScanResultPageState extends State<ScanResultPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Meal type segmented control
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 18),
-                    child: Row(
-                      children: _mealTypes.map((type) {
-                        final selected = _selectedMealType == type;
-                        return Expanded(
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 4),
-                            child: GestureDetector(
-                              onTap: () => setState(() => _selectedMealType = type),
-                              child: AnimatedContainer(
-                                duration: Duration(milliseconds: 180),
-                                padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 10),
-                                decoration: BoxDecoration(
-                                  color: selected ? Colors.green : Color(0xFFF3F3F3),
-                                  borderRadius: BorderRadius.circular(22),
-                                ),
-                                child: Center(
-                                  child: Text(
-                                    _mealTypeLabels[type]!,
-                                    style: TextStyle(
-                                      color: selected ? Colors.white : Colors.grey[700],
-                                      fontWeight: FontWeight.w600,
-                                      fontSize: 16,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                        );
-                      }).toList(),
-                    ),
+                  // Meal type and food type selection
+                  Column(
+                    children: [
+                      _buildMealTypeTabs(_mealTypeLabels),
+                      const SizedBox(height: 16),
+                      _buildFoodTypeButtons(),
+                    ],
                   ),
+                  const SizedBox(height: 24),
                   const Text('Food Name', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
                   const SizedBox(height: 8),
                   TextField(
@@ -501,6 +658,44 @@ class _ScanResultPageState extends State<ScanResultPage> {
                         borderSide: BorderSide.none,
                       ),
                     ),
+                  ),
+                  const SizedBox(height: 18),
+                  // Quantity section
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          'Quantity',
+                          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                        ),
+                      ),
+                      GestureDetector(
+                        onTap: _showQuantityDialog,
+                        child: Container(
+                          padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                          decoration: BoxDecoration(
+                            color: kPrimaryGreen.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: kPrimaryGreen.withOpacity(0.3)),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                '${_quantity ?? 1} ${_quantityUnit ?? 'servings'}',
+                                style: TextStyle(
+                                  color: kPrimaryGreen,
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 16,
+                                ),
+                              ),
+                              SizedBox(width: 8),
+                              Icon(Icons.edit, color: kPrimaryGreen, size: 18),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                   const SizedBox(height: 18),
                   Row(

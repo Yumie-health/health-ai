@@ -196,7 +196,7 @@ Respond in a motivating and friendly tone, like a helpful nutrition buddy. If th
 ''';
   }
 
-  Future<Map<String, int>?> getNutritionPlanRecommendation({
+  Future<Map<String, dynamic>?> getNutritionPlanRecommendation({
     required int age,
     required int heightCm,
     required double weightKg,
@@ -211,80 +211,155 @@ Respond in a motivating and friendly tone, like a helpful nutrition buddy. If th
     final stopwatch = Stopwatch()..start();
     
     try {
-      log.info('Getting nutrition plan recommendation', {
+      log.info('Getting AI nutrition plan recommendation', {
         'age': age,
         'calorie_goal': calorieGoal,
+        'protein_goal': proteinGoal,
+        'carbs_goal': carbsGoal,
+        'fat_goal': fatGoal,
         'language': language,
       });
 
-    final prompt = '''
-Given the following user profile, provide a personalized nutrition plan recommendation:
+      final prompt = '''
+Based on the user's calculated daily nutrition needs, provide a personalized nutrition plan:
 
+User Profile:
 - Age: $age
 - Height: ${(heightCm / 2.54).round()} inches
 - Weight: ${(weightKg * 2.20462).round()} lbs
 - Daily calorie goal: $calorieGoal kcal
-- Protein goal: ${proteinGoal}g
-- Carbs goal: ${carbsGoal}g
-- Fat goal: ${fatGoal}g
-- Blood Type: $bloodType
-- Diabetic: ${isDiabetic ? 'Yes' : 'No'}
+- Daily protein goal: ${proteinGoal}g
+- Daily carbs goal: ${carbsGoal}g
+- Daily fat goal: ${fatGoal}g
+- Blood type: $bloodType
+- Diabetic: $isDiabetic
 
-Provide a JSON response with the following structure:
-{
-  "breakfast": {
-    "calories": <number>,
-    "protein": <number>,
-    "carbs": <number>,
-    "fat": <number>
-  },
-  "lunch": {
-    "calories": <number>,
-    "protein": <number>,
-    "carbs": <number>,
-    "fat": <number>
-  },
-  "dinner": {
-    "calories": <number>,
-    "protein": <number>,
-    "carbs": <number>,
-    "fat": <number>
-  },
-  "snack": {
-    "calories": <number>,
-    "protein": <number>,
-    "carbs": <number>,
-    "fat": <number>
-  }
-}
+Please provide a detailed nutrition plan that includes:
 
-Only return the JSON, no additional text.
+1. DAILY INTAKE SUMMARY:
+   - Total calories: $calorieGoal kcal
+   - Protein: ${proteinGoal}g
+   - Carbs: ${carbsGoal}g
+   - Fat: ${fatGoal}g
+
+2. MEAL BREAKDOWN:
+   - Breakfast: ${(calorieGoal * 0.25).round()} calories
+   - Lunch: ${(calorieGoal * 0.35).round()} calories
+   - Dinner: ${(calorieGoal * 0.30).round()} calories
+   - Snacks: ${(calorieGoal * 0.10).round()} calories
+
+3. SPECIFIC FOOD SUGGESTIONS for each meal with realistic portions
+
+4. CONSIDERATIONS:
+   - Foods suitable for blood type $bloodType
+   - Diabetic-friendly options if applicable
+   - Balanced nutrition
+   - Realistic portion sizes
+   - Variety and taste
+
+Provide specific food items with quantities for each meal.
 ''';
 
-      final response = await sendMessage(prompt, model: 'gpt-4o-mini');
+      final response = await sendMessage(prompt);
       
-      stopwatch.stop();
-      log.logPerformance('Nutrition plan recommendation', stopwatch.elapsed);
-      
-      if (response != null) {
-        try {
-          final data = jsonDecode(response);
-          log.info('Nutrition plan recommendation successful');
-          return Map<String, int>.from(data);
-        } catch (e) {
-          log.error('Failed to parse nutrition plan JSON', e);
-          return null;
-        }
+      if (response != null && response.isNotEmpty) {
+        log.info('AI nutrition plan received', {
+          'response_length': response.length,
+          'duration_ms': stopwatch.elapsedMilliseconds,
+        });
+        
+        // Return the DAILY INTAKE values that the final page expects
+        return {
+          'calories': calorieGoal,
+          'protein': proteinGoal,
+          'carbs': carbsGoal,
+          'fat': fatGoal,
+          'ai_plan': response,
+        };
       } else {
-        log.error('Nutrition plan recommendation failed', 'No response from AI');
-        return null;
+        throw Exception('Empty AI response');
       }
+      
     } catch (e) {
-      stopwatch.stop();
-      log.error('Nutrition plan recommendation error', e);
-      return null;
+      log.warning('AI nutrition plan failed, using fallback calculation', {
+        'error': e.toString(),
+        'duration_ms': stopwatch.elapsedMilliseconds,
+      });
+      
+      // Fallback to local calculation if AI fails
+      return _getFallbackNutritionPlan(
+        calorieGoal: calorieGoal,
+        proteinGoal: proteinGoal,
+        carbsGoal: carbsGoal,
+        fatGoal: fatGoal,
+        bloodType: bloodType,
+        isDiabetic: isDiabetic,
+      );
     }
   }
+
+  // Fallback nutrition plan calculation
+  Map<String, dynamic> _getFallbackNutritionPlan({
+    required int calorieGoal,
+    required int proteinGoal,
+    required int carbsGoal,
+    required int fatGoal,
+    required String bloodType,
+    required bool isDiabetic,
+  }) {
+    // Return the DAILY INTAKE values that the final page expects
+    return {
+      'calories': calorieGoal,
+      'protein': proteinGoal,
+      'carbs': carbsGoal,
+      'fat': fatGoal,
+      'ai_plan': _generateFallbackPlan(bloodType, isDiabetic, calorieGoal),
+    };
+  }
+
+  String _generateFallbackPlan(String bloodType, bool isDiabetic, int calorieGoal) {
+    final breakfastCal = (calorieGoal * 0.25).round();
+    final lunchCal = (calorieGoal * 0.35).round();
+    final dinnerCal = (calorieGoal * 0.30).round();
+    final snacksCal = (calorieGoal * 0.10).round();
+
+    return '''
+Personalized Nutrition Plan:
+
+🥞 BREAKFAST ($breakfastCal calories)
+• Oatmeal with berries and nuts
+• Greek yogurt with honey
+• Whole grain toast with avocado
+• Green tea or coffee
+
+🍽️ LUNCH ($lunchCal calories)
+• Grilled chicken breast with quinoa
+• Mixed green salad with olive oil
+• Steamed vegetables
+• Fresh fruit for dessert
+
+🍽️ DINNER ($dinnerCal calories)
+• Salmon or lean protein
+• Brown rice or sweet potato
+• Roasted vegetables
+• Herbal tea
+
+🍎 SNACKS ($snacksCal calories)
+• Apple with almond butter
+• Carrot sticks with hummus
+• Mixed nuts and dried fruits
+• Protein smoothie
+
+💡 Tips:
+• Stay hydrated with 8+ glasses of water daily
+• Eat slowly and mindfully
+• Include protein with every meal
+• Choose whole foods over processed options
+• Listen to your body's hunger cues
+''';
+  }
+
+
 
   /// Get nutritional information for a food item using AI
   Future<Map<String, dynamic>?> getFoodNutrition(String foodName) async {
@@ -384,19 +459,75 @@ Include common variations and similar foods. Only return the JSON array, no addi
   }
 
   /// Fast food search with minimal prompt for speed
-  Future<List<Map<String, dynamic>>> searchFoodItemsFast(String query) async {
+  Future<List<Map<String, dynamic>>> searchFoodItemsFast(String query, {String? foodType}) async {
     final stopwatch = Stopwatch()..start();
     try {
-      print('🤖 AI: Starting fast search for: $query'); // Debug log
-      log.info('Fast searching for food items', {'query': query});
+      print('🤖 AI: Starting fast search for: $query (food type: $foodType)'); // Debug log
+      log.info('Fast searching for food items', {'query': query, 'food_type': foodType});
+      
+      String foodTypeInstruction = '';
+      if (foodType != null) {
+        switch (foodType) {
+          case 'ingredient':
+            foodTypeInstruction = '''
+IMPORTANT: You are searching for RAW INGREDIENTS only. Focus on:
+- Single food items: apple, banana, carrot, broccoli, spinach
+- Multiple items: 3 bananas, 2 apples, 4 carrots (count accurately)
+- Raw proteins: chicken breast, salmon, egg, tofu
+- Nuts and seeds: almonds, walnuts, sunflower seeds
+- Grains: rice, quinoa, oats, bread
+- Raw vegetables and fruits
+- Use realistic calorie ranges: fruits 30-80 cal, vegetables 10-50 cal, nuts 500-700 cal
+- Be specific about quantity in food names
+- Do NOT include prepared dishes, meals, or drinks''';
+            break;
+          case 'meal':
+            foodTypeInstruction = '''
+IMPORTANT: You are searching for PREPARED MEALS only. Focus on:
+- Complete dishes: grilled chicken with rice, pasta carbonara, beef stir fry
+- Prepared foods: pizza, burger, salad, soup, curry
+- Restaurant dishes: pad thai, sushi roll, tacos, lasagna
+- Fast food: McDonald's, Burger King, Subway, etc.
+- Home-cooked meals: meatloaf, casserole, roasted vegetables
+- Use realistic calorie ranges: light meals 200-400 cal, regular meals 400-800 cal, heavy meals 800-1200 cal
+- Do NOT include raw ingredients or drinks''';
+            break;
+          case 'drink':
+            foodTypeInstruction = '''
+IMPORTANT: You are searching for BEVERAGES/DRINKS only. Focus on:
+- Coffee shop drinks: Starbucks, Dunkin, coffee, latte, cappuccino, americano, espresso, mocha, iced coffee
+- Tea drinks: green tea, black tea, herbal tea, iced tea, bubble tea, chai
+- Juices and smoothies: orange juice, apple juice, smoothies, fresh juices, fruit smoothies, protein smoothies
+- Milk and dairy drinks: whole milk, almond milk, soy milk, chocolate milk, milkshakes
+- Energy drinks: Red Bull, Monster, energy drinks, sports drinks
+- Soft drinks: soda, cola, lemonade, iced coffee, iced tea
+- Alcoholic beverages: beer, wine, cocktails (if appropriate)
+- Use realistic calorie ranges: coffee 0-50 cal, smoothies 100-300 cal, milkshakes 200-500 cal
+- Do NOT include solid foods, meals, or raw ingredients''';
+            break;
+        }
+      }
+      
       String prompt = '''
-List 5 foods for "$query". The first result MUST be the exact food "$query" (if it exists), followed by 4 similar foods. For each, give name, calories, protein, carbs, fat per 100g. Respond ONLY with a valid JSON array, no explanation, no text, no code block, just the array. Example:
+Search for "$query" and return exactly 5 results.$foodTypeInstruction
+
+CRITICAL RULES:
+1. The first result MUST be the exact food "$query" if it exists
+2. Follow the food type category strictly - do not mix categories
+3. For each result, provide accurate nutritional info per 100g
+4. Return ONLY a valid JSON array, no text, no explanations
+5. Use REALISTIC and ACCURATE nutritional values for each specific food item
+6. Do NOT copy example values - calculate actual nutrition for each food
+7. Research and provide accurate nutrition data for each specific food item
+8. Calories should be realistic for the food type (e.g., fruits 30-80 cal, meats 100-300 cal, drinks 0-200 cal)
+
+Example format (use realistic values for each specific food):
 [
-  {"name": "$query", "calories": 32, "protein": 0.7, "carbs": 7.7, "fat": 0.3},
-  {"name": "Raspberry", "calories": 52, "protein": 1.2, "carbs": 12, "fat": 0.7},
-  {"name": "Blackberry", "calories": 43, "protein": 1.4, "carbs": 10, "fat": 0.5},
-  {"name": "Blueberry", "calories": 57, "protein": 0.7, "carbs": 14, "fat": 0.3},
-  {"name": "Gooseberry", "calories": 44, "protein": 1.0, "carbs": 10, "fat": 0.6}
+  {"name": "$query", "calories": [realistic_value], "protein": [realistic_value], "carbs": [realistic_value], "fat": [realistic_value]},
+  {"name": "Similar Item 1", "calories": [realistic_value], "protein": [realistic_value], "carbs": [realistic_value], "fat": [realistic_value]},
+  {"name": "Similar Item 2", "calories": [realistic_value], "protein": [realistic_value], "carbs": [realistic_value], "fat": [realistic_value]},
+  {"name": "Similar Item 3", "calories": [realistic_value], "protein": [realistic_value], "carbs": [realistic_value], "fat": [realistic_value]},
+  {"name": "Similar Item 4", "calories": [realistic_value], "protein": [realistic_value], "carbs": [realistic_value], "fat": [realistic_value]}
 ]
 ''';
       print('🤖 AI: Sending prompt to AI...'); // Debug log
@@ -411,7 +542,7 @@ List 5 foods for "$query". The first result MUST be the exact food "$query" (if 
           // Retry with even stricter prompt
           print('🤖 AI: First response not valid JSON, retrying with stricter prompt...');
           String retryPrompt = '''
-List 5 foods similar to "$query". For each, give name, calories, protein, carbs, fat per 100g. Respond ONLY with a valid JSON array, no explanation, no text, no code block, just the array. DO NOT SAY ANYTHING ELSE. DO NOT USE MARKDOWN. JUST THE ARRAY.''';
+List 5 foods similar to "$query".$foodTypeInstruction For each, give name, calories, protein, carbs, fat per 100g. Use REALISTIC and ACCURATE nutritional values for each specific food item. Respond ONLY with a valid JSON array, no explanation, no text, no code block, just the array. DO NOT SAY ANYTHING ELSE. DO NOT USE MARKDOWN. JUST THE ARRAY.''';
           response = await sendMessage(retryPrompt, model: 'gpt-4o-mini');
           print('🤖 AI: Retry response: '+(response?.substring(0, 100) ?? "null")+'...'); // Debug log
           parsedResults = response != null ? _tryParseFoodJson(response) : null;
@@ -495,13 +626,36 @@ List 5 foods similar to "$query". For each, give name, calories, protein, carbs,
       languageInstruction = '\nRespond in Spanish.';
     }
     final prompt = '''
-You are a nutrition AI. Given this photo of a meal, return a JSON object with:
-- food_name: string
-- calories: integer
-- protein: integer
-- carbs: integer
-- fat: integer
-- ingredients: array of strings
+You are a nutrition AI expert. Analyze this food/drink image and return a JSON object with:
+- food_name: string (be specific and descriptive)
+- calories: integer (per 100g for ingredients/meals, per 8 fl oz for drinks)
+- protein: integer (grams per 100g for ingredients/meals, per 8 fl oz for drinks)
+- carbs: integer (grams per 100g for ingredients/meals, per 8 fl oz for drinks)
+- fat: integer (grams per 100g for ingredients/meals, per 8 fl oz for drinks)
+- ingredients: array of strings (main ingredients only)
+- food_type: string (must be one of: "ingredient", "meal", "drink")
+
+CRITICAL RULES:
+1. For DRINKS (coffee, tea, smoothies, juices, sodas, energy drinks):
+   - Recognize coffee shop drinks (Starbucks, Dunkin, etc.)
+   - Recognize smoothies, juices, milkshakes, energy drinks
+   - Use realistic calorie ranges: coffee 0-50 cal, smoothies 100-300 cal, milkshakes 200-500 cal
+   - Base serving: 8 fl oz (240ml) for most drinks
+
+2. For INGREDIENTS (fruits, vegetables, nuts, single items):
+   - Count multiple items (e.g., "3 bananas" not "1 banana")
+   - Use realistic calorie ranges: fruits 30-80 cal, vegetables 10-50 cal, nuts 500-700 cal
+   - Be specific about quantity in food_name
+
+3. For MEALS (prepared dishes, cooked food):
+   - Recognize restaurant dishes, fast food, home-cooked meals
+   - Use realistic calorie ranges: light meals 200-400 cal, regular meals 400-800 cal, heavy meals 800-1200 cal
+
+4. ACCURATE NUTRITION DATA:
+   - Research and provide realistic nutrition values
+   - Do NOT guess or use placeholder values
+   - Consider portion sizes and preparation methods
+
 Respond ONLY with valid JSON.$languageInstruction
 ''';
     final response = await http.post(

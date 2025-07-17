@@ -1,5 +1,9 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
+    
+    <!-- Permission to save images to photo gallery -->
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    
     <application
         android:label="Yumie"
         android:name="${applicationName}"

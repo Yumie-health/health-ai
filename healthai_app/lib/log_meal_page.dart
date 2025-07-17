@@ -9,18 +9,21 @@ import 'services/pexels_service.dart';
 import 'services/ai_service.dart';
 import 'providers/preferences_provider.dart';
 import 'utils/constants.dart';
+import 'widgets/quantity_selection_dialog.dart';
 
 // Searchable meal input with dropdown suggestions
 class SearchableMealInput extends StatefulWidget {
   final TextEditingController controller;
-  final Function(String name, int calories, int protein, int carbs, int fat)? onMealSelected;
+  final Function(String name, int calories, int protein, int carbs, int fat, String? foodType, int? quantity, String? quantityUnit)? onMealSelected;
   final String hintText;
+  final String selectedFoodType; // ingredient, meal, drink
 
   const SearchableMealInput({
     Key? key,
     required this.controller,
     this.onMealSelected,
     required this.hintText,
+    required this.selectedFoodType,
   }) : super(key: key);
 
   @override
@@ -59,7 +62,7 @@ class _SearchableMealInputState extends State<SearchableMealInput> {
   Future<void> _performSearch(String query) async {
     if (_isSearching) return; // Prevent multiple simultaneous searches
     
-    print('🔍 Starting search for: $query'); // Debug log
+    print('🔍 Starting search for: $query (food type: ${widget.selectedFoodType})'); // Debug log
     
     setState(() {
       _isSearching = true;
@@ -68,8 +71,8 @@ class _SearchableMealInputState extends State<SearchableMealInput> {
 
     try {
       print('🔍 Calling AI service...'); // Debug log
-      // Use a faster, simpler AI prompt for quicker results
-      final results = await _aiService.searchFoodItemsFast(query);
+      // Use a faster, simpler AI prompt for quicker results with food type refinement
+      final results = await _aiService.searchFoodItemsFast(query, foodType: widget.selectedFoodType);
       print('🔍 AI returned ${results.length} results'); // Debug log
       
       if (mounted) {
@@ -94,18 +97,84 @@ class _SearchableMealInputState extends State<SearchableMealInput> {
 
   void _selectMeal(Map<String, dynamic> meal) {
     widget.controller.text = meal['name'];
-    widget.onMealSelected?.call(
-      meal['name'],
-      (meal['calories'] as num).toInt(),
-      (meal['protein'] as num).toInt(),
-      (meal['carbs'] as num).toInt(),
-      (meal['fat'] as num).toInt(),
-    );
+    
+    // Show quantity selection dialog
+    _showQuantityDialog(meal);
+    
     setState(() {
       _showDropdown = false; // Only hide when a result is selected
       _searchResults = [];
     });
     _focusNode.unfocus(); // Only unfocus when a result is selected
+  }
+
+  void _showQuantityDialog(Map<String, dynamic> meal) {
+    // Determine food type based on meal name and characteristics
+    String foodType = _determineFoodType(meal['name']);
+    
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => QuantitySelectionDialog(
+        foodName: meal['name'],
+        foodType: foodType,
+        baseCalories: (meal['calories'] as num).toInt(),
+        baseProtein: (meal['protein'] as num).toInt(),
+        baseCarbs: (meal['carbs'] as num).toInt(),
+        baseFat: (meal['fat'] as num).toInt(),
+      ),
+    ).then((result) {
+      if (result != null) {
+        // Update the meal with calculated values
+        widget.onMealSelected?.call(
+          meal['name'],
+          result['calories'],
+          result['protein'],
+          result['carbs'],
+          result['fat'],
+          foodType,
+          result['quantity'],
+          result['unit'],
+        );
+      }
+    });
+  }
+
+  String _determineFoodType(String foodName) {
+    final name = foodName.toLowerCase();
+    
+    // Drink keywords
+    final drinkKeywords = [
+      'juice', 'smoothie', 'shake', 'milk', 'coffee', 'tea', 'water', 'soda', 
+      'beverage', 'drink', 'latte', 'cappuccino', 'espresso', 'hot chocolate',
+      'lemonade', 'iced tea', 'energy drink', 'protein shake', 'green tea'
+    ];
+    
+    // Ingredient keywords (raw, single items)
+    final ingredientKeywords = [
+      'apple', 'banana', 'orange', 'strawberry', 'blueberry', 'grape', 'pear',
+      'carrot', 'broccoli', 'spinach', 'lettuce', 'tomato', 'cucumber',
+      'almond', 'walnut', 'cashew', 'peanut', 'sunflower seed',
+      'egg', 'chicken breast', 'salmon', 'tuna', 'beef', 'pork',
+      'rice', 'quinoa', 'oat', 'bread', 'pasta'
+    ];
+    
+    // Check if it's a drink
+    for (final keyword in drinkKeywords) {
+      if (name.contains(keyword)) {
+        return 'drink';
+      }
+    }
+    
+    // Check if it's an ingredient
+    for (final keyword in ingredientKeywords) {
+      if (name.contains(keyword)) {
+        return 'ingredient';
+      }
+    }
+    
+    // Default to meal (prepared dishes)
+    return 'meal';
   }
 
   void _onCheckmarkTap() {
@@ -381,8 +450,14 @@ class _LogMealPageState extends State<LogMealPage> with TickerProviderStateMixin
   List<String> _ingredients = [];
 
   String _selectedMealType = 'breakfast';
+  String _selectedFoodType = 'meal'; // ingredient, meal, drink
   bool _isSaving = false;
   String? _error;
+
+  // Quantity tracking
+  String? _foodType;
+  int? _quantity;
+  String? _quantityUnit;
 
   final List<String> _mealTypes = ['breakfast', 'lunch', 'dinner', 'snack'];
 
@@ -400,8 +475,24 @@ class _LogMealPageState extends State<LogMealPage> with TickerProviderStateMixin
     _foodNameControllerAnim = AnimationController(vsync: this, duration: Duration(milliseconds: 400));
     _macrosController = AnimationController(vsync: this, duration: Duration(milliseconds: 400));
     _recentController = AnimationController(vsync: this, duration: Duration(milliseconds: 400));
+    _autoSelectMealType();
     _playEntranceAnimations();
     _foodNameController.addListener(() => setState(() {}));
+  }
+
+  void _autoSelectMealType() {
+    final now = DateTime.now();
+    final hour = now.hour;
+    
+    if (hour >= 5 && hour < 11) {
+      _selectedMealType = 'breakfast';
+    } else if (hour >= 11 && hour < 16) {
+      _selectedMealType = 'lunch';
+    } else if (hour >= 16 && hour < 21) {
+      _selectedMealType = 'dinner';
+    } else {
+      _selectedMealType = 'snack';
+    }
   }
 
   void _playEntranceAnimations() async {
@@ -554,9 +645,17 @@ class _LogMealPageState extends State<LogMealPage> with TickerProviderStateMixin
         mealType: _selectedMealType,
         userId: user.uid,
         ingredients: List<String>.from(_ingredients),
+        foodType: _foodType,
+        quantity: _quantity,
+        quantityUnit: _quantityUnit,
       );
       await MealService().addMeal(meal);
-      setState(() { _ingredients.clear(); });
+      setState(() { 
+        _ingredients.clear();
+        _foodType = null;
+        _quantity = null;
+        _quantityUnit = null;
+      });
       if (mounted) {
         await _showCalmPopupIfNeeded(() {
           Navigator.of(context).pop();
@@ -585,39 +684,93 @@ class _LogMealPageState extends State<LogMealPage> with TickerProviderStateMixin
       opacity: _tabsController,
       child: SlideTransition(
         position: Tween<Offset>(begin: Offset(0, 0.12), end: Offset.zero).animate(CurvedAnimation(parent: _tabsController, curve: Curves.easeOutCubic)),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: _mealTypes.map((type) {
-            final selected = _selectedMealType == type;
-            final color = selected ? kPrimaryGreen : Colors.grey[200];
-            final textColor = selected ? Colors.white : Colors.grey[600];
-            return Expanded(
-              child: GestureDetector(
-                onTap: () => setState(() => _selectedMealType = type),
-                child: AnimatedContainer(
-                  duration: Duration(milliseconds: 180),
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                  decoration: BoxDecoration(
-                    color: color,
-                    borderRadius: BorderRadius.circular(18),
-                    boxShadow: selected
-                        ? [BoxShadow(color: kPrimaryGreen.withOpacity(0.08), blurRadius: 8, offset: Offset(0, 2))]
-                        : [],
-                  ),
-                  child: Center(
-                    child: Text(
-                      mealTypeLabels[type]!,
-                      style: TextStyle(
-                        fontWeight: FontWeight.w600,
-                        fontSize: 18,
-                        color: textColor,
+        child: Column(
+          children: [
+            // Meal type selection (breakfast/lunch/dinner/snack)
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: _mealTypes.map((type) {
+                final selected = _selectedMealType == type;
+                final color = selected ? kPrimaryGreen : Colors.grey[200];
+                final textColor = selected ? Colors.white : Colors.grey[600];
+                return Expanded(
+                  child: GestureDetector(
+                    onTap: () => setState(() => _selectedMealType = type),
+                    child: AnimatedContainer(
+                      duration: Duration(milliseconds: 180),
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      decoration: BoxDecoration(
+                        color: color,
+                        borderRadius: BorderRadius.circular(18),
+                        boxShadow: selected
+                            ? [BoxShadow(color: kPrimaryGreen.withOpacity(0.08), blurRadius: 8, offset: Offset(0, 2))]
+                            : [],
+                      ),
+                      child: Center(
+                        child: Text(
+                          mealTypeLabels[type]!,
+                          style: TextStyle(
+                            fontWeight: FontWeight.w600,
+                            fontSize: 18,
+                            color: textColor,
+                          ),
+                        ),
                       ),
                     ),
                   ),
+                );
+              }).toList(),
+            ),
+            const SizedBox(height: 16),
+            // Food type selection (ingredient/meal/drink)
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                _buildFoodTypeButton('ingredient', '🥕', AppLocalizations.of(context)!.ingredient),
+                _buildFoodTypeButton('meal', '🍽️', AppLocalizations.of(context)!.meal),
+                _buildFoodTypeButton('drink', '🥤', AppLocalizations.of(context)!.drink),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFoodTypeButton(String type, String emoji, String label) {
+    final selected = _selectedFoodType == type;
+    final color = selected ? kPrimaryGreen : Colors.grey[200];
+    final textColor = selected ? Colors.white : Colors.grey[600];
+    
+    return Expanded(
+      child: GestureDetector(
+        onTap: () => setState(() => _selectedFoodType = type),
+        child: AnimatedContainer(
+          duration: Duration(milliseconds: 180),
+          padding: const EdgeInsets.symmetric(vertical: 10),
+          margin: const EdgeInsets.symmetric(horizontal: 4),
+          decoration: BoxDecoration(
+            color: color,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: selected
+                ? [BoxShadow(color: kPrimaryGreen.withOpacity(0.08), blurRadius: 8, offset: Offset(0, 2))]
+                : [],
+          ),
+          child: Column(
+            children: [
+              Text(emoji, style: TextStyle(fontSize: 20)),
+              const SizedBox(height: 4),
+              Text(
+                label,
+                style: TextStyle(
+                  fontWeight: FontWeight.w600,
+                  fontSize: 14,
+                  color: textColor,
                 ),
+                textAlign: TextAlign.center,
               ),
-            );
-          }).toList(),
+            ],
+          ),
         ),
       ),
     );
@@ -1308,13 +1461,17 @@ class _LogMealPageState extends State<LogMealPage> with TickerProviderStateMixin
                     SearchableMealInput(
                       controller: _foodNameController,
                       hintText: AppLocalizations.of(context)!.searchOrEnterFoodName,
-                      onMealSelected: (name, calories, protein, carbs, fat) {
+                      selectedFoodType: _selectedFoodType,
+                      onMealSelected: (name, calories, protein, carbs, fat, foodType, quantity, quantityUnit) {
                         setState(() {
                           _foodNameController.text = name;
                           _caloriesController.text = calories.toString();
                           _proteinController.text = protein.toString();
                           _carbsController.text = carbs.toString();
                           _fatController.text = fat.toString();
+                          _foodType = foodType;
+                          _quantity = quantity;
+                          _quantityUnit = quantityUnit;
                         });
                       },
                     ),

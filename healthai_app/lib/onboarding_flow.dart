@@ -37,7 +37,7 @@ class _OnboardingFlowPageState extends State<OnboardingFlowPage> with SingleTick
   String? waterIntake;
   String? selectedSex;
   bool isLoadingNutritionPlan = false;
-  Map<String, int>? aiNutritionPlan;
+  Map<String, dynamic>? aiNutritionPlan;
   String? aiError;
   List<String> selectedReminders = [];
 
@@ -2470,105 +2470,113 @@ class _NutritionPlanSummaryStepState extends State<_NutritionPlanSummaryStep> wi
           height: double.infinity,
           child: SafeArea(
             child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        Align(
-                  alignment: Alignment.topLeft,
-          child: Container(
-                    margin: EdgeInsets.only(top: 8, left: 8),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
-                  blurRadius: 8,
-                  offset: Offset(0, 2),
-                ),
-              ],
-            ),
-            child: IconButton(
-              icon: Icon(Icons.arrow_back, color: theme.primaryColor, size: 28),
-                      onPressed: widget.onBack,
-            ),
-          ),
-        ),
-                SizedBox(height: 36),
-                Text(
-                  "You're all set! 🎉",
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 32, color: theme.primaryColor, letterSpacing: -1.2),
-                  textAlign: TextAlign.center,
-                ),
-                SizedBox(height: 18),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24.0),
-                  child: Text(
-                    "Here's your personalized nutrition plan. Welcome to your health journey with Yumie!",
-                    style: TextStyle(fontSize: 18, color: Colors.grey[700]),
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-                SizedBox(height: 36),
-                Center(
-                  child: Container(
-                    width: 360,
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(32),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.07),
-                          blurRadius: 18,
-                          offset: Offset(0, 8),
-                        ),
-                      ],
-                    ),
-                    padding: EdgeInsets.symmetric(vertical: 36, horizontal: 28),
+              children: [
+                Expanded(
+                  child: SingleChildScrollView(
                     child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
-                        _NutritionRow(
-                          icon: Icons.local_fire_department,
-                          label: 'Calories',
-                          value: '${widget.calories} kcal',
-                          iconColor: Color(0xFF43A047),
-                        ),
-                        SizedBox(height: 18),
-                        _NutritionRow(
-                          icon: Icons.fitness_center,
-                          label: 'Protein',
-                          value: '${widget.protein} g',
-                          iconColor: Color(0xFF1976D2),
-                        ),
-                        SizedBox(height: 18),
-                        _NutritionRow(
-                          icon: Icons.opacity,
-                          label: 'Fat',
-                          value: '${widget.fat} g',
-                          iconColor: Color(0xFFFBC02D),
-                        ),
-                        SizedBox(height: 18),
-                        _NutritionRow(
-                          icon: Icons.grain,
-                          label: 'Carbs',
-                          value: '${widget.carbs} g',
-                          iconColor: Color(0xFF8D6E63),
+                        Align(
+                          alignment: Alignment.topLeft,
+                          child: Container(
+                            margin: EdgeInsets.only(top: 8, left: 8),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(12),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.05),
+                                  blurRadius: 8,
+                                  offset: Offset(0, 2),
+                                ),
+                              ],
+                            ),
+                            child: IconButton(
+                              icon: Icon(Icons.arrow_back, color: theme.primaryColor, size: 28),
+                              onPressed: widget.onBack,
+                            ),
                           ),
+                        ),
+                        SizedBox(height: 36),
+                        Text(
+                          "You're all set! 🎉",
+                          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 32, color: theme.primaryColor, letterSpacing: -1.2),
+                          textAlign: TextAlign.center,
+                        ),
+                        SizedBox(height: 18),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                          child: Text(
+                            "Here's your personalized nutrition plan. Welcome to your health journey with Yumie!",
+                            style: TextStyle(fontSize: 18, color: Colors.grey[700]),
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
+                        SizedBox(height: 36),
+                        Center(
+                          child: Container(
+                            width: 360,
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(32),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.07),
+                                  blurRadius: 18,
+                                  offset: Offset(0, 8),
+                                ),
+                              ],
+                            ),
+                            padding: EdgeInsets.symmetric(vertical: 36, horizontal: 28),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                _NutritionRow(
+                                  icon: Icons.local_fire_department,
+                                  label: 'Calories',
+                                  value: '${widget.calories} kcal',
+                                  iconColor: Color(0xFF43A047),
+                                ),
+                                SizedBox(height: 18),
+                                _NutritionRow(
+                                  icon: Icons.fitness_center,
+                                  label: 'Protein',
+                                  value: '${widget.protein} g',
+                                  iconColor: Color(0xFF1976D2),
+                                ),
+                                SizedBox(height: 18),
+                                _NutritionRow(
+                                  icon: Icons.opacity,
+                                  label: 'Fat',
+                                  value: '${widget.fat} g',
+                                  iconColor: Color(0xFFFBC02D),
+                                ),
+                                SizedBox(height: 18),
+                                _NutritionRow(
+                                  icon: Icons.grain,
+                                  label: 'Carbs',
+                                  value: '${widget.carbs} g',
+                                  iconColor: Color(0xFF8D6E63),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                        SizedBox(height: 48),
                       ],
                     ),
                   ),
                 ),
-                SizedBox(height: 48),
-        SizedBox(
-          width: double.infinity,
+                SizedBox(
+                  width: double.infinity,
                   child: Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
-          child: ElevatedButton(
+                    child: ElevatedButton(
                       onPressed: widget.onFinish,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: theme.primaryColor,
-              foregroundColor: Colors.white,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: theme.primaryColor,
+                        foregroundColor: Colors.white,
                         padding: EdgeInsets.symmetric(vertical: 24),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
                         elevation: 3,
@@ -2576,16 +2584,16 @@ class _NutritionPlanSummaryStepState extends State<_NutritionPlanSummaryStep> wi
                         shadowColor: theme.primaryColor.withOpacity(0.18),
                       ),
                       child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-      children: [
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
                           Icon(Icons.check_circle, size: 26, color: Colors.white),
                           SizedBox(width: 12),
                           Text('Get Started'),
-              ],
-            ),
-            ),
-          ),
-        ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
               ],
             ),
           ),
@@ -2602,10 +2610,10 @@ class _NutritionPlanSummaryStepState extends State<_NutritionPlanSummaryStep> wi
                   'assets/animations/confetti.json',
                   repeat: false,
                   fit: BoxFit.cover,
-            ),
+                ),
               ),
+            ),
           ),
-        ),
       ],
     );
   }

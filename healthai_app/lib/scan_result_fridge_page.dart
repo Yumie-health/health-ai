@@ -12,6 +12,7 @@ import 'package:provider/provider.dart';
 import 'l10n/app_localizations.dart';
 import 'providers/preferences_provider.dart';
 import 'utils/constants.dart';
+import 'widgets/quantity_selection_dialog.dart';
 
 class ScanResultFridgePage extends StatefulWidget {
   final String imagePath;
@@ -30,11 +31,17 @@ class _ScanResultFridgePageState extends State<ScanResultFridgePage> {
   final TextEditingController _ingredientController = TextEditingController();
   List<String> _ingredients = [];
   String _selectedMealType = 'breakfast';
+  String _selectedFoodType = 'meal'; // ingredient, meal, drink
   bool _isSaving = false;
   String? _error;
   bool _isLoadingAI = true;
   bool _isGeneratingMeal = false;
   Map<String, dynamic>? _generatedMeal;
+
+  // Quantity tracking
+  String? _foodType;
+  int? _quantity;
+  String? _quantityUnit;
 
   final List<String> _mealTypes = ['breakfast', 'lunch', 'dinner', 'snack'];
   Map<String, String> get _mealTypeLabels {
@@ -47,11 +54,77 @@ class _ScanResultFridgePageState extends State<ScanResultFridgePage> {
     };
   }
 
+  Widget _buildFoodTypeButtons() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+      children: [
+        _buildFoodTypeButton('ingredient', '🥕', AppLocalizations.of(context)!.ingredient),
+        _buildFoodTypeButton('meal', '🍽️', AppLocalizations.of(context)!.meal),
+        _buildFoodTypeButton('drink', '🥤', AppLocalizations.of(context)!.drink),
+      ],
+    );
+  }
+
+  Widget _buildFoodTypeButton(String type, String emoji, String label) {
+    final selected = _selectedFoodType == type;
+    final color = selected ? kPrimaryGreen : Colors.grey[200];
+    final textColor = selected ? Colors.white : Colors.grey[600];
+    
+    return Expanded(
+      child: GestureDetector(
+        onTap: () => setState(() => _selectedFoodType = type),
+        child: AnimatedContainer(
+          duration: Duration(milliseconds: 180),
+          padding: const EdgeInsets.symmetric(vertical: 10),
+          margin: const EdgeInsets.symmetric(horizontal: 4),
+          decoration: BoxDecoration(
+            color: color,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: selected
+                ? [BoxShadow(color: kPrimaryGreen.withOpacity(0.08), blurRadius: 8, offset: Offset(0, 2))]
+                : [],
+          ),
+          child: Column(
+            children: [
+              Text(emoji, style: TextStyle(fontSize: 20)),
+              const SizedBox(height: 4),
+              Text(
+                label,
+                style: TextStyle(
+                  fontWeight: FontWeight.w600,
+                  fontSize: 14,
+                  color: textColor,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   void initState() {
     super.initState();
+    _autoSelectMealType();
     _foodNameController.addListener(() => setState(() {}));
     _runAIFridgeScan();
+  }
+
+  void _autoSelectMealType() {
+    final now = DateTime.now();
+    final hour = now.hour;
+    
+    if (hour >= 5 && hour < 11) {
+      _selectedMealType = 'breakfast';
+    } else if (hour >= 11 && hour < 16) {
+      _selectedMealType = 'lunch';
+    } else if (hour >= 16 && hour < 21) {
+      _selectedMealType = 'dinner';
+    } else {
+      _selectedMealType = 'snack';
+    }
   }
 
   @override
@@ -81,8 +154,39 @@ class _ScanResultFridgePageState extends State<ScanResultFridgePage> {
     });
   }
 
+  Future<void> _showQuantityDialog() async {
+    final result = await showDialog<Map<String, dynamic>>(
+      context: context,
+      builder: (context) => QuantitySelectionDialog(
+        foodName: 'Fridge Item',
+        foodType: _selectedFoodType,
+        baseCalories: 0,
+        baseProtein: 0,
+        baseCarbs: 0,
+        baseFat: 0,
+      ),
+    );
+
+    if (result != null) {
+      setState(() {
+        _quantity = result['quantity'] as int;
+        _quantityUnit = result['unit'] as String;
+      });
+    }
+  }
+
   void _discard() {
     Navigator.of(context).popUntil((route) => route.isFirst);
+  }
+
+  int _extractQuantityFromName(String foodName) {
+    // Extract quantity from food name (e.g., "3 ripe bananas", "2 apples", "1 cup coffee")
+    final regex = RegExp(r'^(\d+)\s+');
+    final match = regex.firstMatch(foodName.toLowerCase());
+    if (match != null) {
+      return int.tryParse(match.group(1) ?? '1') ?? 1;
+    }
+    return 1; // Default to 1 if no quantity found
   }
 
   Future<void> _showCalmPopupIfNeeded(VoidCallback onContinue) async {
@@ -244,6 +348,11 @@ class _ScanResultFridgePageState extends State<ScanResultFridgePage> {
     if (result != null) {
       setState(() {
         _ingredients = result;
+        // Set default quantity for ingredients (fridge items are typically ingredients)
+        _selectedFoodType = 'ingredient';
+        _foodType = 'ingredient';
+        _quantity = 1;
+        _quantityUnit = 'count';
         _isLoadingAI = false;
       });
     } else {
@@ -314,118 +423,120 @@ class _ScanResultFridgePageState extends State<ScanResultFridgePage> {
               height: 100,
             ),
           )
-        : Column(
-        children: [
-          // Image preview
-          Container(
-            width: double.infinity,
-            color: Colors.black,
-            height: 220,
-            child: Stack(
+        : SingleChildScrollView(
+            child: Column(
               children: [
-                Positioned.fill(
-                  child: Image.file(
-                    File(widget.imagePath),
-                    fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) => Center(child: Text('Failed to load image', style: TextStyle(color: Colors.white))),
-                  ),
-                ),
-                Positioned.fill(
-                  child: Container(
-                    color: Colors.black.withOpacity(0.25),
-                  ),
-                ),
-                Center(
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.white.withOpacity(0.85),
-                      foregroundColor: Colors.black,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
-                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                    ),
-                    onPressed: () {
-                      showDialog(
-                        context: context,
-                        builder: (_) => Dialog(
-                          backgroundColor: Colors.black,
-                          child: InteractiveViewer(
-                            child: Image.file(File(widget.imagePath)),
-                          ),
+                // Image preview
+                Container(
+                  width: double.infinity,
+                  color: Colors.black,
+                  height: 220,
+                  child: Stack(
+                    children: [
+                      Positioned.fill(
+                        child: Image.file(
+                          File(widget.imagePath),
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) => Center(child: Text('Failed to load image', style: TextStyle(color: Colors.white))),
                         ),
-                      );
-                    },
-                    child: Text(AppLocalizations.of(context)!.previewFullImage, style: TextStyle(fontWeight: FontWeight.bold)),
+                      ),
+                      Positioned.fill(
+                        child: Container(
+                          color: Colors.black.withOpacity(0.25),
+                        ),
+                      ),
+                      Center(
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.white.withOpacity(0.85),
+                            foregroundColor: Colors.black,
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
+                            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                          ),
+                          onPressed: () {
+                            showDialog(
+                              context: context,
+                              builder: (_) => Dialog(
+                                backgroundColor: Colors.black,
+                                child: InteractiveViewer(
+                                  child: Image.file(File(widget.imagePath)),
+                                ),
+                              ),
+                            );
+                          },
+                          child: Text(AppLocalizations.of(context)!.previewFullImage, style: TextStyle(fontWeight: FontWeight.bold)),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                // Generate Meal button
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+                  child: SizedBox(
+                    width: double.infinity,
+                    height: 56,
+                    child: ElevatedButton(
+                      onPressed: _ingredients.isEmpty || _isGeneratingMeal ? null : _generateMealFromFridge,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.green,
+                        foregroundColor: Colors.white,
+                        textStyle: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                      ),
+                      child: _isGeneratingMeal
+                        ? SizedBox(width: 28, height: 28, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 3))
+                        : Text(AppLocalizations.of(context)!.generateMeal),
+                    ),
+                  ),
+                ),
+                // Fridge items box
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  child: Card(
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    elevation: 2,
+                    margin: EdgeInsets.zero,
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(AppLocalizations.of(context)!.detectedFridgeItems, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 17, color: Colors.green[700])),
+                          SizedBox(height: 10),
+                          _ingredients.isEmpty
+                            ? Center(child: Text(AppLocalizations.of(context)!.noFridgeItemsDetected, style: TextStyle(color: Colors.grey)))
+                            : Wrap(
+                                spacing: 8,
+                                runSpacing: 8,
+                                children: _ingredients.map((item) => Chip(label: Text(item))).toList(),
+                              ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                // Discard button (big button at bottom)
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+                  child: SizedBox(
+                    width: double.infinity,
+                    height: 56,
+                    child: ElevatedButton(
+                      onPressed: _discard,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.red,
+                        foregroundColor: Colors.white,
+                        textStyle: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                      ),
+                      child: Text(AppLocalizations.of(context)!.discard),
+                    ),
                   ),
                 ),
               ],
             ),
           ),
-          // Generate Meal button
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
-            child: SizedBox(
-              width: double.infinity,
-              height: 56,
-              child: ElevatedButton(
-                    onPressed: _ingredients.isEmpty || _isGeneratingMeal ? null : _generateMealFromFridge,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.green,
-                  foregroundColor: Colors.white,
-                  textStyle: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                ),
-                    child: _isGeneratingMeal
-                      ? SizedBox(width: 28, height: 28, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 3))
-                      : Text(AppLocalizations.of(context)!.generateMeal),
-              ),
-            ),
-          ),
-          // Fridge items box
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24),
-                child: Card(
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                  elevation: 2,
-                  margin: EdgeInsets.zero,
-                  child: Padding(
-              padding: const EdgeInsets.all(16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(AppLocalizations.of(context)!.detectedFridgeItems, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 17, color: Colors.green[700])),
-                        SizedBox(height: 10),
-                        _ingredients.isEmpty
-                  ? Center(child: Text(AppLocalizations.of(context)!.noFridgeItemsDetected, style: TextStyle(color: Colors.grey)))
-                          : Wrap(
-                              spacing: 8,
-                              runSpacing: 8,
-                              children: _ingredients.map((item) => Chip(label: Text(item))).toList(),
-                            ),
-                      ],
-                      ),
-                    ),
-            ),
-          ),
-          // Discard button
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
-            child: SizedBox(
-              width: double.infinity,
-              height: 48,
-              child: ElevatedButton(
-                onPressed: _discard,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.red,
-                  foregroundColor: Colors.white,
-                  textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                ),
-                child: Text(AppLocalizations.of(context)!.discard),
-              ),
-            ),
-          ),
-        ],
-      ),
     );
   }
 } 
