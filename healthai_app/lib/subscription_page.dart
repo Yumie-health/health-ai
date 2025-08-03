@@ -21,6 +21,7 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
   List<ProductDetails> _products = [];
   bool _isLoading = true;
   bool _isProcessingPayment = false;
+  String? _errorMessage;
   late Stream<List<PurchaseDetails>> _purchaseStream;
 
   @override
@@ -32,67 +33,121 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
   }
 
   Future<void> _initializeIAP() async {
-    final bool available = await _iap.isAvailable();
-    if (!available) {
-      setState(() => _isLoading = false);
-      return;
-    }
-    final ProductDetailsResponse response = await _iap.queryProductDetails(_kProductIds);
-    print('Loaded products: ${response.productDetails.map((p) => p.id).toList()}');
-    if (response.notFoundIDs.isNotEmpty) {
-      print('Not found: ${response.notFoundIDs}');
-    }
-    // If no products are loaded, use mock data for screenshot
-    if (response.productDetails.isEmpty) {
-      _products = [
-        ProductDetails(
-          id: 'premium_monthly',
-          title: 'Monthly Premium',
-          description: 'No ads',
-          price: ' 47.99',
-          rawPrice: 7.99,
-          currencyCode: 'USD',
-        ),
-        ProductDetails(
-          id: 'premium_yearly',
-          title: 'Yearly Premium',
-          description: 'No ads (Save 37%)',
-          price: ' 449.99',
-          rawPrice: 49.99,
-          currencyCode: 'USD',
-        ),
-      ];
+    try {
+      final bool available = await _iap.isAvailable();
+      print('IAP Available: $available');
+      
+      if (!available) {
+        setState(() {
+          _isLoading = false;
+          _errorMessage = 'In-app purchases are not available on this device';
+        });
+        return;
+      }
+
+      final ProductDetailsResponse response = await _iap.queryProductDetails(_kProductIds);
+      print('Loaded products: ${response.productDetails.map((p) => '${p.id}: ${p.title} - ${p.price}').toList()}');
+      
+      if (response.notFoundIDs.isNotEmpty) {
+        print('Products not found: ${response.notFoundIDs}');
+        print('Make sure these products are configured in App Store Connect');
+      }
+
+      if (response.error != null) {
+        print('Error loading products: ${response.error}');
+        setState(() {
+          _errorMessage = 'Failed to load subscription products. Please try again.';
+        });
+      }
+
+      // If no products are loaded, use mock data for testing
+      if (response.productDetails.isEmpty) {
+        print('No products loaded from App Store, using mock data for testing');
+        _products = [
+          ProductDetails(
+            id: 'premium_monthly',
+            title: 'Monthly Premium',
+            description: 'No ads',
+            price: '\$7.99',
+            rawPrice: 7.99,
+            currencyCode: 'USD',
+          ),
+          ProductDetails(
+            id: 'premium_yearly',
+            title: 'Yearly Premium',
+            description: 'No ads (Save 37%)',
+            price: '\$49.99',
+            rawPrice: 49.99,
+            currencyCode: 'USD',
+          ),
+        ];
+      } else {
+        _products = response.productDetails;
+      }
+
       setState(() {
         _isLoading = false;
       });
-    } else {
+    } catch (e) {
+      print('Error initializing IAP: $e');
       setState(() {
-        _products = response.productDetails;
         _isLoading = false;
+        _errorMessage = 'Failed to initialize subscription system';
       });
     }
   }
 
   void _onPurchaseUpdated(List<PurchaseDetails> purchases) async {
     for (final purchase in purchases) {
+      print('Purchase status: ${purchase.status} for product: ${purchase.productID}');
+      
       if (purchase.status == PurchaseStatus.purchased || purchase.status == PurchaseStatus.restored) {
-        // Unlock premium
-        final prefs = await SharedPreferences.getInstance();
-        await prefs.setBool('isPremium', true);
-        await prefs.setString('subscriptionType', purchase.productID);
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Subscription activated!'), backgroundColor: kPrimaryGreen),
-          );
-          Navigator.of(context).pop();
+        try {
+          // Unlock premium
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.setBool('isPremium', true);
+          await prefs.setString('subscriptionType', purchase.productID);
+          await prefs.setString('purchaseDate', DateTime.now().toIso8601String());
+          
+          print('Subscription activated: ${purchase.productID}');
+          
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Subscription activated!'),
+                backgroundColor: kPrimaryGreen,
+                duration: Duration(seconds: 3),
+              ),
+            );
+            Navigator.of(context).pop();
+          }
+        } catch (e) {
+          print('Error saving subscription: $e');
         }
       } else if (purchase.status == PurchaseStatus.error) {
+        print('Purchase error: ${purchase.error}');
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Purchase failed. Please try again.'), backgroundColor: kWarningRed),
+            SnackBar(
+              content: Text('Purchase failed: ${purchase.error?.message ?? 'Unknown error'}'),
+              backgroundColor: kWarningRed,
+              duration: Duration(seconds: 5),
+            ),
+          );
+        }
+      } else if (purchase.status == PurchaseStatus.canceled) {
+        print('Purchase canceled');
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Purchase was canceled'),
+              backgroundColor: Colors.orange,
+              duration: Duration(seconds: 3),
+            ),
           );
         }
       }
+      
       if (purchase.pendingCompletePurchase) {
         await _iap.completePurchase(purchase);
       }
@@ -101,12 +156,16 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
   }
 
   void _buy(ProductDetails product) {
+    print('Attempting to purchase: ${product.id} on ${Platform.isIOS ? 'iOS' : 'Android'}');
     setState(() => _isProcessingPayment = true);
     final purchaseParam = PurchaseParam(productDetails: product);
+    
+    // The same code works for both iOS and Android
     _iap.buyNonConsumable(purchaseParam: purchaseParam);
   }
 
   void _restore() {
+    print('Restoring purchases...');
     _iap.restorePurchases();
   }
 
@@ -209,8 +268,10 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
         ],
       ),
       body: _isLoading
-          ? Center(child: CircularProgressIndicator())
-          : SingleChildScrollView(
+          ? Center(child: CircularProgressIndicator(color: kPrimaryGreen))
+          : _errorMessage != null
+              ? _buildErrorView()
+              : SingleChildScrollView(
               padding: EdgeInsets.all(16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -319,6 +380,58 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildErrorView() {
+    return Center(
+      child: Padding(
+        padding: EdgeInsets.all(24),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.error_outline,
+              size: 64,
+              color: kWarningRed,
+            ),
+            SizedBox(height: 16),
+            Text(
+              'Subscription Error',
+              style: TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+                color: Colors.black87,
+              ),
+            ),
+            SizedBox(height: 8),
+            Text(
+              _errorMessage ?? 'An unknown error occurred',
+              style: TextStyle(
+                fontSize: 16,
+                color: Colors.grey[600],
+              ),
+              textAlign: TextAlign.center,
+            ),
+            SizedBox(height: 24),
+            ElevatedButton(
+              onPressed: () {
+                setState(() {
+                  _isLoading = true;
+                  _errorMessage = null;
+                });
+                _initializeIAP();
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: kPrimaryGreen,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              ),
+              child: Text('Retry', style: TextStyle(color: Colors.white)),
+            ),
+          ],
+        ),
       ),
     );
   }
