@@ -6,15 +6,35 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'logging_service.dart';
+import 'native_billing_service.dart';
+import 'production_integrity_service.dart';
 
 class SubscriptionService {
   static final SubscriptionService _instance = SubscriptionService._internal();
   factory SubscriptionService() => _instance;
   SubscriptionService._internal();
 
+  // Initialize billing service
+  Future<void> initializeBilling() async {
+    try {
+      if (Platform.isAndroid) {
+        await NativeBillingService.initializeBilling();
+      }
+    } catch (e) {
+      print('Error initializing billing: $e');
+    }
+  }
+
   // Check if user has premium subscription
   Future<bool> isPremiumUser() async {
     try {
+      // First check integrity before subscription operations
+      final isIntegrityValid = await ProductionIntegrityService.checkBeforePremiumAccess();
+      if (!isIntegrityValid) {
+        print('Integrity check failed - denying premium access');
+        return false;
+      }
+      
       final prefs = await SharedPreferences.getInstance();
       final isPremium = prefs.getBool('isPremium') ?? false;
       

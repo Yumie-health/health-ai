@@ -248,9 +248,9 @@ void main() async {
   try {
     print('Firebase initialized');
 
-    // print('Initializing SubscriptionService...');
-    // await SubscriptionService().initialize();
-    // print('SubscriptionService initialized');
+    print('Initializing SubscriptionService...');
+    await SubscriptionService().initializeBilling();
+    print('SubscriptionService initialized');
 
     MobileAds.instance.initialize(); // Initialize AdMob
 

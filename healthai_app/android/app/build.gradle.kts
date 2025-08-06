@@ -53,4 +53,14 @@ dependencies {
     // Add other Firebase dependencies as needed
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
     implementation("androidx.multidex:multidex:2.0.1")
+    
+    // Play Integrity API - Updated to latest version
+    implementation("com.google.android.play:integrity:1.4.0")
+    
+    // Coroutines for async operations
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.7.3")
+    
+    // Google Play Billing Library
+    implementation("com.android.billingclient:billing-ktx:6.2.1")
 }
