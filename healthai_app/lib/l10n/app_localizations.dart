@@ -379,6 +379,30 @@ abstract class AppLocalizations {
   /// **'Help & Support'**
   String get helpSupport;
 
+  /// No description provided for @legal.
+  ///
+  /// In en, this message translates to:
+  /// **'Legal'**
+  String get legal;
+
+  /// No description provided for @privacyPolicy.
+  ///
+  /// In en, this message translates to:
+  /// **'Privacy Policy'**
+  String get privacyPolicy;
+
+  /// No description provided for @termsOfService.
+  ///
+  /// In en, this message translates to:
+  /// **'Terms of Service'**
+  String get termsOfService;
+
+  /// No description provided for @apiDocumentation.
+  ///
+  /// In en, this message translates to:
+  /// **'API Documentation'**
+  String get apiDocumentation;
+
   /// No description provided for @needAssistanceContactSupport.
   ///
   /// In en, this message translates to:

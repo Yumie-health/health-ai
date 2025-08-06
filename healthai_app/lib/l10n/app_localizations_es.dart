@@ -150,6 +150,18 @@ class AppLocalizationsEs extends AppLocalizations {
   String get helpSupport => 'Ayuda y soporte';
 
   @override
+  String get legal => 'Legal';
+
+  @override
+  String get privacyPolicy => 'Política de Privacidad';
+
+  @override
+  String get termsOfService => 'Términos de Servicio';
+
+  @override
+  String get apiDocumentation => 'Documentación API';
+
+  @override
   String get needAssistanceContactSupport => '¿Necesitas ayuda? Contacta a nuestro equipo de soporte:';
 
   @override

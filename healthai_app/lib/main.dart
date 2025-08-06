@@ -1208,22 +1208,70 @@ class _AuthScreenState extends State<AuthScreen> {
                             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
                           ),
                           Expanded(
-                            child: RichText(
-                              text: TextSpan(
-                                style: TextStyle(color: Colors.grey[800], fontSize: 14),
-                                children: [
-                                  const TextSpan(text: 'I accept the '),
-                                  TextSpan(
-                                    text: 'Terms of Service',
-                                    style: TextStyle(color: kPrimaryGreen, fontWeight: FontWeight.w500),
+                            child: Wrap(
+                              crossAxisAlignment: WrapCrossAlignment.center,
+                              children: [
+                                Text(
+                                  'I accept the ',
+                                  style: TextStyle(
+                                    color: Colors.grey[700],
+                                    fontSize: 14,
                                   ),
-                                  const TextSpan(text: ' and '),
-                                  TextSpan(
-                                    text: 'Privacy Policy',
-                                    style: TextStyle(color: kPrimaryGreen, fontWeight: FontWeight.w500),
+                                ),
+                                GestureDetector(
+                                  onTap: () async {
+                                    try {
+                                      final uri = Uri.parse('https://yumie.me/terms');
+                                      if (await canLaunchUrl(uri)) {
+                                        await launchUrl(uri, mode: LaunchMode.externalApplication);
+                                      }
+                                    } catch (e) {
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        SnackBar(content: Text('Could not open Terms of Service')),
+                                      );
+                                    }
+                                  },
+                                  child: Text(
+                                    'Terms of Service',
+                                    style: TextStyle(
+                                      color: kPrimaryGreen,
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w500,
+                                      decoration: TextDecoration.underline,
+                                    ),
                                   ),
-                                ],
-                              ),
+                                ),
+                                Text(
+                                  ' and ',
+                                  style: TextStyle(
+                                    color: Colors.grey[700],
+                                    fontSize: 14,
+                                  ),
+                                ),
+                                GestureDetector(
+                                  onTap: () async {
+                                    try {
+                                      final uri = Uri.parse('https://yumie.me/privacy');
+                                      if (await canLaunchUrl(uri)) {
+                                        await launchUrl(uri, mode: LaunchMode.externalApplication);
+                                      }
+                                    } catch (e) {
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        SnackBar(content: Text('Could not open Privacy Policy')),
+                                      );
+                                    }
+                                  },
+                                  child: Text(
+                                    'Privacy Policy',
+                                    style: TextStyle(
+                                      color: kPrimaryGreen,
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w500,
+                                      decoration: TextDecoration.underline,
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
                         ],
@@ -1282,15 +1330,100 @@ class _AuthScreenState extends State<AuthScreen> {
                     const SizedBox(height: 24),
                     // Social sign-in buttons
                     if (isIOS) ...[
-                      _GoogleSignInButton(onTap: _handleGoogleSignIn, isSignUp: showSignUp),
+                      _GoogleSignInButton(
+                        onTap: _handleGoogleSignIn, 
+                        isSignUp: showSignUp,
+                        isDisabled: showSignUp && !acceptTerms,
+                      ),
                       SizedBox(height: 12),
                       _AppleSignInButton(onTap: _handleAppleSignIn),
                     ] else if (isSamsung) ...[
-                      _GoogleSignInButton(onTap: _handleGoogleSignIn, isSignUp: showSignUp),
+                      _GoogleSignInButton(
+                        onTap: _handleGoogleSignIn, 
+                        isSignUp: showSignUp,
+                        isDisabled: showSignUp && !acceptTerms,
+                      ),
                       SizedBox(height: 12),
                       _SamsungSignInButton(onTap: _handleSamsungSignIn),
                     ] else if (isAndroid) ...[
-                      _GoogleSignInButton(onTap: _handleGoogleSignIn, isSignUp: showSignUp),
+                      _GoogleSignInButton(
+                        onTap: _handleGoogleSignIn, 
+                        isSignUp: showSignUp,
+                        isDisabled: showSignUp && !acceptTerms,
+                      ),
+                    ],
+                    const SizedBox(height: 24),
+                    // Legal links (only show on sign-in, not sign-up)
+                    if (!showSignUp) ...[
+                      Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 16),
+                        child: Wrap(
+                          alignment: WrapAlignment.center,
+                          crossAxisAlignment: WrapCrossAlignment.center,
+                          children: [
+                            Text(
+                              'By continuing, you agree to our ',
+                              style: TextStyle(
+                                color: Colors.grey[600],
+                                fontSize: 12,
+                              ),
+                            ),
+                            GestureDetector(
+                              onTap: () async {
+                                try {
+                                  final uri = Uri.parse('https://yumie.me/terms');
+                                  if (await canLaunchUrl(uri)) {
+                                    await launchUrl(uri, mode: LaunchMode.externalApplication);
+                                  }
+                                } catch (e) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(content: Text('Could not open Terms of Service')),
+                                  );
+                                }
+                              },
+                              child: Text(
+                                'Terms of Service',
+                                style: TextStyle(
+                                  color: kPrimaryGreen,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w500,
+                                  decoration: TextDecoration.underline,
+                                ),
+                              ),
+                            ),
+                            Text(
+                              ' and ',
+                              style: TextStyle(
+                                color: Colors.grey[600],
+                                fontSize: 12,
+                              ),
+                            ),
+                            GestureDetector(
+                              onTap: () async {
+                                try {
+                                  final uri = Uri.parse('https://yumie.me/privacy');
+                                  if (await canLaunchUrl(uri)) {
+                                    await launchUrl(uri, mode: LaunchMode.externalApplication);
+                                  }
+                                } catch (e) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(content: Text('Could not open Privacy Policy')),
+                                  );
+                                }
+                              },
+                              child: Text(
+                                'Privacy Policy',
+                                style: TextStyle(
+                                  color: kPrimaryGreen,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w500,
+                                  decoration: TextDecoration.underline,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
                     ],
                   ],
                 ),
@@ -1307,20 +1440,27 @@ class _AuthScreenState extends State<AuthScreen> {
 class _GoogleSignInButton extends StatelessWidget {
   final VoidCallback onTap;
   final bool isSignUp;
-  const _GoogleSignInButton({required this.onTap, this.isSignUp = false});
+  final bool isDisabled;
+  const _GoogleSignInButton({required this.onTap, this.isSignUp = false, this.isDisabled = false});
   @override
   Widget build(BuildContext context) {
     return ElevatedButton.icon(
       style: ElevatedButton.styleFrom(
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black,
+        backgroundColor: isDisabled ? Colors.grey[300] : Colors.white,
+        foregroundColor: isDisabled ? Colors.grey[600] : Colors.black,
         minimumSize: Size(double.infinity, 48),
-        side: BorderSide(color: Colors.grey[300]!),
+        side: BorderSide(color: isDisabled ? Colors.grey[400]! : Colors.grey[300]!),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
-      icon: Image.asset('assets/google_logo.png', height: 24),
-      label: Text(isSignUp ? 'Sign up with Google' : 'Sign in with Google', style: TextStyle(fontWeight: FontWeight.w600)),
-      onPressed: onTap,
+      icon: Image.asset('assets/google_logo.png', height: 24, color: isDisabled ? Colors.grey[600] : null),
+      label: Text(
+        isSignUp ? 'Sign up with Google' : 'Sign in with Google', 
+        style: TextStyle(
+          fontWeight: FontWeight.w600,
+          color: isDisabled ? Colors.grey[600] : Colors.black,
+        )
+      ),
+      onPressed: isDisabled ? null : onTap,
     );
   }
 }
@@ -3899,6 +4039,28 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             icon: Icons.help_outline,
                             label: AppLocalizations.of(context)!.helpSupport,
                             iconColor: Colors.red,
+                            onTap: () async {
+                              try {
+                                final uri = Uri.parse('https://maivenx.com/');
+                                if (await canLaunchUrl(uri)) {
+                                  await launchUrl(uri, mode: LaunchMode.externalApplication);
+                                } else {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(content: Text('Could not open website')),
+                                  );
+                                }
+                              } catch (e) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(content: Text('Error opening website')),
+                                );
+                              }
+                            },
+                          ),
+                          Divider(height: 1, color: Colors.grey[200]),
+                          _ProfileMenuTile(
+                            icon: Icons.gavel,
+                            label: AppLocalizations.of(context)!.legal,
+                            iconColor: Colors.grey[600],
                             onTap: () {
                               showDialog(
                                 context: context,
@@ -3912,151 +4074,34 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                       mainAxisSize: MainAxisSize.min,
                                       children: [
                                         Icon(
-                                          Icons.support_agent,
+                                          Icons.gavel,
                                           size: 48,
                                           color: kPrimaryGreen,
                                         ),
                                         SizedBox(height: 16),
                                         Text(
-                                          AppLocalizations.of(context)!.helpSupport,
+                                          AppLocalizations.of(context)!.legal,
                                           style: TextStyle(
                                             fontSize: 24,
                                             fontWeight: FontWeight.bold,
                                           ),
                                         ),
-                                        SizedBox(height: 8),
-                                        Text(
-                                          AppLocalizations.of(context)!.needAssistanceContactSupport,
-                                          style: TextStyle(
-                                            fontSize: 16,
-                                            color: Colors.grey[600],
-                                          ),
-                                          textAlign: TextAlign.center,
-                                        ),
                                         SizedBox(height: 16),
-                                        InkWell(
-                                          onTap: () async {
-                                            try {
-                                              // Try multiple email URI formats for better Android compatibility
-                                              final List<Uri> emailUris = [
-                                                Uri(
-                                                  scheme: 'mailto',
-                                                  path: 'support@healthai.com',
-                                                  queryParameters: {
-                                                    'subject': 'HealthAI Support Request',
-                                                  },
-                                                ),
-                                                Uri.parse('mailto:support@healthai.com?subject=HealthAI Support Request'),
-                                                Uri.parse('mailto:support@healthai.com'),
-                                              ];
-
-                                              bool launched = false;
-                                              for (final uri in emailUris) {
-                                                if (await canLaunchUrl(uri)) {
-                                                  await launchUrl(uri, mode: LaunchMode.externalApplication);
-                                                  launched = true;
-                                                  break;
-                                                }
-                                              }
-
-                                              if (!launched) {
-                                                // Fallback: show email address for manual copying
-                                                showDialog(
-                                                  context: context,
-                                                  builder: (context) => AlertDialog(
-                                                    title: Text('Email Client Not Found'),
-                                                    content: Column(
-                                                      mainAxisSize: MainAxisSize.min,
-                                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                                      children: [
-                                                        Text('No email app found on your device.'),
-                                                        SizedBox(height: 12),
-                                                        Text('Please copy the email address:'),
-                                                        SizedBox(height: 8),
-                                                        Container(
-                                                          padding: EdgeInsets.all(12),
-                                                          decoration: BoxDecoration(
-                                                            color: Colors.grey[100],
-                                                            borderRadius: BorderRadius.circular(8),
-                                                            border: Border.all(color: Colors.grey[300]!),
-                                                          ),
-                                                          child: Row(
-                                                            children: [
-                                                              Expanded(
-                                                                child: Text(
-                                                                  'support@healthai.com',
-                                                                  style: TextStyle(
-                                                                    fontFamily: 'monospace',
-                                                                    fontSize: 16,
-                                                                    fontWeight: FontWeight.w600,
-                                                                  ),
-                                                                ),
-                                                              ),
-                                                              IconButton(
-                                                                icon: Icon(Icons.copy, color: kPrimaryGreen),
-                                                                onPressed: () {
-                                                                  Clipboard.setData(ClipboardData(text: 'support@healthai.com'));
-                                                                  ScaffoldMessenger.of(context).showSnackBar(
-                                                                    SnackBar(content: Text('Email address copied to clipboard')),
-                                                                  );
-                                                                  Navigator.pop(context);
-                                                                },
-                                                                tooltip: 'Copy email address',
-                                                              ),
-                                                            ],
-                                                          ),
-                                                        ),
-                                                      ],
-                                                    ),
-                                                    actions: [
-                                                      TextButton(
-                                                        onPressed: () => Navigator.pop(context),
-                                                        child: Text('OK'),
-                                                      ),
-                                                    ],
-                                                  ),
-                                                );
-                                              }
-                                            } catch (e) {
-                                              // Show fallback dialog if all attempts fail
-                                              showDialog(
-                                                context: context,
-                                                builder: (context) => AlertDialog(
-                                                  title: Text('Error'),
-                                                  content: Text('Could not launch email client. Please copy the email address manually.'),
-                                                  actions: [
-                                                    TextButton(
-                                                      onPressed: () => Navigator.pop(context),
-                                                      child: Text('OK'),
-                                                    ),
-                                                  ],
-                                                ),
-                                              );
-                                            }
-                                          },
-                                          child: Container(
-                                            padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                                            decoration: BoxDecoration(
-                                              color: kPrimaryGreen.withOpacity(0.1),
-                                              borderRadius: BorderRadius.circular(12),
-                                              border: Border.all(color: kPrimaryGreen.withOpacity(0.3)),
-                                            ),
-                                            child: Row(
-                                              mainAxisSize: MainAxisSize.min,
-                                              children: [
-                                                Icon(Icons.email, color: kPrimaryGreen),
-                                                SizedBox(width: 8),
-                                                Text(
-                                                  'support@healthai.com',
-                                                  style: TextStyle(
-                                                    color: kPrimaryGreen,
-                                                    fontWeight: FontWeight.w600,
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                          ),
+                                        _LegalLinkTile(
+                                          icon: Icons.privacy_tip,
+                                          title: AppLocalizations.of(context)!.privacyPolicy,
+                                          subtitle: 'Read our privacy policy',
+                                          url: 'https://yumie.me/privacy',
                                         ),
+                                        SizedBox(height: 12),
+                                        _LegalLinkTile(
+                                          icon: Icons.description,
+                                          title: AppLocalizations.of(context)!.termsOfService,
+                                          subtitle: 'Read our terms of service',
+                                          url: 'https://yumie.me/terms',
+                                        ),
+                                        SizedBox(height: 12),
+
                                         SizedBox(height: 24),
                                         Row(
                                           mainAxisAlignment: MainAxisAlignment.center,
@@ -6815,13 +6860,86 @@ Locale _getLocale(String code) {
   if (code == 'ar') return const Locale('ar');
   if (code == 'es') return const Locale('es');
   return const Locale('en');
-  }
+}
 
-  // Helper to get current greeting based on time of day
-  String get _currentGreeting {
-    final hour = DateTime.now().hour;
-    if (hour >= 5 && hour < 11) return 'Good morning ☀️';
-    if (hour >= 11 && hour < 16) return 'Good afternoon 🌤️';
-    if (hour >= 16 && hour < 21) return 'Good evening 🌇';
-    return 'Good night 🌙';
+// Helper to get current greeting based on time of day
+String get _currentGreeting {
+  final hour = DateTime.now().hour;
+  if (hour >= 5 && hour < 11) return 'Good morning ☀️';
+  if (hour >= 11 && hour < 16) return 'Good afternoon 🌤️';
+  if (hour >= 16 && hour < 21) return 'Good evening 🌇';
+  return 'Good night 🌙';
+}
+
+class _LegalLinkTile extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final String url;
+
+  const _LegalLinkTile({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.url,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: () async {
+        try {
+          final uri = Uri.parse(url);
+          if (await canLaunchUrl(uri)) {
+            await launchUrl(uri, mode: LaunchMode.externalApplication);
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('Could not open link')),
+            );
+          }
+        } catch (e) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Error opening link')),
+          );
+        }
+      },
+      child: Container(
+        padding: EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.grey[50],
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.grey[200]!),
+        ),
+        child: Row(
+          children: [
+            Icon(icon, color: kPrimaryGreen, size: 24),
+            SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: TextStyle(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 16,
+                    ),
+                  ),
+                  SizedBox(height: 2),
+                  Text(
+                    subtitle,
+                    style: TextStyle(
+                      color: Colors.grey[600],
+                      fontSize: 12,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Icon(Icons.open_in_new, color: Colors.grey[400], size: 20),
+          ],
+        ),
+      ),
+    );
   }
+}

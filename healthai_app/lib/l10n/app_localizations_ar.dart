@@ -150,6 +150,18 @@ class AppLocalizationsAr extends AppLocalizations {
   String get helpSupport => 'المساعدة والدعم';
 
   @override
+  String get legal => 'قانوني';
+
+  @override
+  String get privacyPolicy => 'سياسة الخصوصية';
+
+  @override
+  String get termsOfService => 'شروط الخدمة';
+
+  @override
+  String get apiDocumentation => 'وثائق API';
+
+  @override
   String get needAssistanceContactSupport => 'تحتاج مساعدة؟ تواصل مع فريق الدعم:';
 
   @override
