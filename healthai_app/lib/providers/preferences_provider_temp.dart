@@ -27,64 +27,15 @@ class PreferencesProvider extends ChangeNotifier {
   bool get momentOfCalmReminders => _momentOfCalmReminders;
   String get language => _language;
 
-  // Load preferences from SharedPreferences and sync with Firestore
+  // Load preferences from SharedPreferences
   Future<void> loadPreferences() async {
     final prefs = await SharedPreferences.getInstance();
-    
-    // Load basic preferences from SharedPreferences
     _useMetric = prefs.getBool('useMetric') ?? true;
-    _language = prefs.getString('language') ?? 'en';
-    
-    // Load notification preferences from SharedPreferences first (as fallback)
     _mealLoggingPrompts = prefs.getBool('mealLoggingPrompts') ?? false;
     _waterIntakeReminders = prefs.getBool('waterIntakeReminders') ?? false;
     _mindfulWalksReminders = prefs.getBool('mindfulWalksReminders') ?? false;
     _momentOfCalmReminders = prefs.getBool('momentOfCalmReminders') ?? false;
-    
-    // Try to sync with Firestore (onboarding may have saved there)
-    try {
-      final user = FirebaseAuth.instance.currentUser;
-      if (user != null) {
-        final doc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
-        final data = doc.data();
-        if (data != null && data['reminders'] != null) {
-          final reminders = data['reminders'] as Map<String, dynamic>;
-          
-          // Update values from Firestore and save to SharedPreferences
-          _mealLoggingPrompts = reminders['mealLoggingPrompts'] ?? _mealLoggingPrompts;
-          _waterIntakeReminders = reminders['waterIntakeReminders'] ?? _waterIntakeReminders;
-          _mindfulWalksReminders = reminders['mindfulWalksReminders'] ?? _mindfulWalksReminders;
-          _momentOfCalmReminders = reminders['momentOfCalmReminders'] ?? _momentOfCalmReminders;
-          
-          // Sync SharedPreferences with Firestore values
-          await prefs.setBool('mealLoggingPrompts', _mealLoggingPrompts);
-          await prefs.setBool('waterIntakeReminders', _waterIntakeReminders);
-          await prefs.setBool('mindfulWalksReminders', _mindfulWalksReminders);
-          await prefs.setBool('momentOfCalmReminders', _momentOfCalmReminders);
-          
-          print('✅ Synced notification preferences from Firestore');
-          print('📱 Meal: $_mealLoggingPrompts, Water: $_waterIntakeReminders, Walk: $_mindfulWalksReminders, Calm: $_momentOfCalmReminders');
-          
-          // Schedule notifications for enabled preferences
-          if (_mealLoggingPrompts) {
-            print('🍽️ Scheduling meal reminders from Firestore sync...');
-            await _scheduleMealLoggingPrompts();
-          }
-          if (_waterIntakeReminders) {
-            print('💧 Scheduling water reminders from Firestore sync...');
-            await _scheduleWaterIntakeReminders();
-          }
-          if (_mindfulWalksReminders) {
-            print('🚶‍♀️ Scheduling walk reminders from Firestore sync...');
-            await _scheduleMindfulWalksReminders();
-          }
-        }
-      }
-    } catch (e) {
-      print('⚠️ Failed to sync preferences from Firestore: $e');
-      // If Firestore fails, use SharedPreferences values (already loaded above)
-    }
-    
+    _language = prefs.getString('language') ?? 'en';
     notifyListeners();
   }
 

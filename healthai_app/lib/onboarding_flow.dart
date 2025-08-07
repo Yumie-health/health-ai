@@ -6,6 +6,8 @@ import 'package:lottie/lottie.dart';
 import 'services/ai_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'l10n/app_localizations.dart';
+import 'package:provider/provider.dart';
+import 'providers/preferences_provider.dart';
 
 class OnboardingFlowPage extends StatefulWidget {
   const OnboardingFlowPage({Key? key}) : super(key: key);
@@ -314,6 +316,7 @@ class _OnboardingFlowPageState extends State<OnboardingFlowPage> with SingleTick
                               'age': selectedAge,
                               'height': selectedHeightCm,
                               'weight': selectedWeightKg,
+                              'startingWeight': selectedWeightKg, // Set starting weight to initial weight during onboarding
                               'targetWeight': targetWeightKg ?? selectedWeightKg,
                               'activityLevel': activityLevel ?? '',
                               'bloodType': bloodType,
@@ -383,6 +386,16 @@ class _OnboardingFlowPageState extends State<OnboardingFlowPage> with SingleTick
                         } catch (e) {
                           // Handle error silently
                         }
+                        
+                        // Force reload preferences after onboarding
+                        try {
+                          final prefsProvider = Provider.of<PreferencesProvider>(context, listen: false);
+                          await prefsProvider.loadPreferences();
+                          print('✅ Reloaded preferences after onboarding');
+                        } catch (e) {
+                          print('⚠️ Failed to reload preferences: $e');
+                        }
+                        
                         // Wait for Firestore to update
                         bool updated = false;
                         while (!updated) {

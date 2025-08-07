@@ -76,8 +76,10 @@ class _NutritionalPlanPageState extends State<NutritionalPlanPage> {
       final newWeight = userData!['weight']?.toDouble() ?? 0.0;
       final weightChange = newWeight - originalWeight;
       
-      // Update the user data
-      await FirebaseFirestore.instance.collection('users').doc(user.uid).update(userData!);
+      // Update the user data (but exclude startingWeight - it should never change after initial setup)
+      final updateData = Map<String, dynamic>.from(userData!);
+      updateData.remove('startingWeight'); // Never update starting weight
+      await FirebaseFirestore.instance.collection('users').doc(user.uid).update(updateData);
       
       // If weight changed, also update the weight change tracking
       if (weightChange != 0) {

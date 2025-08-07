@@ -42,7 +42,12 @@ import 'l10n/app_localizations.dart';
 import 'utils/constants.dart';
 import 'providers/preferences_provider.dart';
 import 'utils/onboarding_helper.dart';
+import 'services/permission_service.dart';
+import 'permission_request_screen.dart';
+import 'permission_status_screen.dart';
 import 'services/logging_service.dart';
+import 'package:share_plus/share_plus.dart';
+import 'package:in_app_review/in_app_review.dart';
 import 'utils/validation.dart';
 import 'services/error_handler.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
@@ -135,6 +140,8 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   // Handle background message
 }
 
+// Simple Android notification system - no complex background callbacks needed
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
@@ -192,23 +199,11 @@ void main() async {
     enableVibration: true,
   );
 
-  const AndroidNotificationChannel testChannel = AndroidNotificationChannel(
-    'test_channel',
-    'Test Notifications',
-    description: 'Test notifications for debugging',
-    importance: Importance.max,
-    playSound: true,
-    enableVibration: true,
-  );
 
-  const AndroidNotificationChannel backgroundChannel = AndroidNotificationChannel(
-    'background_channel',
-    'Background Notifications',
-    description: 'Notifications that work when app is closed',
-    importance: Importance.max,
-    playSound: true,
-    enableVibration: true,
-  );
+
+
+
+
 
   // Create the channels
   await flutterLocalNotificationsPlugin
@@ -220,17 +215,14 @@ void main() async {
   await flutterLocalNotificationsPlugin
       .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
       ?.createNotificationChannel(walkChannel);
-  await flutterLocalNotificationsPlugin
-      .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
-      ?.createNotificationChannel(testChannel);
-  await flutterLocalNotificationsPlugin
-      .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
-      ?.createNotificationChannel(backgroundChannel);
+
 
   // Request notification permissions
   // For Android, permissions are handled automatically by the plugin
   // For iOS, permissions are requested during initialization via DarwinInitializationSettings
   
+  // Simple Android notifications - no complex initialization needed
+
   // Initialize Firebase - Android will use google-services.json, iOS will use the options
   await Firebase.initializeApp();
   
@@ -256,7 +248,11 @@ void main() async {
 
     runApp(
       ChangeNotifierProvider(
-        create: (_) => PreferencesProvider(),
+        create: (_) {
+          final prefs = PreferencesProvider();
+          prefs.loadPreferences(); // Load preferences when provider is created
+          return prefs;
+        },
         child: const HealthAIApp(),
       ),
     );
@@ -472,6 +468,8 @@ class SplashOrApp extends StatefulWidget {
 
 class _SplashOrAppState extends State<SplashOrApp> with SingleTickerProviderStateMixin {
   bool _ready = false;
+  bool _hasCheckedPermissions = false;
+  bool _shouldShowPermissions = false;
   late AnimationController _controller;
   late Animation<double> _animation;
 
@@ -501,9 +499,17 @@ class _SplashOrAppState extends State<SplashOrApp> with SingleTickerProviderStat
     } catch (e, stack) {
       print('Auth state or Firestore error: $e');
     }
+    
+    // Check permissions
+    final shouldRequest = await PermissionService.shouldRequestPermissions();
+    
     await minSplash;
     if (mounted) {
-      setState(() => _ready = true);
+      setState(() {
+        _ready = true;
+        _hasCheckedPermissions = true;
+        _shouldShowPermissions = shouldRequest;
+      });
       _controller.forward();
     }
   }
@@ -516,6 +522,17 @@ class _SplashOrAppState extends State<SplashOrApp> with SingleTickerProviderStat
 
   @override
   Widget build(BuildContext context) {
+    // Show permission screen if needed
+    if (_ready && _hasCheckedPermissions && _shouldShowPermissions) {
+      return PermissionRequestScreen(
+        onPermissionsComplete: () {
+          setState(() {
+            _shouldShowPermissions = false;
+          });
+        },
+      );
+    }
+
     return Container(
       color: kPrimaryGreen,
       child: Stack(
@@ -3191,6 +3208,8 @@ extension StringCasingExtension on String {
   String capitalize() => isEmpty ? this : '${this[0].toUpperCase()}${substring(1)}';
 }
 
+
+
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
 
@@ -3200,6 +3219,156 @@ class ProfileScreen extends StatefulWidget {
 
 class _ProfileScreenState extends State<ProfileScreen> {
   final UserService _userService = UserService();
+
+  // Helper functions for sharing and rating
+  Future<void> _shareApp(BuildContext context) async {
+    try {
+      const String shareText = '''
+🌟 Check out HealthAI - Your Personal Nutrition Assistant! 🌟
+
+Track your calories, scan food with AI, and get personalized nutrition insights to achieve your health goals!
+
+📱 Download HealthAI now:
+• iOS: https://apps.apple.com/us/app/yumie-ai/id6748360245
+• Android: https://play.google.com/store/apps/details?id=com.yumie.healthai
+
+#HealthAI #Nutrition #Fitness #HealthyLiving
+      ''';
+      
+      await Share.share(
+        shareText,
+        subject: 'HealthAI - Your Personal Nutrition Assistant',
+      );
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Unable to share at this time. Please try again.'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _rateApp(BuildContext context) async {
+    print('🔥 _rateApp called - starting rating process');
+    try {
+      final InAppReview inAppReview = InAppReview.instance;
+      print('🔥 InAppReview instance created');
+      
+      // Check if in-app review is available
+      final isAvailable = await inAppReview.isAvailable();
+      print('🔥 InAppReview isAvailable: $isAvailable');
+      
+      if (isAvailable) {
+        print('🔥 Attempting to show native in-app review');
+        // Request the in-app review
+        await inAppReview.requestReview();
+        print('🔥 Native in-app review requested');
+        
+        // Wait a moment to see if the native review dialog appeared
+        await Future.delayed(Duration(milliseconds: 1000));
+        print('🔥 Waited for native review dialog to appear');
+        
+        // In production with published app, native review should work
+        // In development or if app isn't published, show fallback
+        // We can detect if we're in debug mode
+        bool isDebugMode = false;
+        assert(isDebugMode = true); // This only runs in debug mode
+        
+        if (isDebugMode) {
+          print('🔥 Debug mode detected, showing fallback dialog');
+          _showRatingFallbackDialog(context);
+        } else {
+          print('🔥 Production mode - native review should have appeared');
+          // In production, if native review didn't show after 1 second, 
+          // something went wrong, so show fallback
+        }
+      } else {
+        print('🔥 In-app review not available, opening store listing');
+        // Try to open store listing first
+        try {
+          await inAppReview.openStoreListing(
+            appStoreId: '6748360245', // Yumie AI App Store ID
+          );
+          print('🔥 Store listing opened');
+        } catch (storeError) {
+          print('🔥 Store listing failed: $storeError, showing fallback dialog');
+          _showRatingFallbackDialog(context);
+        }
+      }
+    } catch (e) {
+      print('🔥 Error in _rateApp: $e');
+      // Fallback: Show platform-specific dialog
+      if (context.mounted) {
+        print('🔥 Showing fallback dialog due to error');
+        _showRatingFallbackDialog(context);
+      }
+    }
+  }
+
+  void _showRatingFallbackDialog(BuildContext context) {
+    final bool isIOS = Platform.isIOS;
+    final String storeName = isIOS ? 'App Store' : 'Play Store';
+    final IconData storeIcon = isIOS ? Icons.phone_iphone : Icons.play_arrow;
+    final Color storeColor = isIOS ? Colors.blue : Colors.green;
+    final String storeUrl = isIOS 
+      ? 'https://apps.apple.com/us/app/yumie-ai/id6748360245'
+      : 'https://play.google.com/store/apps/details?id=com.yumie.healthai';
+
+    showDialog(
+      context: context,
+      builder: (BuildContext dialogContext) => AlertDialog(
+        title: Row(
+          children: [
+            Icon(Icons.star, color: Colors.amber, size: 28),
+            SizedBox(width: 12),
+            Flexible(child: Text('Rate Yumie AI', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold))),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              'Love using Yumie AI? Help us grow by rating us on the $storeName!',
+              style: TextStyle(fontSize: 16),
+              textAlign: TextAlign.center,
+            ),
+            SizedBox(height: 20),
+            ElevatedButton.icon(
+              onPressed: () async {
+                try {
+                  final uri = Uri.parse(storeUrl);
+                  if (await canLaunchUrl(uri)) {
+                    await launchUrl(uri, mode: LaunchMode.externalApplication);
+                  }
+                } catch (e) {
+                  // Handle error silently
+                }
+                Navigator.of(dialogContext).pop();
+              },
+              icon: Icon(storeIcon, size: 24),
+              label: Text('Rate on $storeName', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: storeColor,
+                foregroundColor: Colors.white,
+                padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(),
+            child: Text('Maybe Later', style: TextStyle(color: Colors.grey[600])),
+          ),
+        ],
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      ),
+    );
+  }
 
   Future<void> _changeProfilePicture() async {
     final picker = ImagePicker();
@@ -3890,18 +4059,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
                           Divider(height: 1, color: Colors.grey[200]),
                           _ProfileMenuTile(
-                            icon: Icons.star_rate,
-                            label: AppLocalizations.of(context)!.rateUsOnGoogle,
-                            iconColor: kAccentOrange,
+                            icon: Platform.isIOS ? Icons.phone_iphone : Icons.play_arrow,
+                            label: Platform.isIOS ? 'Rate us on App Store' : 'Rate us on Play Store',
+                            iconColor: Platform.isIOS ? Colors.blue : Colors.green,
                             onTap: () {
-                              showDialog(
-                                context: context,
-                                builder: (context) => AlertDialog(
-                                  title: Text(AppLocalizations.of(context)!.comingSoon),
-                                  content: Text(AppLocalizations.of(context)!.ratingOnGoogleAvailableAfterRelease),
-                                  actions: [TextButton(onPressed: () => Navigator.pop(context), child: Text(AppLocalizations.of(context)!.ok))],
-                                ),
-                              );
+                              print('🔥 Rating button tapped!');
+                              _rateApp(context);
                             },
                           ),
                           Divider(height: 1, color: Colors.grey[200]),
@@ -3909,16 +4072,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             icon: Icons.share,
                             label: AppLocalizations.of(context)!.shareWithFriends,
                             iconColor: kSecondaryBlue,
-                            onTap: () {
-                              showDialog(
-                                context: context,
-                                builder: (context) => AlertDialog(
-                                  title: Text(AppLocalizations.of(context)!.comingSoon),
-                                  content: Text(AppLocalizations.of(context)!.sharingAvailableAfterRelease),
-                                  actions: [TextButton(onPressed: () => Navigator.pop(context), child: Text(AppLocalizations.of(context)!.ok))],
-                                ),
-                              );
-                            },
+                            onTap: () => _shareApp(context),
                           ),
                           Divider(height: 1, color: Colors.grey[200]),
                           _ProfileMenuTile(
@@ -4493,15 +4647,7 @@ class _CoachScreenState extends State<CoachScreen> with TickerProviderStateMixin
       setState(() { _aiHealthInsight = "Could not load profile."; _loadingInsight = false; });
       return;
     }
-    final user = FirebaseAuth.instance.currentUser;
-    String bloodType = '-';
-    bool isDiabetic = false;
-    if (user != null) {
-      final doc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
-      final data = doc.data() ?? {};
-      bloodType = data['bloodType'] ?? '-';
-      isDiabetic = data['isDiabetic'] ?? false;
-    }
+    // User health data (bloodType, isDiabetic, etc.) is now available in userProfile
     final meals = await MealService().getTodayMeals().first;
     int caloriesConsumed = meals.fold(0, (sum, m) => sum + m.calories);
     int proteinG = meals.fold(0, (sum, m) => sum + m.protein);
@@ -4518,14 +4664,20 @@ class _CoachScreenState extends State<CoachScreen> with TickerProviderStateMixin
       age: userProfile.age,
       heightCm: userProfile.height.round(),
       weightKg: userProfile.weight,
+      startingWeight: userProfile.startingWeight,
+      targetWeight: userProfile.targetWeight,
+      activityLevel: userProfile.activityLevel,
       calorieGoal: userProfile.dailyCalorieGoal,
       caloriesConsumed: caloriesConsumed,
+      proteinGoal: userProfile.proteinGoal,
+      carbsGoal: userProfile.carbsGoal,
+      fatGoal: userProfile.fatGoal,
       proteinG: proteinG,
       carbsG: carbsG,
       fatG: fatG,
       waterIntakeL: waterIntakeL,
-      bloodType: bloodType,
-      isDiabetic: isDiabetic,
+      bloodType: userProfile.bloodType,
+      isDiabetic: userProfile.isDiabetic,
       specialInstruction: 'For this health insight, respond as a concise list of 3-5 bullet points. Each point should be a short, actionable tip or observation. Do not use paragraphs.',
       language: prefs.language,
     );
@@ -4619,16 +4771,7 @@ class _CoachScreenState extends State<CoachScreen> with TickerProviderStateMixin
       return;
     }
 
-    // 2. Get bloodType and isDiabetic from Firestore (set by Health Awareness page)
-    final user = FirebaseAuth.instance.currentUser;
-    String bloodType = '-';
-    bool isDiabetic = false;
-    if (user != null) {
-      final doc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
-      final data = doc.data() ?? {};
-      bloodType = data['bloodType'] ?? '-';
-      isDiabetic = data['isDiabetic'] ?? false;
-    }
+    // 2. User health data (bloodType, isDiabetic, etc.) is now available in userProfile
 
     // 3. Fetch today's meals
     final meals = await MealService().getTodayMeals().first;
@@ -4663,14 +4806,20 @@ class _CoachScreenState extends State<CoachScreen> with TickerProviderStateMixin
       age: userProfile.age,
       heightCm: userProfile.height.round(),
       weightKg: userProfile.weight,
+      startingWeight: userProfile.startingWeight,
+      targetWeight: userProfile.targetWeight,
+      activityLevel: userProfile.activityLevel,
       calorieGoal: userProfile.dailyCalorieGoal,
       caloriesConsumed: caloriesConsumed,
+      proteinGoal: userProfile.proteinGoal,
+      carbsGoal: userProfile.carbsGoal,
+      fatGoal: userProfile.fatGoal,
       proteinG: proteinG,
       carbsG: carbsG,
       fatG: fatG,
       waterIntakeL: waterIntakeL,
-      bloodType: bloodType,
-      isDiabetic: isDiabetic,
+      bloodType: userProfile.bloodType,
+      isDiabetic: userProfile.isDiabetic,
       language: prefs.language,
     );
 
@@ -6385,7 +6534,7 @@ class SettingsPage extends StatelessWidget {
                       title: Text(AppLocalizations.of(context)!.useMetricUnits, style: TextStyle(fontWeight: FontWeight.w600)),
               subtitle: Text(AppLocalizations.of(context)!.unitsSubtitle),
               value: prefs.useMetric,
-              onChanged: (v) => prefs.setUnits(v),
+              onChanged: (v) => prefs.setUseMetric(v),
               secondary: Icon(Icons.straighten),
             ),
                     Divider(height: 1, thickness: 1, indent: 16, endIndent: 16),
@@ -6404,6 +6553,27 @@ class SettingsPage extends StatelessWidget {
               ),
             ),
                   ],
+                ),
+              ),
+              SizedBox(height: 32),
+              Text('App Permissions', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 22)),
+              SizedBox(height: 18),
+              Card(
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+                elevation: 2,
+                child: ListTile(
+                  leading: Icon(Icons.security),
+                  title: Text('Manage Permissions', style: TextStyle(fontWeight: FontWeight.w600)),
+                  subtitle: Text('Camera, notifications, and more'),
+                  trailing: Icon(Icons.chevron_right),
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => PermissionStatusScreen(),
+                      ),
+                    );
+                  },
                 ),
               ),
               SizedBox(height: 32),
@@ -6448,61 +6618,7 @@ class SettingsPage extends StatelessWidget {
                   ],
                 ),
               ),
-              SizedBox(height: 32),
-              Text('🧪 Test Notifications', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 22)),
-              SizedBox(height: 18),
-              Card(
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-                elevation: 2,
-                child: Column(
-                  children: [
-                    ListTile(
-                      leading: Icon(Icons.notifications_active, color: Colors.orange),
-                      title: Text('Test All Notifications', style: TextStyle(fontWeight: FontWeight.w600)),
-                      subtitle: Text('Schedule test notifications for 30s, 1min, and 2min from now'),
-                      trailing: ElevatedButton(
-                        onPressed: () {
-                          prefs.testNotifications();
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text('🧪 Test notifications scheduled! Check your device in 30 seconds, 1 minute, and 2 minutes.')),
-                          );
-                        },
-                        child: Text('Test'),
-                      ),
-                    ),
-                    Divider(height: 1, thickness: 1, indent: 16, endIndent: 16),
-                    ListTile(
-                      leading: Icon(Icons.cancel, color: Colors.red),
-                      title: Text('Cancel Test Notifications', style: TextStyle(fontWeight: FontWeight.w600)),
-                      subtitle: Text('Cancel all test notifications'),
-                      trailing: ElevatedButton(
-                        onPressed: () {
-                          prefs.cancelTestNotifications();
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text('✅ Test notifications cancelled!')),
-                          );
-                        },
-                        child: Text('Cancel'),
-                      ),
-                    ),
-                    Divider(height: 1, thickness: 1, indent: 16, endIndent: 16),
-                    ListTile(
-                      leading: Icon(Icons.notifications_active, color: Colors.blue),
-                      title: Text('Test Background Notifications', style: TextStyle(fontWeight: FontWeight.w600)),
-                      subtitle: Text('Schedule notification for 10 seconds, then close app'),
-                      trailing: ElevatedButton(
-                        onPressed: () {
-                          prefs.testBackgroundNotifications();
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text('🔔 Background test scheduled! Close the app and wait 10 seconds.')),
-                          );
-                        },
-                        child: Text('Test Background'),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+
             ],
           ),
         ),

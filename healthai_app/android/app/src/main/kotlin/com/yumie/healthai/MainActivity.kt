@@ -10,14 +10,17 @@ import kotlinx.coroutines.launch
 class MainActivity: FlutterActivity() {
     private val CHANNEL = "play_integrity_channel"
     private val BILLING_CHANNEL = "billing_channel"
+    private val NOTIFICATION_CHANNEL = "native_notifications"
     private lateinit var playIntegrityHelper: PlayIntegrityHelper
     private lateinit var billingService: BillingService
+    private lateinit var notificationScheduler: NotificationScheduler
     
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
         
         playIntegrityHelper = PlayIntegrityHelper(this)
         billingService = BillingService(this)
+        notificationScheduler = NotificationScheduler(this)
         
         // Set up billing callback
         billingService.setCallback(object : BillingService.BillingCallback {
@@ -95,6 +98,71 @@ class MainActivity: FlutterActivity() {
                         } catch (e: Exception) {
                             result.error("BILLING_ERROR", "Failed to restore purchases", e.message)
                         }
+                    }
+                }
+                else -> {
+                    result.notImplemented()
+                }
+            }
+        }
+        
+        // Native notification channel
+        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, NOTIFICATION_CHANNEL).setMethodCallHandler { call, result ->
+            when (call.method) {
+                "scheduleTestNotification" -> {
+                    try {
+                        notificationScheduler.scheduleTestNotification()
+                        result.success("Native test notification scheduled")
+                    } catch (e: Exception) {
+                        result.error("NOTIFICATION_ERROR", "Failed to schedule test notification", e.message)
+                    }
+                }
+                "scheduleMealReminders" -> {
+                    try {
+                        notificationScheduler.scheduleMealReminders()
+                        result.success("Native meal reminders scheduled")
+                    } catch (e: Exception) {
+                        result.error("NOTIFICATION_ERROR", "Failed to schedule meal reminders", e.message)
+                    }
+                }
+                "cancelAllNotifications" -> {
+                    try {
+                        notificationScheduler.cancelAllNotifications()
+                        result.success("All native notifications canceled")
+                    } catch (e: Exception) {
+                        result.error("NOTIFICATION_ERROR", "Failed to cancel notifications", e.message)
+                    }
+                }
+                "scheduleWaterReminders" -> {
+                    try {
+                        notificationScheduler.scheduleWaterReminders()
+                        result.success("Native water reminders scheduled")
+                    } catch (e: Exception) {
+                        result.error("NOTIFICATION_ERROR", "Failed to schedule water reminders", e.message)
+                    }
+                }
+                "scheduleWalkReminders" -> {
+                    try {
+                        notificationScheduler.scheduleWalkReminders()
+                        result.success("Native walk reminders scheduled")
+                    } catch (e: Exception) {
+                        result.error("NOTIFICATION_ERROR", "Failed to schedule walk reminders", e.message)
+                    }
+                }
+                "cancelWaterReminders" -> {
+                    try {
+                        notificationScheduler.cancelWaterReminders()
+                        result.success("Native water reminders canceled")
+                    } catch (e: Exception) {
+                        result.error("NOTIFICATION_ERROR", "Failed to cancel water reminders", e.message)
+                    }
+                }
+                "cancelWalkReminders" -> {
+                    try {
+                        notificationScheduler.cancelWalkReminders()
+                        result.success("Native walk reminders canceled")
+                    } catch (e: Exception) {
+                        result.error("NOTIFICATION_ERROR", "Failed to cancel walk reminders", e.message)
                     }
                 }
                 else -> {

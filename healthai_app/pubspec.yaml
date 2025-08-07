@@ -71,13 +71,15 @@ dependencies:
   image_picker: ^1.1.1
   camera: ^0.10.5+9
   share_plus: ^11.0.0
+  permission_handler: ^11.3.1
   logging: ^1.2.0
   flutter_localizations:
     sdk: flutter
   firebase_remote_config: ^5.4.7
   in_app_purchase: ^3.1.13
-  # Note: We'll use the official Android Play Integrity API directly
-  # The Flutter package may not be available, so we'll implement it natively
+  in_app_review: ^2.0.9
+  # Simple, reliable notifications - no complex background packages
+  # Using flutter_local_notifications only (already included)
 
 dev_dependencies:
   flutter_test:

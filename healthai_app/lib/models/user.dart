@@ -18,6 +18,10 @@ class UserProfile {
   final String photoUrl;
   final String? waterIntake;
   final int? waterLoggedMl;
+  // Additional health data for comprehensive coaching
+  final String activityLevel; // e.g., "Sedentary", "Lightly Active", "Moderately Active", "Very Active"
+  final String bloodType; // e.g., "A+", "B-", "O+", etc.
+  final bool isDiabetic;
 
   UserProfile({
     required this.id,
@@ -37,6 +41,9 @@ class UserProfile {
     this.photoUrl = '',
     this.waterIntake,
     this.waterLoggedMl,
+    this.activityLevel = '',
+    this.bloodType = '',
+    this.isDiabetic = false,
   });
 
   Map<String, dynamic> toMap() {
@@ -57,6 +64,9 @@ class UserProfile {
       'photoUrl': photoUrl,
       'waterIntake': waterIntake,
       'waterLoggedMl': waterLoggedMl,
+      'activityLevel': activityLevel,
+      'bloodType': bloodType,
+      'isDiabetic': isDiabetic,
     };
   }
 
@@ -80,6 +90,9 @@ class UserProfile {
       photoUrl: data['photoUrl'] ?? '',
       waterIntake: data['waterIntake'],
       waterLoggedMl: data['waterLoggedMl'],
+      activityLevel: data['activityLevel'] ?? '',
+      bloodType: data['bloodType'] ?? '',
+      isDiabetic: data['isDiabetic'] ?? false,
     );
   }
 } 

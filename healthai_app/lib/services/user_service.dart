@@ -23,7 +23,10 @@ class UserService {
     final user = _auth.currentUser;
     if (user == null) throw Exception('User not authenticated');
 
-    await _firestore.collection('users').doc(user.uid).update(profile.toMap());
+    // Create update data but exclude startingWeight - it should never change after initial setup
+    final updateData = Map<String, dynamic>.from(profile.toMap());
+    updateData.remove('startingWeight'); // Never update starting weight
+    await _firestore.collection('users').doc(user.uid).update(updateData);
   }
 
   // Create initial user profile
