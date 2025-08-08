@@ -186,7 +186,7 @@ class _SubscriptionPopupPageState extends State<SubscriptionPopupPage>
                     ],
                   ),
                   constraints: BoxConstraints(
-                    maxHeight: screenSize.height * 0.65,
+                    maxHeight: screenSize.height * 0.85,
                     maxWidth: screenSize.width * 0.85,
                   ),
                   child: SingleChildScrollView(
@@ -220,16 +220,16 @@ class _SubscriptionPopupPageState extends State<SubscriptionPopupPage>
                     
                     // App logo
                     SizedBox(
-                      height: isVerySmallScreen ? 60 : (isSmallScreen ? 70 : 80),
+                      height: isVerySmallScreen ? 80 : (isSmallScreen ? 100 : 120),
                       child: Image.asset(
                         'assets/logo.png',
-                        width: isVerySmallScreen ? 60 : (isSmallScreen ? 70 : 80),
-                        height: isVerySmallScreen ? 60 : (isSmallScreen ? 70 : 80),
+                        width: isVerySmallScreen ? 80 : (isSmallScreen ? 100 : 120),
+                        height: isVerySmallScreen ? 80 : (isSmallScreen ? 100 : 120),
                         fit: BoxFit.contain,
                       ),
                     ),
                     
-                    SizedBox(height: isVerySmallScreen ? 4 : 8),
+                    SizedBox(height: isVerySmallScreen ? 8 : 16),
                     
                     // Title
                     Text(
@@ -237,14 +237,14 @@ class _SubscriptionPopupPageState extends State<SubscriptionPopupPage>
                         ? '🎉 Welcome to Yumie!' 
                         : '✨ Unlock Premium Features',
                       style: TextStyle(
-                        fontSize: isVerySmallScreen ? 14 : (isSmallScreen ? 16 : 18),
+                        fontSize: isVerySmallScreen ? 16 : (isSmallScreen ? 18 : 20),
                         fontWeight: FontWeight.bold,
                         color: kPrimaryGreen,
                       ),
                       textAlign: TextAlign.center,
                     ),
                     
-                    SizedBox(height: isVerySmallScreen ? 4 : 8),
+                    SizedBox(height: isVerySmallScreen ? 8 : 16),
                     
                     // Subtitle
                     Text(
@@ -252,24 +252,24 @@ class _SubscriptionPopupPageState extends State<SubscriptionPopupPage>
                         ? 'Get the most out of your health journey with unlimited access!'
                         : 'Unlock unlimited scans, AI coaching, and personalized meal plans!',
                       style: TextStyle(
-                        fontSize: isVerySmallScreen ? 10 : (isSmallScreen ? 12 : 14),
+                        fontSize: isVerySmallScreen ? 12 : (isSmallScreen ? 14 : 16),
                         color: Colors.grey[700],
-                        height: 1.3,
+                        height: 1.4,
                       ),
                       textAlign: TextAlign.center,
                     ),
                     
-                    SizedBox(height: isVerySmallScreen ? 6 : 12),
+                    SizedBox(height: isVerySmallScreen ? 12 : 24),
                     
                     // Features list
                     _buildFeaturesList(isVerySmallScreen, isSmallScreen),
                     
-                    SizedBox(height: isVerySmallScreen ? 6 : 12),
+                    SizedBox(height: isVerySmallScreen ? 12 : 24),
                     
                     // Premium buttons
                     _buildPremiumButtons(isVerySmallScreen, isSmallScreen),
                     
-                    SizedBox(height: isVerySmallScreen ? 6 : 12),
+                    SizedBox(height: isVerySmallScreen ? 12 : 24),
                     
                     // Maybe later button
                     GestureDetector(
@@ -314,25 +314,25 @@ class _SubscriptionPopupPageState extends State<SubscriptionPopupPage>
           child: Row(
             children: [
               Container(
-                width: isVerySmallScreen ? 20 : 28,
-                height: isVerySmallScreen ? 20 : 28,
+                width: isVerySmallScreen ? 24 : 32,
+                height: isVerySmallScreen ? 24 : 32,
                 decoration: BoxDecoration(
                   color: kPrimaryGreen.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(6),
+                  borderRadius: BorderRadius.circular(8),
                 ),
                 child: Center(
                   child: Text(
                     feature['icon']!,
-                    style: TextStyle(fontSize: isVerySmallScreen ? 10 : 14),
+                    style: TextStyle(fontSize: isVerySmallScreen ? 12 : 16),
                   ),
                 ),
               ),
-              SizedBox(width: isVerySmallScreen ? 6 : 10),
+              SizedBox(width: isVerySmallScreen ? 8 : 12),
               Expanded(
                 child: Text(
                   feature['text']!,
                   style: TextStyle(
-                    fontSize: isVerySmallScreen ? 10 : (isSmallScreen ? 11 : 13),
+                    fontSize: isVerySmallScreen ? 12 : (isSmallScreen ? 13 : 15),
                     fontWeight: FontWeight.w500,
                   ),
                 ),
@@ -387,7 +387,7 @@ class _SubscriptionPopupPageState extends State<SubscriptionPopupPage>
       onTap: onTap,
       child: Container(
         width: double.infinity,
-        padding: EdgeInsets.all(isVerySmallScreen ? 8 : (isSmallScreen ? 10 : 12)),
+        padding: EdgeInsets.all(isVerySmallScreen ? 12 : (isSmallScreen ? 14 : 16)),
         decoration: BoxDecoration(
           color: isPopular ? kPrimaryGreen : Colors.white,
           border: Border.all(

@@ -4377,7 +4377,8 @@ Track your calories, scan food with AI, and get personalized nutrition insights 
                             iconColor: Colors.amber[600],
                             onTap: () async {
                               try {
-                                final uri = Uri.parse('https://play.google.com/store/apps/details?id=com.maivenx.yumie');
+                                // Use the correct package name for the app
+                                final uri = Uri.parse('https://play.google.com/store/apps/details?id=com.yumie.healthai');
                                 if (await canLaunchUrl(uri)) {
                                   await launchUrl(uri, mode: LaunchMode.externalApplication);
                                 } else {
@@ -7734,78 +7735,91 @@ class _DeleteAccountDialogState extends State<_DeleteAccountDialog> {
         constraints: BoxConstraints(
           maxHeight: availableHeight * 0.8,
         ),
-        child: SingleChildScrollView(
-          child: Padding(
-            padding: const EdgeInsets.all(24.0),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  Icons.warning_rounded,
-                  color: Colors.red[600],
-                  size: 64,
-                ),
-                SizedBox(height: 16),
-                Text(
-                  AppLocalizations.of(context)!.confirmDeleteAccount,
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.red[700],
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Scrollable content
+            Expanded(
+              child: SingleChildScrollView(
+                child: Padding(
+                  padding: const EdgeInsets.all(24.0),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.warning_rounded,
+                        color: Colors.red[600],
+                        size: 64,
+                      ),
+                      SizedBox(height: 16),
+                      Text(
+                        AppLocalizations.of(context)!.confirmDeleteAccount,
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.red[700],
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                      SizedBox(height: 16),
+                      Text(
+                        AppLocalizations.of(context)!.deleteAccountWarning,
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Colors.grey[700],
+                          height: 1.4,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                      SizedBox(height: 24),
+                      Text(
+                        AppLocalizations.of(context)!.typeDeleteToConfirm,
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.grey[800],
+                        ),
+                      ),
+                      SizedBox(height: 12),
+                      TextField(
+                        controller: _confirmationController,
+                        decoration: InputDecoration(
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          hintText: AppLocalizations.of(context)!.deleteAccountFinalConfirmation,
+                        ),
+                        onChanged: (value) => setState(() {}),
+                      ),
+                      if (_message.isNotEmpty) ...[
+                        SizedBox(height: 16),
+                        Container(
+                          padding: EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: Colors.red[50],
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(color: Colors.red[200]!),
+                          ),
+                          child: Text(
+                            _message,
+                            style: TextStyle(color: Colors.red[700], fontSize: 12),
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
+                      ],
+                    ],
                   ),
-                  textAlign: TextAlign.center,
                 ),
-                SizedBox(height: 16),
-                Text(
-                  AppLocalizations.of(context)!.deleteAccountWarning,
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.grey[700],
-                    height: 1.4,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-                SizedBox(height: 24),
-                Text(
-                  AppLocalizations.of(context)!.typeDeleteToConfirm,
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.grey[800],
-                  ),
-                ),
-                SizedBox(height: 12),
-                TextField(
-                  controller: _confirmationController,
-                  decoration: InputDecoration(
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    hintText: AppLocalizations.of(context)!.deleteAccountFinalConfirmation,
-                  ),
-                  onChanged: (value) => setState(() {}),
-                ),
-                if (_message.isNotEmpty) ...[
-                  SizedBox(height: 16),
-                  Container(
-                    padding: EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: Colors.red[50],
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: Colors.red[200]!),
-                    ),
-                    child: Text(
-                      _message,
-                      style: TextStyle(color: Colors.red[700], fontSize: 12),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                ],
-                SizedBox(height: 24),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    OutlinedButton(
+              ),
+            ),
+            // Fixed buttons at bottom
+            SafeArea(
+              minimum: EdgeInsets.fromLTRB(24, 0, 24, 24),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
                       onPressed: _isLoading ? null : () => Navigator.pop(context),
                       style: OutlinedButton.styleFrom(
                         foregroundColor: Colors.grey[600],
@@ -7816,7 +7830,10 @@ class _DeleteAccountDialogState extends State<_DeleteAccountDialog> {
                       ),
                       child: Text(AppLocalizations.of(context)!.cancel),
                     ),
-                    ElevatedButton(
+                  ),
+                  SizedBox(width: 12),
+                  Expanded(
+                    child: ElevatedButton(
                       onPressed: (_isLoading || 
                           _confirmationController.text.trim() != 
                           AppLocalizations.of(context)!.deleteAccountFinalConfirmation)
@@ -7840,11 +7857,11 @@ class _DeleteAccountDialogState extends State<_DeleteAccountDialog> {
                           )
                         : Text(AppLocalizations.of(context)!.deleteAccount),
                     ),
-                  ],
-                ),
-              ],
+                  ),
+                ],
+              ),
             ),
-          ),
+          ],
         ),
       ),
     );
