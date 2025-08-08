@@ -1748,26 +1748,17 @@ class _WeightStep extends StatelessWidget {
             ),
           ),
         ),
+        Spacer(),
+        // BMI display at bottom like height step
         if (bmi != null)
           Padding(
-            padding: const EdgeInsets.symmetric(vertical: 16),
+            padding: const EdgeInsets.only(bottom: 8),
             child: Column(
               children: [
-                Text('Your BMI:', style: TextStyle(fontSize: 20, color: Colors.black)),
+                Text('Your BMI:', style: TextStyle(fontSize: 18, color: Colors.black)),
                 SizedBox(height: 4),
-                Text(bmi.toStringAsFixed(1), style: TextStyle(fontSize: 36, fontWeight: FontWeight.bold, color: bmiColor(bmi))),
+                Text(bmi.toStringAsFixed(1), style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: bmiColor(bmi))),
               ],
-            ),
-          ),
-        Spacer(),
-        if (weightKg != null)
-          Padding(
-            padding: const EdgeInsets.only(bottom: 8),
-            child: Text(
-              useMetric
-                  ? '${weightKg!.toStringAsFixed(1)} kg'
-                  : '${weightLb.toStringAsFixed(1)} lbs',
-              style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: Theme.of(context).primaryColor),
             ),
           ),
         SizedBox(
@@ -1969,54 +1960,47 @@ class _GoalWeightStep extends StatelessWidget {
         ),
         SizedBox(height: 36),
         if (selectedGoal != 'Build muscle' && selectedGoal != 'Eat healthier')
-        SizedBox(
-          height: 180,
-          child: Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                // Large slider
-                SizedBox(
-                  height: sliderHeight,
+          SizedBox(
+            height: 180,
+            child: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  // Large slider
+                  SizedBox(
+                    height: sliderHeight,
                     child: Slider(
                       value: useMetricWeight ? goalWeightKg : goalWeightKg * 2.20462,
                       min: min,
                       max: max,
                       divisions: (max - min).toInt(),
                       onChanged: (v) => onGoalWeightChanged(useMetricWeight ? v : v / 2.20462),
-                        ),
-                ),
-                SizedBox(height: 18),
-                // Animated value display
-                AnimatedSwitcher(
-                  duration: Duration(milliseconds: 250),
-                  transitionBuilder: (child, anim) => ScaleTransition(scale: anim, child: FadeTransition(opacity: anim, child: child)),
-                  child: Text(
+                    ),
+                  ),
+                  SizedBox(height: 18),
+                  // Animated value display
+                  AnimatedSwitcher(
+                    duration: Duration(milliseconds: 250),
+                    transitionBuilder: (child, anim) => ScaleTransition(scale: anim, child: FadeTransition(opacity: anim, child: child)),
+                    child: Text(
                       '${(useMetricWeight ? goalWeightKg : goalWeightKg * 2.20462).toStringAsFixed(1)} $weightUnit',
                       key: ValueKey('goal-${(useMetricWeight ? goalWeightKg : goalWeightKg * 2.20462).toStringAsFixed(1)}'),
-                    style: TextStyle(fontSize: valueFontSize, fontWeight: FontWeight.bold, color: Colors.black),
+                      style: TextStyle(fontSize: valueFontSize, fontWeight: FontWeight.bold, color: Colors.black),
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
-        ),
         if (selectedGoal == 'Build muscle' || selectedGoal == 'Eat healthier')
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 32),
             child: Text(
               '${(useMetricWeight ? currentWeightKg : currentWeightKg * 2.20462).toStringAsFixed(1)} $weightUnit',
               style: TextStyle(fontSize: valueFontSize, fontWeight: FontWeight.bold, color: theme.primaryColor),
+            ),
           ),
-        ),
         Spacer(),
-        Padding(
-          padding: const EdgeInsets.only(bottom: 8),
-          child: Text(
-            '${(useMetricWeight ? goalWeightKg : goalWeightKg * 2.20462).toStringAsFixed(1)} $weightUnit',
-            style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: theme.primaryColor),
-          ),
-        ),
         SizedBox(
           width: double.infinity,
           child: ElevatedButton(

@@ -331,11 +331,45 @@ class _SearchableMealInputState extends State<SearchableMealInput> {
                 borderSide: BorderSide.none,
               ),
               suffixIcon: _isFocused
-                  ? IconButton(
-                      icon: Icon(Icons.check, color: kPrimaryGreen, size: 20),
-                      onPressed: _onCheckmarkTap,
-                      padding: EdgeInsets.zero,
-                      constraints: BoxConstraints(minWidth:40, minHeight: 40),
+                  ? Container(
+                      margin: EdgeInsets.only(right: 8),
+                      child: InkWell(
+                        onTap: _onCheckmarkTap,
+                        borderRadius: BorderRadius.circular(16),
+                        child: Container(
+                          padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                          decoration: BoxDecoration(
+                            color: kPrimaryGreen,
+                            borderRadius: BorderRadius.circular(16),
+                            boxShadow: [
+                              BoxShadow(
+                                color: kPrimaryGreen.withOpacity(0.3),
+                                blurRadius: 4,
+                                offset: Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                'AI Search',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12,
+                                ),
+                              ),
+                              SizedBox(width: 4),
+                              Icon(
+                                Icons.search,
+                                color: Colors.white,
+                                size: 16,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
                     )
                   : null,
             ),
@@ -980,7 +1014,16 @@ class _LogMealPageState extends State<LogMealPage> with TickerProviderStateMixin
         child: StreamBuilder<List<Meal>>(
           stream: MealService().getTodayMeals(),
           builder: (context, snapshot) {
-            final meals = snapshot.data ?? [];
+            final allMeals = snapshot.data ?? [];
+            // Filter out meals with invalid or empty data
+            final meals = allMeals.where((meal) => 
+              meal.name.trim().isNotEmpty && 
+              meal.calories >= 0 && 
+              meal.protein >= 0 && 
+              meal.carbs >= 0 && 
+              meal.fat >= 0
+            ).toList();
+            
             if (meals.isEmpty) {
               return Padding(
                 padding: const EdgeInsets.symmetric(vertical: 24),
@@ -1017,22 +1060,22 @@ class _LogMealPageState extends State<LogMealPage> with TickerProviderStateMixin
 
   Widget _recentFoodTile(Meal meal) {
     return _ExpandableMealTile(
-      name: meal.name,
-      protein: meal.protein,
-      carbs: meal.carbs,
-      fat: meal.fat,
-      calories: meal.calories,
-      ingredients: meal.ingredients,
+      name: meal.name.isNotEmpty ? meal.name : 'Unknown Food',
+      protein: meal.protein.clamp(0, 999),
+      carbs: meal.carbs.clamp(0, 999),
+      fat: meal.fat.clamp(0, 999),
+      calories: meal.calories.clamp(0, 9999),
+      ingredients: meal.ingredients.where((ingredient) => ingredient.trim().isNotEmpty).toList(),
       icon: Icons.restaurant_menu,
       iconColor: kPrimaryGreen,
       onAdd: () {
             setState(() {
-              _foodNameController.text = meal.name;
-              _caloriesController.text = meal.calories.toString();
-              _proteinController.text = meal.protein.toString();
-              _carbsController.text = meal.carbs.toString();
-              _fatController.text = meal.fat.toString();
-          _ingredients = List<String>.from(meal.ingredients);
+              _foodNameController.text = meal.name.isNotEmpty ? meal.name : 'Unknown Food';
+              _caloriesController.text = meal.calories.clamp(0, 9999).toString();
+              _proteinController.text = meal.protein.clamp(0, 999).toString();
+              _carbsController.text = meal.carbs.clamp(0, 999).toString();
+              _fatController.text = meal.fat.clamp(0, 999).toString();
+              _ingredients = List<String>.from(meal.ingredients.where((ingredient) => ingredient.trim().isNotEmpty));
             });
           },
       isCustomMeal: false,

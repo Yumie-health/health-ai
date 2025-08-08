@@ -57,21 +57,9 @@ class ImprovedWeightStep extends StatelessWidget {
     final screenWidth = MediaQuery.of(context).size.width;
     final isSmallScreen = screenHeight < 700 || screenWidth < 400;
     
-    return SafeArea(
-      child: SingleChildScrollView(
-        child: ConstrainedBox(
-          constraints: BoxConstraints(
-            minHeight: screenHeight - MediaQuery.of(context).padding.top - MediaQuery.of(context).padding.bottom,
-          ),
-          child: IntrinsicHeight(
-            child: Padding(
-              padding: EdgeInsets.symmetric(
-                horizontal: 20,
-                vertical: isSmallScreen ? 10 : 20,
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
         // Back button
         Align(
           alignment: Alignment.centerLeft,
@@ -222,12 +210,7 @@ class ImprovedWeightStep extends StatelessWidget {
             child: Text('Continue'),
           ),
         ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
+      ],
     );
   }
 }

@@ -106,117 +106,128 @@ class _GeneratedMealFromFridgePageState extends State<GeneratedMealFromFridgePag
         actions: [
         ],
       ),
-      body: RepaintBoundary(
-        key: _screenshotKey,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(meal['meal_name'] ?? '', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 26)),
-              SizedBox(height: 18),
-              Card(
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-                elevation: 2,
+      body: Column(
+        children: [
+          Expanded(
+            child: SingleChildScrollView(
+              child: RepaintBoundary(
+                key: _screenshotKey,
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 12),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: macros.map((m) => Column(
-                      children: [
-                        Text(m['label'] as String, style: TextStyle(color: m['color'] as Color?, fontWeight: FontWeight.w600)),
-                        SizedBox(height: 4),
-                        Text(m['value'] as String, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: m['color'] as Color?)),
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(meal['meal_name'] ?? '', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 26)),
+                      SizedBox(height: 18),
+                      Card(
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+                        elevation: 2,
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 12),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                            children: macros.map((m) => Column(
+                              children: [
+                                Text(m['label'] as String, style: TextStyle(color: m['color'] as Color?, fontWeight: FontWeight.w600)),
+                                SizedBox(height: 4),
+                                Text(m['value'] as String, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: m['color'] as Color?)),
+                              ],
+                            )).toList(),
+                          ),
+                        ),
+                      ),
+                      SizedBox(height: 18),
+                      if (ingredients.isNotEmpty) ...[
+                        Text(localizations.ingredients, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Colors.green)),
+                        SizedBox(height: 8),
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 8,
+                          children: ingredients.map((i) => Chip(label: Text(i))).toList(),
+                        ),
+                        SizedBox(height: 18),
                       ],
-                    )).toList(),
+                      Text(
+                        localizations.localeName.startsWith('ar')
+                            ? 'طريقة التحضير'
+                            : localizations.localeName.startsWith('es')
+                                ? 'Cómo preparar'
+                                : 'How to Make',
+                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                      ),
+                      SizedBox(height: 8),
+                      // Recipe steps - now part of main scrollable content
+                      ...recipe.asMap().entries.map((entry) {
+                        int index = entry.key;
+                        String step = entry.value;
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: 10),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text('${index + 1}. ', style: TextStyle(fontWeight: FontWeight.bold)),
+                              Expanded(child: Text(step)),
+                            ],
+                          ),
+                        );
+                      }).toList(),
+                      SizedBox(height: 20),
+                    ],
                   ),
                 ),
               ),
-              SizedBox(height: 18),
-              if (ingredients.isNotEmpty) ...[
-                Text(localizations.ingredients, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Colors.green)),
-                SizedBox(height: 8),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: ingredients.map((i) => Chip(label: Text(i))).toList(),
-                ),
-                SizedBox(height: 18),
-              ],
-              Text(
-                localizations.localeName.startsWith('ar')
-                    ? 'طريقة التحضير'
-                    : localizations.localeName.startsWith('es')
-                        ? 'Cómo preparar'
-                        : 'How to Make',
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
-              ),
-              SizedBox(height: 8),
-              Expanded(
-                child: ListView.builder(
-                  itemCount: recipe.length,
-                  itemBuilder: (context, i) => Padding(
-                    padding: const EdgeInsets.only(bottom: 10),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text('${i + 1}. ', style: TextStyle(fontWeight: FontWeight.bold)),
-                        Expanded(child: Text(recipe[i])),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-              SizedBox(height: 18),
-              if (!_hideButtons)
-                Row(
-                  children: [
-                    Expanded(
-                      child: ElevatedButton(
-                        onPressed: () => Navigator.of(context).popUntil((route) => route.isFirst),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.red,
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                        ),
-                        child: Text(localizations.discard),
-                      ),
-                    ),
-                    SizedBox(width: 16),
-                    Expanded(
-                      child: ElevatedButton(
-                        onPressed: () {
-                          Navigator.of(context).pushReplacement(
-                            MaterialPageRoute(
-                              builder: (_) => ScanResultPage(
-                                imagePath: '',
-                                prefill: {
-                                  'food_name': meal['meal_name'] ?? '',
-                                  'calories': meal['calories']?.toString() ?? '',
-                                  'protein': meal['protein']?.toString() ?? '',
-                                  'carbs': meal['carbs']?.toString() ?? '',
-                                  'fat': meal['fat']?.toString() ?? '',
-                                  'ingredients': (meal['ingredients'] as List?)?.map((e) => e.toString()).toList() ?? [],
-                                },
-                              ),
-                            ),
-                          );
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.green,
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                        ),
-                        child: Text(localizations.logMeal),
-                      ),
-                    ),
-                  ],
-                ),
-            ],
+            ),
           ),
-        ),
+          if (!_hideButtons)
+            SafeArea(
+              minimum: EdgeInsets.fromLTRB(20, 0, 20, 16),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () => Navigator.of(context).popUntil((route) => route.isFirst),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.red,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                      ),
+                      child: Text(localizations.discard),
+                    ),
+                  ),
+                  SizedBox(width: 16),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () {
+                        Navigator.of(context).pushReplacement(
+                          MaterialPageRoute(
+                            builder: (_) => ScanResultPage(
+                              imagePath: '',
+                              prefill: {
+                                'food_name': meal['meal_name'] ?? '',
+                                'calories': meal['calories']?.toString() ?? '',
+                                'protein': meal['protein']?.toString() ?? '',
+                                'carbs': meal['carbs']?.toString() ?? '',
+                                'fat': meal['fat']?.toString() ?? '',
+                                'ingredients': (meal['ingredients'] as List?)?.map((e) => e.toString()).toList() ?? [],
+                              },
+                            ),
+                          ),
+                        );
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.green,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                      ),
+                      child: Text(localizations.logMeal),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+        ],
       ),
     );
   }

@@ -4364,12 +4364,33 @@ Track your calories, scan food with AI, and get personalized nutrition insights 
                             },
                           ),
                           Divider(height: 1, color: Colors.grey[200]),
-                          // Rating menu item removed
                           _ProfileMenuTile(
                             icon: Icons.share,
                             label: AppLocalizations.of(context)!.shareWithFriends,
                             iconColor: kSecondaryBlue,
                             onTap: () => _shareApp(context),
+                          ),
+                          Divider(height: 1, color: Colors.grey[200]),
+                          _ProfileMenuTile(
+                            icon: Icons.star,
+                            label: 'Rate us on Play Store',
+                            iconColor: Colors.amber[600],
+                            onTap: () async {
+                              try {
+                                final uri = Uri.parse('https://play.google.com/store/apps/details?id=com.maivenx.yumie');
+                                if (await canLaunchUrl(uri)) {
+                                  await launchUrl(uri, mode: LaunchMode.externalApplication);
+                                } else {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(content: Text('Could not open Play Store')),
+                                  );
+                                }
+                              } catch (e) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(content: Text('Error opening Play Store')),
+                                );
+                              }
+                            },
                           ),
                           Divider(height: 1, color: Colors.grey[200]),
                           _ProfileMenuTile(
