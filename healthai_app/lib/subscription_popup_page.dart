@@ -157,32 +157,42 @@ class _SubscriptionPopupPageState extends State<SubscriptionPopupPage>
 
   @override
   Widget build(BuildContext context) {
+    final screenSize = MediaQuery.of(context).size;
+    final isSmallScreen = screenSize.width < 400 || screenSize.height < 700;
+    final isVerySmallScreen = screenSize.width < 350 || screenSize.height < 600;
+    
     return Scaffold(
       backgroundColor: Colors.black.withOpacity(0.7),
       body: FadeTransition(
         opacity: _fadeAnimation,
-        child: Center(
-          child: SlideTransition(
-            position: _slideAnimation,
-            child: ScaleTransition(
-              scale: _scaleAnimation,
-              child: Container(
-                margin: EdgeInsets.all(MediaQuery.of(context).size.width > 600 ? 32 : 16),
-                padding: EdgeInsets.all(MediaQuery.of(context).size.width > 400 ? 24 : 16),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(24),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.3),
-                      blurRadius: 20,
-                      offset: const Offset(0, 10),
-                    ),
-                  ],
-                ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
+        child: SafeArea(
+          child: Center(
+            child: SlideTransition(
+              position: _slideAnimation,
+              child: ScaleTransition(
+                scale: _scaleAnimation,
+                child: Container(
+                  margin: EdgeInsets.all(isVerySmallScreen ? 8 : (isSmallScreen ? 12 : 16)),
+                  padding: EdgeInsets.all(isVerySmallScreen ? 12 : (isSmallScreen ? 16 : 20)),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(isVerySmallScreen ? 16 : 24),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.3),
+                        blurRadius: 20,
+                        offset: const Offset(0, 10),
+                      ),
+                    ],
+                  ),
+                  constraints: BoxConstraints(
+                    maxHeight: screenSize.height * 0.9,
+                    maxWidth: screenSize.width * 0.95,
+                  ),
+                  child: SingleChildScrollView(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
                     // Close button
                     Align(
                       alignment: Alignment.topRight,
@@ -210,31 +220,31 @@ class _SubscriptionPopupPageState extends State<SubscriptionPopupPage>
                     
                     // App logo
                     SizedBox(
-                      height: 120,
+                      height: isVerySmallScreen ? 80 : (isSmallScreen ? 100 : 120),
                       child: Image.asset(
                         'assets/logo.png',
-                        width: 120,
-                        height: 120,
+                        width: isVerySmallScreen ? 80 : (isSmallScreen ? 100 : 120),
+                        height: isVerySmallScreen ? 80 : (isSmallScreen ? 100 : 120),
                         fit: BoxFit.contain,
                       ),
                     ),
                     
-                    const SizedBox(height: 16),
+                    SizedBox(height: isVerySmallScreen ? 8 : 16),
                     
                     // Title
                     Text(
                       widget.isOnboardingComplete 
                         ? '🎉 Welcome to Yumie!' 
                         : '✨ Unlock Premium Features',
-                      style: const TextStyle(
-                        fontSize: 24,
+                      style: TextStyle(
+                        fontSize: isVerySmallScreen ? 18 : (isSmallScreen ? 20 : 24),
                         fontWeight: FontWeight.bold,
                         color: kPrimaryGreen,
                       ),
                       textAlign: TextAlign.center,
                     ),
                     
-                    const SizedBox(height: 12),
+                    SizedBox(height: isVerySmallScreen ? 6 : 12),
                     
                     // Subtitle
                     Text(
@@ -242,24 +252,24 @@ class _SubscriptionPopupPageState extends State<SubscriptionPopupPage>
                         ? 'Get the most out of your health journey with unlimited access!'
                         : 'Unlock unlimited scans, AI coaching, and personalized meal plans!',
                       style: TextStyle(
-                        fontSize: 16,
+                        fontSize: isVerySmallScreen ? 12 : (isSmallScreen ? 14 : 16),
                         color: Colors.grey[700],
                         height: 1.4,
                       ),
                       textAlign: TextAlign.center,
                     ),
                     
-                    const SizedBox(height: 24),
+                    SizedBox(height: isVerySmallScreen ? 12 : 24),
                     
                     // Features list
-                    _buildFeaturesList(),
+                    _buildFeaturesList(isVerySmallScreen, isSmallScreen),
                     
-                    const SizedBox(height: 24),
+                    SizedBox(height: isVerySmallScreen ? 12 : 24),
                     
                     // Premium buttons
-                    _buildPremiumButtons(),
+                    _buildPremiumButtons(isVerySmallScreen, isSmallScreen),
                     
-                    const SizedBox(height: 16),
+                    SizedBox(height: isVerySmallScreen ? 8 : 16),
                     
                     // Maybe later button
                     GestureDetector(
@@ -271,12 +281,14 @@ class _SubscriptionPopupPageState extends State<SubscriptionPopupPage>
                         'Maybe later',
                         style: TextStyle(
                           color: Colors.grey[600],
-                          fontSize: 14,
+                          fontSize: isVerySmallScreen ? 12 : 14,
                           decoration: TextDecoration.underline,
                         ),
                       ),
                     ),
-                  ],
+                      ],
+                    ),
+                  ),
                 ),
               ),
             ),
@@ -286,7 +298,7 @@ class _SubscriptionPopupPageState extends State<SubscriptionPopupPage>
     );
   }
 
-  Widget _buildFeaturesList() {
+  Widget _buildFeaturesList(bool isVerySmallScreen, bool isSmallScreen) {
     final features = [
       {'icon': '🔍', 'text': 'Unlimited food scanning'},
       {'icon': '🤖', 'text': 'AI nutrition coach'},
@@ -298,12 +310,12 @@ class _SubscriptionPopupPageState extends State<SubscriptionPopupPage>
     return Column(
       children: features.map((feature) {
         return Padding(
-          padding: const EdgeInsets.symmetric(vertical: 6),
+          padding: EdgeInsets.symmetric(vertical: isVerySmallScreen ? 3 : 6),
           child: Row(
             children: [
               Container(
-                width: 32,
-                height: 32,
+                width: isVerySmallScreen ? 24 : 32,
+                height: isVerySmallScreen ? 24 : 32,
                 decoration: BoxDecoration(
                   color: kPrimaryGreen.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(8),
@@ -311,16 +323,16 @@ class _SubscriptionPopupPageState extends State<SubscriptionPopupPage>
                 child: Center(
                   child: Text(
                     feature['icon']!,
-                    style: const TextStyle(fontSize: 16),
+                    style: TextStyle(fontSize: isVerySmallScreen ? 12 : 16),
                   ),
                 ),
               ),
-              const SizedBox(width: 12),
+              SizedBox(width: isVerySmallScreen ? 8 : 12),
               Expanded(
                 child: Text(
                   feature['text']!,
-                  style: const TextStyle(
-                    fontSize: 15,
+                  style: TextStyle(
+                    fontSize: isVerySmallScreen ? 12 : (isSmallScreen ? 13 : 15),
                     fontWeight: FontWeight.w500,
                   ),
                 ),
@@ -332,7 +344,7 @@ class _SubscriptionPopupPageState extends State<SubscriptionPopupPage>
     );
   }
 
-  Widget _buildPremiumButtons() {
+  Widget _buildPremiumButtons(bool isVerySmallScreen, bool isSmallScreen) {
     return Column(
       children: [
         // Yearly plan (highlighted)
@@ -342,9 +354,11 @@ class _SubscriptionPopupPageState extends State<SubscriptionPopupPage>
           savings: 'Save 37%',
           isPopular: true,
           onTap: _navigateToSubscription,
+          isVerySmallScreen: isVerySmallScreen,
+          isSmallScreen: isSmallScreen,
         ),
         
-        const SizedBox(height: 12),
+        SizedBox(height: isVerySmallScreen ? 6 : 12),
         
         // Monthly plan
         _buildPlanButton(
@@ -353,6 +367,8 @@ class _SubscriptionPopupPageState extends State<SubscriptionPopupPage>
           savings: null,
           isPopular: false,
           onTap: _navigateToSubscription,
+          isVerySmallScreen: isVerySmallScreen,
+          isSmallScreen: isSmallScreen,
         ),
       ],
     );
@@ -364,12 +380,14 @@ class _SubscriptionPopupPageState extends State<SubscriptionPopupPage>
     String? savings,
     required bool isPopular,
     required VoidCallback onTap,
+    required bool isVerySmallScreen,
+    required bool isSmallScreen,
   }) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
         width: double.infinity,
-        padding: const EdgeInsets.all(16),
+        padding: EdgeInsets.all(isVerySmallScreen ? 10 : (isSmallScreen ? 12 : 16)),
         decoration: BoxDecoration(
           color: isPopular ? kPrimaryGreen : Colors.white,
           border: Border.all(
@@ -398,7 +416,7 @@ class _SubscriptionPopupPageState extends State<SubscriptionPopupPage>
                       Text(
                         title,
                         style: TextStyle(
-                          fontSize: 16,
+                          fontSize: isVerySmallScreen ? 12 : (isSmallScreen ? 14 : 16),
                           fontWeight: FontWeight.bold,
                           color: isPopular ? Colors.white : Colors.black,
                         ),
@@ -427,19 +445,19 @@ class _SubscriptionPopupPageState extends State<SubscriptionPopupPage>
                     ],
                   ),
                   const SizedBox(height: 4),
-                  Text(
+                                      Text(
                     price,
                     style: TextStyle(
-                      fontSize: 14,
+                      fontSize: isVerySmallScreen ? 10 : (isSmallScreen ? 12 : 14),
                       color: isPopular ? Colors.white.withOpacity(0.9) : Colors.grey[600],
                     ),
                   ),
                   if (savings != null) ...[
                     const SizedBox(height: 2),
-                    Text(
+                                          Text(
                       savings,
                       style: TextStyle(
-                        fontSize: 12,
+                        fontSize: isVerySmallScreen ? 9 : (isSmallScreen ? 10 : 12),
                         fontWeight: FontWeight.bold,
                         color: isPopular ? Colors.white : kPrimaryGreen,
                       ),

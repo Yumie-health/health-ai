@@ -958,6 +958,31 @@ class _AuthScreenState extends State<AuthScreen> {
         return; // User cancelled
       }
       
+      // Check if this email was recently deleted (within 24 hours)
+      final prefs = await SharedPreferences.getInstance();
+      final email = googleUser.email;
+      final deletedTimestamp = prefs.getString('deleted_account_$email');
+      if (deletedTimestamp != null) {
+        final deletedTime = int.tryParse(deletedTimestamp) ?? 0;
+        final now = DateTime.now().millisecondsSinceEpoch;
+        const twentyFourHours = 24 * 60 * 60 * 1000;
+        
+        if (now - deletedTime < twentyFourHours) {
+          if (!showSignUp) {
+            // Account was recently deleted and user is trying to sign in
+            setState(() => isLoading = false);
+            _showAccountNotFoundDialog();
+            return;
+          } else {
+            // Account was recently deleted but user is signing up - allow it
+            await prefs.remove('deleted_account_$email');
+          }
+        } else {
+          // Clean up old deleted account tracking
+          await prefs.remove('deleted_account_$email');
+        }
+      }
+      
       // For sign-up mode, try authentication and check if it's an existing account
       if (showSignUp) {
         print('🔍 Google Sign-Up Mode: Checking for existing account for ${googleUser.email}');
@@ -1233,6 +1258,25 @@ class _AuthScreenState extends State<AuthScreen> {
     try {
       log.info('User attempting sign in', {'email': email});
       
+      // Check if this email was recently deleted (within 24 hours)
+      final prefs = await SharedPreferences.getInstance();
+      final deletedTimestamp = prefs.getString('deleted_account_$email');
+      if (deletedTimestamp != null) {
+        final deletedTime = int.tryParse(deletedTimestamp) ?? 0;
+        final now = DateTime.now().millisecondsSinceEpoch;
+        const twentyFourHours = 24 * 60 * 60 * 1000;
+        
+        if (now - deletedTime < twentyFourHours) {
+          // Account was recently deleted
+          setState(() => isLoading = false);
+          _showAccountNotFoundDialog();
+          return;
+        } else {
+          // Clean up old deleted account tracking
+          await prefs.remove('deleted_account_$email');
+        }
+      }
+      
       // First check if account exists
       final signInMethods = await FirebaseAuth.instance.fetchSignInMethodsForEmail(email);
       if (signInMethods.isEmpty) {
@@ -1324,6 +1368,21 @@ class _AuthScreenState extends State<AuthScreen> {
 
     try {
       log.info('User attempting sign up', {'email': email, 'name': name});
+      
+      // Check if this email was recently deleted (within 24 hours)
+      final prefs = await SharedPreferences.getInstance();
+      final deletedTimestamp = prefs.getString('deleted_account_$email');
+      if (deletedTimestamp != null) {
+        final deletedTime = int.tryParse(deletedTimestamp) ?? 0;
+        final now = DateTime.now().millisecondsSinceEpoch;
+        const twentyFourHours = 24 * 60 * 60 * 1000;
+        
+        if (now - deletedTime < twentyFourHours) {
+          // Account was recently deleted, allow creating a new one
+          await prefs.remove('deleted_account_$email');
+          // Continue with sign-up process
+        }
+      }
       
       // Check if account already exists
       final signInMethods = await FirebaseAuth.instance.fetchSignInMethodsForEmail(email);
@@ -7576,17 +7635,54 @@ class _DeleteAccountDialogState extends State<_DeleteAccountDialog> {
     });
 
     try {
+      // Store email for deleted account tracking
+      final email = user.email;
+      
       // 1. Delete user data from Firestore
       await FirebaseFirestore.instance.collection('users').doc(user.uid).delete();
       
-      // 2. Clear local storage
+      // 2. Clear local storage (but preserve permissions_requested flag)
       final prefs = await SharedPreferences.getInstance();
+      final hadRequestedPermissions = prefs.getBool('permissions_requested') ?? false;
       await prefs.clear();
+      if (hadRequestedPermissions) {
+        await prefs.setBool('permissions_requested', true);
+      }
       
-      // 3. Delete Firebase Auth account
-      await user.delete();
+      // 3. Track deleted account email for 24 hours
+      if (email != null) {
+        await prefs.setString('deleted_account_${email}', DateTime.now().millisecondsSinceEpoch.toString());
+      }
       
-      // 4. Navigate to auth screen
+      // 4. Delete Firebase Auth account (handle re-authentication requirement)
+      try {
+        await user.delete();
+      } catch (e) {
+        // If re-authentication is required, try to force delete by refreshing token
+        if (e.toString().contains('requires-recent-login')) {
+          try {
+            await user.reload();
+            await user.delete();
+          } catch (e2) {
+            // If still fails, sign out instead and show a message
+            await FirebaseAuth.instance.signOut();
+            if (mounted) {
+              Navigator.of(context).pushAndRemoveUntil(
+                MaterialPageRoute(builder: (_) => AuthScreen()),
+                (route) => false,
+              );
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('Account data deleted. Please sign in again to complete account deletion.')),
+              );
+              return;
+            }
+          }
+        } else {
+          throw e;
+        }
+      }
+      
+      // 5. Navigate to auth screen
       if (mounted) {
         Navigator.of(context).pushAndRemoveUntil(
           MaterialPageRoute(builder: (_) => AuthScreen()),
@@ -7607,116 +7703,127 @@ class _DeleteAccountDialogState extends State<_DeleteAccountDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final screenHeight = MediaQuery.of(context).size.height;
+    final keyboardHeight = MediaQuery.of(context).viewInsets.bottom;
+    final availableHeight = screenHeight - keyboardHeight;
+    
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-      child: Padding(
-        padding: const EdgeInsets.all(24.0),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              Icons.warning_rounded,
-              color: Colors.red[600],
-              size: 64,
-            ),
-            SizedBox(height: 16),
-            Text(
-              AppLocalizations.of(context)!.confirmDeleteAccount,
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: Colors.red[700],
-              ),
-              textAlign: TextAlign.center,
-            ),
-            SizedBox(height: 16),
-            Text(
-              AppLocalizations.of(context)!.deleteAccountWarning,
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.grey[700],
-                height: 1.4,
-              ),
-              textAlign: TextAlign.center,
-            ),
-            SizedBox(height: 24),
-            Text(
-              AppLocalizations.of(context)!.typeDeleteToConfirm,
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
-                color: Colors.grey[800],
-              ),
-            ),
-            SizedBox(height: 12),
-            TextField(
-              controller: _confirmationController,
-              decoration: InputDecoration(
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
+      child: Container(
+        constraints: BoxConstraints(
+          maxHeight: availableHeight * 0.8,
+        ),
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.all(24.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.warning_rounded,
+                  color: Colors.red[600],
+                  size: 64,
                 ),
-                hintText: AppLocalizations.of(context)!.deleteAccountFinalConfirmation,
-              ),
-              onChanged: (value) => setState(() {}),
-            ),
-            if (_message.isNotEmpty) ...[
-              SizedBox(height: 16),
-              Container(
-                padding: EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: Colors.red[50],
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.red[200]!),
-                ),
-                child: Text(
-                  _message,
-                  style: TextStyle(color: Colors.red[700], fontSize: 12),
+                SizedBox(height: 16),
+                Text(
+                  AppLocalizations.of(context)!.confirmDeleteAccount,
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.red[700],
+                  ),
                   textAlign: TextAlign.center,
                 ),
-              ),
-            ],
-            SizedBox(height: 24),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                OutlinedButton(
-                  onPressed: _isLoading ? null : () => Navigator.pop(context),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: Colors.grey[600],
-                    side: BorderSide(color: Colors.grey[300]!),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
+                SizedBox(height: 16),
+                Text(
+                  AppLocalizations.of(context)!.deleteAccountWarning,
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.grey[700],
+                    height: 1.4,
                   ),
-                  child: Text(AppLocalizations.of(context)!.cancel),
+                  textAlign: TextAlign.center,
                 ),
-                ElevatedButton(
-                  onPressed: (_isLoading || 
-                      _confirmationController.text.trim() != 
-                      AppLocalizations.of(context)!.deleteAccountFinalConfirmation)
-                    ? null
-                    : _deleteAccount,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.red[600],
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
+                SizedBox(height: 24),
+                Text(
+                  AppLocalizations.of(context)!.typeDeleteToConfirm,
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.grey[800],
+                  ),
+                ),
+                SizedBox(height: 12),
+                TextField(
+                  controller: _confirmationController,
+                  decoration: InputDecoration(
+                    border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
+                    hintText: AppLocalizations.of(context)!.deleteAccountFinalConfirmation,
                   ),
-                  child: _isLoading
-                    ? SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: Colors.white,
+                  onChanged: (value) => setState(() {}),
+                ),
+                if (_message.isNotEmpty) ...[
+                  SizedBox(height: 16),
+                  Container(
+                    padding: EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.red[50],
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Colors.red[200]!),
+                    ),
+                    child: Text(
+                      _message,
+                      style: TextStyle(color: Colors.red[700], fontSize: 12),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                ],
+                SizedBox(height: 24),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    OutlinedButton(
+                      onPressed: _isLoading ? null : () => Navigator.pop(context),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: Colors.grey[600],
+                        side: BorderSide(color: Colors.grey[300]!),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
                         ),
-                      )
-                    : Text(AppLocalizations.of(context)!.deleteAccount),
+                      ),
+                      child: Text(AppLocalizations.of(context)!.cancel),
+                    ),
+                    ElevatedButton(
+                      onPressed: (_isLoading || 
+                          _confirmationController.text.trim() != 
+                          AppLocalizations.of(context)!.deleteAccountFinalConfirmation)
+                        ? null
+                        : _deleteAccount,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.red[600],
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: _isLoading
+                        ? SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
+                          )
+                        : Text(AppLocalizations.of(context)!.deleteAccount),
+                    ),
+                  ],
                 ),
               ],
             ),
-          ],
+          ),
         ),
       ),
     );

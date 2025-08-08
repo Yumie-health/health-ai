@@ -167,10 +167,25 @@ class _ImprovedGoalWeightStepState extends State<ImprovedGoalWeightStep>
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final currentSliderValue = _getCurrentSliderValue();
+    final screenHeight = MediaQuery.of(context).size.height;
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isSmallScreen = screenHeight < 700 || screenWidth < 400;
     
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
+    return SafeArea(
+      child: SingleChildScrollView(
+        child: ConstrainedBox(
+          constraints: BoxConstraints(
+            minHeight: screenHeight - MediaQuery.of(context).padding.top - MediaQuery.of(context).padding.bottom,
+          ),
+          child: IntrinsicHeight(
+            child: Padding(
+              padding: EdgeInsets.symmetric(
+                horizontal: 20,
+                vertical: isSmallScreen ? 10 : 20,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
         // Back button
         Align(
           alignment: Alignment.centerLeft,
@@ -195,7 +210,7 @@ class _ImprovedGoalWeightStepState extends State<ImprovedGoalWeightStep>
           ),
         ),
         
-        SizedBox(height: 32),
+        SizedBox(height: isSmallScreen ? 16 : 32),
         
         // Title with animation
         FadeTransition(
@@ -208,7 +223,7 @@ class _ImprovedGoalWeightStepState extends State<ImprovedGoalWeightStep>
                   'Your goal weight',
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
-                    fontSize: 32,
+                    fontSize: isSmallScreen ? 24 : 32,
                     letterSpacing: -0.5,
                   ),
                   textAlign: TextAlign.center,
@@ -218,7 +233,7 @@ class _ImprovedGoalWeightStepState extends State<ImprovedGoalWeightStep>
                   _getSubtitle(),
                   style: TextStyle(
                     color: Colors.grey[600],
-                    fontSize: 16,
+                    fontSize: isSmallScreen ? 14 : 16,
                   ),
                   textAlign: TextAlign.center,
                 ),
@@ -227,7 +242,7 @@ class _ImprovedGoalWeightStepState extends State<ImprovedGoalWeightStep>
           ),
         ),
         
-        SizedBox(height: 40),
+        SizedBox(height: isSmallScreen ? 20 : 40),
         
         // Beautiful weight display
         FadeTransition(
@@ -295,7 +310,7 @@ class _ImprovedGoalWeightStepState extends State<ImprovedGoalWeightStep>
           ),
         ),
         
-        SizedBox(height: 40),
+        SizedBox(height: isSmallScreen ? 20 : 40),
         
         // Slider controls (only show if not build muscle or eat healthier)
         if (_shouldShowSlider())
@@ -347,9 +362,9 @@ class _ImprovedGoalWeightStepState extends State<ImprovedGoalWeightStep>
                         Expanded(
                           child: SliderTheme(
                             data: SliderTheme.of(context).copyWith(
-                              trackHeight: 3.0,
+                              trackHeight: 8.0,
                               thumbShape: CustomSliderThumbShape(),
-                              overlayShape: RoundSliderOverlayShape(overlayRadius: 50.0),
+                              overlayShape: RoundSliderOverlayShape(overlayRadius: 28.0),
                               activeTrackColor: theme.primaryColor,
                               inactiveTrackColor: theme.primaryColor.withOpacity(0.2),
                               thumbColor: theme.primaryColor,
@@ -430,7 +445,7 @@ class _ImprovedGoalWeightStepState extends State<ImprovedGoalWeightStep>
             ),
           ),
         
-        Spacer(),
+        Spacer(flex: isSmallScreen ? 1 : 2),
         
         // Continue button
         SizedBox(
@@ -440,15 +455,20 @@ class _ImprovedGoalWeightStepState extends State<ImprovedGoalWeightStep>
             style: ElevatedButton.styleFrom(
               backgroundColor: theme.primaryColor,
               foregroundColor: Colors.white,
-              padding: EdgeInsets.symmetric(vertical: 20),
+              padding: EdgeInsets.symmetric(vertical: isSmallScreen ? 16 : 20),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
               elevation: 0,
-              textStyle: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              textStyle: TextStyle(fontSize: isSmallScreen ? 16 : 18, fontWeight: FontWeight.bold),
             ),
             child: Text('Continue'),
           ),
         ),
-      ],
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
     );
   }
 }
@@ -456,7 +476,7 @@ class _ImprovedGoalWeightStepState extends State<ImprovedGoalWeightStep>
 class CustomSliderThumbShape extends SliderComponentShape {
   @override
   Size getPreferredSize(bool isEnabled, bool isDiscrete) {
-    return Size(18.0, 18.0);  // Smaller visual size
+    return Size(48.0, 48.0);  // Much larger touch target
   }
 
   @override
@@ -486,17 +506,17 @@ class CustomSliderThumbShape extends SliderComponentShape {
       ..style = PaintingStyle.fill
       ..maskFilter = MaskFilter.blur(BlurStyle.normal, 2);
     
-    // Draw shadow - smaller
-    canvas.drawCircle(center + Offset(0, 1), 10.0, shadowPaint);
+    // Draw shadow - larger
+    canvas.drawCircle(center + Offset(0, 1), 18.0, shadowPaint);
     
-    // Draw outer white circle - smaller
-    canvas.drawCircle(center, 10.0, outerPaint);
+    // Draw outer white circle - larger
+    canvas.drawCircle(center, 18.0, outerPaint);
     
-    // Draw inner colored circle - smaller
+    // Draw inner colored circle - larger
     final Paint innerPaint = Paint()
       ..color = sliderTheme.thumbColor!
       ..style = PaintingStyle.fill;
     
-    canvas.drawCircle(center, 7.0, innerPaint);
+    canvas.drawCircle(center, 14.0, innerPaint);
   }
 }

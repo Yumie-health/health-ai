@@ -53,10 +53,25 @@ class ImprovedWeightStep extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final bmi = _calculateBMI();
+    final screenHeight = MediaQuery.of(context).size.height;
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isSmallScreen = screenHeight < 700 || screenWidth < 400;
     
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
+    return SafeArea(
+      child: SingleChildScrollView(
+        child: ConstrainedBox(
+          constraints: BoxConstraints(
+            minHeight: screenHeight - MediaQuery.of(context).padding.top - MediaQuery.of(context).padding.bottom,
+          ),
+          child: IntrinsicHeight(
+            child: Padding(
+              padding: EdgeInsets.symmetric(
+                horizontal: 20,
+                vertical: isSmallScreen ? 10 : 20,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
         // Back button
         Align(
           alignment: Alignment.centerLeft,
@@ -81,7 +96,7 @@ class ImprovedWeightStep extends StatelessWidget {
           ),
         ),
         
-        SizedBox(height: 32),
+        SizedBox(height: isSmallScreen ? 16 : 32),
         
         // Title with animation
         FadeTransition(
@@ -94,7 +109,7 @@ class ImprovedWeightStep extends StatelessWidget {
                   'Your current weight',
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
-                    fontSize: 32,
+                    fontSize: isSmallScreen ? 24 : 32,
                     letterSpacing: -0.5,
                   ),
                   textAlign: TextAlign.center,
@@ -104,7 +119,7 @@ class ImprovedWeightStep extends StatelessWidget {
                   'This helps us track your progress',
                   style: TextStyle(
                     color: Colors.grey[600],
-                    fontSize: 16,
+                    fontSize: isSmallScreen ? 14 : 16,
                   ),
                   textAlign: TextAlign.center,
                 ),
@@ -113,7 +128,7 @@ class ImprovedWeightStep extends StatelessWidget {
           ),
         ),
         
-        SizedBox(height: 40),
+        SizedBox(height: isSmallScreen ? 20 : 40),
         
         // Weight selector with animation
         FadeTransition(
@@ -131,7 +146,7 @@ class ImprovedWeightStep extends StatelessWidget {
           ),
         ),
         
-        SizedBox(height: 30),
+        SizedBox(height: isSmallScreen ? 15 : 30),
         
         // BMI Display
         if (weightKg != null)
@@ -189,7 +204,7 @@ class ImprovedWeightStep extends StatelessWidget {
             ),
           ),
         
-        Spacer(),
+        Spacer(flex: isSmallScreen ? 1 : 2),
         
         // Continue button
         SizedBox(
@@ -199,15 +214,20 @@ class ImprovedWeightStep extends StatelessWidget {
             style: ElevatedButton.styleFrom(
               backgroundColor: theme.primaryColor,
               foregroundColor: Colors.white,
-              padding: EdgeInsets.symmetric(vertical: 20),
+              padding: EdgeInsets.symmetric(vertical: isSmallScreen ? 16 : 20),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
               elevation: 0,
-              textStyle: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              textStyle: TextStyle(fontSize: isSmallScreen ? 16 : 18, fontWeight: FontWeight.bold),
             ),
             child: Text('Continue'),
           ),
         ),
-      ],
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

@@ -235,9 +235,9 @@ class _ImprovedWeightSelectorState extends State<ImprovedWeightSelector>
                   Expanded(
                     child: SliderTheme(
                       data: SliderTheme.of(context).copyWith(
-                        trackHeight: 3.0,
+                        trackHeight: 8.0,
                         thumbShape: CustomSliderThumbShape(),
-                        overlayShape: RoundSliderOverlayShape(overlayRadius: 50.0),
+                        overlayShape: RoundSliderOverlayShape(overlayRadius: 28.0),
                         activeTrackColor: Theme.of(context).primaryColor,
                         inactiveTrackColor: Theme.of(context).primaryColor.withOpacity(0.2),
                         thumbColor: Theme.of(context).primaryColor,
@@ -323,7 +323,7 @@ class _ImprovedWeightSelectorState extends State<ImprovedWeightSelector>
 class CustomSliderThumbShape extends SliderComponentShape {
   @override
   Size getPreferredSize(bool isEnabled, bool isDiscrete) {
-    return Size(18.0, 18.0);  // Smaller visual size
+    return Size(48.0, 48.0);  // Much larger touch target
   }
 
   @override
@@ -353,17 +353,18 @@ class CustomSliderThumbShape extends SliderComponentShape {
       ..style = PaintingStyle.fill
       ..maskFilter = MaskFilter.blur(BlurStyle.normal, 2);
     
-    // Draw shadow - smaller
-    canvas.drawCircle(center + Offset(0, 1), 10.0, shadowPaint);
+    // Draw shadow - larger
+    canvas.drawCircle(center + Offset(0, 1), 18.0, shadowPaint);
     
-    // Draw outer white circle - smaller
-    canvas.drawCircle(center, 10.0, outerPaint);
+    // Draw outer white circle - larger
+    canvas.drawCircle(center, 18.0, outerPaint);
     
-    // Draw inner colored circle - smaller
+    
+    // Draw inner colored circle - larger
     final Paint innerPaint = Paint()
       ..color = sliderTheme.thumbColor!
       ..style = PaintingStyle.fill;
     
-    canvas.drawCircle(center, 7.0, innerPaint);
+    canvas.drawCircle(center, 14.0, innerPaint);
   }
 }
