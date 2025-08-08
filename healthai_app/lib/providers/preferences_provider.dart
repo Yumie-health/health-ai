@@ -47,21 +47,29 @@ class PreferencesProvider extends ChangeNotifier {
       if (user != null) {
         final doc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
         final data = doc.data();
-        if (data != null && data['reminders'] != null) {
-          final reminders = data['reminders'] as Map<String, dynamic>;
+        if (data != null) {
+          // Sync unit preference from Firestore if available
+          if (data.containsKey('useMetric')) {
+            _useMetric = data['useMetric'] ?? _useMetric;
+            await prefs.setBool('useMetric', _useMetric);
+          }
           
-          // Update values from Firestore and save to SharedPreferences
-          _mealLoggingPrompts = reminders['mealLoggingPrompts'] ?? _mealLoggingPrompts;
-          _waterIntakeReminders = reminders['waterIntakeReminders'] ?? _waterIntakeReminders;
-          _mindfulWalksReminders = reminders['mindfulWalksReminders'] ?? _mindfulWalksReminders;
-          _momentOfCalmReminders = reminders['momentOfCalmReminders'] ?? _momentOfCalmReminders;
-          
-          // Sync SharedPreferences with Firestore values
-          await prefs.setBool('mealLoggingPrompts', _mealLoggingPrompts);
-          await prefs.setBool('waterIntakeReminders', _waterIntakeReminders);
-          await prefs.setBool('mindfulWalksReminders', _mindfulWalksReminders);
-          await prefs.setBool('momentOfCalmReminders', _momentOfCalmReminders);
-          
+          // Sync reminders if available
+          if (data['reminders'] != null) {
+            final reminders = data['reminders'] as Map<String, dynamic>;
+            
+            // Update values from Firestore and save to SharedPreferences
+            _mealLoggingPrompts = reminders['mealLoggingPrompts'] ?? _mealLoggingPrompts;
+            _waterIntakeReminders = reminders['waterIntakeReminders'] ?? _waterIntakeReminders;
+            _mindfulWalksReminders = reminders['mindfulWalksReminders'] ?? _mindfulWalksReminders;
+            _momentOfCalmReminders = reminders['momentOfCalmReminders'] ?? _momentOfCalmReminders;
+            
+            // Sync SharedPreferences with Firestore values
+            await prefs.setBool('mealLoggingPrompts', _mealLoggingPrompts);
+            await prefs.setBool('waterIntakeReminders', _waterIntakeReminders);
+            await prefs.setBool('mindfulWalksReminders', _mindfulWalksReminders);
+            await prefs.setBool('momentOfCalmReminders', _momentOfCalmReminders);
+          }
                 // Preferences synced from Firestore
           
           // Schedule notifications for enabled preferences
@@ -89,6 +97,20 @@ class PreferencesProvider extends ChangeNotifier {
     final prefs = await SharedPreferences.getInstance();
     _useMetric = value;
     await prefs.setBool('useMetric', value);
+    
+    // Also save to Firestore
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user != null) {
+        await FirebaseFirestore.instance.collection('users').doc(user.uid).update({
+          'useMetric': value,
+          'lastUpdated': DateTime.now(),
+        });
+      }
+    } catch (e) {
+      print('Error saving useMetric to Firestore: $e');
+    }
+    
     notifyListeners();
   }
 

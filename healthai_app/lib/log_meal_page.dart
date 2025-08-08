@@ -5,7 +5,7 @@ import 'models/meal.dart';
 import 'services/meal_service.dart';
 import 'models/custom_meal.dart';
 import 'l10n/app_localizations.dart';
-import 'services/pexels_service.dart';
+
 import 'services/ai_service.dart';
 import 'providers/preferences_provider.dart';
 import 'utils/constants.dart';
@@ -183,7 +183,8 @@ class _SearchableMealInputState extends State<SearchableMealInput> {
     });
 
     try {
-      final results = await _aiService.searchFoodItemsFast(query, foodType: widget.selectedFoodType);
+      final prefs = Provider.of<PreferencesProvider>(context, listen: false);
+      final results = await _aiService.searchFoodItemsFast(query, foodType: widget.selectedFoodType, language: prefs.language);
       
       if (mounted) {
         setState(() {
@@ -1749,28 +1750,10 @@ class _ExpandableMealTileState extends State<_ExpandableMealTile> {
       child: Column(
         children: [
           ListTile(
-            leading: widget.isCustomMeal
-                ? CircleAvatar(
-                    backgroundColor: kPrimaryGreen.withOpacity(0.13),
-                    child: Icon(widget.icon, color: widget.iconColor),
-                  )
-                : FutureBuilder<String?>(
-                    future: PexelsService.staticFetchMealImage(widget.name),
-                    builder: (context, snapshot) {
-                      if (snapshot.connectionState == ConnectionState.waiting) {
-                        return CircleAvatar(
-                          backgroundColor: kPrimaryGreen.withOpacity(0.13),
-                          child: CircularProgressIndicator(strokeWidth: 2, color: kPrimaryGreen),
-                        );
-                      }
-                      final imageUrl = snapshot.data;
-                      return CircleAvatar(
-                        backgroundColor: kPrimaryGreen.withOpacity(0.13),
-                        backgroundImage: imageUrl != null ? NetworkImage(imageUrl) : null,
-                        child: imageUrl == null ? Icon(widget.icon, color: widget.iconColor) : null,
-                      );
-                    },
-                  ),
+            leading: CircleAvatar(
+                backgroundColor: kPrimaryGreen.withOpacity(0.13),
+                child: Icon(widget.icon, color: widget.iconColor),
+              ),
             title: Text(
               widget.name,
               style: const TextStyle(fontWeight: FontWeight.w600),

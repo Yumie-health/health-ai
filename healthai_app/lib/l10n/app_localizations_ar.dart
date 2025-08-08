@@ -24,7 +24,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get useMetricUnits => 'استخدم الوحدات المترية';
 
   @override
-  String get unitsSubtitle => 'كجم/سم أو رطل/قدم';
+  String get unitsSubtitle => 'استخدم كجم/سم (تشغيل) أو رطل/قدم (إيقاف)';
 
   @override
   String get language => 'اللغة';
@@ -480,10 +480,10 @@ class AppLocalizationsAr extends AppLocalizations {
   String get upgradePlan => 'ترقية الخطة';
 
   @override
-  String get watchAdForScan => 'شاهد إعلانًا للمسح';
+  String get watchAdForScan => 'شاهد إعلان للمسح';
 
   @override
-  String get watchAdForSearch => 'شاهد إعلانًا للبحث';
+  String get watchAdForSearch => 'شاهد إعلان للبحث';
 
   @override
   String get generateMeal => 'إنشاء وجبة';
@@ -504,23 +504,448 @@ class AppLocalizationsAr extends AppLocalizations {
   String get noResultsFoundFor => 'لم يتم العثور على نتائج لـ';
 
   @override
-  String get count => 'Count';
+  String get count => 'عدد';
 
   @override
-  String get servings => 'Servings';
+  String get servings => 'حصص';
 
   @override
-  String get fluidOunces => 'Fluid Ounces';
+  String get fluidOunces => 'أونصة سائلة';
 
   @override
-  String get quantity => 'Quantity';
+  String get quantity => 'الكمية';
 
   @override
-  String get confirm => 'Confirm';
+  String get confirm => 'تأكيد';
 
   @override
-  String get ingredient => 'Ingredient';
+  String get ingredient => 'مكون';
 
   @override
-  String get drink => 'Drink';
+  String get drink => 'مشروب';
+
+  @override
+  String get kg => 'كيلوغرام';
+
+  @override
+  String get g => 'غرام';
+
+  @override
+  String get mg => 'ميليغرام';
+
+  @override
+  String get cm => 'سنتيمتر';
+
+  @override
+  String get m => 'متر';
+
+  @override
+  String get kcal => 'سعرة حرارية';
+
+  @override
+  String get cal => 'سعرة';
+
+  @override
+  String get lb => 'رطل';
+
+  @override
+  String get oz => 'أونصة';
+
+  @override
+  String get ft => 'قدم';
+
+  @override
+  String get inches => 'بوصة';
+
+  @override
+  String get cup => 'كوب';
+
+  @override
+  String get tbsp => 'ملعقة كبيرة';
+
+  @override
+  String get tsp => 'ملعقة صغيرة';
+
+  @override
+  String get ml => 'مليلتر';
+
+  @override
+  String get l => 'لتر';
+
+  @override
+  String get upgradeToPremiumTitle => 'الترقية إلى بريميوم';
+
+  @override
+  String get premiumFeatures => 'الميزات المميزة';
+
+  @override
+  String get unlimitedScans => 'مسح غير محدود';
+
+  @override
+  String get aiNutritionCoach => 'مدرب تغذية بالذكاء الاصطناعي';
+
+  @override
+  String get detailedAnalytics => 'تحليلات مفصلة';
+
+  @override
+  String get personalizedMealPlans => 'خطط وجبات شخصية';
+
+  @override
+  String get noAdvertisements => 'بدون إعلانات';
+
+  @override
+  String get yearlyPremium => 'باقة سنوية مميزة';
+
+  @override
+  String get monthlyPremium => 'باقة شهرية مميزة';
+
+  @override
+  String savePercent(Object percent) {
+    return 'وفر $percent%';
+  }
+
+  @override
+  String get perYear => '/سنة';
+
+  @override
+  String get perMonth => '/شهر';
+
+  @override
+  String get popular => 'شائع';
+
+  @override
+  String get maybeLater => 'ربما لاحقاً';
+
+  @override
+  String get welcomeToYumie => 'مرحباً بك في يومي!';
+
+  @override
+  String get unlockPremiumFeatures => 'فتح الميزات المميزة';
+
+  @override
+  String get getMostOutOfHealthJourney => 'احصل على أقصى استفادة من رحلتك الصحية مع وصول غير محدود!';
+
+  @override
+  String get unlimitedScansAICoaching => 'افتح المسح غير المحدود وتدريب الذكاء الاصطناعي وخطط الوجبات المخصصة!';
+
+  @override
+  String get subscribe => 'اشترك';
+
+  @override
+  String get foodNameLabel => 'اسم الطعام';
+
+  @override
+  String get managePermissions => 'إدارة الأذونات';
+
+  @override
+  String get cameraNotificationsAndMore => 'الكاميرا والإشعارات والمزيد';
+
+  @override
+  String get deleteMeal => 'حذف الوجبة';
+
+  @override
+  String get areYouSureDeleteMeal => 'هل أنت متأكد من أنك تريد حذف هذه الوجبة؟';
+
+  @override
+  String get unknown => 'غير معروف';
+
+  @override
+  String get servings1 => 'حصة واحدة';
+
+  @override
+  String get edit => 'تعديل';
+
+  @override
+  String get ignoreFood => 'تجاهل الطعام';
+
+  @override
+  String get addComponent => 'أضف مكونًا';
+
+  @override
+  String get components => 'المكونات';
+
+  @override
+  String get recentFoods => 'الأطعمة الحديثة';
+
+  @override
+  String get logWeightChange => 'تسجيل تغيير الوزن';
+
+  @override
+  String get lost => 'فقد';
+
+  @override
+  String get gained => 'اكتسب';
+
+  @override
+  String get googleSignInHelp => 'مساعدة تسجيل الدخول بجوجل';
+
+  @override
+  String get couldNotOpenTermsOfService => 'لا يمكن فتح شروط الخدمة';
+
+  @override
+  String get couldNotOpenPrivacyPolicy => 'لا يمكن فتح سياسة الخصوصية';
+
+  @override
+  String get errorSavingProfile => 'خطأ في حفظ الملف الشخصي';
+
+  @override
+  String get completeYourProfile => 'أكمل ملفك الشخصي';
+
+  @override
+  String get saveAndContinue => 'حفظ ومتابعة';
+
+  @override
+  String get pleasSignIn => 'يرجى تسجيل الدخول.';
+
+  @override
+  String get noFoodLogsYet => 'لا توجد سجلات طعام بعد.';
+
+  @override
+  String get healthAIFoodLog => 'HealthAI - سجل الطعام';
+
+  @override
+  String get addLog => 'إضافة سجل';
+
+  @override
+  String get unableToShareAtThisTime => 'لا يمكن المشاركة في الوقت الحالي. يرجى المحاولة مرة أخرى.';
+
+  @override
+  String get failedToUpdatePhoto => 'فشل في تحديث الصورة';
+
+  @override
+  String get changeProfileName => 'تغيير اسم الملف الشخصي';
+
+  @override
+  String get failedToUpdateName => 'فشل في تحديث الاسم';
+
+  @override
+  String get profileUpdatedSuccessfully => 'تم تحديث الملف الشخصي بنجاح';
+
+  @override
+  String get errorUpdatingProfile => 'خطأ في تحديث الملف الشخصي';
+
+  @override
+  String get editGoals => 'تعديل الأهداف';
+
+  @override
+  String get goalsUpdatedSuccessfully => 'تم تحديث الأهداف بنجاح';
+
+  @override
+  String get errorUpdatingGoals => 'خطأ في تحديث الأهداف';
+
+  @override
+  String get couldNotOpenWebsite => 'لا يمكن فتح الموقع الإلكتروني';
+
+  @override
+  String get errorOpeningWebsite => 'خطأ في فتح الموقع الإلكتروني';
+
+  @override
+  String get english => 'الإنجليزية';
+
+  @override
+  String get arabic => 'العربية';
+
+  @override
+  String get spanish => 'الإسبانية';
+
+  @override
+  String get reviewMealTitle => 'مراجعة الوجبة';
+
+  @override
+  String get startingWeight => 'الوزن البداية';
+
+  @override
+  String get appPermissions => 'أذونات التطبيق';
+
+  @override
+  String get permissionStatus => 'حالة الأذونات';
+
+  @override
+  String get manageAppPermissions => 'إدارة أذونات التطبيق لضمان عمل جميع الميزات بشكل صحيح';
+
+  @override
+  String get camera => 'الكاميرا';
+
+  @override
+  String get scanFoodItems => 'مسح عناصر الطعام والتقاط صور للوجبات';
+
+  @override
+  String get photoLibrary => 'مكتبة الصور';
+
+  @override
+  String get saveScannedImages => 'حفظ الصور الممسوحة واختيار الصور';
+
+  @override
+  String get notifications => 'الإشعارات';
+
+  @override
+  String get sendMealReminders => 'إرسال تذكيرات الوجبات والتنبيهات الصحية';
+
+  @override
+  String get needHelp => 'تحتاج مساعدة؟';
+
+  @override
+  String get permanentlyDeniedHelp => 'إذا تم رفض الأذونات نهائياً، يمكنك تمكينها في إعدادات جهازك';
+
+  @override
+  String get openDeviceSettings => 'فتح إعدادات الجهاز';
+
+  @override
+  String get goodMorning => 'صباح الخير';
+
+  @override
+  String get goodAfternoon => 'مساء الخير';
+
+  @override
+  String get goodEvening => 'مساء الخير';
+
+  @override
+  String get goodNight => 'تصبح على خير';
+
+  @override
+  String get ounces => 'أونصات';
+
+  @override
+  String get january => 'يناير';
+
+  @override
+  String get february => 'فبراير';
+
+  @override
+  String get march => 'مارس';
+
+  @override
+  String get april => 'أبريل';
+
+  @override
+  String get may => 'مايو';
+
+  @override
+  String get june => 'يونيو';
+
+  @override
+  String get july => 'يوليو';
+
+  @override
+  String get august => 'أغسطس';
+
+  @override
+  String get september => 'سبتمبر';
+
+  @override
+  String get october => 'أكتوبر';
+
+  @override
+  String get november => 'نوفمبر';
+
+  @override
+  String get december => 'ديسمبر';
+
+  @override
+  String get trackYourNutrition => 'تتبع تغذيتك';
+
+  @override
+  String get messages => 'الرسائل';
+
+  @override
+  String get subscribeForDailyInsights => 'اشترك للحصول على رؤى يومية';
+
+  @override
+  String get getPersonalizedHealthInsights => 'احصل على رؤى صحية مخصصة بناءً على ملفك الشخصي الكامل';
+
+  @override
+  String get upgradeDescription => 'احصل على عمليات مسح ومبحث غير محدودة ورؤى مدعومة بالذكاء الاصطناعي';
+
+  @override
+  String get unlimitedFoodScans => 'مسح غذاء غير محدود';
+
+  @override
+  String get unlimitedFoodSearches => 'بحث غذاء غير محدود';
+
+  @override
+  String get unlimitedAICoachMessages => 'رسائل مدرب ذكي غير محدودة';
+
+  @override
+  String get dailyHealthInsights => 'رؤى صحية يومية';
+
+  @override
+  String get logWaterIntake => 'تسجيل شرب الماء';
+
+  @override
+  String get add => 'أضف';
+
+  @override
+  String get freemium => 'مجاني';
+
+  @override
+  String get premium => 'مميز';
+
+  @override
+  String get chooseYourPlan => 'اختر خطتك';
+
+  @override
+  String get water => 'الماء';
+
+  @override
+  String get resetPasswordDescription => 'سيتم إرسال رابط إعادة تعيين كلمة المرور إلى بريدك الإلكتروني';
+
+  @override
+  String get deleteAccount => 'حذف الحساب';
+
+  @override
+  String get deleteAccountDescription => 'حذف حسابك وجميع البيانات نهائياً';
+
+  @override
+  String get confirmDeleteAccount => 'هل أنت متأكد من أنك تريد حذف حسابك؟';
+
+  @override
+  String get deleteAccountWarning => 'لا يمكن التراجع عن هذا الإجراء. جميع بياناتك بما في ذلك الوجبات والتقدم والإعدادات ستُحذف نهائياً.';
+
+  @override
+  String get typeDeleteToConfirm => 'اكتب \'DELETE\' لتأكيد حذف الحساب';
+
+  @override
+  String get deleteAccountFinalConfirmation => 'DELETE';
+
+  @override
+  String get accountDeleted => 'تم حذف الحساب بنجاح';
+
+  @override
+  String get errorDeletingAccount => 'خطأ في حذف الحساب';
+
+  @override
+  String get totalNutrition => 'إجمالي التغذية';
+
+  @override
+  String get unlockUnlimitedScans => 'فتح المسح غير المحدود، التدريب بالذكاء الاصطناعي،\nوخطط الوجبات الشخصية';
+
+  @override
+  String get unlimitedFoodScanning => 'مسح طعام غير محدود';
+
+  @override
+  String get yearPrice => 'سنة/49.99\$';
+
+  @override
+  String get monthPrice => 'شهر/7.99\$';
+
+  @override
+  String get save37 => 'وفر 37%';
+
+  @override
+  String get youArePremium => 'أنت عضو مميز';
+
+  @override
+  String get yumiePremiumMonthly => 'يومي مميز شهري';
+
+  @override
+  String get yumiePremiumYearly => 'يومي مميز سنوي';
+
+  @override
+  String get restorePurchases => 'استعادة المشتريات';
+
+  @override
+  String get bySubscribing => 'بالاشتراك، فإنك توافق على شروط الخدمة وسياسة الخصوصية. تتجدد الاشتراكات تلقائياً ما لم يتم إلغاؤها';
+
+  @override
+  String get permissionsComplete => 'اكتملت الأذونات!';
 }

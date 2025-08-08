@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart' as ph;
 import 'services/permission_service.dart';
 import 'utils/constants.dart';
+import 'l10n/app_localizations.dart';
 
 class PermissionStatusScreen extends StatefulWidget {
   @override
@@ -66,7 +67,7 @@ class _PermissionStatusScreenState extends State<PermissionStatusScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('App Permissions'),
+        title: Text(AppLocalizations.of(context)!.appPermissions),
         backgroundColor: kPrimaryGreen,
         foregroundColor: Colors.white,
       ),
@@ -96,7 +97,7 @@ class _PermissionStatusScreenState extends State<PermissionStatusScreen> {
                             Icon(Icons.info_outline, color: kPrimaryGreen),
                             SizedBox(width: 8),
                             Text(
-                              'Permission Status',
+                              AppLocalizations.of(context)!.permissionStatus,
                               style: TextStyle(
                                 fontSize: 18,
                                 fontWeight: FontWeight.bold,
@@ -107,7 +108,7 @@ class _PermissionStatusScreenState extends State<PermissionStatusScreen> {
                         ),
                         SizedBox(height: 8),
                         Text(
-                          'Manage app permissions to ensure all features work properly.',
+                          AppLocalizations.of(context)!.manageAppPermissions,
                           style: TextStyle(
                             color: Colors.grey[600],
                             fontSize: 14,
@@ -167,7 +168,7 @@ class _PermissionStatusScreenState extends State<PermissionStatusScreen> {
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
                                       Text(
-                                        PermissionService.getPermissionName(permission),
+                                        PermissionService.getPermissionName(permission, context),
                                         style: TextStyle(
                                           fontWeight: FontWeight.w600,
                                           fontSize: 16,
@@ -308,11 +309,11 @@ class _PermissionStatusScreenState extends State<PermissionStatusScreen> {
   String _getPermissionDescription(ph.Permission permission) {
     switch (permission) {
       case ph.Permission.camera:
-        return 'Scan food items and take photos of meals';
+        return AppLocalizations.of(context)!.scanFoodItems;
       case ph.Permission.photos:
-        return 'Save scanned images and select photos';
+        return AppLocalizations.of(context)!.saveScannedImages;
       case ph.Permission.notification:
-        return 'Send meal reminders and health alerts';
+        return AppLocalizations.of(context)!.sendMealReminders;
       default:
         return 'App functionality';
     }

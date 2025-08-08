@@ -130,7 +130,7 @@ abstract class AppLocalizations {
   /// No description provided for @unitsSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'kg/cm or lb/ft'**
+  /// **'Use kg/cm (on) or lb/ft (off)'**
   String get unitsSubtitle;
 
   /// No description provided for @language.
@@ -358,7 +358,7 @@ abstract class AppLocalizations {
   /// No description provided for @resetPassword.
   ///
   /// In en, this message translates to:
-  /// **'Reset password'**
+  /// **'Reset Password'**
   String get resetPassword;
 
   /// No description provided for @close.
@@ -982,7 +982,7 @@ abstract class AppLocalizations {
   /// No description provided for @meal.
   ///
   /// In en, this message translates to:
-  /// **'Meal'**
+  /// **'MEAL'**
   String get meal;
 
   /// No description provided for @fridge.
@@ -1090,13 +1090,13 @@ abstract class AppLocalizations {
   /// No description provided for @count.
   ///
   /// In en, this message translates to:
-  /// **'Count'**
+  /// **'count'**
   String get count;
 
   /// No description provided for @servings.
   ///
   /// In en, this message translates to:
-  /// **'Servings'**
+  /// **'servings'**
   String get servings;
 
   /// No description provided for @fluidOunces.
@@ -1120,14 +1120,860 @@ abstract class AppLocalizations {
   /// No description provided for @ingredient.
   ///
   /// In en, this message translates to:
-  /// **'Ingredient'**
+  /// **'INGREDIENT'**
   String get ingredient;
 
   /// No description provided for @drink.
   ///
   /// In en, this message translates to:
-  /// **'Drink'**
+  /// **'DRINK'**
   String get drink;
+
+  /// No description provided for @kg.
+  ///
+  /// In en, this message translates to:
+  /// **'kg'**
+  String get kg;
+
+  /// No description provided for @g.
+  ///
+  /// In en, this message translates to:
+  /// **'g'**
+  String get g;
+
+  /// No description provided for @mg.
+  ///
+  /// In en, this message translates to:
+  /// **'mg'**
+  String get mg;
+
+  /// No description provided for @cm.
+  ///
+  /// In en, this message translates to:
+  /// **'cm'**
+  String get cm;
+
+  /// No description provided for @m.
+  ///
+  /// In en, this message translates to:
+  /// **'m'**
+  String get m;
+
+  /// No description provided for @kcal.
+  ///
+  /// In en, this message translates to:
+  /// **'kcal'**
+  String get kcal;
+
+  /// No description provided for @cal.
+  ///
+  /// In en, this message translates to:
+  /// **'cal'**
+  String get cal;
+
+  /// No description provided for @lb.
+  ///
+  /// In en, this message translates to:
+  /// **'lb'**
+  String get lb;
+
+  /// No description provided for @oz.
+  ///
+  /// In en, this message translates to:
+  /// **'oz'**
+  String get oz;
+
+  /// No description provided for @ft.
+  ///
+  /// In en, this message translates to:
+  /// **'ft'**
+  String get ft;
+
+  /// No description provided for @inches.
+  ///
+  /// In en, this message translates to:
+  /// **'in'**
+  String get inches;
+
+  /// No description provided for @cup.
+  ///
+  /// In en, this message translates to:
+  /// **'cup'**
+  String get cup;
+
+  /// No description provided for @tbsp.
+  ///
+  /// In en, this message translates to:
+  /// **'tbsp'**
+  String get tbsp;
+
+  /// No description provided for @tsp.
+  ///
+  /// In en, this message translates to:
+  /// **'tsp'**
+  String get tsp;
+
+  /// No description provided for @ml.
+  ///
+  /// In en, this message translates to:
+  /// **'ml'**
+  String get ml;
+
+  /// No description provided for @l.
+  ///
+  /// In en, this message translates to:
+  /// **'l'**
+  String get l;
+
+  /// No description provided for @upgradeToPremiumTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Upgrade to Premium'**
+  String get upgradeToPremiumTitle;
+
+  /// No description provided for @premiumFeatures.
+  ///
+  /// In en, this message translates to:
+  /// **'Premium Features'**
+  String get premiumFeatures;
+
+  /// No description provided for @unlimitedScans.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlimited scans'**
+  String get unlimitedScans;
+
+  /// No description provided for @aiNutritionCoach.
+  ///
+  /// In en, this message translates to:
+  /// **'AI nutrition coach'**
+  String get aiNutritionCoach;
+
+  /// No description provided for @detailedAnalytics.
+  ///
+  /// In en, this message translates to:
+  /// **'Detailed analytics'**
+  String get detailedAnalytics;
+
+  /// No description provided for @personalizedMealPlans.
+  ///
+  /// In en, this message translates to:
+  /// **'Personalized meal plans'**
+  String get personalizedMealPlans;
+
+  /// No description provided for @noAdvertisements.
+  ///
+  /// In en, this message translates to:
+  /// **'No advertisements'**
+  String get noAdvertisements;
+
+  /// No description provided for @yearlyPremium.
+  ///
+  /// In en, this message translates to:
+  /// **'Yearly Premium'**
+  String get yearlyPremium;
+
+  /// No description provided for @monthlyPremium.
+  ///
+  /// In en, this message translates to:
+  /// **'Monthly Premium'**
+  String get monthlyPremium;
+
+  /// No description provided for @savePercent.
+  ///
+  /// In en, this message translates to:
+  /// **'Save {percent}%'**
+  String savePercent(Object percent);
+
+  /// No description provided for @perYear.
+  ///
+  /// In en, this message translates to:
+  /// **'/year'**
+  String get perYear;
+
+  /// No description provided for @perMonth.
+  ///
+  /// In en, this message translates to:
+  /// **'/month'**
+  String get perMonth;
+
+  /// No description provided for @popular.
+  ///
+  /// In en, this message translates to:
+  /// **'POPULAR'**
+  String get popular;
+
+  /// No description provided for @maybeLater.
+  ///
+  /// In en, this message translates to:
+  /// **'Maybe later'**
+  String get maybeLater;
+
+  /// No description provided for @welcomeToYumie.
+  ///
+  /// In en, this message translates to:
+  /// **'🎉 Welcome to Yumie!'**
+  String get welcomeToYumie;
+
+  /// No description provided for @unlockPremiumFeatures.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlock Premium Features'**
+  String get unlockPremiumFeatures;
+
+  /// No description provided for @getMostOutOfHealthJourney.
+  ///
+  /// In en, this message translates to:
+  /// **'Get the most out of your health journey with unlimited access!'**
+  String get getMostOutOfHealthJourney;
+
+  /// No description provided for @unlimitedScansAICoaching.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlock unlimited scans, AI coaching, and personalized meal plans!'**
+  String get unlimitedScansAICoaching;
+
+  /// No description provided for @subscribe.
+  ///
+  /// In en, this message translates to:
+  /// **'Subscribe'**
+  String get subscribe;
+
+  /// No description provided for @foodNameLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Food Name'**
+  String get foodNameLabel;
+
+  /// No description provided for @managePermissions.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage Permissions'**
+  String get managePermissions;
+
+  /// No description provided for @cameraNotificationsAndMore.
+  ///
+  /// In en, this message translates to:
+  /// **'Camera, notifications, and more'**
+  String get cameraNotificationsAndMore;
+
+  /// No description provided for @deleteMeal.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Meal'**
+  String get deleteMeal;
+
+  /// No description provided for @areYouSureDeleteMeal.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to delete this meal?'**
+  String get areYouSureDeleteMeal;
+
+  /// No description provided for @unknown.
+  ///
+  /// In en, this message translates to:
+  /// **'Unknown'**
+  String get unknown;
+
+  /// No description provided for @servings1.
+  ///
+  /// In en, this message translates to:
+  /// **'servings 1'**
+  String get servings1;
+
+  /// No description provided for @edit.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit'**
+  String get edit;
+
+  /// No description provided for @ignoreFood.
+  ///
+  /// In en, this message translates to:
+  /// **'Ignore Food'**
+  String get ignoreFood;
+
+  /// No description provided for @addComponent.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Component'**
+  String get addComponent;
+
+  /// No description provided for @components.
+  ///
+  /// In en, this message translates to:
+  /// **'Components'**
+  String get components;
+
+  /// No description provided for @recentFoods.
+  ///
+  /// In en, this message translates to:
+  /// **'Recent Foods'**
+  String get recentFoods;
+
+  /// No description provided for @logWeightChange.
+  ///
+  /// In en, this message translates to:
+  /// **'Log Weight Change'**
+  String get logWeightChange;
+
+  /// No description provided for @lost.
+  ///
+  /// In en, this message translates to:
+  /// **'Lost'**
+  String get lost;
+
+  /// No description provided for @gained.
+  ///
+  /// In en, this message translates to:
+  /// **'Gained'**
+  String get gained;
+
+  /// No description provided for @googleSignInHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Google Sign-In Help'**
+  String get googleSignInHelp;
+
+  /// No description provided for @couldNotOpenTermsOfService.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not open Terms of Service'**
+  String get couldNotOpenTermsOfService;
+
+  /// No description provided for @couldNotOpenPrivacyPolicy.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not open Privacy Policy'**
+  String get couldNotOpenPrivacyPolicy;
+
+  /// No description provided for @errorSavingProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Error saving profile'**
+  String get errorSavingProfile;
+
+  /// No description provided for @completeYourProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete Your Profile'**
+  String get completeYourProfile;
+
+  /// No description provided for @saveAndContinue.
+  ///
+  /// In en, this message translates to:
+  /// **'Save & Continue'**
+  String get saveAndContinue;
+
+  /// No description provided for @pleasSignIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Please sign in.'**
+  String get pleasSignIn;
+
+  /// No description provided for @noFoodLogsYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No food logs yet.'**
+  String get noFoodLogsYet;
+
+  /// No description provided for @healthAIFoodLog.
+  ///
+  /// In en, this message translates to:
+  /// **'HealthAI - Food Log'**
+  String get healthAIFoodLog;
+
+  /// No description provided for @addLog.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Log'**
+  String get addLog;
+
+  /// No description provided for @unableToShareAtThisTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Unable to share at this time. Please try again.'**
+  String get unableToShareAtThisTime;
+
+  /// No description provided for @failedToUpdatePhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to update photo'**
+  String get failedToUpdatePhoto;
+
+  /// No description provided for @changeProfileName.
+  ///
+  /// In en, this message translates to:
+  /// **'Change Profile Name'**
+  String get changeProfileName;
+
+  /// No description provided for @failedToUpdateName.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to update name'**
+  String get failedToUpdateName;
+
+  /// No description provided for @profileUpdatedSuccessfully.
+  ///
+  /// In en, this message translates to:
+  /// **'Profile updated successfully'**
+  String get profileUpdatedSuccessfully;
+
+  /// No description provided for @errorUpdatingProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Error updating profile'**
+  String get errorUpdatingProfile;
+
+  /// No description provided for @editGoals.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit Goals'**
+  String get editGoals;
+
+  /// No description provided for @goalsUpdatedSuccessfully.
+  ///
+  /// In en, this message translates to:
+  /// **'Goals updated successfully'**
+  String get goalsUpdatedSuccessfully;
+
+  /// No description provided for @errorUpdatingGoals.
+  ///
+  /// In en, this message translates to:
+  /// **'Error updating goals'**
+  String get errorUpdatingGoals;
+
+  /// No description provided for @couldNotOpenWebsite.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not open website'**
+  String get couldNotOpenWebsite;
+
+  /// No description provided for @errorOpeningWebsite.
+  ///
+  /// In en, this message translates to:
+  /// **'Error opening website'**
+  String get errorOpeningWebsite;
+
+  /// No description provided for @english.
+  ///
+  /// In en, this message translates to:
+  /// **'English'**
+  String get english;
+
+  /// No description provided for @arabic.
+  ///
+  /// In en, this message translates to:
+  /// **'Arabic'**
+  String get arabic;
+
+  /// No description provided for @spanish.
+  ///
+  /// In en, this message translates to:
+  /// **'Spanish'**
+  String get spanish;
+
+  /// No description provided for @reviewMealTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Review Meal'**
+  String get reviewMealTitle;
+
+  /// No description provided for @startingWeight.
+  ///
+  /// In en, this message translates to:
+  /// **'Starting Weight'**
+  String get startingWeight;
+
+  /// No description provided for @appPermissions.
+  ///
+  /// In en, this message translates to:
+  /// **'App Permissions'**
+  String get appPermissions;
+
+  /// No description provided for @permissionStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Permission Status'**
+  String get permissionStatus;
+
+  /// No description provided for @manageAppPermissions.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage app permissions to ensure all features work properly'**
+  String get manageAppPermissions;
+
+  /// No description provided for @camera.
+  ///
+  /// In en, this message translates to:
+  /// **'Camera'**
+  String get camera;
+
+  /// No description provided for @scanFoodItems.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan food items and take photos of meals'**
+  String get scanFoodItems;
+
+  /// No description provided for @photoLibrary.
+  ///
+  /// In en, this message translates to:
+  /// **'Photo Library'**
+  String get photoLibrary;
+
+  /// No description provided for @saveScannedImages.
+  ///
+  /// In en, this message translates to:
+  /// **'Save scanned images and select photos'**
+  String get saveScannedImages;
+
+  /// No description provided for @notifications.
+  ///
+  /// In en, this message translates to:
+  /// **'Notifications'**
+  String get notifications;
+
+  /// No description provided for @sendMealReminders.
+  ///
+  /// In en, this message translates to:
+  /// **'Send meal reminders and health alerts'**
+  String get sendMealReminders;
+
+  /// No description provided for @needHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Need Help?'**
+  String get needHelp;
+
+  /// No description provided for @permanentlyDeniedHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'If permissions are permanently denied, you can enable them in your device settings'**
+  String get permanentlyDeniedHelp;
+
+  /// No description provided for @openDeviceSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Open Device Settings'**
+  String get openDeviceSettings;
+
+  /// No description provided for @goodMorning.
+  ///
+  /// In en, this message translates to:
+  /// **'Good morning'**
+  String get goodMorning;
+
+  /// No description provided for @goodAfternoon.
+  ///
+  /// In en, this message translates to:
+  /// **'Good afternoon'**
+  String get goodAfternoon;
+
+  /// No description provided for @goodEvening.
+  ///
+  /// In en, this message translates to:
+  /// **'Good evening'**
+  String get goodEvening;
+
+  /// No description provided for @goodNight.
+  ///
+  /// In en, this message translates to:
+  /// **'Good night'**
+  String get goodNight;
+
+  /// No description provided for @ounces.
+  ///
+  /// In en, this message translates to:
+  /// **'ounces'**
+  String get ounces;
+
+  /// No description provided for @january.
+  ///
+  /// In en, this message translates to:
+  /// **'January'**
+  String get january;
+
+  /// No description provided for @february.
+  ///
+  /// In en, this message translates to:
+  /// **'February'**
+  String get february;
+
+  /// No description provided for @march.
+  ///
+  /// In en, this message translates to:
+  /// **'March'**
+  String get march;
+
+  /// No description provided for @april.
+  ///
+  /// In en, this message translates to:
+  /// **'April'**
+  String get april;
+
+  /// No description provided for @may.
+  ///
+  /// In en, this message translates to:
+  /// **'May'**
+  String get may;
+
+  /// No description provided for @june.
+  ///
+  /// In en, this message translates to:
+  /// **'June'**
+  String get june;
+
+  /// No description provided for @july.
+  ///
+  /// In en, this message translates to:
+  /// **'July'**
+  String get july;
+
+  /// No description provided for @august.
+  ///
+  /// In en, this message translates to:
+  /// **'August'**
+  String get august;
+
+  /// No description provided for @september.
+  ///
+  /// In en, this message translates to:
+  /// **'September'**
+  String get september;
+
+  /// No description provided for @october.
+  ///
+  /// In en, this message translates to:
+  /// **'October'**
+  String get october;
+
+  /// No description provided for @november.
+  ///
+  /// In en, this message translates to:
+  /// **'November'**
+  String get november;
+
+  /// No description provided for @december.
+  ///
+  /// In en, this message translates to:
+  /// **'December'**
+  String get december;
+
+  /// No description provided for @trackYourNutrition.
+  ///
+  /// In en, this message translates to:
+  /// **'Track your nutrition'**
+  String get trackYourNutrition;
+
+  /// No description provided for @messages.
+  ///
+  /// In en, this message translates to:
+  /// **'Messages'**
+  String get messages;
+
+  /// No description provided for @subscribeForDailyInsights.
+  ///
+  /// In en, this message translates to:
+  /// **'Subscribe for Daily Insights'**
+  String get subscribeForDailyInsights;
+
+  /// No description provided for @getPersonalizedHealthInsights.
+  ///
+  /// In en, this message translates to:
+  /// **'Get personalized health insights based on your complete profile'**
+  String get getPersonalizedHealthInsights;
+
+  /// No description provided for @upgradeDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Get unlimited scans, searches, and AI-powered insights'**
+  String get upgradeDescription;
+
+  /// No description provided for @unlimitedFoodScans.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlimited Food Scans'**
+  String get unlimitedFoodScans;
+
+  /// No description provided for @unlimitedFoodSearches.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlimited Food Searches'**
+  String get unlimitedFoodSearches;
+
+  /// No description provided for @unlimitedAICoachMessages.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlimited AI Coach Messages'**
+  String get unlimitedAICoachMessages;
+
+  /// No description provided for @dailyHealthInsights.
+  ///
+  /// In en, this message translates to:
+  /// **'Daily Health Insights'**
+  String get dailyHealthInsights;
+
+  /// No description provided for @logWaterIntake.
+  ///
+  /// In en, this message translates to:
+  /// **'Log Water Intake'**
+  String get logWaterIntake;
+
+  /// No description provided for @add.
+  ///
+  /// In en, this message translates to:
+  /// **'Add'**
+  String get add;
+
+  /// No description provided for @freemium.
+  ///
+  /// In en, this message translates to:
+  /// **'Freemium'**
+  String get freemium;
+
+  /// No description provided for @premium.
+  ///
+  /// In en, this message translates to:
+  /// **'Premium'**
+  String get premium;
+
+  /// No description provided for @chooseYourPlan.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose Your Plan'**
+  String get chooseYourPlan;
+
+  /// No description provided for @water.
+  ///
+  /// In en, this message translates to:
+  /// **'Water'**
+  String get water;
+
+  /// No description provided for @resetPasswordDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'A password reset link will be sent to your email'**
+  String get resetPasswordDescription;
+
+  /// No description provided for @deleteAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Account'**
+  String get deleteAccount;
+
+  /// No description provided for @deleteAccountDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Permanently delete your account and all data'**
+  String get deleteAccountDescription;
+
+  /// No description provided for @confirmDeleteAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to delete your account?'**
+  String get confirmDeleteAccount;
+
+  /// No description provided for @deleteAccountWarning.
+  ///
+  /// In en, this message translates to:
+  /// **'This action cannot be undone. All your data including meals, progress, and settings will be permanently deleted.'**
+  String get deleteAccountWarning;
+
+  /// No description provided for @typeDeleteToConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Type \'DELETE\' to confirm account deletion'**
+  String get typeDeleteToConfirm;
+
+  /// No description provided for @deleteAccountFinalConfirmation.
+  ///
+  /// In en, this message translates to:
+  /// **'DELETE'**
+  String get deleteAccountFinalConfirmation;
+
+  /// No description provided for @accountDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Account deleted successfully'**
+  String get accountDeleted;
+
+  /// No description provided for @errorDeletingAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Error deleting account'**
+  String get errorDeletingAccount;
+
+  /// No description provided for @totalNutrition.
+  ///
+  /// In en, this message translates to:
+  /// **'Total Nutrition'**
+  String get totalNutrition;
+
+  /// No description provided for @unlockUnlimitedScans.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlock unlimited scans, AI coaching, and\npersonalized meal plans'**
+  String get unlockUnlimitedScans;
+
+  /// No description provided for @unlimitedFoodScanning.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlimited food scanning'**
+  String get unlimitedFoodScanning;
+
+  /// No description provided for @yearPrice.
+  ///
+  /// In en, this message translates to:
+  /// **'year/\$49.99'**
+  String get yearPrice;
+
+  /// No description provided for @monthPrice.
+  ///
+  /// In en, this message translates to:
+  /// **'month/\$7.99'**
+  String get monthPrice;
+
+  /// No description provided for @save37.
+  ///
+  /// In en, this message translates to:
+  /// **'Save 37%'**
+  String get save37;
+
+  /// No description provided for @youArePremium.
+  ///
+  /// In en, this message translates to:
+  /// **'You are Premium'**
+  String get youArePremium;
+
+  /// No description provided for @yumiePremiumMonthly.
+  ///
+  /// In en, this message translates to:
+  /// **'YUMIE Premium Monthly'**
+  String get yumiePremiumMonthly;
+
+  /// No description provided for @yumiePremiumYearly.
+  ///
+  /// In en, this message translates to:
+  /// **'YUMIE Premium Yearly'**
+  String get yumiePremiumYearly;
+
+  /// No description provided for @restorePurchases.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore Purchases'**
+  String get restorePurchases;
+
+  /// No description provided for @bySubscribing.
+  ///
+  /// In en, this message translates to:
+  /// **'By subscribing, you agree to our Terms of Service and Privacy Policy. Subscriptions automatically renew unless cancelled'**
+  String get bySubscribing;
+
+  /// No description provided for @permissionsComplete.
+  ///
+  /// In en, this message translates to:
+  /// **'Permissions Complete!'**
+  String get permissionsComplete;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

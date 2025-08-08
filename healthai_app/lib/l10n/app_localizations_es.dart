@@ -24,7 +24,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get useMetricUnits => 'Usar unidades métricas';
 
   @override
-  String get unitsSubtitle => 'kg/cm o lb/ft';
+  String get unitsSubtitle => 'Usar kg/cm (activado) o lb/ft (desactivado)';
 
   @override
   String get language => 'Idioma';
@@ -33,7 +33,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get selectLanguage => 'Selecciona el idioma de la app';
 
   @override
-  String get habitNotifications => 'Notificaciones de hábitos';
+  String get habitNotifications => 'Notificaciones de Hábitos';
 
   @override
   String get mealLoggingPrompts => 'Recordatorios de registro de comidas';
@@ -138,7 +138,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get sharingAvailableAfterRelease => 'Compartir estará disponible después del lanzamiento.';
 
   @override
-  String get resetPassword => 'Restablecer contraseña';
+  String get resetPassword => 'Restablecer Contraseña';
 
   @override
   String get close => 'Cerrar';
@@ -336,7 +336,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get height => 'Altura';
 
   @override
-  String get targetWeight => 'Peso objetivo';
+  String get targetWeight => 'Peso Objetivo';
 
   @override
   String get calorieGoal => 'Meta calórica';
@@ -450,7 +450,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get recent => 'Recientes';
 
   @override
-  String get meal => 'Comida';
+  String get meal => 'COMIDA';
 
   @override
   String get fridge => 'Refrigerador';
@@ -504,23 +504,448 @@ class AppLocalizationsEs extends AppLocalizations {
   String get noResultsFoundFor => 'No se encontraron resultados para';
 
   @override
-  String get count => 'Count';
+  String get count => 'cantidad';
 
   @override
-  String get servings => 'Servings';
+  String get servings => 'porciones';
 
   @override
-  String get fluidOunces => 'Fluid Ounces';
+  String get fluidOunces => 'Onzas líquidas';
 
   @override
-  String get quantity => 'Quantity';
+  String get quantity => 'Cantidad';
 
   @override
-  String get confirm => 'Confirm';
+  String get confirm => 'Confirmar';
 
   @override
-  String get ingredient => 'Ingredient';
+  String get ingredient => 'INGREDIENTE';
 
   @override
-  String get drink => 'Drink';
+  String get drink => 'BEBIDA';
+
+  @override
+  String get kg => 'kilogramo';
+
+  @override
+  String get g => 'gramo';
+
+  @override
+  String get mg => 'miligramo';
+
+  @override
+  String get cm => 'centímetro';
+
+  @override
+  String get m => 'metro';
+
+  @override
+  String get kcal => 'caloría';
+
+  @override
+  String get cal => 'cal';
+
+  @override
+  String get lb => 'libra';
+
+  @override
+  String get oz => 'onza';
+
+  @override
+  String get ft => 'pie';
+
+  @override
+  String get inches => 'pulgada';
+
+  @override
+  String get cup => 'taza';
+
+  @override
+  String get tbsp => 'cucharada';
+
+  @override
+  String get tsp => 'cucharadita';
+
+  @override
+  String get ml => 'mililitro';
+
+  @override
+  String get l => 'litro';
+
+  @override
+  String get upgradeToPremiumTitle => 'Mejorar a Premium';
+
+  @override
+  String get premiumFeatures => 'Características Premium';
+
+  @override
+  String get unlimitedScans => 'Escaneos ilimitados';
+
+  @override
+  String get aiNutritionCoach => 'Entrenador nutricional IA';
+
+  @override
+  String get detailedAnalytics => 'Análisis detallados';
+
+  @override
+  String get personalizedMealPlans => 'Planes de comida personalizados';
+
+  @override
+  String get noAdvertisements => 'Sin anuncios';
+
+  @override
+  String get yearlyPremium => 'Premium Anual';
+
+  @override
+  String get monthlyPremium => 'Premium Mensual';
+
+  @override
+  String savePercent(Object percent) {
+    return 'Ahorra $percent%';
+  }
+
+  @override
+  String get perYear => '/año';
+
+  @override
+  String get perMonth => '/mes';
+
+  @override
+  String get popular => 'POPULAR';
+
+  @override
+  String get maybeLater => 'Tal vez más tarde';
+
+  @override
+  String get welcomeToYumie => '¡Bienvenido a Yumie!';
+
+  @override
+  String get unlockPremiumFeatures => 'Desbloquear Funciones Premium';
+
+  @override
+  String get getMostOutOfHealthJourney => '¡Obtén el máximo de tu viaje de salud con acceso ilimitado!';
+
+  @override
+  String get unlimitedScansAICoaching => '¡Desbloquea escaneos ilimitados, coaching de IA y planes de comida personalizados!';
+
+  @override
+  String get subscribe => 'Suscribirse';
+
+  @override
+  String get foodNameLabel => 'Nombre del Alimento';
+
+  @override
+  String get managePermissions => 'Gestionar Permisos';
+
+  @override
+  String get cameraNotificationsAndMore => 'Cámara, notificaciones y más';
+
+  @override
+  String get deleteMeal => 'Eliminar Comida';
+
+  @override
+  String get areYouSureDeleteMeal => '¿Estás seguro de que quieres eliminar esta comida?';
+
+  @override
+  String get unknown => 'Desconocido';
+
+  @override
+  String get servings1 => 'porción 1';
+
+  @override
+  String get edit => 'Editar';
+
+  @override
+  String get ignoreFood => 'Ignorar Comida';
+
+  @override
+  String get addComponent => 'Agregar Componente';
+
+  @override
+  String get components => 'Componentes';
+
+  @override
+  String get recentFoods => 'Alimentos Recientes';
+
+  @override
+  String get logWeightChange => 'Registrar Cambio de Peso';
+
+  @override
+  String get lost => 'Perdido';
+
+  @override
+  String get gained => 'Ganado';
+
+  @override
+  String get googleSignInHelp => 'Ayuda de Inicio de Sesión de Google';
+
+  @override
+  String get couldNotOpenTermsOfService => 'No se pudieron abrir los Términos de Servicio';
+
+  @override
+  String get couldNotOpenPrivacyPolicy => 'No se pudo abrir la Política de Privacidad';
+
+  @override
+  String get errorSavingProfile => 'Error al guardar el perfil';
+
+  @override
+  String get completeYourProfile => 'Completa tu Perfil';
+
+  @override
+  String get saveAndContinue => 'Guardar y Continuar';
+
+  @override
+  String get pleasSignIn => 'Por favor inicia sesión.';
+
+  @override
+  String get noFoodLogsYet => 'Aún no hay registros de comida.';
+
+  @override
+  String get healthAIFoodLog => 'HealthAI - Registro de Comida';
+
+  @override
+  String get addLog => 'Agregar Registro';
+
+  @override
+  String get unableToShareAtThisTime => 'No se puede compartir en este momento. Inténtalo de nuevo.';
+
+  @override
+  String get failedToUpdatePhoto => 'Error al actualizar la foto';
+
+  @override
+  String get changeProfileName => 'Cambiar Nombre de Perfil';
+
+  @override
+  String get failedToUpdateName => 'Error al actualizar el nombre';
+
+  @override
+  String get profileUpdatedSuccessfully => 'Perfil actualizado con éxito';
+
+  @override
+  String get errorUpdatingProfile => 'Error al actualizar el perfil';
+
+  @override
+  String get editGoals => 'Editar Objetivos';
+
+  @override
+  String get goalsUpdatedSuccessfully => 'Objetivos actualizados con éxito';
+
+  @override
+  String get errorUpdatingGoals => 'Error al actualizar los objetivos';
+
+  @override
+  String get couldNotOpenWebsite => 'No se pudo abrir el sitio web';
+
+  @override
+  String get errorOpeningWebsite => 'Error al abrir el sitio web';
+
+  @override
+  String get english => 'Inglés';
+
+  @override
+  String get arabic => 'Árabe';
+
+  @override
+  String get spanish => 'Español';
+
+  @override
+  String get reviewMealTitle => 'Revisar Comida';
+
+  @override
+  String get startingWeight => 'Peso Inicial';
+
+  @override
+  String get appPermissions => 'Permisos de la App';
+
+  @override
+  String get permissionStatus => 'Estado de Permisos';
+
+  @override
+  String get manageAppPermissions => 'Gestiona los permisos de la app para asegurar que todas las funciones trabajen correctamente';
+
+  @override
+  String get camera => 'Cámara';
+
+  @override
+  String get scanFoodItems => 'Escanear elementos de comida y tomar fotos de comidas';
+
+  @override
+  String get photoLibrary => 'Biblioteca de Fotos';
+
+  @override
+  String get saveScannedImages => 'Guardar imágenes escaneadas y seleccionar fotos';
+
+  @override
+  String get notifications => 'Notificaciones';
+
+  @override
+  String get sendMealReminders => 'Enviar recordatorios de comidas y alertas de salud';
+
+  @override
+  String get needHelp => '¿Necesitas Ayuda?';
+
+  @override
+  String get permanentlyDeniedHelp => 'Si los permisos están permanentemente denegados, puedes habilitarlos en la configuración de tu dispositivo';
+
+  @override
+  String get openDeviceSettings => 'Abrir Configuración del Dispositivo';
+
+  @override
+  String get goodMorning => 'Buenos días';
+
+  @override
+  String get goodAfternoon => 'Buenas tardes';
+
+  @override
+  String get goodEvening => 'Buenas tardes';
+
+  @override
+  String get goodNight => 'Buenas noches';
+
+  @override
+  String get ounces => 'onzas';
+
+  @override
+  String get january => 'Enero';
+
+  @override
+  String get february => 'Febrero';
+
+  @override
+  String get march => 'Marzo';
+
+  @override
+  String get april => 'Abril';
+
+  @override
+  String get may => 'Mayo';
+
+  @override
+  String get june => 'Junio';
+
+  @override
+  String get july => 'Julio';
+
+  @override
+  String get august => 'Agosto';
+
+  @override
+  String get september => 'Septiembre';
+
+  @override
+  String get october => 'Octubre';
+
+  @override
+  String get november => 'Noviembre';
+
+  @override
+  String get december => 'Diciembre';
+
+  @override
+  String get trackYourNutrition => 'Rastrea tu nutrición';
+
+  @override
+  String get messages => 'Mensajes';
+
+  @override
+  String get subscribeForDailyInsights => 'Suscríbete para Información Diaria';
+
+  @override
+  String get getPersonalizedHealthInsights => 'Obtén información de salud personalizada basada en tu perfil completo';
+
+  @override
+  String get upgradeDescription => 'Obtén escaneos ilimitados, búsquedas e información impulsada por IA';
+
+  @override
+  String get unlimitedFoodScans => 'Escaneos de Comida Ilimitados';
+
+  @override
+  String get unlimitedFoodSearches => 'Búsquedas de Comida Ilimitadas';
+
+  @override
+  String get unlimitedAICoachMessages => 'Mensajes de Entrenador IA Ilimitados';
+
+  @override
+  String get dailyHealthInsights => 'Información de Salud Diaria';
+
+  @override
+  String get logWaterIntake => 'Registrar Consumo de Agua';
+
+  @override
+  String get add => 'Agregar';
+
+  @override
+  String get freemium => 'Gratis';
+
+  @override
+  String get premium => 'Premium';
+
+  @override
+  String get chooseYourPlan => 'Elige Tu Plan';
+
+  @override
+  String get water => 'Agua';
+
+  @override
+  String get resetPasswordDescription => 'Se enviará un enlace de restablecimiento de contraseña a tu correo electrónico';
+
+  @override
+  String get deleteAccount => 'Eliminar Cuenta';
+
+  @override
+  String get deleteAccountDescription => 'Eliminar permanentemente tu cuenta y todos los datos';
+
+  @override
+  String get confirmDeleteAccount => '¿Estás seguro de que quieres eliminar tu cuenta?';
+
+  @override
+  String get deleteAccountWarning => 'Esta acción no se puede deshacer. Todos tus datos incluyendo comidas, progreso y configuraciones serán eliminados permanentemente.';
+
+  @override
+  String get typeDeleteToConfirm => 'Escribe \'DELETE\' para confirmar la eliminación de la cuenta';
+
+  @override
+  String get deleteAccountFinalConfirmation => 'DELETE';
+
+  @override
+  String get accountDeleted => 'Cuenta eliminada exitosamente';
+
+  @override
+  String get errorDeletingAccount => 'Error al eliminar la cuenta';
+
+  @override
+  String get totalNutrition => 'Nutrición Total';
+
+  @override
+  String get unlockUnlimitedScans => 'Desbloquea escaneo ilimitado, entrenamiento IA,\ny planes de comida personalizados';
+
+  @override
+  String get unlimitedFoodScanning => 'Escaneo de comida ilimitado';
+
+  @override
+  String get yearPrice => 'año/\$49.99';
+
+  @override
+  String get monthPrice => 'mes/\$7.99';
+
+  @override
+  String get save37 => 'Ahorra 37%';
+
+  @override
+  String get youArePremium => 'Eres Premium';
+
+  @override
+  String get yumiePremiumMonthly => 'YUMIE Premium Mensual';
+
+  @override
+  String get yumiePremiumYearly => 'YUMIE Premium Anual';
+
+  @override
+  String get restorePurchases => 'Restaurar Compras';
+
+  @override
+  String get bySubscribing => 'Al suscribirte, aceptas nuestros Términos de Servicio y Política de Privacidad. Las suscripciones se renuevan automáticamente a menos que se cancelen';
+
+  @override
+  String get permissionsComplete => '¡Permisos Completos!';
 }

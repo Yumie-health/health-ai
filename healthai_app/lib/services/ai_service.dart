@@ -15,11 +15,18 @@ class AIService {
   static const _suggestedMealsCacheKey = 'suggested_meals_cache';
   static const _suggestedMealsCacheTimeKey = 'suggested_meals_cache_time';
 
-  Future<String?> sendMessage(String message, {String model = 'gpt-4o-mini'}) async {
+  Future<String?> sendMessage(String message, {String model = 'gpt-4o-mini', String language = 'en'}) async {
     final stopwatch = Stopwatch()..start();
     
     try {
-      log.info('Sending AI message', {'model': model, 'message_length': message.length});
+      log.info('Sending AI message', {'model': model, 'message_length': message.length, 'language': language});
+      
+      String languageInstruction = '';
+      if (language == 'ar') {
+        languageInstruction = ' Respond in Modern Standard Arabic.';
+      } else if (language == 'es') {
+        languageInstruction = ' Respond in Spanish.';
+      }
       
       final url = 'https://openaiproxycallable-jlkcfxcyrq-uc.a.run.app';
       final response = await http.post(
@@ -28,7 +35,7 @@ class AIService {
         body: jsonEncode({
           'model': model,
           'messages': [
-            {'role': 'system', 'content': 'You are Yumie, a friendly nutrition and wellness coach. Respond in clear, friendly, plain English. Avoid Markdown formatting (like **bold** or lists) unless the user specifically asks for it.'},
+            {'role': 'system', 'content': 'You are Yumie, a friendly nutrition and wellness coach. Respond in clear, friendly, plain English. Avoid Markdown formatting (like **bold** or lists) unless the user specifically asks for it.$languageInstruction'},
             {'role': 'user', 'content': message},
           ],
           'max_tokens': 1024,
@@ -311,7 +318,7 @@ Please provide a detailed nutrition plan that includes:
 Provide specific food items with quantities for each meal.
 ''';
 
-      final response = await sendMessage(prompt);
+      final response = await sendMessage(prompt, language: language);
       
       if (response != null && response.isNotEmpty) {
         log.info('AI nutrition plan received', {
@@ -413,11 +420,18 @@ Personalized Nutrition Plan:
 
 
   /// Get nutritional information for a food item using AI
-  Future<Map<String, dynamic>?> getFoodNutrition(String foodName) async {
+  Future<Map<String, dynamic>?> getFoodNutrition(String foodName, {String language = 'en'}) async {
     final stopwatch = Stopwatch()..start();
     
     try {
-      log.info('Getting nutrition for food', {'food_name': foodName});
+      log.info('Getting nutrition for food', {'food_name': foodName, 'language': language});
+
+      String languageInstruction = '';
+      if (language == 'ar') {
+        languageInstruction = '\nRespond in Modern Standard Arabic.';
+      } else if (language == 'es') {
+        languageInstruction = '\nRespond in Spanish.';
+      }
 
       final prompt = '''
 Provide nutritional information for "$foodName" per 100g serving.
@@ -431,10 +445,10 @@ Return ONLY a JSON object with this exact structure:
   "fat": <number>
 }
 
-Use standard nutritional databases. Only return the JSON, no additional text or explanations.
+Use standard nutritional databases. Only return the JSON, no additional text or explanations.$languageInstruction
 ''';
 
-      final response = await sendMessage(prompt, model: 'gpt-4o-mini');
+      final response = await sendMessage(prompt, model: 'gpt-4o-mini', language: language);
       
       stopwatch.stop();
       log.logPerformance('Food nutrition lookup', stopwatch.elapsed);
@@ -460,11 +474,18 @@ Use standard nutritional databases. Only return the JSON, no additional text or 
   }
 
   /// Search for food items that match the query
-  Future<List<Map<String, dynamic>>> searchFoodItems(String query) async {
+  Future<List<Map<String, dynamic>>> searchFoodItems(String query, {String language = 'en'}) async {
     final stopwatch = Stopwatch()..start();
     
     try {
-      log.info('Searching for food items', {'query': query});
+      log.info('Searching for food items', {'query': query, 'language': language});
+
+      String languageInstruction = '';
+      if (language == 'ar') {
+        languageInstruction = '\nRespond in Modern Standard Arabic.';
+      } else if (language == 'es') {
+        languageInstruction = '\nRespond in Spanish.';
+      }
 
       final prompt = '''
 Search for food items that match "$query". Return a list of 5-10 relevant food items.
@@ -480,10 +501,10 @@ Return ONLY a JSON array with this exact structure:
   }
 ]
 
-Include common variations and similar foods. Only return the JSON array, no additional text.
+Include common variations and similar foods. Only return the JSON array, no additional text.$languageInstruction
 ''';
 
-      final response = await sendMessage(prompt, model: 'gpt-4o-mini');
+      final response = await sendMessage(prompt, model: 'gpt-4o-mini', language: language);
       
       stopwatch.stop();
       log.logPerformance('Food search', stopwatch.elapsed);
@@ -510,11 +531,18 @@ Include common variations and similar foods. Only return the JSON array, no addi
   }
 
   /// Fast food search with minimal prompt for speed
-  Future<List<Map<String, dynamic>>> searchFoodItemsFast(String query, {String? foodType}) async {
+  Future<List<Map<String, dynamic>>> searchFoodItemsFast(String query, {String? foodType, String language = 'en'}) async {
     final stopwatch = Stopwatch()..start();
     try {
       print('🤖 AI: Starting fast search for: $query (food type: $foodType)'); // Debug log
-      log.info('Fast searching for food items', {'query': query, 'food_type': foodType});
+      log.info('Fast searching for food items', {'query': query, 'food_type': foodType, 'language': language});
+
+      String languageInstruction = '';
+      if (language == 'ar') {
+        languageInstruction = '\nRespond in Modern Standard Arabic.';
+      } else if (language == 'es') {
+        languageInstruction = '\nRespond in Spanish.';
+      }
       
       String foodTypeInstruction = '';
       if (foodType != null) {
@@ -579,7 +607,7 @@ Example format (use realistic values for each specific food):
   {"name": "Similar Item 2", "calories": [realistic_value], "protein": [realistic_value], "carbs": [realistic_value], "fat": [realistic_value]},
   {"name": "Similar Item 3", "calories": [realistic_value], "protein": [realistic_value], "carbs": [realistic_value], "fat": [realistic_value]},
   {"name": "Similar Item 4", "calories": [realistic_value], "protein": [realistic_value], "carbs": [realistic_value], "fat": [realistic_value]}
-]
+]$languageInstruction
 ''';
       print('🤖 AI: Sending prompt to AI...'); // Debug log
       String? response = await sendMessage(prompt, model: 'gpt-4o-mini');
@@ -594,7 +622,7 @@ Example format (use realistic values for each specific food):
           print('🤖 AI: First response not valid JSON, retrying with stricter prompt...');
           String retryPrompt = '''
 List 5 foods similar to "$query".$foodTypeInstruction For each, give name, calories, protein, carbs, fat per 100g. Use REALISTIC and ACCURATE nutritional values for each specific food item. Respond ONLY with a valid JSON array, no explanation, no text, no code block, just the array. DO NOT SAY ANYTHING ELSE. DO NOT USE MARKDOWN. JUST THE ARRAY.''';
-          response = await sendMessage(retryPrompt, model: 'gpt-4o-mini');
+          response = await sendMessage(retryPrompt, model: 'gpt-4o-mini', language: language);
           print('🤖 AI: Retry response: '+(response?.substring(0, 100) ?? "null")+'...'); // Debug log
           parsedResults = response != null ? _tryParseFoodJson(response) : null;
         }

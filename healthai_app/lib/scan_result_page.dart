@@ -101,6 +101,23 @@ class ScanResultPage extends StatefulWidget {
 }
 
 class _ScanResultPageState extends State<ScanResultPage> {
+  
+  String _getLocalizedUnit(String unit) {
+    final localizations = AppLocalizations.of(context)!;
+    switch (unit.toLowerCase()) {
+      case 'servings':
+        return localizations.servings;
+      case 'ounces':
+      case 'oz':
+        return localizations.ounces;
+      case 'count':
+        return localizations.count;
+      case 'fl oz':
+        return 'fl ${localizations.ounces}';
+      default:
+        return unit;
+    }
+  }
   final TextEditingController _foodNameController = TextEditingController();
   final TextEditingController _caloriesController = TextEditingController();
   final TextEditingController _proteinController = TextEditingController();
@@ -645,7 +662,7 @@ class _ScanResultPageState extends State<ScanResultPage> {
                     ],
                   ),
                   const SizedBox(height: 24),
-                  const Text('Food Name', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+                  Text(AppLocalizations.of(context)!.foodNameLabel, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
                   const SizedBox(height: 8),
                   TextField(
                     controller: _foodNameController,
@@ -665,7 +682,7 @@ class _ScanResultPageState extends State<ScanResultPage> {
                     children: [
                       Expanded(
                         child: Text(
-                          'Quantity',
+                          AppLocalizations.of(context)!.quantity,
                           style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
                         ),
                       ),
@@ -682,7 +699,7 @@ class _ScanResultPageState extends State<ScanResultPage> {
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               Text(
-                                '${_quantity ?? 1} ${_quantityUnit ?? 'servings'}',
+                                '${_quantity ?? 1} ${_getLocalizedUnit(_quantityUnit ?? 'servings')}',
                                 style: TextStyle(
                                   color: kPrimaryGreen,
                                   fontWeight: FontWeight.w600,

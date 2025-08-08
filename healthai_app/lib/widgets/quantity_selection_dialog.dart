@@ -166,6 +166,19 @@ class _QuantitySelectionDialogState extends State<QuantitySelectionDialog>
     }
   }
 
+  String _getFoodTypeLabel() {
+    switch (widget.foodType) {
+      case 'ingredient':
+        return AppLocalizations.of(context)!.ingredient;
+      case 'meal':
+        return AppLocalizations.of(context)!.meal;
+      case 'drink':
+        return AppLocalizations.of(context)!.drink;
+      default:
+        return widget.foodType.toUpperCase();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Dialog(
@@ -206,8 +219,8 @@ class _QuantitySelectionDialogState extends State<QuantitySelectionDialog>
                 const SizedBox(height: 8),
                 Text(
                   widget.foodType == 'drink' 
-                    ? '${widget.foodType.toUpperCase()} • ${widget.baseCalories} cal (per 8 fl oz)'
-                    : '${widget.foodType.toUpperCase()} • ${widget.baseCalories} cal',
+                    ? '${_getFoodTypeLabel()} • ${widget.baseCalories} cal (per 8 fl oz)'
+                    : '${_getFoodTypeLabel()} • ${widget.baseCalories} cal',
                   style: TextStyle(
                     color: Colors.grey[600],
                     fontSize: 14,
@@ -288,7 +301,7 @@ class _QuantitySelectionDialogState extends State<QuantitySelectionDialog>
                                   ),
                                   const SizedBox(width: 8),
                                   Text(
-                                    'Total Nutrition',
+                                    AppLocalizations.of(context)!.totalNutrition,
                                     style: TextStyle(
                                       fontSize: 16,
                                       fontWeight: FontWeight.w600,

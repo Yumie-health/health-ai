@@ -292,7 +292,7 @@ class _ScanPageState extends State<ScanPage> {
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            _buildModeButton('Scan', !_isFridgeMode, () {
+                            _buildModeButton(AppLocalizations.of(context)!.scan, !_isFridgeMode, () {
                               setState(() { _isFridgeMode = false; });
                             }),
                             const SizedBox(width: 12),

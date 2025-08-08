@@ -30,7 +30,7 @@ import 'package:lottie/lottie.dart';
 import 'generated_meal_fridge_page.dart';
 import 'package:flutter/services.dart';
 import 'dart:convert';
-import 'services/pexels_service.dart';
+
 // import 'package:firebase_analytics/firebase_analytics.dart';  // Removed due to Kotlin conflicts
 // import 'package:firebase_analytics/observer.dart';  // Removed due to Kotlin conflicts
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -43,6 +43,8 @@ import 'utils/constants.dart';
 import 'providers/preferences_provider.dart';
 import 'utils/onboarding_helper.dart';
 import 'services/permission_service.dart';
+import 'subscription_popup_page.dart';
+
 import 'permission_request_screen.dart';
 import 'permission_status_screen.dart';
 import 'services/logging_service.dart';
@@ -54,6 +56,32 @@ import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'config/payment_config.dart';
 import 'services/subscription_service.dart';
 import 'subscription_page.dart';
+
+// Global helper function to translate meal types
+String getMealTypeLocalized(BuildContext context, String mealType) {
+  final localizations = AppLocalizations.of(context)!;
+  switch (mealType.toLowerCase()) {
+    case 'breakfast':
+      return localizations.breakfast;
+    case 'lunch':
+      return localizations.lunch;
+    case 'dinner':
+      return localizations.dinner;
+    case 'snack':
+      return localizations.snack;
+    default:
+      return mealType.capitalize();
+  }
+}
+
+// Global helper function to get current meal period
+String getCurrentMealPeriod() {
+  final hour = DateTime.now().hour;
+  if (hour >= 5 && hour < 11) return 'breakfast';
+  if (hour >= 11 && hour < 16) return 'lunch';
+  if (hour >= 16 && hour < 21) return 'dinner';
+  return 'snack';
+}
 
 // Custom TextField with floating Done button for iOS
 class _NumericTextField extends StatefulWidget {
@@ -642,7 +670,27 @@ class MyApp extends StatelessWidget {
                 return OnboardingFlowPage();
               }
 
+              // Check if we should show subscription popup for returning users (occasional)
+              return FutureBuilder<bool>(
+                future: SubscriptionPopupPage.shouldShowPopup(isPostOnboarding: false),
+                builder: (context, popupSnapshot) {
+                  if (popupSnapshot.connectionState == ConnectionState.waiting) {
               return MainNavScreen();
+                  }
+                  
+                  if (popupSnapshot.data == true) {
+                    return SubscriptionPopupPage(
+                      onDismiss: () {
+                        Navigator.of(context).pushReplacement(
+                          MaterialPageRoute(builder: (_) => MainNavScreen()),
+                        );
+                      },
+                    );
+                  }
+                  
+                  return MainNavScreen();
+                },
+              );
             },
           );
         }
@@ -665,10 +713,9 @@ class _AuthScreenState extends State<AuthScreen> {
   final TextEditingController passwordController = TextEditingController();
   String message = '';
   bool isLoading = false;
-  bool showSignUp = false;
+  bool showSignUp = true; // Default to sign up page
   final TextEditingController nameController = TextEditingController();
   bool acceptTerms = false;
-  bool isSamsung = false;
   bool isIOS = Platform.isIOS;
   bool isAndroid = Platform.isAndroid;
   // final FirebaseAnalytics analytics = FirebaseAnalytics.instance;  // Removed due to Kotlin conflicts
@@ -676,17 +723,228 @@ class _AuthScreenState extends State<AuthScreen> {
   @override
   void initState() {
     super.initState();
-    _checkSamsung();
   }
 
-  Future<void> _checkSamsung() async {
-    if (Platform.isAndroid) {
-      final deviceInfo = DeviceInfoPlugin();
-      final androidInfo = await deviceInfo.androidInfo;
-      setState(() {
-        isSamsung = androidInfo.manufacturer?.toLowerCase().contains('samsung') ?? false;
-      });
-    }
+  void _showAccountNotFoundDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: true,
+      builder: (BuildContext context) {
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(20),
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [Colors.white, Colors.grey[50]!],
+              ),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 80,
+                  height: 80,
+                  decoration: BoxDecoration(
+                    color: kPrimaryGreen.withOpacity(0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    Icons.person_search_rounded,
+                    size: 40,
+                    color: kPrimaryGreen,
+                  ),
+                ),
+                const SizedBox(height: 20),
+                Text(
+                  'Account Not Found',
+                  style: TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.grey[800],
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  'We couldn\'t find an account with this email address. Would you like to create a new account instead?',
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: Colors.grey[600],
+                    height: 1.4,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 24),
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextButton(
+                        onPressed: () => Navigator.of(context).pop(),
+                        style: TextButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            side: BorderSide(color: Colors.grey[300]!),
+                          ),
+                        ),
+                        child: Text(
+                          'Cancel',
+                          style: TextStyle(
+                            color: Colors.grey[600],
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: () {
+                          Navigator.of(context).pop();
+                          setState(() => showSignUp = true);
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: kPrimaryGreen,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          elevation: 2,
+                        ),
+                        child: const Text(
+                          'Sign Up',
+                          style: TextStyle(
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  void _showAccountExistsDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: true,
+      builder: (BuildContext context) {
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(20),
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [Colors.white, Colors.grey[50]!],
+              ),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 80,
+                  height: 80,
+                  decoration: BoxDecoration(
+                    color: Colors.orange.withOpacity(0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    Icons.person_off_rounded,
+                    size: 40,
+                    color: Colors.orange[700],
+                  ),
+                ),
+                const SizedBox(height: 20),
+                Text(
+                  'Account Already Exists',
+                  style: TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.grey[800],
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  'An account with this email address already exists. Would you like to sign in instead?',
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: Colors.grey[600],
+                    height: 1.4,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 24),
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextButton(
+                        onPressed: () => Navigator.of(context).pop(),
+                        style: TextButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            side: BorderSide(color: Colors.grey[300]!),
+                          ),
+                        ),
+                        child: Text(
+                          'Cancel',
+                          style: TextStyle(
+                            color: Colors.grey[600],
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: () {
+                          Navigator.of(context).pop();
+                          setState(() => showSignUp = false);
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: kPrimaryGreen,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          elevation: 2,
+                        ),
+                        child: const Text(
+                          'Sign In',
+                          style: TextStyle(
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
   }
 
   Future<void> _handleGoogleSignIn() async {
@@ -699,17 +957,40 @@ class _AuthScreenState extends State<AuthScreen> {
         setState(() => isLoading = false);
         return; // User cancelled
       }
+      
+      // For sign-up mode, try authentication and check if it's an existing account
+      if (showSignUp) {
+        print('🔍 Google Sign-Up Mode: Checking for existing account for ${googleUser.email}');
+      } else {
+        print('🔑 Google Sign-In Mode: Proceeding with authentication for ${googleUser.email}');
+      }
+      
+      // Proceed with Google authentication
       final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
       final credential = GoogleAuthProvider.credential(
         accessToken: googleAuth.accessToken,
         idToken: googleAuth.idToken,
       );
       final userCredential = await FirebaseAuth.instance.signInWithCredential(credential);
+      
+      // Check if this was a new user creation or existing user sign-in
+      final isNewUser = userCredential.additionalUserInfo?.isNewUser ?? false;
+      print('📊 Google Auth Result: isNewUser=$isNewUser, signUpMode=$showSignUp');
+      
       // await analytics.logLogin(loginMethod: 'google');  // Removed due to Kotlin conflicts
       final userService = UserService();
       final user = FirebaseAuth.instance.currentUser;
       if (user != null) {
         final doc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
+        
+        // If we're in sign-up mode but the user already exists, show the popup
+        if (showSignUp && doc.exists) {
+          setState(() => isLoading = false);
+          await FirebaseAuth.instance.signOut(); // Sign out since we don't want to proceed
+          _showAccountExistsDialog();
+          return;
+        }
+        
         if (!doc.exists) {
           await userService.createInitialUserProfile(user.email ?? '', user.displayName ?? '');
           setState(() => isLoading = false);
@@ -737,7 +1018,7 @@ class _AuthScreenState extends State<AuthScreen> {
         
         String errorMessage = 'Google sign-in failed: $e';
         
-        // Provide more helpful error messages for common issues
+        // Handle specific Google authentication errors
         if (e.toString().contains('SecurityException') || e.toString().contains('Unknown calling package')) {
           errorMessage = 'Google Sign-In configuration error. This is typically caused by:\n'
               '• Debug signing certificate not added to Firebase Console\n'
@@ -919,35 +1200,7 @@ class _AuthScreenState extends State<AuthScreen> {
     return digest.toString();
   }
 
-  Future<void> _handleSamsungSignIn() async {
-    setState(() => isLoading = true);
-    try {
-      log.info('User attempting Samsung sign-in');
-      
-      // For Samsung Sign In, we'll use a custom implementation
-      // This would typically involve Samsung's SDK, but for now we'll show a message
-      // In a real implementation, you would integrate Samsung's authentication SDK
-      
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Samsung Sign In requires Samsung SDK integration. Please use Google Sign In for now.'),
-          duration: Duration(seconds: 3),
-        ),
-      );
-      
-      // For now, we'll redirect to Google Sign In as a fallback
-      await _handleGoogleSignIn();
-      
-    } catch (e) {
-      if (mounted) {
-        setState(() => isLoading = false);
-        // await analytics.logEvent(name: 'login_failed', parameters: {'method': 'samsung', 'error': e.toString()});  // Removed due to Kotlin conflicts
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Samsung sign-in failed: $e')),
-        );
-      }
-    }
-  }
+
 
   Future<void> signIn() async {
     setState(() {
@@ -980,6 +1233,15 @@ class _AuthScreenState extends State<AuthScreen> {
     try {
       log.info('User attempting sign in', {'email': email});
       
+      // First check if account exists
+      final signInMethods = await FirebaseAuth.instance.fetchSignInMethodsForEmail(email);
+      if (signInMethods.isEmpty) {
+        // No account exists - show the account not found dialog
+        setState(() => isLoading = false);
+        _showAccountNotFoundDialog();
+        return;
+      }
+      
       await FirebaseAuth.instance.signInWithEmailAndPassword(
         email: email,
         password: password,
@@ -1011,9 +1273,9 @@ class _AuthScreenState extends State<AuthScreen> {
       }
       setState(() => message = 'Sign in successful!');
     } catch (e) {
+      log.error('Sign in failed', e);
       final errorMessage = errorHandler.handleAuthError(e);
       setState(() => message = errorMessage);
-      log.error('Sign in failed', e);
       // await analytics.logEvent(name: 'login_failed', parameters: {'method': 'email', 'error': e.toString()});  // Removed due to Kotlin conflicts
     } finally {
       setState(() => isLoading = false);
@@ -1062,6 +1324,15 @@ class _AuthScreenState extends State<AuthScreen> {
 
     try {
       log.info('User attempting sign up', {'email': email, 'name': name});
+      
+      // Check if account already exists
+      final signInMethods = await FirebaseAuth.instance.fetchSignInMethodsForEmail(email);
+      if (signInMethods.isNotEmpty) {
+        // Account already exists - show the account exists dialog
+        setState(() => isLoading = false);
+        _showAccountExistsDialog();
+        return;
+      }
       
       await FirebaseAuth.instance.createUserWithEmailAndPassword(
         email: email,
@@ -1117,10 +1388,17 @@ class _AuthScreenState extends State<AuthScreen> {
         backgroundColor: const Color(0xFFF8F9FA),
         body: Center(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.all(24.0),
+            padding: EdgeInsets.all(MediaQuery.of(context).size.width > 600 ? 24.0 : 16.0),
             child: Container(
-              width: 400,
-              padding: const EdgeInsets.symmetric(vertical: 36, horizontal: 28),
+              width: MediaQuery.of(context).size.width > 600 ? 400 : double.infinity,
+              constraints: BoxConstraints(
+                maxWidth: 400,
+                minWidth: 280,
+              ),
+              padding: EdgeInsets.symmetric(
+                vertical: MediaQuery.of(context).size.height > 700 ? 36 : 24, 
+                horizontal: MediaQuery.of(context).size.width > 400 ? 28 : 20,
+              ),
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(20),
@@ -1399,14 +1677,6 @@ class _AuthScreenState extends State<AuthScreen> {
                       ),
                       SizedBox(height: 12),
                       _AppleSignInButton(onTap: _handleAppleSignIn),
-                    ] else if (isSamsung) ...[
-                      _GoogleSignInButton(
-                        onTap: _handleGoogleSignIn, 
-                        isSignUp: showSignUp,
-                        isDisabled: showSignUp && !acceptTerms,
-                      ),
-                      SizedBox(height: 12),
-                      _SamsungSignInButton(onTap: _handleSamsungSignIn),
                     ] else if (isAndroid) ...[
                       _GoogleSignInButton(
                         onTap: _handleGoogleSignIn, 
@@ -1544,24 +1814,7 @@ class _AppleSignInButton extends StatelessWidget {
     );
   }
 }
-class _SamsungSignInButton extends StatelessWidget {
-  final VoidCallback onTap;
-  const _SamsungSignInButton({required this.onTap});
-  @override
-  Widget build(BuildContext context) {
-    return ElevatedButton.icon(
-      style: ElevatedButton.styleFrom(
-        backgroundColor: Color(0xFF1428A0),
-        foregroundColor: Colors.white,
-        minimumSize: Size(double.infinity, 48),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      ),
-      icon: Icon(Icons.account_circle, size: 26),
-      label: Text('Sign in with Samsung', style: TextStyle(fontWeight: FontWeight.w600)),
-      onPressed: onTap,
-    );
-  }
-}
+
 
 class StartupProfileScreen extends StatefulWidget {
   final User user;
@@ -1619,7 +1872,7 @@ class _StartupProfileScreenState extends State<StartupProfileScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Complete Your Profile')),
+      appBar: AppBar(title: Text(AppLocalizations.of(context)!.completeYourProfile)),
       body: Padding(
         padding: const EdgeInsets.all(24.0),
         child: Form(
@@ -1957,6 +2210,37 @@ class _MainNavScreenState extends State<MainNavScreen> with TickerProviderStateM
     } else {
       _footerController.value = 1.0;
     }
+    
+    // Check for post-onboarding popup
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      final prefs = await SharedPreferences.getInstance();
+      final justCompletedOnboarding = prefs.getBool('just_completed_onboarding') ?? false;
+      
+      if (justCompletedOnboarding) {
+        print('🎯 POST-ONBOARDING: Detected just completed onboarding...');
+        // Clear the flag
+        await prefs.setBool('just_completed_onboarding', false);
+        
+        final shouldShow = await SubscriptionPopupPage.shouldShowPopup(isPostOnboarding: true);
+        print('🎯 POST-ONBOARDING: shouldShow=$shouldShow, mounted=$mounted');
+        if (shouldShow && mounted) {
+          await Future.delayed(Duration(milliseconds: 1000)); // Longer delay for stable navigation
+          print('🎯 POST-ONBOARDING: About to show popup after delay...');
+          if (mounted) {
+            print('🎯 POST-ONBOARDING: Pushing subscription popup page...');
+            Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => SubscriptionPopupPage(
+                isOnboardingComplete: true,
+              )),
+            );
+          } else {
+            print('❌ POST-ONBOARDING: Widget not mounted, skipping popup');
+          }
+        } else {
+          print('❌ POST-ONBOARDING: shouldShow=false, not showing popup');
+        }
+      }
+    });
     _screens = [
       DashboardScreen(
         onViewAllMeals: () => _onItemTapped(1),
@@ -2184,14 +2468,14 @@ class _MainNavScreenState extends State<MainNavScreen> with TickerProviderStateM
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
                                 _FabActionButton(
-                                  label: 'Weight',
+                                  label: AppLocalizations.of(context)!.weight,
                                   icon: Icons.monitor_weight,
                                   onTap: _navigateToWeightLog,
                                   isLarge: false,
                                 ),
                                 const SizedBox(width: 40),
                                 _FabActionButton(
-                                  label: 'Water',
+                                  label: AppLocalizations.of(context)!.water,
                                   icon: Icons.water_drop,
                                   onTap: _navigateToWaterLog,
                                   isLarge: false,
@@ -2347,6 +2631,19 @@ class DashboardScreen extends StatefulWidget {
 class _DashboardScreenState extends State<DashboardScreen> with TickerProviderStateMixin {
   final MealService _mealService = MealService();
   final UserService _userService = UserService();
+  
+  // Helper function to get food type icon
+  IconData _getFoodTypeIcon(String? foodType) {
+    switch (foodType?.toLowerCase()) {
+      case 'drink':
+        return Icons.local_drink;
+      case 'ingredient':
+        return Icons.eco;
+      case 'meal':
+      default:
+        return Icons.restaurant;
+    }
+  }
 
   late AnimationController _headerController;
   late AnimationController _summaryController;
@@ -2441,7 +2738,7 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(_currentGreeting, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 26, color: Colors.black)),
+                            Text(_getCurrentGreeting(context), style: TextStyle(fontWeight: FontWeight.bold, fontSize: 26, color: Colors.black)),
                             const SizedBox(height: 4),
                             Text(AppLocalizations.of(context)!.trackNutritionToday, style: TextStyle(color: Colors.grey[500], fontSize: 16)),
                           ],
@@ -2994,6 +3291,20 @@ class _MealCardModern extends StatefulWidget {
 
 class _MealCardModernState extends State<_MealCardModern> {
   bool _expanded = false;
+  
+  // Helper function to get food type icon
+  IconData _getFoodTypeIcon(String? foodType) {
+    switch (foodType?.toLowerCase()) {
+      case 'drink':
+        return Icons.local_drink;
+      case 'ingredient':
+        return Icons.eco;
+      case 'meal':
+      default:
+        return Icons.restaurant;
+    }
+  }
+  
   @override
   Widget build(BuildContext context) {
     final meal = widget.meal;
@@ -3017,7 +3328,7 @@ class _MealCardModernState extends State<_MealCardModern> {
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Meal image - prioritize user's photo over Pexels
+              // Meal image - prioritize user's photo, otherwise use food type icon
               ClipRRect(
                 borderRadius: BorderRadius.circular(16),
                 child: meal.imageUrl != null
@@ -3027,62 +3338,34 @@ class _MealCardModernState extends State<_MealCardModern> {
                         height: 70,
                         fit: BoxFit.cover,
                         errorBuilder: (context, error, stackTrace) {
-                          // Fallback to Pexels if user's image fails to load
-                          return FutureBuilder<String?>(
-                            future: PexelsService.staticFetchMealImage(meal.name, locale: Locale(AppLocalizations.of(context)!.localeName)),
-                            builder: (context, snapshot) {
-                              if (snapshot.connectionState == ConnectionState.waiting) {
+                          // Fallback to food type icon if user's image fails to load
                                 return Container(
                                   width: 70,
                                   height: 70,
-                                  color: Colors.grey[200],
-                                  child: Center(child: CircularProgressIndicator(strokeWidth: 2, color: kPrimaryGreen)),
-                                );
-                              }
-                              final imageUrl = snapshot.data;
-                              return imageUrl != null
-                                  ? Image.network(
-                                      imageUrl,
-                                      width: 70,
-                                      height: 70,
-                                      fit: BoxFit.cover,
-                                    )
-                                  : Container(
-                                      width: 70,
-                                      height: 70,
-                                      color: Colors.grey[200],
-                                      child: Icon(Icons.fastfood, color: Colors.grey[400]),
-                                    );
-                            },
+                            decoration: BoxDecoration(
+                              color: kPrimaryGreen.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            child: Icon(
+                              _getFoodTypeIcon(meal.foodType),
+                              size: 35,
+                              color: kPrimaryGreen,
+                            ),
                           );
                         },
-                      )
-                    : FutureBuilder<String?>(
-                        future: PexelsService.staticFetchMealImage(meal.name, locale: Locale(AppLocalizations.of(context)!.localeName)),
-                        builder: (context, snapshot) {
-                          if (snapshot.connectionState == ConnectionState.waiting) {
-                            return Container(
-                              width: 70,
-                              height: 70,
-                              color: Colors.grey[200],
-                              child: Center(child: CircularProgressIndicator(strokeWidth: 2, color: kPrimaryGreen)),
-                            );
-                          }
-                          final imageUrl = snapshot.data;
-                          return imageUrl != null
-                              ? Image.network(
-                                  imageUrl,
-                                  width: 70,
-                                  height: 70,
-                                  fit: BoxFit.cover,
                                 )
                               : Container(
                                   width: 70,
                                   height: 70,
-                                  color: Colors.grey[200],
-                                  child: Icon(Icons.fastfood, color: Colors.grey[400]),
-                                );
-                        },
+                        decoration: BoxDecoration(
+                          color: kPrimaryGreen.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: Icon(
+                          _getFoodTypeIcon(meal.foodType),
+                          size: 35,
+                          color: kPrimaryGreen,
+                        ),
                       ),
               ),
               const SizedBox(width: 14),
@@ -3092,7 +3375,7 @@ class _MealCardModernState extends State<_MealCardModern> {
                   children: [
                     Row(
                       children: [
-                        Text(meal.mealType.capitalize(), style: TextStyle(color: kPrimaryGreen, fontWeight: FontWeight.w600)),
+                        Text(getMealTypeLocalized(context, meal.mealType), style: TextStyle(color: kPrimaryGreen, fontWeight: FontWeight.w600)),
                         const SizedBox(width: 8),
                         Text(formatTime(meal.timestamp), style: TextStyle(color: Colors.grey[500], fontSize: 13)),
                         if (meal.quantity != null && meal.quantityUnit != null) ...[
@@ -3150,23 +3433,23 @@ class _MealCardModernState extends State<_MealCardModern> {
                       IconButton(
                         icon: Icon(Icons.delete, color: Colors.redAccent, size: 22),
                         tooltip: 'Delete meal',
-                        padding: EdgeInsets.zero,
-                        constraints: BoxConstraints(),
+                        padding: EdgeInsets.all(8),
+                        constraints: BoxConstraints(minWidth: 48, minHeight: 48),
                         onPressed: () async {
                           final confirm = await showDialog<bool>(
                             context: context,
                             builder: (context) => AlertDialog(
-                              title: Text('Delete Meal'),
-                              content: Text('Are you sure you want to delete this meal?'),
+                              title: Text(AppLocalizations.of(context)!.deleteMeal),
+                              content: Text(AppLocalizations.of(context)!.areYouSureDeleteMeal),
                               actions: [
                                 TextButton(
                                   onPressed: () => Navigator.pop(context, false),
-                                  child: Text('Cancel'),
+                                  child: Text(AppLocalizations.of(context)!.cancel),
                                 ),
                                 TextButton(
                                   onPressed: () => Navigator.pop(context, true),
                                   style: TextButton.styleFrom(foregroundColor: Colors.red),
-                                  child: Text('Delete'),
+                                  child: Text(AppLocalizations.of(context)!.delete),
                                 ),
                               ],
                             ),
@@ -3179,8 +3462,8 @@ class _MealCardModernState extends State<_MealCardModern> {
                       IconButton(
                         icon: Icon(_expanded ? Icons.expand_less : Icons.expand_more, color: kPrimaryGreen, size: 22),
                         tooltip: _expanded ? 'Hide ingredients' : 'Show ingredients',
-                        padding: EdgeInsets.zero,
-                        constraints: BoxConstraints(),
+                        padding: EdgeInsets.all(8),
+                        constraints: BoxConstraints(minWidth: 48, minHeight: 48),
                         onPressed: () => setState(() => _expanded = !_expanded),
                       ),
                     ],
@@ -3342,13 +3625,13 @@ Track your calories, scan food with AI, and get personalized nutrition insights 
       context: parentContext,
       builder: (dialogContext) => StatefulBuilder(
         builder: (context, setState) => AlertDialog(
-          title: const Text('Change Profile Name'),
+          title: Text(AppLocalizations.of(context)!.changeProfileName),
           content: TextField(
             controller: controller,
             decoration: InputDecoration(hintText: 'Enter new name', errorText: error),
           ),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(dialogContext), child: const Text('Cancel')),
+            TextButton(onPressed: () => Navigator.pop(dialogContext), child: Text(AppLocalizations.of(context)!.cancel)),
             ElevatedButton(
               onPressed: () async {
                 final newName = controller.text.trim();
@@ -3471,7 +3754,7 @@ Track your calories, scan food with AI, and get personalized nutrition insights 
                         side: BorderSide(color: kPrimaryGreen, width: 2),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                       ),
-                      child: const Text('Cancel'),
+                      child: Text(AppLocalizations.of(context)!.cancel),
                     ),
                     const SizedBox(width: 12),
                     ElevatedButton(
@@ -3536,7 +3819,7 @@ Track your calories, scan food with AI, and get personalized nutrition insights 
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Edit Goals'),
+        title: Text(AppLocalizations.of(context)!.editGoals),
         content: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -3563,7 +3846,7 @@ Track your calories, scan food with AI, and get personalized nutrition insights 
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+            child: Text(AppLocalizations.of(context)!.cancel),
           ),
           ElevatedButton(
             onPressed: () async {
@@ -3779,7 +4062,7 @@ Track your calories, scan food with AI, and get personalized nutrition insights 
                                             borderRadius: BorderRadius.circular(12),
                                           ),
                                           child: Text(
-                                            isPremium ? 'Premium' : 'Freemium', 
+                                            isPremium ? AppLocalizations.of(context)!.premium : AppLocalizations.of(context)!.freemium, 
                                             style: TextStyle(
                                               color: isPremium ? kPrimaryGreen : Colors.grey[600], 
                                               fontWeight: FontWeight.w600, 
@@ -3844,7 +4127,7 @@ Track your calories, scan food with AI, and get personalized nutrition insights 
                                           children: [
                                             Icon(Icons.trending_up, color: kPrimaryGreen, size: 26),
                                             SizedBox(height: 6),
-                                            Text('Starting Weight', style: TextStyle(color: kPrimaryGreen, fontWeight: FontWeight.w600, fontSize: 15), textAlign: TextAlign.center),
+                                            Text(AppLocalizations.of(context)!.startingWeight, style: TextStyle(color: kPrimaryGreen, fontWeight: FontWeight.w600, fontSize: 15), textAlign: TextAlign.center),
                                             SizedBox(height: 2),
                                             Text('${useMetric ? profile.startingWeight.toStringAsFixed(1) : (profile.startingWeight * 2.20462).toStringAsFixed(1)} ${useMetric ? 'kg' : 'lb'}', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Colors.black)),
                                           ],
@@ -3925,7 +4208,7 @@ Track your calories, scan food with AI, and get personalized nutrition insights 
                                           children: [
                                             Icon(Icons.flag, color: kPrimaryGreen, size: 26),
                                             SizedBox(height: 6),
-                                            Text('Target Weight', style: TextStyle(color: kPrimaryGreen, fontWeight: FontWeight.w600, fontSize: 15), textAlign: TextAlign.center),
+                                            Text(AppLocalizations.of(context)!.targetWeight, style: TextStyle(color: kPrimaryGreen, fontWeight: FontWeight.w600, fontSize: 15), textAlign: TextAlign.center),
                                             SizedBox(height: 2),
                                             Text('${useMetric ? profile.targetWeight.toStringAsFixed(1) : (profile.targetWeight * 2.20462).toStringAsFixed(1)} ${useMetric ? 'kg' : 'lb'}', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Colors.black)),
                                           ],
@@ -3992,7 +4275,7 @@ Track your calories, scan food with AI, and get personalized nutrition insights 
                                 children: [
                                   _ProfileMenuTile(
                                     icon: isPremium ? Icons.workspace_premium : Icons.workspace_premium_outlined,
-                                    label: isPremium ? 'You are Premium' : 'Upgrade to Premium',
+                                    label: isPremium ? AppLocalizations.of(context)!.youArePremium : AppLocalizations.of(context)!.upgradeToPremium,
                                     iconColor: isPremium ? kPrimaryGreen : Colors.grey[600],
                                     onTap: () {
                                       Navigator.of(context).push(MaterialPageRoute(builder: (context) => SubscriptionPage()));
@@ -4053,9 +4336,9 @@ Track your calories, scan food with AI, and get personalized nutrition insights 
                                           children: [
                                             Icon(Icons.lock_reset, size: 48, color: kPrimaryGreen),
                                             SizedBox(height: 16),
-                                            Text('Reset Password', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+                                            Text(AppLocalizations.of(context)!.resetPassword, style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
                                             SizedBox(height: 8),
-                                            Text('A password reset link will be sent to your email:',
+                                            Text(AppLocalizations.of(context)!.resetPasswordDescription,
                                               style: TextStyle(fontSize: 16, color: Colors.grey[600]),
                                               textAlign: TextAlign.center,
                                             ),
@@ -4142,6 +4425,13 @@ Track your calories, scan food with AI, and get personalized nutrition insights 
                                 },
                               );
                             },
+                          ),
+                          Divider(height: 1, color: Colors.grey[200]),
+                          _ProfileMenuTile(
+                            icon: Icons.delete_forever,
+                            label: AppLocalizations.of(context)!.deleteAccount,
+                            iconColor: Colors.red[700],
+                            onTap: () => _showDeleteAccountDialog(context),
                           ),
                           Divider(height: 1, color: Colors.grey[200]),
                           _ProfileMenuTile(
@@ -4348,7 +4638,13 @@ Track your calories, scan food with AI, and get personalized nutrition insights 
     );
   }
 
-
+  // Delete Account Dialog
+  void _showDeleteAccountDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => _DeleteAccountDialog(),
+    );
+  }
 }
 
 // Helper widget for menu tiles
@@ -4559,7 +4855,7 @@ class _CoachScreenState extends State<CoachScreen> with TickerProviderStateMixin
     try {
       final meals = await MealService().getTodayMeals().first;
       final currentCalories = meals.fold(0, (sum, m) => sum + m.calories);
-      final currentMealPeriod = _getCurrentMealPeriod();
+      final currentMealPeriod = getCurrentMealPeriod();
       
       // If no previous insight exists, generate one
       if (_aiHealthInsight == null || _aiHealthInsight!.isEmpty) {
@@ -4591,13 +4887,11 @@ class _CoachScreenState extends State<CoachScreen> with TickerProviderStateMixin
     }
   }
 
-  // Helper to get current meal period
-  String _getCurrentMealPeriod() {
-    final hour = DateTime.now().hour;
-    if (hour >= 5 && hour < 11) return 'breakfast';
-    if (hour >= 11 && hour < 16) return 'lunch';
-    if (hour >= 16 && hour < 21) return 'dinner';
-    return 'snack';
+
+
+  // Helper to translate meal types
+  String _getMealTypeLocalized(BuildContext context, String mealType) {
+    return getMealTypeLocalized(context, mealType);
   }
 
   // Helper to get last insight meal period from SharedPreferences
@@ -4668,7 +4962,7 @@ class _CoachScreenState extends State<CoachScreen> with TickerProviderStateMixin
     if (_aiHealthInsight != null) {
       prefs2.setString('last_health_insight', _aiHealthInsight!);
       prefs2.setInt('last_insight_calories', caloriesConsumed);
-      prefs2.setString('last_insight_meal_period', _getCurrentMealPeriod());
+      prefs2.setString('last_insight_meal_period', getCurrentMealPeriod());
       prefs2.setInt('last_insight_timestamp', DateTime.now().millisecondsSinceEpoch);
     }
   }
@@ -4760,7 +5054,7 @@ class _CoachScreenState extends State<CoachScreen> with TickerProviderStateMixin
     String mealsSummary = meals.isEmpty
         ? "No meals logged today."
         : meals.map((m) =>
-            "${m.mealType.capitalize()}: ${m.name} (${m.calories} kcal, P:${m.protein}g C:${m.carbs}g F:${m.fat}g)").join("; ");
+            "${getMealTypeLocalized(context, m.mealType)}: ${m.name} (${m.calories} kcal, P:${m.protein}g C:${m.carbs}g F:${m.fat}g)").join("; ");
 
     // 4. Nutrition log
     int caloriesConsumed = meals.fold(0, (sum, m) => sum + m.calories);
@@ -5274,7 +5568,7 @@ class _CoachScreenState extends State<CoachScreen> with TickerProviderStateMixin
                                                    ),
                                                    SizedBox(height: 20),
                                                    Text(
-                                                     'Subscribe for Daily Insights',
+                                                     AppLocalizations.of(context)!.subscribeForDailyInsights,
                                                      textAlign: TextAlign.center,
                                                      style: TextStyle(
                                                        fontSize: 20,
@@ -5284,7 +5578,7 @@ class _CoachScreenState extends State<CoachScreen> with TickerProviderStateMixin
                                                    ),
                                                    SizedBox(height: 12),
                                                    Text(
-                                                     'Get personalized health insights\nbased on your complete profile',
+                                                     AppLocalizations.of(context)!.getPersonalizedHealthInsights,
                                                      textAlign: TextAlign.center,
                                                      style: TextStyle(
                                                        fontSize: 15,
@@ -5313,7 +5607,7 @@ class _CoachScreenState extends State<CoachScreen> with TickerProviderStateMixin
                                                          elevation: 2,
                                                        ),
                                                        child: Text(
-                                                         'Upgrade to Premium',
+                                                         AppLocalizations.of(context)!.upgradeToPremium,
                                                          style: TextStyle(
                                                            fontSize: 16,
                                                            fontWeight: FontWeight.bold,
@@ -5417,7 +5711,7 @@ class _CoachScreenState extends State<CoachScreen> with TickerProviderStateMixin
                               ),
                             ),
                             child: Text(
-                              'Messages: ${_maxFreeMessages - _messageCount}/$_maxFreeMessages',
+                              '${AppLocalizations.of(context)!.messages}: ${_maxFreeMessages - _messageCount}/$_maxFreeMessages',
                               style: TextStyle(
                                 fontSize: 12,
                                 fontWeight: FontWeight.w600,
@@ -5551,6 +5845,19 @@ class _FoodScreenState extends State<FoodScreen> with TickerProviderStateMixin {
   DateTime? _selectedDay;
   int _tabIndex = 0; // 0: My Meals, 1: Suggested Meals
   final MealService _mealService = MealService();
+  
+  // Helper function to get food type icon
+  IconData _getFoodTypeIcon(String? foodType) {
+    switch (foodType?.toLowerCase()) {
+      case 'drink':
+        return Icons.local_drink;
+      case 'ingredient':
+        return Icons.eco;
+      case 'meal':
+      default:
+        return Icons.restaurant;
+    }
+  }
 
   // AI-powered suggested meals (no longer hardcoded)
   List<Map<String, dynamic>> _aiMeals = [];
@@ -5589,7 +5896,38 @@ class _FoodScreenState extends State<FoodScreen> with TickerProviderStateMixin {
 
   // Add state for meal type filter in Food page
   int _selectedFoodMealTypeIndex = 0;
-  final List<String> _foodMealTypes = ['Breakfast', 'Lunch', 'Dinner', 'Snack'];
+  bool _hasFoodPageInitialized = false;
+  
+  // Helper to get localized food meal types
+  List<String> _getFoodMealTypes(BuildContext context) {
+    final localizations = AppLocalizations.of(context)!;
+    return [
+      localizations.breakfast,
+      localizations.lunch,
+      localizations.dinner,
+      localizations.snack,
+    ];
+  }
+  
+  // Helper to get meal type keys for filtering
+  final List<String> _foodMealTypeKeys = ['breakfast', 'lunch', 'dinner', 'snack'];
+  
+  // Helper to get meal type index based on current time
+  int _getCurrentMealTypeIndex() {
+    final currentMealPeriod = getCurrentMealPeriod();
+    switch (currentMealPeriod) {
+      case 'breakfast':
+        return 0;
+      case 'lunch':
+        return 1;
+      case 'dinner':
+        return 2;
+      case 'snack':
+        return 3;
+      default:
+        return 0;
+    }
+  }
 
   // Add cache for AI meals
   Map<String, List<Map<String, dynamic>>> _cachedAIMeals = {};
@@ -5702,6 +6040,16 @@ class _FoodScreenState extends State<FoodScreen> with TickerProviderStateMixin {
       localizations.dinner,
       localizations.snack,
     ];
+    
+    // Initialize meal type selection based on current time (only once)
+    if (!_hasFoodPageInitialized) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        setState(() {
+          _selectedFoodMealTypeIndex = _getCurrentMealTypeIndex();
+          _hasFoodPageInitialized = true;
+        });
+      });
+    }
     String getCurrentMealLabel() {
       final period = _currentMealPeriod;
       switch (period) {
@@ -5746,7 +6094,7 @@ class _FoodScreenState extends State<FoodScreen> with TickerProviderStateMixin {
                   children: [
                     Text(localizations.food, style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black, fontSize: 22)),
                     SizedBox(height: 2),
-                    Text('Track your nutrition', style: TextStyle(fontSize: 13, color: Colors.grey[500])),
+                    Text(localizations.trackYourNutrition, style: TextStyle(fontSize: 13, color: Colors.grey[500])),
                   ],
                 ),
               ],
@@ -5893,7 +6241,7 @@ class _FoodScreenState extends State<FoodScreen> with TickerProviderStateMixin {
                             builder: (context, snapshot) {
                               if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
                               final meals = snapshot.data!;
-                              final filteredMeals = meals.where((m) => m.mealType.toLowerCase() == _foodMealTypes[_selectedFoodMealTypeIndex].toLowerCase()).toList();
+                              final filteredMeals = meals.where((m) => m.mealType.toLowerCase() == _foodMealTypeKeys[_selectedFoodMealTypeIndex]).toList();
                               if (filteredMeals.isEmpty) {
                                 return Center(child: Text(localizations.noMealsLoggedForThisDay, style: TextStyle(color: Colors.grey)));
                               }
@@ -5972,39 +6320,22 @@ class _FoodScreenState extends State<FoodScreen> with TickerProviderStateMixin {
                                             child: Row(
                                               crossAxisAlignment: CrossAxisAlignment.start,
                                               children: [
-                                                // Meal image - AI suggested meals use Pexels since they don't have user photos
-                                                FutureBuilder<String?> (
-                                                  future: PexelsService.staticFetchMealImage(meal['meal_name'] as String? ?? '', locale: Locale(AppLocalizations.of(context)!.localeName)),
-                                                  builder: (context, snapshot) {
-                                                    if (snapshot.connectionState == ConnectionState.waiting) {
-                                                      return ClipRRect(
+                                                // Meal image - AI suggested meals use food type icon
+                                                ClipRRect(
                                                         borderRadius: BorderRadius.circular(16),
                                                         child: Container(
                                                           width: 70,
                                                           height: 70,
-                                                          color: Colors.grey[200],
-                                                          child: Center(child: CircularProgressIndicator(strokeWidth: 2, color: kPrimaryGreen)),
-                                                        ),
-                                                      );
-                                                    }
-                                                    final imageUrl = snapshot.data;
-                                                    return ClipRRect(
+                                                    decoration: BoxDecoration(
+                                                      color: kPrimaryGreen.withOpacity(0.1),
                                                       borderRadius: BorderRadius.circular(16),
-                                                      child: imageUrl != null
-                                                          ? Image.network(
-                                                              imageUrl,
-                                                              width: 70,
-                                                              height: 70,
-                                                              fit: BoxFit.cover,
-                                                            )
-                                                          : Container(
-                                                              width: 70,
-                                                              height: 70,
-                                                              color: Colors.grey[200],
-                                                              child: Icon(Icons.fastfood, color: Colors.grey[400]),
-                                                            ),
-                                                    );
-                                                  },
+                                                    ),
+                                                    child: Icon(
+                                                      _getFoodTypeIcon('meal'), // AI suggested meals are always meals
+                                                      size: 35,
+                                                      color: kPrimaryGreen,
+                                                    ),
+                                                  ),
                                                 ),
                                                 const SizedBox(width: 14),
                                                 // Meal info
@@ -6121,6 +6452,20 @@ class _FoodMealCard extends StatefulWidget {
 
 class _FoodMealCardState extends State<_FoodMealCard> {
   bool _expanded = false;
+  
+  // Helper function to get food type icon
+  IconData _getFoodTypeIcon(String? foodType) {
+    switch (foodType?.toLowerCase()) {
+      case 'drink':
+        return Icons.local_drink;
+      case 'ingredient':
+        return Icons.eco;
+      case 'meal':
+      default:
+        return Icons.restaurant;
+    }
+  }
+  
   @override
   Widget build(BuildContext context) {
     final meal = widget.meal;
@@ -6144,7 +6489,7 @@ class _FoodMealCardState extends State<_FoodMealCard> {
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Meal image - prioritize user's photo over Pexels
+              // Meal image - prioritize user's photo, otherwise use food type icon
               ClipRRect(
                 borderRadius: BorderRadius.circular(16),
                 child: meal.imageUrl != null
@@ -6154,62 +6499,34 @@ class _FoodMealCardState extends State<_FoodMealCard> {
                         height: 70,
                         fit: BoxFit.cover,
                         errorBuilder: (context, error, stackTrace) {
-                          // Fallback to Pexels if user's image fails to load
-                          return FutureBuilder<String?>(
-                            future: PexelsService.staticFetchMealImage(meal.name, locale: Locale(AppLocalizations.of(context)!.localeName)),
-                            builder: (context, snapshot) {
-                              if (snapshot.connectionState == ConnectionState.waiting) {
+                          // Fallback to food type icon if user's image fails to load
                                 return Container(
                                   width: 70,
                                   height: 70,
-                                  color: Colors.grey[200],
-                                  child: Center(child: CircularProgressIndicator(strokeWidth: 2, color: kPrimaryGreen)),
-                                );
-                              }
-                              final imageUrl = snapshot.data;
-                              return imageUrl != null
-                                  ? Image.network(
-                                      imageUrl,
-                                      width: 70,
-                                      height: 70,
-                                      fit: BoxFit.cover,
-                                    )
-                                  : Container(
-                                      width: 70,
-                                      height: 70,
-                                      color: Colors.grey[200],
-                                      child: Icon(Icons.fastfood, color: Colors.grey[400]),
-                                    );
-                            },
+                            decoration: BoxDecoration(
+                              color: kPrimaryGreen.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            child: Icon(
+                              _getFoodTypeIcon(meal.foodType),
+                              size: 35,
+                              color: kPrimaryGreen,
+                            ),
                           );
                         },
-                      )
-                    : FutureBuilder<String?>(
-                        future: PexelsService.staticFetchMealImage(meal.name, locale: Locale(AppLocalizations.of(context)!.localeName)),
-                        builder: (context, snapshot) {
-                          if (snapshot.connectionState == ConnectionState.waiting) {
-                            return Container(
-                              width: 70,
-                              height: 70,
-                              color: Colors.grey[200],
-                              child: Center(child: CircularProgressIndicator(strokeWidth: 2, color: kPrimaryGreen)),
-                            );
-                          }
-                          final imageUrl = snapshot.data;
-                          return imageUrl != null
-                              ? Image.network(
-                                  imageUrl,
-                                  width: 70,
-                                  height: 70,
-                                  fit: BoxFit.cover,
                                 )
                               : Container(
                                   width: 70,
                                   height: 70,
-                                  color: Colors.grey[200],
-                                  child: Icon(Icons.fastfood, color: Colors.grey[400]),
-                                );
-                        },
+                        decoration: BoxDecoration(
+                          color: kPrimaryGreen.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: Icon(
+                          _getFoodTypeIcon(meal.foodType),
+                          size: 35,
+                          color: kPrimaryGreen,
+                        ),
                       ),
               ),
               const SizedBox(width: 14),
@@ -6219,7 +6536,7 @@ class _FoodMealCardState extends State<_FoodMealCard> {
                   children: [
                     Row(
                       children: [
-                        Text(meal.mealType.capitalize(), style: TextStyle(color: kPrimaryGreen, fontWeight: FontWeight.w600)),
+                        Text(getMealTypeLocalized(context, meal.mealType), style: TextStyle(color: kPrimaryGreen, fontWeight: FontWeight.w600)),
                         const SizedBox(width: 8),
                         Text(formatTime(meal.timestamp), style: TextStyle(color: Colors.grey[500], fontSize: 13)),
                       ],
@@ -6258,23 +6575,23 @@ class _FoodMealCardState extends State<_FoodMealCard> {
                       IconButton(
                         icon: Icon(Icons.delete, color: Colors.redAccent, size: 22),
                         tooltip: 'Delete meal',
-                        padding: EdgeInsets.zero,
-                        constraints: BoxConstraints(),
+                        padding: EdgeInsets.all(8),
+                        constraints: BoxConstraints(minWidth: 48, minHeight: 48),
                         onPressed: () async {
                           final confirm = await showDialog<bool>(
                             context: context,
                             builder: (context) => AlertDialog(
-                              title: Text('Delete Meal'),
-                              content: Text('Are you sure you want to delete this meal?'),
+                              title: Text(AppLocalizations.of(context)!.deleteMeal),
+                              content: Text(AppLocalizations.of(context)!.areYouSureDeleteMeal),
                               actions: [
                                 TextButton(
                                   onPressed: () => Navigator.pop(context, false),
-                                  child: Text('Cancel'),
+                                  child: Text(AppLocalizations.of(context)!.cancel),
                                 ),
                                 TextButton(
                                   onPressed: () => Navigator.pop(context, true),
                                   style: TextButton.styleFrom(foregroundColor: Colors.red),
-                                  child: Text('Delete'),
+                                  child: Text(AppLocalizations.of(context)!.delete),
                                 ),
                               ],
                             ),
@@ -6287,8 +6604,8 @@ class _FoodMealCardState extends State<_FoodMealCard> {
                       IconButton(
                         icon: Icon(_expanded ? Icons.expand_less : Icons.expand_more, color: kPrimaryGreen, size: 22),
                         tooltip: _expanded ? 'Hide ingredients' : 'Show ingredients',
-                        padding: EdgeInsets.zero,
-                        constraints: BoxConstraints(),
+                        padding: EdgeInsets.all(8),
+                        constraints: BoxConstraints(minWidth: 48, minHeight: 48),
                         onPressed: () => setState(() => _expanded = !_expanded),
                       ),
                     ],
@@ -6643,14 +6960,14 @@ class SettingsPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final prefs = Provider.of<PreferencesProvider>(context);
     return Scaffold(
-      appBar: AppBar(title: Text('Settings')),
+      appBar: AppBar(title: Text(AppLocalizations.of(context)!.settings)),
       body: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 24),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Preferences', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 22)),
+              Text(AppLocalizations.of(context)!.preferences, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 22)),
               SizedBox(height: 18),
               Card(
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
@@ -6673,9 +6990,9 @@ class SettingsPage extends StatelessWidget {
               trailing: DropdownButton<String>(
                 value: prefs.language,
                 items: [
-                  DropdownMenuItem(value: 'en', child: Text('English')),
-                  DropdownMenuItem(value: 'ar', child: Text('Arabic')),
-                  DropdownMenuItem(value: 'es', child: Text('Spanish')),
+                  DropdownMenuItem(value: 'en', child: Text(AppLocalizations.of(context)!.english)),
+                  DropdownMenuItem(value: 'ar', child: Text(AppLocalizations.of(context)!.arabic)),
+                  DropdownMenuItem(value: 'es', child: Text(AppLocalizations.of(context)!.spanish)),
                 ],
                 onChanged: (v) => prefs.setLanguage(v!),
               ),
@@ -6684,15 +7001,15 @@ class SettingsPage extends StatelessWidget {
                 ),
               ),
               SizedBox(height: 32),
-              Text('App Permissions', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 22)),
+              Text(AppLocalizations.of(context)!.appPermissions, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 22)),
               SizedBox(height: 18),
               Card(
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
                 elevation: 2,
                 child: ListTile(
                   leading: Icon(Icons.security),
-                  title: Text('Manage Permissions', style: TextStyle(fontWeight: FontWeight.w600)),
-                  subtitle: Text('Camera, notifications, and more'),
+                  title: Text(AppLocalizations.of(context)!.managePermissions, style: TextStyle(fontWeight: FontWeight.w600)),
+                  subtitle: Text(AppLocalizations.of(context)!.cameraNotificationsAndMore),
                   trailing: Icon(Icons.chevron_right),
                   onTap: () {
                     Navigator.push(
@@ -6705,7 +7022,7 @@ class SettingsPage extends StatelessWidget {
                 ),
               ),
               SizedBox(height: 32),
-              Text('Habit Notifications', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 22)),
+              Text(AppLocalizations.of(context)!.habitNotifications, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 22)),
               SizedBox(height: 18),
               Card(
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
@@ -6912,7 +7229,7 @@ class _WeightLogDialogState extends State<_WeightLogDialog> {
     final unit = _getUnit(useMetric);
     
     return AlertDialog(
-      title: Text('Log Weight Change'),
+      title: Text(AppLocalizations.of(context)!.logWeightChange),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -6920,7 +7237,7 @@ class _WeightLogDialogState extends State<_WeightLogDialog> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               ChoiceChip(
-                label: Text('Lost'),
+                label: Text(AppLocalizations.of(context)!.lost),
                 selected: !_isAdd,
                 selectedColor: Colors.blue[100],
                 onSelected: (selected) => setState(() => _isAdd = false),
@@ -6931,7 +7248,7 @@ class _WeightLogDialogState extends State<_WeightLogDialog> {
               ),
               SizedBox(width: 12),
               ChoiceChip(
-                label: Text('Gained'),
+                label: Text(AppLocalizations.of(context)!.gained),
                 selected: _isAdd,
                 selectedColor: Colors.red[100],
                 onSelected: (selected) => setState(() => _isAdd = true),
@@ -6967,11 +7284,11 @@ class _WeightLogDialogState extends State<_WeightLogDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: Text('Cancel'),
+          child: Text(AppLocalizations.of(context)!.cancel),
         ),
         ElevatedButton(
           onPressed: () => Navigator.of(context).pop(_isAdd ? _value : -_value),
-          child: Text(_isAdd ? 'Gained' : 'Lost'),
+          child: Text(_isAdd ? AppLocalizations.of(context)!.gained : AppLocalizations.of(context)!.lost),
           style: ElevatedButton.styleFrom(
             backgroundColor: _isAdd ? Colors.red : Colors.blue,
             foregroundColor: Colors.white,
@@ -7019,7 +7336,7 @@ class _WaterLogSliderDialogState extends State<_WaterLogSliderDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: Text('Log Water Intake'),
+      title: Text(AppLocalizations.of(context)!.logWaterIntake),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -7027,7 +7344,7 @@ class _WaterLogSliderDialogState extends State<_WaterLogSliderDialog> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               ChoiceChip(
-                label: Text('Add'),
+                label: Text(AppLocalizations.of(context)!.add),
                 selected: _isAdd,
                 selectedColor: Colors.blue[100],
                 onSelected: (selected) => setState(() => _isAdd = true),
@@ -7075,11 +7392,11 @@ class _WaterLogSliderDialogState extends State<_WaterLogSliderDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: Text('Cancel'),
+          child: Text(AppLocalizations.of(context)!.cancel),
         ),
         ElevatedButton(
           onPressed: () => Navigator.of(context).pop(_isAdd ? (_value * 1000).round() : -(_value * 1000).round()),
-          child: Text(_isAdd ? 'Add' : 'Remove'),
+          child: Text(AppLocalizations.of(context)!.add),
           style: ElevatedButton.styleFrom(
             backgroundColor: _isAdd ? Colors.green : Colors.red,
             foregroundColor: Colors.white,
@@ -7090,14 +7407,14 @@ class _WaterLogSliderDialogState extends State<_WaterLogSliderDialog> {
   }
 }
 
-// Helper to remove Markdown formatting from AI responses
-String removeMarkdown(String text) {
+// Helper to remove Markdown formatting from AI responses - DUPLICATE REMOVED
+/* String removeMarkdown_OLD_DUPLICATE(String text) {
   return text
       .replaceAll(RegExp(r'\*\*(.*?)\*\*'), r'')
       .replaceAll(RegExp(r'__(.*?)__'), r'')
       .replaceAll(RegExp(r'\*(.*?)\*'), r'')
       .replaceAll(RegExp(r'_(.*?)_'), r'');
-}
+} */
 
 // Add this helper function to main.dart
 Locale _getLocale(String code) {
@@ -7106,13 +7423,56 @@ Locale _getLocale(String code) {
   return const Locale('en');
 }
 
+// Helper to remove Markdown formatting from AI responses
+String removeMarkdown(String text) {
+  return text
+      // Remove headers (### ## #)
+      .replaceAll(RegExp(r'^#{1,6}\s*(.*)$', multiLine: true), r'$1')
+      // Remove bold (**text** and __text__)
+      .replaceAll(RegExp(r'\*\*(.*?)\*\*'), r'$1')
+      .replaceAll(RegExp(r'__(.*?)__'), r'$1')
+      // Remove italic (*text* and _text_)
+      .replaceAll(RegExp(r'\*(.*?)\*'), r'$1')
+      .replaceAll(RegExp(r'_(.*?)_'), r'$1')
+      // Remove strikethrough (~~text~~)
+      .replaceAll(RegExp(r'~~(.*?)~~'), r'$1')
+      // Remove code blocks (```text``` and `text`)
+      .replaceAll(RegExp(r'```[\s\S]*?```'), '')
+      .replaceAll(RegExp(r'`(.*?)`'), r'$1')
+      // Remove links [text](url)
+      .replaceAll(RegExp(r'\[([^\]]*)\]\([^\)]*\)'), r'$1')
+      // Remove list markers (- * +)
+      .replaceAll(RegExp(r'^[\s]*[-\*\+]\s*', multiLine: true), '')
+      // Remove numbered lists (1. 2. etc)
+      .replaceAll(RegExp(r'^[\s]*\d+\.\s*', multiLine: true), '')
+      // Remove horizontal rules (--- or ***)
+      .replaceAll(RegExp(r'^[\s]*[-\*]{3,}[\s]*$', multiLine: true), '')
+      // Remove blockquotes (>)
+      .replaceAll(RegExp(r'^[\s]*>\s*', multiLine: true), '')
+      // Remove dollar signs with numbers ($1, $2, etc) - meal section markers
+      .replaceAll(RegExp(r'^\$\d+\s*$', multiLine: true), '')
+      .replaceAll(RegExp(r'^\$\d+\s*', multiLine: true), '')
+      // Remove any remaining standalone dollar signs
+      .replaceAll(RegExp(r'^\$\s*$', multiLine: true), '')
+      // Remove table formatting (|)
+      .replaceAll(RegExp(r'\|'), '')
+      // Remove LaTeX/Math expressions
+      .replaceAll(RegExp(r'\$\$.*?\$\$'), '')
+      .replaceAll(RegExp(r'\$.*?\$'), '')
+      // Clean up multiple spaces and newlines
+      .replaceAll(RegExp(r'\n{3,}'), '\n\n')
+      .replaceAll(RegExp(r'[ \t]{2,}'), ' ')
+      .trim();
+}
+
 // Helper to get current greeting based on time of day
-String get _currentGreeting {
+String _getCurrentGreeting(BuildContext context) {
   final hour = DateTime.now().hour;
-  if (hour >= 5 && hour < 11) return 'Good morning ☀️';
-  if (hour >= 11 && hour < 16) return 'Good afternoon 🌤️';
-  if (hour >= 16 && hour < 21) return 'Good evening 🌇';
-  return 'Good night 🌙';
+  final localizations = AppLocalizations.of(context)!;
+  if (hour >= 5 && hour < 11) return '${localizations.goodMorning} ☀️';
+  if (hour >= 11 && hour < 16) return '${localizations.goodAfternoon} 🌤️';
+  if (hour >= 16 && hour < 21) return '${localizations.goodEvening} 🌇';
+  return '${localizations.goodNight} 🌙';
 }
 
 class _LegalLinkTile extends StatelessWidget {
@@ -7181,6 +7541,181 @@ class _LegalLinkTile extends StatelessWidget {
               ),
             ),
             Icon(Icons.open_in_new, color: Colors.grey[400], size: 20),
+          ],
+        ),
+      ),
+    );
+  }
+
+
+}
+
+class _DeleteAccountDialog extends StatefulWidget {
+  @override
+  _DeleteAccountDialogState createState() => _DeleteAccountDialogState();
+}
+
+class _DeleteAccountDialogState extends State<_DeleteAccountDialog> {
+  final TextEditingController _confirmationController = TextEditingController();
+  bool _isLoading = false;
+  String _message = '';
+
+  @override
+  void dispose() {
+    _confirmationController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _deleteAccount() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+
+    setState(() {
+      _isLoading = true;
+      _message = '';
+    });
+
+    try {
+      // 1. Delete user data from Firestore
+      await FirebaseFirestore.instance.collection('users').doc(user.uid).delete();
+      
+      // 2. Clear local storage
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.clear();
+      
+      // 3. Delete Firebase Auth account
+      await user.delete();
+      
+      // 4. Navigate to auth screen
+      if (mounted) {
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (_) => AuthScreen()),
+          (route) => false,
+        );
+        
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(AppLocalizations.of(context)!.accountDeleted)),
+        );
+      }
+    } catch (e) {
+      setState(() {
+        _message = '${AppLocalizations.of(context)!.errorDeletingAccount}: ${e.toString()}';
+        _isLoading = false;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      child: Padding(
+        padding: const EdgeInsets.all(24.0),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.warning_rounded,
+              color: Colors.red[600],
+              size: 64,
+            ),
+            SizedBox(height: 16),
+            Text(
+              AppLocalizations.of(context)!.confirmDeleteAccount,
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: Colors.red[700],
+              ),
+              textAlign: TextAlign.center,
+            ),
+            SizedBox(height: 16),
+            Text(
+              AppLocalizations.of(context)!.deleteAccountWarning,
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.grey[700],
+                height: 1.4,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            SizedBox(height: 24),
+            Text(
+              AppLocalizations.of(context)!.typeDeleteToConfirm,
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: Colors.grey[800],
+              ),
+            ),
+            SizedBox(height: 12),
+            TextField(
+              controller: _confirmationController,
+              decoration: InputDecoration(
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                hintText: AppLocalizations.of(context)!.deleteAccountFinalConfirmation,
+              ),
+              onChanged: (value) => setState(() {}),
+            ),
+            if (_message.isNotEmpty) ...[
+              SizedBox(height: 16),
+              Container(
+                padding: EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.red[50],
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.red[200]!),
+                ),
+                child: Text(
+                  _message,
+                  style: TextStyle(color: Colors.red[700], fontSize: 12),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            ],
+            SizedBox(height: 24),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                OutlinedButton(
+                  onPressed: _isLoading ? null : () => Navigator.pop(context),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: Colors.grey[600],
+                    side: BorderSide(color: Colors.grey[300]!),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: Text(AppLocalizations.of(context)!.cancel),
+                ),
+                ElevatedButton(
+                  onPressed: (_isLoading || 
+                      _confirmationController.text.trim() != 
+                      AppLocalizations.of(context)!.deleteAccountFinalConfirmation)
+                    ? null
+                    : _deleteAccount,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.red[600],
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: _isLoading
+                    ? SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.white,
+                        ),
+                      )
+                    : Text(AppLocalizations.of(context)!.deleteAccount),
+                ),
+              ],
+            ),
           ],
         ),
       ),

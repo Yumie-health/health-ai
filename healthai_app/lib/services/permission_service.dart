@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'dart:io' show Platform;
+import '../l10n/app_localizations.dart';
 
 class PermissionService {
   static final FlutterLocalNotificationsPlugin _notificationsPlugin = 
@@ -208,7 +209,24 @@ class PermissionService {
   }
 
   // Get permission name for UI
-  static String getPermissionName(ph.Permission permission) {
+  static String getPermissionName(ph.Permission permission, [BuildContext? context]) {
+    if (context != null) {
+      final localizations = AppLocalizations.of(context);
+      if (localizations != null) {
+        switch (permission) {
+          case ph.Permission.camera:
+            return localizations.camera;
+          case ph.Permission.photos:
+            return localizations.photoLibrary;
+          case ph.Permission.notification:
+            return localizations.notifications;
+          default:
+            return localizations.unknown;
+        }
+      }
+    }
+    
+    // Fallback to English if no context or localization
     switch (permission) {
       case ph.Permission.camera:
         return 'Camera';

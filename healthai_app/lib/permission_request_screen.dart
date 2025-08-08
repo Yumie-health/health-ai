@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart' as ph;
 import 'services/permission_service.dart';
 import 'utils/constants.dart';
+import 'l10n/app_localizations.dart';
 
 class PermissionRequestScreen extends StatefulWidget {
   final VoidCallback onPermissionsComplete;
@@ -96,7 +97,7 @@ class _PermissionRequestScreenState extends State<PermissionRequestScreen>
       context: context,
       barrierDismissible: false,
       builder: (context) => AlertDialog(
-        title: Text('Permissions Complete!'),
+        title: Text(AppLocalizations.of(context)!.permissionsComplete),
         content: Text(
           grantedCount == _permissions.length
               ? 'All permissions granted! You\'re all set to use Yumie.'
@@ -221,7 +222,7 @@ class _PermissionRequestScreenState extends State<PermissionRequestScreen>
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
                                       Text(
-                                        PermissionService.getPermissionName(permission),
+                                        PermissionService.getPermissionName(permission, context),
                                         style: TextStyle(
                                           fontWeight: FontWeight.w600,
                                           color: Colors.grey[800],

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'main.dart'; // For AuthScreen
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -7,6 +8,12 @@ import 'services/ai_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:provider/provider.dart';
 import 'providers/preferences_provider.dart';
+import 'subscription_popup_page.dart';
+import 'widgets/improved_age_selector.dart';
+import 'widgets/improved_height_selector.dart';
+import 'widgets/improved_height_step.dart';
+import 'widgets/improved_weight_step.dart';
+import 'widgets/improved_goal_weight_step.dart';
 
 class OnboardingFlowPage extends StatefulWidget {
   const OnboardingFlowPage({Key? key}) : super(key: key);
@@ -20,12 +27,12 @@ class _OnboardingFlowPageState extends State<OnboardingFlowPage> with SingleTick
   String? selectedMotivation;
   int? selectedAge;
   double? selectedHeightCm;
-  bool useMetricHeight = true;
+  bool useMetricHeight = false;
   int selectedHeightFeet = 5;
   int selectedHeightInches = 8;
   // Weight state
   double? selectedWeightKg;
-  bool useMetricWeight = true;
+  bool useMetricWeight = false;
   double selectedWeightLb = 154;
   double? targetWeightKg;
   String? activityLevel;
@@ -83,6 +90,10 @@ class _OnboardingFlowPageState extends State<OnboardingFlowPage> with SingleTick
       if (step == 7 && selectedGoal == 'Maintain body weight') {
         targetWeightKg = selectedWeightKg;
         step++; // Skip the target weight step
+      }
+      // Skip step 14 (it doesn't exist - jump from 13 to 15)
+      if (step == 14) {
+        step = 15;
       }
       _controller.reset();
       _controller.forward();
@@ -179,7 +190,7 @@ class _OnboardingFlowPageState extends State<OnboardingFlowPage> with SingleTick
                   onBack: prevStep,
                 );
               } else if (step == 5) {
-                return _HeightStep(
+                return ImprovedHeightStep(
                   fadeAnimation: _fadeAnimation,
                   slideAnimation: _slideAnimation,
                   useMetric: useMetricHeight,
@@ -208,22 +219,17 @@ class _OnboardingFlowPageState extends State<OnboardingFlowPage> with SingleTick
                   onBack: prevStep,
                 );
               } else if (step == 6) {
-                return _WeightStep(
+                // Automatically set weight unit based on height unit
+                useMetricWeight = useMetricHeight;
+                return ImprovedWeightStep(
                   fadeAnimation: _fadeAnimation,
                   slideAnimation: _slideAnimation,
                   useMetric: useMetricWeight,
                   weightKg: selectedWeightKg,
                   weightLb: selectedWeightLb,
-                  onUnitToggle: (metric) => setState(() {
-                    useMetricWeight = metric;
-                    if (selectedWeightKg != null) {
-                      if (metric) {
-                        selectedWeightKg = selectedWeightLb / 2.20462;
-                      } else {
-                        selectedWeightLb = (selectedWeightKg! * 2.20462);
-                      }
-                    }
-                  }),
+                  onUnitToggle: (metric) {
+                    // This won't be called anymore since we removed the toggle
+                  },
                   onSelectKg: (kg) => setState(() {
                     selectedWeightKg = kg;
                     selectedWeightLb = kg * 2.20462;
@@ -232,21 +238,20 @@ class _OnboardingFlowPageState extends State<OnboardingFlowPage> with SingleTick
                     selectedWeightLb = lb;
                     selectedWeightKg = lb / 2.20462;
                   }),
-                  heightCm: selectedHeightCm,
                   onContinue: selectedWeightKg == null ? null : nextStep,
                   onBack: prevStep,
                 );
               } else if (step == 7) {
-                return _GoalWeightStep(
+                return ImprovedGoalWeightStep(
                   fadeAnimation: _fadeAnimation,
                   slideAnimation: _slideAnimation,
-                  useMetricWeight: useMetricWeight,
+                  useMetric: useMetricWeight,
                   goalWeightKg: targetWeightKg ?? selectedWeightKg ?? 70,
+                  currentWeightKg: selectedWeightKg ?? 70,
                   onGoalWeightChanged: (v) => setState(() => targetWeightKg = v),
                   onContinue: (targetWeightKg != null) ? nextStep : null,
                   onBack: prevStep,
                   selectedGoal: selectedGoal,
-                  currentWeightKg: selectedWeightKg ?? 70,
                 );
               } else if (step == 8) {
                 return _ActivityLevelStep(
@@ -308,6 +313,10 @@ class _OnboardingFlowPageState extends State<OnboardingFlowPage> with SingleTick
                             await prefs.setBool('waterIntakeReminders', selectedReminders.contains('Water Intake Reminders'));
                             await prefs.setBool('mindfulWalksReminders', selectedReminders.contains('Mindful Walks Reminders'));
                             await prefs.setBool('momentOfCalmReminders', selectedReminders.contains('Moment of Calm After Meals'));
+                            
+                            // Save unit preference to SharedPreferences for immediate use
+                            await prefs.setBool('useMetric', useMetricHeight);
+                            
                             // Save other user info to Firestore as before, but exclude reminders
                             await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
                               'name': name,
@@ -321,6 +330,7 @@ class _OnboardingFlowPageState extends State<OnboardingFlowPage> with SingleTick
                               'bloodType': bloodType,
                               'isDiabetic': isDiabetic,
                               'waterIntake': waterIntake,
+                              'useMetric': useMetricHeight, // Save unit preference to profile
                               'createdAt': now,
                               'lastUpdated': now,
                             }, SetOptions(merge: true));
@@ -411,6 +421,13 @@ class _OnboardingFlowPageState extends State<OnboardingFlowPage> with SingleTick
                           }
                         }
                     }
+                    
+                    // Navigate to main app with post-onboarding flag
+                    // Mark that onboarding just completed
+                    final prefs = await SharedPreferences.getInstance();
+                    await prefs.setBool('just_completed_onboarding', true);
+                    
+                    // Navigate to main app
                     Navigator.of(context).pushAndRemoveUntil(
                       MaterialPageRoute(builder: (_) => MainNavScreen()),
                       (route) => false,
@@ -1317,38 +1334,9 @@ class _AgeStep extends StatelessWidget {
           opacity: fadeAnimation,
           child: SlideTransition(
             position: slideAnimation,
-            child: Column(
-              children: [
-                SizedBox(
-                  height: 120,
-                  child: ListWheelScrollView.useDelegate(
-                    itemExtent: 48,
-                    diameterRatio: 1.2,
-                    physics: FixedExtentScrollPhysics(),
-                    onSelectedItemChanged: (i) => onSelect(i + 16),
-                    childDelegate: ListWheelChildBuilderDelegate(
-                      builder: (context, i) {
-                        final age = i + 16;
-                        if (age > 100) return null;
-                        return Center(
-                          child: Text(
-                            '$age',
-                            style: TextStyle(
-                              fontSize: 32,
-                              fontWeight: FontWeight.bold,
-                              color: selectedAge == age ? Theme.of(context).primaryColor : Colors.grey[600],
-                            ),
-                          ),
-                        );
-                      },
-                      childCount: 100 - 16 + 1,
-                    ),
-                  ),
-                ),
-                SizedBox(height: 12),
-                if (selectedAge != null)
-                  Text('Selected: $selectedAge years', style: TextStyle(fontSize: 18, color: Theme.of(context).primaryColor, fontWeight: FontWeight.w600)),
-              ],
+            child: ImprovedAgeSelector(
+              selectedAge: selectedAge,
+              onSelect: onSelect,
             ),
           ),
         ),

@@ -3,6 +3,8 @@ import 'package:in_app_purchase/in_app_purchase.dart';
 import 'dart:io';
 import 'services/receipt_validation_service.dart';
 import 'utils/constants.dart';
+import 'subscription_success_page.dart';
+import 'l10n/app_localizations.dart';
 
 class SubscriptionPage extends StatefulWidget {
   const SubscriptionPage({Key? key}) : super(key: key);
@@ -112,14 +114,15 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
             print('Subscription validated and activated: ${purchase.productID}');
             
             if (mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text('Subscription activated!'),
-                  backgroundColor: kPrimaryGreen,
-                  duration: Duration(seconds: 3),
-                ),
+              // Show beautiful success animation
+              SubscriptionSuccessPage.show(
+                context,
+                purchase.productID,
+                onComplete: () {
+                  Navigator.of(context).pop(); // Close success animation
+                  Navigator.of(context).pop(); // Close subscription page
+                },
               );
-              Navigator.of(context).pop();
             }
           } else {
             print('Receipt validation failed for: ${purchase.productID}');
@@ -158,15 +161,7 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
         }
       } else if (purchase.status == PurchaseStatus.canceled) {
         print('Purchase canceled');
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Purchase was canceled'),
-              backgroundColor: Colors.orange,
-              duration: Duration(seconds: 3),
-            ),
-          );
-        }
+        // Don't show any message when user cancels - they know they canceled
       }
       
       if (purchase.pendingCompletePurchase) {
@@ -209,7 +204,7 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
   Widget _buildPlanCard(ProductDetails product) {
     final isYearly = product.id == 'premium_yearly';
     final price = product.id == 'premium_monthly' ? '7.99' : '49.99';
-    final description = isYearly ? 'Save 37%' : '';
+    final description = isYearly ? AppLocalizations.of(context)!.save37 : '';
     return Card(
       margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       elevation: 4,
@@ -226,7 +221,7 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  product.id == 'premium_monthly' ? 'YUMIE Premium Monthly' : 'YUMIE Premium Yearly',
+                  product.id == 'premium_monthly' ? AppLocalizations.of(context)!.yumiePremiumMonthly : AppLocalizations.of(context)!.yumiePremiumYearly,
                   style: TextStyle(
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
@@ -241,7 +236,7 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Text(
-                      'SAVE 37%',
+                      AppLocalizations.of(context)!.save37,
                       style: TextStyle(
                         color: Colors.white,
                         fontSize: 12,
@@ -280,7 +275,7 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
                 ),
                 child: _isProcessingPayment
                     ? CircularProgressIndicator(color: Colors.white)
-                    : Text('Subscribe', style: TextStyle(fontSize: 18, color: Colors.white)),
+                    : Text(AppLocalizations.of(context)!.subscribe, style: TextStyle(fontSize: 18, color: Colors.white)),
               ),
             ),
           ],
@@ -293,13 +288,13 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Upgrade to Premium'),
+        title: Text(AppLocalizations.of(context)!.upgradeToPremium),
         backgroundColor: kPrimaryGreen,
         foregroundColor: Colors.white,
         actions: [
           IconButton(
             icon: Icon(Icons.restore),
-            tooltip: 'Restore Purchases',
+            tooltip: AppLocalizations.of(context)!.restorePurchases,
             onPressed: _restore,
           ),
         ],
@@ -334,7 +329,7 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
                         ),
                         SizedBox(height: 16),
                         Text(
-                          'Unlock Premium Features',
+                          AppLocalizations.of(context)!.unlockPremiumFeatures,
                           style: TextStyle(
                             fontSize: 28,
                             fontWeight: FontWeight.bold,
@@ -344,7 +339,7 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
                         ),
                         SizedBox(height: 8),
                         Text(
-                          'Get unlimited scans, searches, and AI-powered insights',
+                          AppLocalizations.of(context)!.upgradeDescription,
                           style: TextStyle(
                             fontSize: 16,
                             color: Colors.white70,
@@ -357,7 +352,7 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
                   SizedBox(height: 24),
                   // Features list
                   Text(
-                    'Premium Features:',
+                    '${AppLocalizations.of(context)!.premiumFeatures}:',
                     style: TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
@@ -365,15 +360,15 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
                     ),
                   ),
                   SizedBox(height: 12),
-                  _buildFeatureItem(Icons.camera_alt, 'Unlimited Food Scans'),
-                  _buildFeatureItem(Icons.search, 'Unlimited Food Searches'),
-                  _buildFeatureItem(Icons.chat, 'Unlimited AI Coach Messages'),
-                  _buildFeatureItem(Icons.insights, 'Daily Health Insights'),
-                  _buildFeatureItem(Icons.workspace_premium, 'No Advertisements'),
+                  _buildFeatureItem(Icons.camera_alt, AppLocalizations.of(context)!.unlimitedFoodScans),
+                  _buildFeatureItem(Icons.search, AppLocalizations.of(context)!.unlimitedFoodSearches),
+                  _buildFeatureItem(Icons.chat, AppLocalizations.of(context)!.unlimitedAICoachMessages),
+                  _buildFeatureItem(Icons.insights, AppLocalizations.of(context)!.dailyHealthInsights),
+                  _buildFeatureItem(Icons.workspace_premium, AppLocalizations.of(context)!.noAdvertisements),
                   SizedBox(height: 24),
                   // Subscription plans
                   Text(
-                    'Choose Your Plan:',
+                    '${AppLocalizations.of(context)!.chooseYourPlan}:',
                     style: TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
@@ -385,7 +380,7 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
                   SizedBox(height: 24),
                   // Terms and conditions
                   Text(
-                    'By subscribing, you agree to our Terms of Service and Privacy Policy. Subscriptions automatically renew unless cancelled.',
+                    AppLocalizations.of(context)!.bySubscribing,
                     style: TextStyle(
                       fontSize: 12,
                       color: Colors.grey[600],
