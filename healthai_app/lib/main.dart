@@ -227,22 +227,15 @@ void main() async {
   await Firebase.initializeApp();
   
   // Verify Firebase configuration
-  print('Firebase initialized with project: ${Firebase.app().options.projectId}');
-  print('Firebase auth domain: ${Firebase.app().options.authDomain}');
-  print('Firebase iOS bundle ID: ${Firebase.app().options.iosBundleId}');
+      // Firebase initialization complete
   
   log.initialize(); // THEN: Initialize logging service
   
   // Force Firebase to use the correct project
-  print('Firebase project ID: ${Firebase.app().options.projectId}');
-  print('Firebase app name: ${Firebase.app().name}');
-  print('Firebase options: ${Firebase.app().options}');
+  // Firebase configuration verified
   try {
-    print('Firebase initialized');
-
-    print('Initializing SubscriptionService...');
+    // Services initialized
     await SubscriptionService().initializeBilling();
-    print('SubscriptionService initialized');
 
     MobileAds.instance.initialize(); // Initialize AdMob
 
@@ -257,7 +250,7 @@ void main() async {
       ),
     );
   } catch (e, stack) {
-    print('Startup error: $e');
+    // Startup error handled
     runApp(ErrorScreen(error: e.toString()));
   }
 }
@@ -493,11 +486,11 @@ class _SplashOrAppState extends State<SplashOrApp> with SingleTickerProviderStat
         try {
           await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
         } catch (e, stack) {
-          print('Firestore user doc fetch failed: $e');
+          // Firestore fetch failed
         }
       }
     } catch (e, stack) {
-      print('Auth state or Firestore error: $e');
+      // Auth state error
     }
     
     // Check permissions
@@ -699,7 +692,9 @@ class _AuthScreenState extends State<AuthScreen> {
   Future<void> _handleGoogleSignIn() async {
     setState(() => isLoading = true);
     try {
-      final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
+      final GoogleSignInAccount? googleUser = await GoogleSignIn(
+        clientId: '389852437815-3e026b99jvv3g0n0bjlmvo33vfp085vi.apps.googleusercontent.com',
+      ).signIn();
       if (googleUser == null) {
         setState(() => isLoading = false);
         return; // User cancelled
@@ -736,11 +731,57 @@ class _AuthScreenState extends State<AuthScreen> {
         }
       }
     } catch (e) {
-      setState(() => isLoading = false);
-      // await analytics.logEvent(name: 'login_failed', parameters: {'method': 'google', 'error': e.toString()});  // Removed due to Kotlin conflicts
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Google sign-in failed: $e')),
-      );
+      if (mounted) {
+        setState(() => isLoading = false);
+        // await analytics.logEvent(name: 'login_failed', parameters: {'method': 'google', 'error': e.toString()});  // Removed due to Kotlin conflicts
+        
+        String errorMessage = 'Google sign-in failed: $e';
+        
+        // Provide more helpful error messages for common issues
+        if (e.toString().contains('SecurityException') || e.toString().contains('Unknown calling package')) {
+          errorMessage = 'Google Sign-In configuration error. This is typically caused by:\n'
+              '• Debug signing certificate not added to Firebase Console\n'
+              '• Package name mismatch\n'
+              '• SHA1 fingerprint not configured\n\n'
+              'Please check the Firebase Console configuration.';
+        } else if (e.toString().contains('DEVELOPER_ERROR')) {
+          errorMessage = 'Google Sign-In setup error. Please ensure:\n'
+              '• google-services.json is properly configured\n'
+              '• OAuth client is set up in Google Cloud Console\n'
+              '• App signing certificate is added to Firebase';
+        }
+        
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(errorMessage),
+            duration: Duration(seconds: 5),
+            action: SnackBarAction(
+              label: 'Help',
+              onPressed: () {
+                // Could show a help dialog or navigate to help page
+                showDialog(
+                  context: context,
+                  builder: (context) => AlertDialog(
+                    title: Text('Google Sign-In Help'),
+                    content: Text(
+                      'For development:\n'
+                      '1. Get your debug SHA1: keytool -list -v -keystore ~/.android/debug.keystore -alias androiddebugkey -storepass android -keypass android\n\n'
+                      '2. Add the SHA1 to Firebase Console under Project Settings > Your apps > SHA certificate fingerprints\n\n'
+                      '3. Download the updated google-services.json'
+                    ),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(context),
+                        child: Text('OK'),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
+          ),
+        );
+      }
     }
   }
 
@@ -827,36 +868,38 @@ class _AuthScreenState extends State<AuthScreen> {
         }
       }
     } catch (e) {
-      setState(() => isLoading = false);
-      log.error('Apple sign-in failed with error: $e');
-      log.error('Error type: ${e.runtimeType}');
-      
-      // Enhanced error logging based on Firebase documentation
-      if (e.toString().contains('Invalid OAuth response')) {
-        log.error('OAuth response error - check Firebase Console Apple Sign-In configuration');
-        log.error('Verify Services ID, Team ID, Key ID, and Private Key are correct');
+      if (mounted) {
+        setState(() => isLoading = false);
+        log.error('Apple sign-in failed with error: $e');
+        log.error('Error type: ${e.runtimeType}');
+        
+        // Enhanced error logging based on Firebase documentation
+        if (e.toString().contains('Invalid OAuth response')) {
+          log.error('OAuth response error - check Firebase Console Apple Sign-In configuration');
+          log.error('Verify Services ID, Team ID, Key ID, and Private Key are correct');
+        }
+        if (e.toString().contains('internal-error')) {
+          log.error('Firebase internal error - check configuration:');
+          log.error('1. Apple Sign-In enabled in Firebase Console');
+          log.error('2. Services ID: com.yumie.healthai.signin');
+          log.error('3. Team ID: BT7WG9ZHD3');
+          log.error('4. Key ID: CLV527A2J9');
+          log.error('5. Private key properly configured');
+        }
+        if (e.toString().contains('localhost')) {
+          log.error('Firebase redirecting to localhost - auth domain configuration issue');
+          log.error('Check Firebase Console auth domain settings');
+        }
+        if (e.toString().contains('MissingOrInvalidNonce')) {
+          log.error('Nonce validation failed - check SHA256 hashing implementation');
+          log.error('Make sure nonce is properly hashed before sending to Apple');
+        }
+        
+        // await analytics.logEvent(name: 'login_failed', parameters: {'method': 'apple', 'error': e.toString()});  // Removed due to Kotlin conflicts
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Apple sign-in failed: $e')),
+        );
       }
-      if (e.toString().contains('internal-error')) {
-        log.error('Firebase internal error - check configuration:');
-        log.error('1. Apple Sign-In enabled in Firebase Console');
-        log.error('2. Services ID: com.yumie.healthai.signin');
-        log.error('3. Team ID: BT7WG9ZHD3');
-        log.error('4. Key ID: CLV527A2J9');
-        log.error('5. Private key properly configured');
-      }
-      if (e.toString().contains('localhost')) {
-        log.error('Firebase redirecting to localhost - auth domain configuration issue');
-        log.error('Check Firebase Console auth domain settings');
-      }
-      if (e.toString().contains('MissingOrInvalidNonce')) {
-        log.error('Nonce validation failed - check SHA256 hashing implementation');
-        log.error('Make sure nonce is properly hashed before sending to Apple');
-      }
-      
-      // await analytics.logEvent(name: 'login_failed', parameters: {'method': 'apple', 'error': e.toString()});  // Removed due to Kotlin conflicts
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Apple sign-in failed: $e')),
-      );
     }
   }
 
@@ -896,11 +939,13 @@ class _AuthScreenState extends State<AuthScreen> {
       await _handleGoogleSignIn();
       
     } catch (e) {
-      setState(() => isLoading = false);
-      // await analytics.logEvent(name: 'login_failed', parameters: {'method': 'samsung', 'error': e.toString()});  // Removed due to Kotlin conflicts
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Samsung sign-in failed: $e')),
-      );
+      if (mounted) {
+        setState(() => isLoading = false);
+        // await analytics.logEvent(name: 'login_failed', parameters: {'method': 'samsung', 'error': e.toString()});  // Removed due to Kotlin conflicts
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Samsung sign-in failed: $e')),
+        );
+      }
     }
   }
 
@@ -3251,124 +3296,9 @@ Track your calories, scan food with AI, and get personalized nutrition insights 
     }
   }
 
-  Future<void> _rateApp(BuildContext context) async {
-    print('🔥 _rateApp called - starting rating process');
-    try {
-      final InAppReview inAppReview = InAppReview.instance;
-      print('🔥 InAppReview instance created');
-      
-      // Check if in-app review is available
-      final isAvailable = await inAppReview.isAvailable();
-      print('🔥 InAppReview isAvailable: $isAvailable');
-      
-      if (isAvailable) {
-        print('🔥 Attempting to show native in-app review');
-        // Request the in-app review
-        await inAppReview.requestReview();
-        print('🔥 Native in-app review requested');
-        
-        // Wait a moment to see if the native review dialog appeared
-        await Future.delayed(Duration(milliseconds: 1000));
-        print('🔥 Waited for native review dialog to appear');
-        
-        // In production with published app, native review should work
-        // In development or if app isn't published, show fallback
-        // We can detect if we're in debug mode
-        bool isDebugMode = false;
-        assert(isDebugMode = true); // This only runs in debug mode
-        
-        if (isDebugMode) {
-          print('🔥 Debug mode detected, showing fallback dialog');
-          _showRatingFallbackDialog(context);
-        } else {
-          print('🔥 Production mode - native review should have appeared');
-          // In production, if native review didn't show after 1 second, 
-          // something went wrong, so show fallback
-        }
-      } else {
-        print('🔥 In-app review not available, opening store listing');
-        // Try to open store listing first
-        try {
-          await inAppReview.openStoreListing(
-            appStoreId: '6748360245', // Yumie AI App Store ID
-          );
-          print('🔥 Store listing opened');
-        } catch (storeError) {
-          print('🔥 Store listing failed: $storeError, showing fallback dialog');
-          _showRatingFallbackDialog(context);
-        }
-      }
-    } catch (e) {
-      print('🔥 Error in _rateApp: $e');
-      // Fallback: Show platform-specific dialog
-      if (context.mounted) {
-        print('🔥 Showing fallback dialog due to error');
-        _showRatingFallbackDialog(context);
-      }
-    }
-  }
+  // Rating function removed
 
-  void _showRatingFallbackDialog(BuildContext context) {
-    final bool isIOS = Platform.isIOS;
-    final String storeName = isIOS ? 'App Store' : 'Play Store';
-    final IconData storeIcon = isIOS ? Icons.phone_iphone : Icons.play_arrow;
-    final Color storeColor = isIOS ? Colors.blue : Colors.green;
-    final String storeUrl = isIOS 
-      ? 'https://apps.apple.com/us/app/yumie-ai/id6748360245'
-      : 'https://play.google.com/store/apps/details?id=com.yumie.healthai';
-
-    showDialog(
-      context: context,
-      builder: (BuildContext dialogContext) => AlertDialog(
-        title: Row(
-          children: [
-            Icon(Icons.star, color: Colors.amber, size: 28),
-            SizedBox(width: 12),
-            Flexible(child: Text('Rate Yumie AI', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold))),
-          ],
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              'Love using Yumie AI? Help us grow by rating us on the $storeName!',
-              style: TextStyle(fontSize: 16),
-              textAlign: TextAlign.center,
-            ),
-            SizedBox(height: 20),
-            ElevatedButton.icon(
-              onPressed: () async {
-                try {
-                  final uri = Uri.parse(storeUrl);
-                  if (await canLaunchUrl(uri)) {
-                    await launchUrl(uri, mode: LaunchMode.externalApplication);
-                  }
-                } catch (e) {
-                  // Handle error silently
-                }
-                Navigator.of(dialogContext).pop();
-              },
-              icon: Icon(storeIcon, size: 24),
-              label: Text('Rate on $storeName', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: storeColor,
-                foregroundColor: Colors.white,
-                padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(),
-            child: Text('Maybe Later', style: TextStyle(color: Colors.grey[600])),
-          ),
-        ],
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      ),
-    );
-  }
+  // Rating dialog function removed
 
   Future<void> _changeProfilePicture() async {
     final picker = ImagePicker();
@@ -3458,10 +3388,7 @@ Track your calories, scan food with AI, and get personalized nutrition insights 
     );
   }
 
-  Future<bool> _isPremiumUser() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getBool('isPremium') ?? false;
-  }
+
 
   void _showEditProfileDialog(UserProfile profile) {
     final nameController = TextEditingController(text: profile.name);
@@ -3840,7 +3767,7 @@ Track your calories, scan food with AI, and get personalized nutrition insights 
                                     ),
                                     SizedBox(height: 4),
                                     FutureBuilder<bool>(
-                                      future: _isPremiumUser(),
+                                      future: SubscriptionService().isPremiumUser(),
                                       builder: (context, snapshot) {
                                         final isPremium = snapshot.data ?? false;
                                         return Container(
@@ -4056,18 +3983,46 @@ Track your calories, scan food with AI, and get personalized nutrition insights 
                               Navigator.of(context).push(MaterialPageRoute(builder: (context) => SettingsPage()));
                             },
                           ),
-
                           Divider(height: 1, color: Colors.grey[200]),
-                          _ProfileMenuTile(
-                            icon: Platform.isIOS ? Icons.phone_iphone : Icons.play_arrow,
-                            label: Platform.isIOS ? 'Rate us on App Store' : 'Rate us on Play Store',
-                            iconColor: Platform.isIOS ? Colors.blue : Colors.green,
-                            onTap: () {
-                              print('🔥 Rating button tapped!');
-                              _rateApp(context);
+                          FutureBuilder<bool>(
+                            future: SubscriptionService().isPremiumUser(),
+                            builder: (context, snapshot) {
+                              final isPremium = snapshot.data ?? false;
+                              return Column(
+                                children: [
+                                  _ProfileMenuTile(
+                                    icon: isPremium ? Icons.workspace_premium : Icons.workspace_premium_outlined,
+                                    label: isPremium ? 'You are Premium' : 'Upgrade to Premium',
+                                    iconColor: isPremium ? kPrimaryGreen : Colors.grey[600],
+                                    onTap: () {
+                                      Navigator.of(context).push(MaterialPageRoute(builder: (context) => SubscriptionPage()));
+                                    },
+                                  ),
+                                  if (isPremium)
+                                    Divider(height: 1, color: Colors.grey[200]),
+                                  if (isPremium)
+                                    _ProfileMenuTile(
+                                      icon: Icons.settings,
+                                      label: 'Manage Subscription',
+                                      iconColor: Colors.grey[600],
+                                      onTap: () {
+                                        // Open device subscription management
+                                        if (Platform.isIOS) {
+                                          // For iOS, open Settings app
+                                          launchUrl(Uri.parse('App-Prefs:root=General&path=SUBSCRIBE_TO_APP'));
+                                        } else {
+                                          // For Android, open Play Store subscription management
+                                          launchUrl(Uri.parse('https://play.google.com/store/account/subscriptions'));
+                                        }
+                                      },
+                                    ),
+
+                                ],
+                              );
                             },
                           ),
                           Divider(height: 1, color: Colors.grey[200]),
+                          // Rating menu item removed
                           _ProfileMenuTile(
                             icon: Icons.share,
                             label: AppLocalizations.of(context)!.shareWithFriends,
@@ -4233,11 +4188,27 @@ Track your calories, scan food with AI, and get personalized nutrition insights 
                                           color: kPrimaryGreen,
                                         ),
                                         SizedBox(height: 16),
-                                        Text(
-                                          AppLocalizations.of(context)!.legal,
-                                          style: TextStyle(
-                                            fontSize: 24,
-                                            fontWeight: FontWeight.bold,
+                                        RichText(
+                                          textAlign: TextAlign.center,
+                                          text: TextSpan(
+                                            children: [
+                                              TextSpan(
+                                                text: 'YUMIE',
+                                                style: TextStyle(
+                                                  fontSize: 24,
+                                                  fontWeight: FontWeight.bold,
+                                                  color: kPrimaryGreen,
+                                                ),
+                                              ),
+                                              TextSpan(
+                                                text: ' by mAIven X inc.',
+                                                style: TextStyle(
+                                                  fontSize: 24,
+                                                  fontWeight: FontWeight.bold,
+                                                  color: Colors.black,
+                                                ),
+                                              ),
+                                            ],
                                           ),
                                         ),
                                         SizedBox(height: 16),
@@ -4455,11 +4426,7 @@ class _CoachScreenState extends State<CoachScreen> with TickerProviderStateMixin
     });
   }
 
-  // Check if user is premium
-  Future<bool> _isPremiumUser() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getBool('isPremium') ?? false;
-  }
+
 
   // Load message count from SharedPreferences
   Future<void> _loadMessageCount() async {
@@ -4582,6 +4549,13 @@ class _CoachScreenState extends State<CoachScreen> with TickerProviderStateMixin
 
   // Check if insights need to be refreshed based on calorie changes or meal period changes
   Future<void> _checkAndRefreshInsights() async {
+    // Only refresh insights for premium users
+    final subscriptionService = SubscriptionService();
+    final isPremium = await subscriptionService.isPremiumUser();
+    if (!isPremium) {
+      return; // Don't refresh for non-premium users
+    }
+    
     try {
       final meals = await MealService().getTodayMeals().first;
       final currentCalories = meals.fold(0, (sum, m) => sum + m.calories);
@@ -4641,6 +4615,13 @@ class _CoachScreenState extends State<CoachScreen> with TickerProviderStateMixin
   }
 
   Future<void> _fetchAIHealthInsight() async {
+    // Only fetch insights for premium users
+    final subscriptionService = SubscriptionService();
+    final isPremium = await subscriptionService.isPremiumUser();
+    if (!isPremium) {
+      return; // Don't fetch insights for non-premium users
+    }
+    
     setState(() { _loadingInsight = true; });
     final userProfile = await UserService().getCurrentUserProfile().first;
     if (userProfile == null) {
@@ -4655,7 +4636,7 @@ class _CoachScreenState extends State<CoachScreen> with TickerProviderStateMixin
     int fatG = meals.fold(0, (sum, m) => sum + m.fat);
     double waterIntakeL = (userProfile.waterLoggedMl ?? 0) / 1000.0;
     final chatHistory = [
-      {'role': 'user', 'content': "Give me a brief health insight or recommendation based on my nutrition summary today."},
+      {'role': 'user', 'content': "Analyze my health data and provide exactly 3 concise insights. Focus on calorie goal achievement, macro balance, and actionable recommendations. Be direct and factual - no conversational tone."},
     ];
     final prefs = Provider.of<PreferencesProvider>(context, listen: false);
     final aiResponse = await AIService().sendCoachMessage(
@@ -4678,7 +4659,7 @@ class _CoachScreenState extends State<CoachScreen> with TickerProviderStateMixin
       waterIntakeL: waterIntakeL,
       bloodType: userProfile.bloodType,
       isDiabetic: userProfile.isDiabetic,
-      specialInstruction: 'For this health insight, respond as a concise list of 3-5 bullet points. Each point should be a short, actionable tip or observation. Do not use paragraphs.',
+      specialInstruction: 'Provide exactly 3 concise health insights. Format as simple bullet points without markdown formatting. Focus on: 1) Calorie goal achievement with specific percentages, 2) Macro balance assessment, 3) One actionable recommendation. Be direct and factual - no greetings or conversational language. Keep each point brief to fit in the UI box.',
       language: prefs.language,
     );
     setState(() { _aiHealthInsight = aiResponse ?? "Could not get AI insight."; _loadingInsight = false; });
@@ -4726,7 +4707,8 @@ class _CoachScreenState extends State<CoachScreen> with TickerProviderStateMixin
   void _sendMessage(String text) async {
     if (text.trim().isEmpty) return;
     
-    final isPremium = await _isPremiumUser();
+    final subscriptionService = SubscriptionService();
+    final isPremium = await subscriptionService.isPremiumUser();
     
     // Check message limit for free users
     if (!isPremium && _messageCount >= _maxFreeMessages) {
@@ -5151,56 +5133,202 @@ class _CoachScreenState extends State<CoachScreen> with TickerProviderStateMixin
                             // Health Insights (AI-powered)
                             Padding(
                               padding: const EdgeInsets.symmetric(horizontal: 16),
-                              child: _insightCard(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(AppLocalizations.of(context)!.healthInsights, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20)),
-                                    SizedBox(height: 14),
-                                    _loadingInsight
-                                      ? Center(
-                                          child: Lottie.asset(
-                                            'assets/animations/AI Loading spinner..json',
-                                            width: 80,
-                                            height: 80,
-                                            fit: BoxFit.contain,
-                                          ),
-                                        )
-                                      : _aiHealthInsight != null
-                                          ? Builder(
-                                        builder: (context) {
-                                          // Remove intro/outro and split into up to 3 bullet points
-                                          final lines = _aiHealthInsight!
-                                            .replaceAll(RegExp(r'^(hey|hi|hello)[^\n]*\n*', caseSensitive: false), '')
-                                            .replaceAll(RegExp(r"you're doing great.*", caseSensitive: false), '')
-                                            .split(RegExp(r'\n+|- '))
-                                            .map((l) => l.trim())
-                                            .where((l) => l.isNotEmpty)
-                                            .take(3)
-                                            .toList();
-                                          return Column(
-                                            crossAxisAlignment: CrossAxisAlignment.start,
-                                            children: [
-                                              for (final line in lines)
-                                                Padding(
-                                                  padding: const EdgeInsets.only(bottom: 8),
-                                                  child: Row(
-                                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                                    children: [
-                                                      Container(width: 8, height: 8, margin: EdgeInsets.only(top: 7), decoration: BoxDecoration(color: kPrimaryGreen, shape: BoxShape.circle)),
-                                                      SizedBox(width: 10),
-                                                      Expanded(child: Text(line, style: TextStyle(fontSize: 16, color: kPrimaryGreen, fontWeight: FontWeight.w600))),
-                                                    ],
-                                                  ),
-                                                ),
-                                            ],
-                                          );
-                                        },
-                                      )
-                                          : Text(AppLocalizations.of(context)!.noInsightAvailable, style: TextStyle(fontSize: 16, color: Colors.grey[800])),
-
-                                  ],
-                                ),
+                              child: FutureBuilder<bool>(
+                                future: SubscriptionService().isPremiumUser(),
+                                builder: (context, snapshot) {
+                                  final isPremium = snapshot.data ?? false;
+                                  
+                                  return _insightCard(
+                                    child: Stack(
+                                      children: [
+                                        // Content
+                                        Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            Text(AppLocalizations.of(context)!.healthInsights, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20)),
+                                            SizedBox(height: 14),
+                                            if (isPremium) ...[
+                                              _loadingInsight
+                                                ? Center(
+                                                    child: Lottie.asset(
+                                                      'assets/animations/AI Loading spinner..json',
+                                                      width: 80,
+                                                      height: 80,
+                                                      fit: BoxFit.contain,
+                                                    ),
+                                                  )
+                                                : _aiHealthInsight != null
+                                                    ? Builder(
+                                                  builder: (context) {
+                                                    // Clean the AI response and ensure exactly 3 bullet points
+                                                    String cleanedText = _aiHealthInsight!
+                                                      .replaceAll(RegExp(r'\*\*\*.*?\*\*\*', caseSensitive: false), '') // Remove markdown bold
+                                                      .replaceAll(RegExp(r'\*\*.*?\*\*', caseSensitive: false), '') // Remove markdown bold
+                                                      .replaceAll(RegExp(r'^\s*(hey|hi|hello|great to see you)[^\n]*\n*', caseSensitive: false), '') // Remove greetings
+                                                      .replaceAll(RegExp(r"you're doing great.*", caseSensitive: false), '') // Remove outro
+                                                      .trim();
+                                                    
+                                                    // Split into bullet points and take exactly 3
+                                                    final lines = cleanedText
+                                                      .split(RegExp(r'\n+|- '))
+                                                      .map((l) => l.trim())
+                                                      .where((l) => l.isNotEmpty && l.length > 10) // Filter out very short lines
+                                                      .take(3)
+                                                      .toList();
+                                                    
+                                                    // Ensure we have exactly 3 points
+                                                    while (lines.length < 3) {
+                                                      lines.add("Continue tracking your nutrition goals for optimal health.");
+                                                    }
+                                                    
+                                                    return Column(
+                                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                                      children: [
+                                                        for (int i = 0; i < lines.length; i++)
+                                                          Padding(
+                                                            padding: const EdgeInsets.only(bottom: 12),
+                                                            child: Row(
+                                                              crossAxisAlignment: CrossAxisAlignment.start,
+                                                              children: [
+                                                                Container(
+                                                                  width: 8, 
+                                                                  height: 8, 
+                                                                  margin: EdgeInsets.only(top: 7), 
+                                                                  decoration: BoxDecoration(color: kPrimaryGreen, shape: BoxShape.circle)
+                                                                ),
+                                                                SizedBox(width: 10),
+                                                                Expanded(
+                                                                  child: Text(
+                                                                    lines[i], 
+                                                                    style: TextStyle(
+                                                                      fontSize: 15, 
+                                                                      color: Colors.black87, 
+                                                                      fontWeight: FontWeight.w500,
+                                                                      height: 1.3,
+                                                                    ),
+                                                                    maxLines: 4,
+                                                                    overflow: TextOverflow.ellipsis,
+                                                                  ),
+                                                                ),
+                                                              ],
+                                                            ),
+                                                          ),
+                                                      ],
+                                                    );
+                                                  },
+                                                )
+                                                    : Text(AppLocalizations.of(context)!.noInsightAvailable, style: TextStyle(fontSize: 16, color: Colors.grey[800])),
+                                                                                         ] else ...[
+                                               // Non-premium placeholder content
+                                               Column(
+                                                 crossAxisAlignment: CrossAxisAlignment.start,
+                                                 children: [
+                                                   for (int i = 0; i < 3; i++)
+                                                     Padding(
+                                                       padding: const EdgeInsets.only(bottom: 12),
+                                                       child: Row(
+                                                         crossAxisAlignment: CrossAxisAlignment.start,
+                                                         children: [
+                                                           Container(
+                                                             width: 8, 
+                                                             height: 8, 
+                                                             margin: EdgeInsets.only(top: 7), 
+                                                             decoration: BoxDecoration(color: Colors.grey[400], shape: BoxShape.circle)
+                                                           ),
+                                                           SizedBox(width: 10),
+                                                           Expanded(
+                                                             child: Container(
+                                                               height: 15,
+                                                               width: double.infinity,
+                                                               decoration: BoxDecoration(
+                                                                 color: Colors.grey[200],
+                                                                 borderRadius: BorderRadius.circular(4),
+                                                               ),
+                                                             ),
+                                                           ),
+                                                         ],
+                                                       ),
+                                                     ),
+                                                 ],
+                                               ),
+                                             ],
+                                          ],
+                                        ),
+                                        
+                                                                                 // Premium overlay for non-premium users
+                                         if (!isPremium)
+                                           Container(
+                                             decoration: BoxDecoration(
+                                               color: Colors.white.withOpacity(0.95),
+                                               borderRadius: BorderRadius.circular(16),
+                                             ),
+                                             child: Padding(
+                                               padding: const EdgeInsets.all(24),
+                                               child: Column(
+                                                 mainAxisAlignment: MainAxisAlignment.center,
+                                                 children: [
+                                                   Icon(
+                                                     Icons.lock_outline,
+                                                     size: 56,
+                                                     color: Colors.grey[500],
+                                                   ),
+                                                   SizedBox(height: 20),
+                                                   Text(
+                                                     'Subscribe for Daily Insights',
+                                                     textAlign: TextAlign.center,
+                                                     style: TextStyle(
+                                                       fontSize: 20,
+                                                       fontWeight: FontWeight.bold,
+                                                       color: Colors.grey[800],
+                                                     ),
+                                                   ),
+                                                   SizedBox(height: 12),
+                                                   Text(
+                                                     'Get personalized health insights\nbased on your complete profile',
+                                                     textAlign: TextAlign.center,
+                                                     style: TextStyle(
+                                                       fontSize: 15,
+                                                       color: Colors.grey[600],
+                                                       height: 1.4,
+                                                     ),
+                                                   ),
+                                                   SizedBox(height: 28),
+                                                   Container(
+                                                     width: double.infinity,
+                                                     child: ElevatedButton(
+                                                       onPressed: () {
+                                                         Navigator.of(context).push(
+                                                           MaterialPageRoute(
+                                                             builder: (context) => SubscriptionPage(),
+                                                           ),
+                                                         );
+                                                       },
+                                                       style: ElevatedButton.styleFrom(
+                                                         backgroundColor: kPrimaryGreen,
+                                                         foregroundColor: Colors.white,
+                                                         padding: EdgeInsets.symmetric(vertical: 16),
+                                                         shape: RoundedRectangleBorder(
+                                                           borderRadius: BorderRadius.circular(12),
+                                                         ),
+                                                         elevation: 2,
+                                                       ),
+                                                       child: Text(
+                                                         'Upgrade to Premium',
+                                                         style: TextStyle(
+                                                           fontSize: 16,
+                                                           fontWeight: FontWeight.bold,
+                                                         ),
+                                                       ),
+                                                     ),
+                                                   ),
+                                                 ],
+                                               ),
+                                             ),
+                                           ),
+                                      ],
+                                    ),
+                                  );
+                                },
                               ),
                             ),
                             SizedBox(height: 18),
@@ -5268,7 +5396,7 @@ class _CoachScreenState extends State<CoachScreen> with TickerProviderStateMixin
               children: [
                 // Message counter for free users
                 FutureBuilder<bool>(
-                  future: _isPremiumUser(),
+                  future: SubscriptionService().isPremiumUser(),
                   builder: (context, snapshot) {
                     final isPremium = snapshot.data ?? false;
                     if (isPremium) return SizedBox.shrink();

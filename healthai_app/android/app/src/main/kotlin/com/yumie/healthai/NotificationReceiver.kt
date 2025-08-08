@@ -70,7 +70,7 @@ class NotificationReceiver : BroadcastReceiver() {
         )
 
         val builder = NotificationCompat.Builder(context, channelId)
-            .setSmallIcon(android.R.drawable.ic_dialog_info) // Use system icon for now
+            .setSmallIcon(R.drawable.ic_notification) // Use Yumie notification icon
             .setContentTitle(title)
             .setContentText(message)
             .setPriority(NotificationCompat.PRIORITY_HIGH)

@@ -2,11 +2,8 @@ import 'dart:io';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:path_provider/path_provider.dart';
-import 'package:path/path.dart' as path;
-import 'scan_result_page.dart';
 import 'package:image/image.dart' as img;
-import 'dart:math';
+import 'scan_result_page.dart';
 import 'scanner_overlay.dart';
 import 'scan_result_fridge_page.dart';
 import 'scan_paywall_page.dart';
@@ -49,7 +46,7 @@ class _ScanPageState extends State<ScanPage> {
 
   Future<void> _initCamera() async {
     _cameras = await availableCameras();
-    _controller = CameraController(_cameras[0], ResolutionPreset.high);
+    _controller = CameraController(_cameras[0], ResolutionPreset.high, enableAudio: false);
     await _controller.initialize();
     setState(() {
       _isCameraInitialized = true;

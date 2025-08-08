@@ -4,8 +4,8 @@
     "indexes": "firestore.indexes.json"
   },
   "functions": {
-    "source": "functions",
-    "runtime": "nodejs18"
+    "source": "functions/functions",
+    "runtime": "nodejs20"
   },
   "storage": {
     "rules": "storage.rules"

@@ -102,12 +102,8 @@ class _QuantitySelectionDialogState extends State<QuantitySelectionDialog>
     
     // Trigger animations when quantity changes
     if (quantity != null && quantity > 0) {
-      _nutritionAnimationController.forward().then((_) {
-        _nutritionAnimationController.reverse();
-      });
-      _valueAnimationController.forward().then((_) {
-        _valueAnimationController.reverse();
-      });
+      _nutritionAnimationController.forward();
+      _valueAnimationController.forward();
     }
   }
 

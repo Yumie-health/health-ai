@@ -1,5 +1,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools">
+    xmlns:tools="http://schemas.android.com/tools"
+    package="com.yumie.healthai">
     
     <!-- Camera permission for scanning food items -->
     <uses-permission android:name="android.permission.CAMERA" />
@@ -18,9 +19,8 @@
     <!-- Notification permissions for Android 13+ -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     
-    <!-- Exact alarm permissions for scheduled notifications -->
+    <!-- Scheduled alarm permissions for notifications -->
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
-    <uses-permission android:name="android.permission.USE_EXACT_ALARM" />
     
     <!-- Wake lock for background notifications -->
     <uses-permission android:name="android.permission.WAKE_LOCK" />
@@ -83,6 +83,11 @@
             android:name="android.adservices.AD_SERVICES_CONFIG"
             android:resource="@xml/gma_ad_services_config"
             tools:replace="android:resource" />
+            
+        <!-- Google Sign-In Configuration -->
+        <meta-data
+            android:name="com.google.android.gms.version"
+            android:value="@integer/google_play_services_version" />
     </application>
     <!-- Required to query activities that can process text, see:
          https://developer.android.com/training/package-visibility and

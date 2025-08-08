@@ -84,8 +84,15 @@ class MainActivity: FlutterActivity() {
                 "purchaseSubscription" -> {
                     val productId = call.argument<String>("productId")
                     if (productId != null) {
-                        // Handle purchase - you'll need to implement this based on your product details
-                        result.success("Purchase initiated")
+                        CoroutineScope(Dispatchers.Main).launch {
+                            try {
+                                // For now, we'll use the Flutter IAP plugin instead of native
+                                // The native billing is set up but not fully integrated
+                                result.success("Purchase handled by Flutter IAP")
+                            } catch (e: Exception) {
+                                result.error("BILLING_ERROR", "Failed to purchase subscription", e.message)
+                            }
+                        }
                     } else {
                         result.error("BILLING_ERROR", "Product ID is required", null)
                     }

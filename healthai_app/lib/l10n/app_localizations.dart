@@ -1027,6 +1027,12 @@ abstract class AppLocalizations {
   /// **'Get unlimited scans and more!'**
   String get getUnlimitedScans;
 
+  /// No description provided for @getUnlimitedSearches.
+  ///
+  /// In en, this message translates to:
+  /// **'Get unlimited searches and more!'**
+  String get getUnlimitedSearches;
+
   /// No description provided for @upgradePlan.
   ///
   /// In en, this message translates to:
@@ -1038,6 +1044,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Watch Ad for Scan'**
   String get watchAdForScan;
+
+  /// No description provided for @watchAdForSearch.
+  ///
+  /// In en, this message translates to:
+  /// **'Watch Ad for Search'**
+  String get watchAdForSearch;
 
   /// No description provided for @generateMeal.
   ///

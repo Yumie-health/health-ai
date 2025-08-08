@@ -474,10 +474,16 @@ class AppLocalizationsEs extends AppLocalizations {
   String get getUnlimitedScans => '¡Obtén escaneos ilimitados y más!';
 
   @override
+  String get getUnlimitedSearches => '¡Obtén búsquedas ilimitadas y más!';
+
+  @override
   String get upgradePlan => 'Mejorar plan';
 
   @override
   String get watchAdForScan => 'Ver anuncio para escanear';
+
+  @override
+  String get watchAdForSearch => 'Ver anuncio para buscar';
 
   @override
   String get generateMeal => 'Generar comida';

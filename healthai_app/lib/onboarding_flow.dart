@@ -5,7 +5,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:lottie/lottie.dart';
 import 'services/ai_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'l10n/app_localizations.dart';
 import 'package:provider/provider.dart';
 import 'providers/preferences_provider.dart';
 

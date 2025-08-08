@@ -1,6 +1,3 @@
-import 'dart:io';
-import 'package:firebase_remote_config/firebase_remote_config.dart';
-
 class PaymentConfig {
   static const Map<String, Map<String, dynamic>> subscriptionPlans = {
     'monthly': {

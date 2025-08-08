@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    
+    <!-- Yumie mangosteen fruit icon for notifications -->
+    <!-- Main round body -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M12,8C8.69,8 6,10.69 6,14C6,17.31 8.69,20 12,20C15.31,20 18,17.31 18,14C18,10.69 15.31,8 12,8Z"/>
+    
+    <!-- Crown/petal top -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M12,6C11.45,6 11,6.45 11,7C11,7.55 11.45,8 12,8C12.55,8 13,7.55 13,7C13,6.45 12.55,6 12,6Z"/>
+    
+    <!-- Additional crown details -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M10,7C9.45,7 9,7.45 9,8C9,8.55 9.45,9 10,9C10.55,9 11,8.55 11,8C11,7.45 10.55,7 10,7Z"/>
+    
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M14,7C13.45,7 13,7.45 13,8C13,8.55 13.45,9 14,9C14.55,9 15,8.55 15,8C15,7.45 14.55,7 14,7Z"/>
+</vector>

@@ -65,6 +65,10 @@ class SubscriptionService {
             }
           }
         }
+        
+        // TODO: For production, implement real-time validation with Google Play/App Store
+        // This would check the actual subscription status from the store
+        // For now, we rely on local validation
       }
       
       return isPremium;
@@ -97,6 +101,8 @@ class SubscriptionService {
       return null;
     }
   }
+
+
 
   Future<void> clearSubscription() async {
     try {

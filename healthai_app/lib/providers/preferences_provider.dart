@@ -62,26 +62,22 @@ class PreferencesProvider extends ChangeNotifier {
           await prefs.setBool('mindfulWalksReminders', _mindfulWalksReminders);
           await prefs.setBool('momentOfCalmReminders', _momentOfCalmReminders);
           
-          print('✅ Synced notification preferences from Firestore');
-          print('📱 Meal: $_mealLoggingPrompts, Water: $_waterIntakeReminders, Walk: $_mindfulWalksReminders, Calm: $_momentOfCalmReminders');
+                // Preferences synced from Firestore
           
           // Schedule notifications for enabled preferences
           if (_mealLoggingPrompts) {
-            print('🍽️ Scheduling meal reminders from Firestore sync...');
             await _scheduleMealLoggingPrompts();
           }
           if (_waterIntakeReminders) {
-            print('💧 Scheduling water reminders from Firestore sync...');
             await _scheduleWaterIntakeReminders();
           }
           if (_mindfulWalksReminders) {
-            print('🚶‍♀️ Scheduling walk reminders from Firestore sync...');
             await _scheduleMindfulWalksReminders();
           }
         }
       }
     } catch (e) {
-      print('⚠️ Failed to sync preferences from Firestore: $e');
+              // Failed to sync preferences
       // If Firestore fails, use SharedPreferences values (already loaded above)
     }
     
@@ -121,7 +117,7 @@ class PreferencesProvider extends ChangeNotifier {
       if (hasPermission) {
         await _scheduleMealLoggingPrompts();
       } else {
-        print('❌ Notification permission denied - cannot schedule meal logging prompts');
+        // Notification permission denied
       }
     } else {
       await _cancelMealLoggingPrompts();
@@ -153,7 +149,7 @@ class PreferencesProvider extends ChangeNotifier {
       if (hasPermission) {
         await _scheduleWaterIntakeReminders();
       } else {
-        print('❌ Notification permission denied - cannot schedule water intake reminders');
+        // Notification permission denied
       }
     } else {
       await _cancelWaterIntakeReminders();

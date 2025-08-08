@@ -8,10 +8,22 @@ import com.google.android.play.core.integrity.IntegrityTokenResponse
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
+import android.util.Base64
+import java.security.SecureRandom
 
 class PlayIntegrityHelper(private val context: Context) {
     
     private val integrityManager: IntegrityManager = IntegrityManagerFactory.create(context)
+    
+    /**
+     * Generate a cryptographically secure nonce of at least 16 bytes
+     */
+    private fun generateNonce(): String {
+        val random = SecureRandom()
+        val nonce = ByteArray(24) // Generate 24 bytes (192 bits) for extra security
+        random.nextBytes(nonce)
+        return Base64.encodeToString(nonce, Base64.URL_SAFE or Base64.NO_WRAP)
+    }
     
     /**
      * Get an integrity token from Google Play
@@ -20,7 +32,7 @@ class PlayIntegrityHelper(private val context: Context) {
     suspend fun getIntegrityToken(): String? = withContext(Dispatchers.IO) {
         try {
             val request = IntegrityTokenRequest.builder()
-                .setNonce("your-nonce-here") // You can customize this
+                .setNonce(generateNonce()) // Generate secure nonce of 24 bytes before base64 encoding
                 .build()
             
             val response: IntegrityTokenResponse = integrityManager.requestIntegrityToken(request).await()

@@ -34,13 +34,24 @@ android {
         versionCode = flutter.versionCode
         versionName = flutter.versionName
         multiDexEnabled = true
+        
+        ndk {
+            abiFilters += listOf("arm64-v8a", "armeabi-v7a")
+        }
+    }
+
+    signingConfigs {
+        create("release") {
+            storeFile = file("upload-keystore.jks")
+            storePassword = "yumiemaivenx"
+            keyAlias = "upload"
+            keyPassword = "yumiemaivenx"
+        }
     }
 
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
-            signingConfig = signingConfigs.getByName("debug")
+            signingConfig = signingConfigs.getByName("release")
         }
     }
 
@@ -63,4 +74,7 @@ dependencies {
     
     // Google Play Billing Library
     implementation("com.android.billingclient:billing-ktx:6.2.1")
+    
+    // Google Sign-In
+    implementation("com.google.android.gms:play-services-auth:20.7.0")
 }

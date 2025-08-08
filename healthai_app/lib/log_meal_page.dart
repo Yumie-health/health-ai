@@ -10,6 +10,10 @@ import 'services/ai_service.dart';
 import 'providers/preferences_provider.dart';
 import 'utils/constants.dart';
 import 'widgets/quantity_selection_dialog.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'services/subscription_service.dart';
+import 'search_paywall_page.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 
 // Searchable meal input with dropdown suggestions
 class SearchableMealInput extends StatefulWidget {
@@ -37,12 +41,43 @@ class _SearchableMealInputState extends State<SearchableMealInput> {
   bool _showDropdown = false;
   bool _isSearching = false;
   List<Map<String, dynamic>> _searchResults = [];
+  RewardedAd? _rewardedAd;
+  bool _isRewardedAdLoaded = false;
+  
+  // Search limit tracking
+  Future<bool> _shouldShowSearchPaywall() async {
+    // Check if user is premium first
+    final subscriptionService = SubscriptionService();
+    final isPremium = await subscriptionService.isPremiumUser();
+    if (isPremium) {
+      return false; // Premium users don't see paywall
+    }
+    
+    final prefs = await SharedPreferences.getInstance();
+    final today = DateTime.now();
+    final lastSearchDate = prefs.getString('lastSearchDate');
+    final searchesToday = prefs.getInt('searchesToday') ?? 0;
+    final todayStr = '${today.year}-${today.month}-${today.day}';
+    if (lastSearchDate != todayStr) {
+      await prefs.setString('lastSearchDate', todayStr);
+      await prefs.setInt('searchesToday', 0);
+      return false; // first search of the day
+    }
+    return searchesToday >= 1;
+  }
+
+  Future<void> _incrementSearchCount() async {
+    final prefs = await SharedPreferences.getInstance();
+    final searchesToday = prefs.getInt('searchesToday') ?? 0;
+    await prefs.setInt('searchesToday', searchesToday + 1);
+  }
 
   @override
   void initState() {
     super.initState();
     _focusNode.addListener(_onFocusChange);
     widget.controller.addListener(_onTextChanged);
+    _loadRewardedAd(() {});
   }
 
   void _onFocusChange() {
@@ -59,10 +94,88 @@ class _SearchableMealInputState extends State<SearchableMealInput> {
     // No-op: do not reset dropdown or results on text change
   }
 
+  void _loadRewardedAd(VoidCallback onAdLoaded) {
+    RewardedAd.load(
+      adUnitId: 'ca-app-pub-3940256099942544/5224354917', // Official test rewarded ad unit
+      request: AdRequest(),
+      rewardedAdLoadCallback: RewardedAdLoadCallback(
+        onAdLoaded: (ad) {
+          _rewardedAd = ad;
+          _isRewardedAdLoaded = true;
+          onAdLoaded();
+        },
+        onAdFailedToLoad: (error) {
+          _isRewardedAdLoaded = false;
+          _rewardedAd = null;
+        },
+      ),
+    );
+  }
+
+  Future<void> _showRewardedAd(BuildContext context, VoidCallback onRewardEarned) async {
+    if (_isRewardedAdLoaded && _rewardedAd != null) {
+      _rewardedAd!.fullScreenContentCallback = FullScreenContentCallback(
+        onAdDismissedFullScreenContent: (ad) {
+          ad.dispose();
+          _isRewardedAdLoaded = false;
+          _rewardedAd = null;
+          _loadRewardedAd(() {}); // Preload next ad
+        },
+        onAdFailedToShowFullScreenContent: (ad, error) {
+          ad.dispose();
+          _isRewardedAdLoaded = false;
+          _rewardedAd = null;
+          _loadRewardedAd(() {});
+        },
+      );
+
+      await _rewardedAd!.show(
+        onUserEarnedReward: (ad, reward) {
+          onRewardEarned();
+        },
+      );
+    } else {
+      // If ad is not loaded, just continue with the action
+      onRewardEarned();
+    }
+  }
+
   Future<void> _performSearch(String query) async {
     if (_isSearching) return; // Prevent multiple simultaneous searches
     
-    print('🔍 Starting search for: $query (food type: ${widget.selectedFoodType})'); // Debug log
+    // Check search limit before performing search
+    final bool showPaywall = await _shouldShowSearchPaywall();
+    if (showPaywall) {
+      if (!mounted) return;
+      await Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) => SearchPaywallPage(
+            onUpgrade: () {
+              Navigator.of(context).pop();
+            },
+            onWatchAd: (paywallContext) async {
+              await _showRewardedAd(paywallContext, () async {
+                await _incrementSearchCount();
+                Navigator.of(paywallContext).pop();
+                // Continue with search after watching ad
+                _performSearchAfterAd(query);
+              });
+            },
+            onDiscard: () {
+              Navigator.of(context).pop();
+            },
+          ),
+        ),
+      );
+      return;
+    }
+
+    await _incrementSearchCount();
+    await _performSearchAfterAd(query);
+  }
+
+  Future<void> _performSearchAfterAd(String query) async {
+    // Starting search
     
     setState(() {
       _isSearching = true;
@@ -70,10 +183,7 @@ class _SearchableMealInputState extends State<SearchableMealInput> {
     });
 
     try {
-      print('🔍 Calling AI service...'); // Debug log
-      // Use a faster, simpler AI prompt for quicker results with food type refinement
       final results = await _aiService.searchFoodItemsFast(query, foodType: widget.selectedFoodType);
-      print('🔍 AI returned ${results.length} results'); // Debug log
       
       if (mounted) {
         setState(() {
@@ -81,10 +191,10 @@ class _SearchableMealInputState extends State<SearchableMealInput> {
           _showDropdown = true; // Keep dropdown visible even if no results
           _isSearching = false;
         });
-        print('🔍 Updated UI with ${results.length} results, dropdown visible: $_showDropdown'); // Debug log
+
       }
     } catch (e) {
-      print('🔍 Search error: $e'); // Debug log
+      // Search error occurred
       if (mounted) {
         setState(() {
           _searchResults = [];
@@ -109,8 +219,8 @@ class _SearchableMealInputState extends State<SearchableMealInput> {
   }
 
   void _showQuantityDialog(Map<String, dynamic> meal) {
-    // Determine food type based on meal name and characteristics
-    String foodType = _determineFoodType(meal['name']);
+    // Use the selected food type from the widget instead of determining from name
+    String foodType = widget.selectedFoodType;
     
     showDialog(
       context: context,
@@ -180,7 +290,7 @@ class _SearchableMealInputState extends State<SearchableMealInput> {
   void _onCheckmarkTap() {
     final query = widget.controller.text.trim();
     if (query.length >= 2) {
-      print('🔍 Checkmark tapped, query: $query'); // Debug log
+      // Checkmark tapped
       _performSearch(query);
     }
     // Do not unfocus here - keep focus to maintain dropdown visibility

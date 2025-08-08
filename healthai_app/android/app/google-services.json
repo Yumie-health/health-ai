@@ -14,11 +14,11 @@
       },
       "oauth_client": [
         {
-          "client_id": "389852437815-d5k3i4upclkcjee5iccp10h3sq4muj7n.apps.googleusercontent.com",
+          "client_id": "389852437815-2j9njr98dqs0h79kfco08sp1m37nec24.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
             "package_name": "com.yumie.healthai",
-            "certificate_hash": "03c68b9d74b7d8ed2a0e8dce61219014ef918f76"
+            "certificate_hash": "a2aeb8f0d35b9898f8bd7506c8e12fab48d9305b"
           }
         },
         {

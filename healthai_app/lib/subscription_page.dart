@@ -1,12 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:in_app_purchase/in_app_purchase.dart';
 import 'dart:io';
-import 'services/subscription_service.dart';
-import 'l10n/app_localizations.dart';
+import 'services/receipt_validation_service.dart';
 import 'utils/constants.dart';
-import 'services/logging_service.dart';
-import 'config/payment_config.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 class SubscriptionPage extends StatefulWidget {
   const SubscriptionPage({Key? key}) : super(key: key);
@@ -50,7 +46,10 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
       
       if (response.notFoundIDs.isNotEmpty) {
         print('Products not found: ${response.notFoundIDs}');
-        print('Make sure these products are configured in App Store Connect');
+        print('Make sure these products are configured in Google Play Console and the app is published to internal testing');
+        setState(() {
+          _errorMessage = 'Subscription products not found. Please ensure the app is published to internal testing.';
+        });
       }
 
       if (response.error != null) {
@@ -67,7 +66,7 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
           ProductDetails(
             id: 'premium_monthly',
             title: 'Monthly Premium',
-            description: 'No ads',
+            description: '',
             price: '\$7.99',
             rawPrice: 7.99,
             currencyCode: 'USD',
@@ -75,7 +74,7 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
           ProductDetails(
             id: 'premium_yearly',
             title: 'Yearly Premium',
-            description: 'No ads (Save 37%)',
+            description: 'Save 37%',
             price: '\$49.99',
             rawPrice: 49.99,
             currencyCode: 'USD',
@@ -103,26 +102,48 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
       
       if (purchase.status == PurchaseStatus.purchased || purchase.status == PurchaseStatus.restored) {
         try {
-          // Unlock premium
-          final prefs = await SharedPreferences.getInstance();
-          await prefs.setBool('isPremium', true);
-          await prefs.setString('subscriptionType', purchase.productID);
-          await prefs.setString('purchaseDate', DateTime.now().toIso8601String());
+          // Validate receipt with backend
+          final isValid = await ReceiptValidationService.validateReceipt(purchase);
           
-          print('Subscription activated: ${purchase.productID}');
-          
+          if (isValid) {
+            // Save validated subscription
+            await ReceiptValidationService.saveValidatedSubscription(purchase);
+            
+            print('Subscription validated and activated: ${purchase.productID}');
+            
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('Subscription activated!'),
+                  backgroundColor: kPrimaryGreen,
+                  duration: Duration(seconds: 3),
+                ),
+              );
+              Navigator.of(context).pop();
+            }
+          } else {
+            print('Receipt validation failed for: ${purchase.productID}');
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('Subscription validation failed. Please try again.'),
+                  backgroundColor: kWarningRed,
+                  duration: Duration(seconds: 5),
+                ),
+              );
+            }
+          }
+        } catch (e) {
+          print('Error processing subscription: $e');
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: Text('Subscription activated!'),
-                backgroundColor: kPrimaryGreen,
-                duration: Duration(seconds: 3),
+                content: Text('Error processing subscription. Please try again.'),
+                backgroundColor: kWarningRed,
+                duration: Duration(seconds: 5),
               ),
             );
-            Navigator.of(context).pop();
           }
-        } catch (e) {
-          print('Error saving subscription: $e');
         }
       } else if (purchase.status == PurchaseStatus.error) {
         print('Purchase error: ${purchase.error}');
@@ -155,13 +176,29 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
     setState(() => _isProcessingPayment = false);
   }
 
-  void _buy(ProductDetails product) {
+  void _buy(ProductDetails product) async {
     print('Attempting to purchase: ${product.id} on ${Platform.isIOS ? 'iOS' : 'Android'}');
     setState(() => _isProcessingPayment = true);
-    final purchaseParam = PurchaseParam(productDetails: product);
     
-    // The same code works for both iOS and Android
-    _iap.buyNonConsumable(purchaseParam: purchaseParam);
+    try {
+      final purchaseParam = PurchaseParam(productDetails: product);
+      
+      // Production purchase flow - always use real in-app purchases
+      _iap.buyNonConsumable(purchaseParam: purchaseParam);
+    } catch (e) {
+      print('Error initiating purchase: $e');
+      setState(() => _isProcessingPayment = false);
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error starting purchase: $e'),
+            backgroundColor: Colors.red,
+            duration: Duration(seconds: 3),
+          ),
+        );
+      }
+    }
   }
 
   void _restore() {
@@ -172,7 +209,7 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
   Widget _buildPlanCard(ProductDetails product) {
     final isYearly = product.id == 'premium_yearly';
     final price = product.id == 'premium_monthly' ? '7.99' : '49.99';
-    final description = isYearly ? 'No ads (Save 37%)' : 'No ads';
+    final description = isYearly ? 'Save 37%' : '';
     return Card(
       margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       elevation: 4,
@@ -189,7 +226,7 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  product.title,
+                  product.id == 'premium_monthly' ? 'YUMIE Premium Monthly' : 'YUMIE Premium Yearly',
                   style: TextStyle(
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
@@ -215,14 +252,14 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
               ],
             ),
             SizedBox(height: 8),
-            Text(
-              ' 24$price',
-              style: TextStyle(
-                fontSize: 32,
-                fontWeight: FontWeight.bold,
-                color: Colors.black87,
-              ),
-            ),
+                         Text(
+               '\$$price',
+               style: TextStyle(
+                 fontSize: 32,
+                 fontWeight: FontWeight.bold,
+                 color: Colors.black87,
+               ),
+             ),
             SizedBox(height: 8),
             Text(
               description,
@@ -307,7 +344,7 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
                         ),
                         SizedBox(height: 8),
                         Text(
-                          'Get unlimited scans and premium nutrition insights',
+                          'Get unlimited scans, searches, and AI-powered insights',
                           style: TextStyle(
                             fontSize: 16,
                             color: Colors.white70,
@@ -329,10 +366,10 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
                   ),
                   SizedBox(height: 12),
                   _buildFeatureItem(Icons.camera_alt, 'Unlimited Food Scans'),
-                  _buildFeatureItem(Icons.analytics, 'Advanced Nutrition Analytics'),
-                  _buildFeatureItem(Icons.psychology, 'AI-Powered Meal Suggestions'),
-                  _buildFeatureItem(Icons.trending_up, 'Detailed Progress Tracking'),
-                  _buildFeatureItem(Icons.notifications, 'Smart Reminders'),
+                  _buildFeatureItem(Icons.search, 'Unlimited Food Searches'),
+                  _buildFeatureItem(Icons.chat, 'Unlimited AI Coach Messages'),
+                  _buildFeatureItem(Icons.insights, 'Daily Health Insights'),
+                  _buildFeatureItem(Icons.workspace_premium, 'No Advertisements'),
                   SizedBox(height: 24),
                   // Subscription plans
                   Text(

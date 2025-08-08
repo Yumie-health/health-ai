@@ -474,10 +474,16 @@ class AppLocalizationsAr extends AppLocalizations {
   String get getUnlimitedScans => 'احصل على عمليات مسح غير محدودة والمزيد!';
 
   @override
+  String get getUnlimitedSearches => 'احصل على عمليات بحث غير محدودة والمزيد!';
+
+  @override
   String get upgradePlan => 'ترقية الخطة';
 
   @override
   String get watchAdForScan => 'شاهد إعلانًا للمسح';
+
+  @override
+  String get watchAdForSearch => 'شاهد إعلانًا للبحث';
 
   @override
   String get generateMeal => 'إنشاء وجبة';
