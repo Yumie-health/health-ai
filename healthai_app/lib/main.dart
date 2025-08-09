@@ -3391,8 +3391,8 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
                           Expanded(
                             child: _AnimatedScaleOnTap(
                               child: _QuickActionCard(
-                                icon: Icons.camera_alt,
-                                label: AppLocalizations.of(context)!.scan,
+                                icon: Icons.edit,
+                                label: AppLocalizations.of(context)!.log,
                                 color: kPrimaryGreen,
                                 onTap: () {
                                   Navigator.of(context).push(
@@ -3406,7 +3406,7 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
                           Expanded(
                             child: _AnimatedScaleOnTap(
                               child: _QuickActionCard(
-                                icon: Icons.qr_code_scanner,
+                                icon: Icons.camera_alt,
                                 label: AppLocalizations.of(context)!.scan,
                                 color: kSecondaryBlue,
                                 onTap: () {
