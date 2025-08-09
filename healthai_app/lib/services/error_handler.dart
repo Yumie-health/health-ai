@@ -228,7 +228,7 @@ class ErrorHandler {
           borderRadius: BorderRadius.circular(8),
         ),
         action: SnackBarAction(
-          label: 'Dismiss',
+          label: AppLocalizations.of(context)!.dismiss,
           textColor: Colors.white,
           onPressed: () {
             ScaffoldMessenger.of(context).hideCurrentSnackBar();

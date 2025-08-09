@@ -181,17 +181,28 @@ class _ImprovedHeightSelectorState extends State<ImprovedHeightSelector>
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Text(
-                      widget.useMetric 
-                        ? "${currentHeightCm.toStringAsFixed(1)}"
-                        : "${widget.heightFeet}'${widget.heightInches}\"",
-                      style: TextStyle(
-                        fontSize: 56,
-                        fontWeight: FontWeight.bold,
-                        color: Theme.of(context).primaryColor,
-                        height: 1.0,
-                      ),
-                    ),
+                    widget.useMetric 
+                      ? Text(
+                          "${currentHeightCm.toStringAsFixed(1)}",
+                          style: TextStyle(
+                            fontSize: 56,
+                            fontWeight: FontWeight.bold,
+                            color: Theme.of(context).primaryColor,
+                            height: 1.0,
+                          ),
+                        )
+                      : Directionality(
+                          textDirection: TextDirection.ltr,
+                          child: Text(
+                            "${widget.heightFeet}'${widget.heightInches}\"",
+                            style: TextStyle(
+                              fontSize: 56,
+                              fontWeight: FontWeight.bold,
+                              color: Theme.of(context).primaryColor,
+                              height: 1.0,
+                            ),
+                          ),
+                        ),
                     SizedBox(height: 4),
                     Text(
                       widget.useMetric ? "centimeters" : "feet",
@@ -241,20 +252,26 @@ class _ImprovedHeightSelectorState extends State<ImprovedHeightSelector>
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(
-                    widget.useMetric ? '100 cm' : '3\'0"',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Theme.of(context).primaryColor.withOpacity(0.6),
-                      fontWeight: FontWeight.w500,
+                  Directionality(
+                    textDirection: TextDirection.ltr,
+                    child: Text(
+                      widget.useMetric ? '100 cm' : '3\'0"',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Theme.of(context).primaryColor.withOpacity(0.6),
+                        fontWeight: FontWeight.w500,
+                      ),
                     ),
                   ),
-                  Text(
-                    widget.useMetric ? '220 cm' : '7\'3"',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Theme.of(context).primaryColor.withOpacity(0.6),
-                      fontWeight: FontWeight.w500,
+                  Directionality(
+                    textDirection: TextDirection.ltr,
+                    child: Text(
+                      widget.useMetric ? '220 cm' : '7\'3"',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Theme.of(context).primaryColor.withOpacity(0.6),
+                        fontWeight: FontWeight.w500,
+                      ),
                     ),
                   ),
                 ],

@@ -473,11 +473,11 @@ class _SecurityAlertsDialog extends StatelessWidget {
                     Icon(Icons.check_circle, color: Colors.green, size: 48),
                     SizedBox(height: 16),
                     Text(
-                      'No security alerts',
+                      AppLocalizations.of(context)!.noSecurityAlertsFound,
                       style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
                     ),
                     Text(
-                      'Your account security looks good!',
+                      AppLocalizations.of(context)!.yourAccountLooksGood,
                       style: TextStyle(color: Colors.grey[600]),
                     ),
                   ],

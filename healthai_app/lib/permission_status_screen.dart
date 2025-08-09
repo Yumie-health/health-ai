@@ -221,7 +221,7 @@ class _PermissionStatusScreenState extends State<PermissionStatusScreen> {
                                             borderRadius: BorderRadius.circular(8),
                                           ),
                                         ),
-                                        child: Text('Grant Permission'),
+                                        child: Text(AppLocalizations.of(context)!.grantPermission),
                                       ),
                                     ),
                                   if (isPermanentlyDenied) ...[

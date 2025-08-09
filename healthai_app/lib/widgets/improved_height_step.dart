@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../l10n/app_localizations.dart';
 import 'improved_height_selector.dart';
 
 class ImprovedHeightStep extends StatelessWidget {
@@ -70,7 +71,7 @@ class ImprovedHeightStep extends StatelessWidget {
             child: Column(
               children: [
                 Text(
-                  'Your height',
+                  AppLocalizations.of(context)!.yourHeight,
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 32,
@@ -80,7 +81,7 @@ class ImprovedHeightStep extends StatelessWidget {
                 ),
                 SizedBox(height: 12),
                 Text(
-                  'Help us calculate your health goals',
+                  AppLocalizations.of(context)!.helpUsCalculateYourHealthGoals,
                   style: TextStyle(
                     color: Colors.grey[600],
                     fontSize: 16,
@@ -126,7 +127,7 @@ class ImprovedHeightStep extends StatelessWidget {
               elevation: 0,
               textStyle: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
-            child: Text('Continue'),
+            child: Text(AppLocalizations.of(context)!.continueButton),
           ),
         ),
       ],

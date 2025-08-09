@@ -3,6 +3,7 @@ import 'utils/constants.dart';
 import 'subscription_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'services/subscription_service.dart';
+import 'l10n/app_localizations.dart';
 
 class SubscriptionPopupPage extends StatefulWidget {
   final VoidCallback? onDismiss;
@@ -234,8 +235,8 @@ class _SubscriptionPopupPageState extends State<SubscriptionPopupPage>
                     // Title
                     Text(
                       widget.isOnboardingComplete 
-                        ? '🎉 Welcome to Yumie!' 
-                        : '✨ Unlock Premium Features',
+                        ? AppLocalizations.of(context)!.welcomeToYumie 
+                        : AppLocalizations.of(context)!.unlockPremiumFeatures,
                       style: TextStyle(
                         fontSize: isVerySmallScreen ? 16 : (isSmallScreen ? 18 : 20),
                         fontWeight: FontWeight.bold,
@@ -249,8 +250,8 @@ class _SubscriptionPopupPageState extends State<SubscriptionPopupPage>
                     // Subtitle
                     Text(
                       widget.isOnboardingComplete
-                        ? 'Get the most out of your health journey with unlimited access!'
-                        : 'Unlock unlimited scans, AI coaching, and personalized meal plans!',
+                        ? AppLocalizations.of(context)!.getMostOutOfHealthJourney
+                        : AppLocalizations.of(context)!.unlimitedScansAICoaching,
                       style: TextStyle(
                         fontSize: isVerySmallScreen ? 12 : (isSmallScreen ? 14 : 16),
                         color: Colors.grey[700],
@@ -278,7 +279,7 @@ class _SubscriptionPopupPageState extends State<SubscriptionPopupPage>
                         _dismissPopup();
                       },
                       child: Text(
-                        'Maybe later',
+                        AppLocalizations.of(context)!.maybeLater,
                         style: TextStyle(
                           color: Colors.grey[600],
                           fontSize: isVerySmallScreen ? 12 : 14,
@@ -299,12 +300,13 @@ class _SubscriptionPopupPageState extends State<SubscriptionPopupPage>
   }
 
   Widget _buildFeaturesList(bool isVerySmallScreen, bool isSmallScreen) {
+    final localizations = AppLocalizations.of(context)!;
     final features = [
-      {'icon': '🔍', 'text': 'Unlimited food scanning'},
-      {'icon': '🤖', 'text': 'AI nutrition coach'},
-      {'icon': '📊', 'text': 'Detailed analytics'},
-      {'icon': '🍽️', 'text': 'Personalized meal plans'},
-      {'icon': '🚫', 'text': 'No advertisements'},
+      {'icon': '🔍', 'text': localizations.unlimitedFoodScanning},
+      {'icon': '🤖', 'text': localizations.aiNutritionCoach},
+      {'icon': '📊', 'text': localizations.detailedAnalytics},
+      {'icon': '🍽️', 'text': localizations.personalizedMealPlans},
+      {'icon': '🚫', 'text': localizations.noAdvertisements},
     ];
 
     return Column(
@@ -349,9 +351,9 @@ class _SubscriptionPopupPageState extends State<SubscriptionPopupPage>
       children: [
         // Yearly plan (highlighted)
         _buildPlanButton(
-          title: 'Yearly Premium',
-          price: '\$49.99/year',
-          savings: 'Save 37%',
+          title: AppLocalizations.of(context)!.yearlyPremium,
+          price: AppLocalizations.of(context)!.yearPrice,
+          savings: AppLocalizations.of(context)!.save37,
           isPopular: true,
           onTap: _navigateToSubscription,
           isVerySmallScreen: isVerySmallScreen,
@@ -362,8 +364,8 @@ class _SubscriptionPopupPageState extends State<SubscriptionPopupPage>
         
         // Monthly plan
         _buildPlanButton(
-          title: 'Monthly Premium',
-          price: '\$7.99/month',
+          title: AppLocalizations.of(context)!.monthlyPremium,
+          price: AppLocalizations.of(context)!.monthPrice,
           savings: null,
           isPopular: false,
           onTap: _navigateToSubscription,
@@ -432,8 +434,8 @@ class _SubscriptionPopupPageState extends State<SubscriptionPopupPage>
                             color: Colors.white.withOpacity(0.2),
                             borderRadius: BorderRadius.circular(12),
                           ),
-                          child: const Text(
-                            'POPULAR',
+                          child: Text(
+                            AppLocalizations.of(context)!.popular,
                             style: TextStyle(
                               fontSize: 10,
                               fontWeight: FontWeight.bold,

@@ -100,8 +100,8 @@ class _PermissionRequestScreenState extends State<PermissionRequestScreen>
         title: Text(AppLocalizations.of(context)!.permissionsComplete),
         content: Text(
           grantedCount == _permissions.length
-              ? 'All permissions granted! You\'re all set to use Yumie.'
-              : '$grantedCount of ${_permissions.length} permissions granted. You can change permissions later in your device settings.',
+              ? AppLocalizations.of(context)!.allPermissionsGranted
+              : '${grantedCount} of ${_permissions.length} permissions granted. You can change permissions later in your device settings.',
         ),
         actions: [
           TextButton(
@@ -109,7 +109,7 @@ class _PermissionRequestScreenState extends State<PermissionRequestScreen>
               Navigator.of(context).pop();
               widget.onPermissionsComplete();
             },
-            child: Text('Continue'),
+            child: Text(AppLocalizations.of(context)!.continueButton),
           ),
         ],
       ),
@@ -150,7 +150,7 @@ class _PermissionRequestScreenState extends State<PermissionRequestScreen>
                         ),
                         const SizedBox(height: 24),
                         Text(
-                          'Welcome to Yumie!',
+                          AppLocalizations.of(context)!.welcomeToYumiePermissions,
                           style: TextStyle(
                             fontSize: 28,
                             fontWeight: FontWeight.bold,
@@ -160,7 +160,7 @@ class _PermissionRequestScreenState extends State<PermissionRequestScreen>
                         ),
                         const SizedBox(height: 12),
                         Text(
-                          'To provide you with the best experience, we need a few permissions.',
+                          AppLocalizations.of(context)!.provideBestExperience,
                           style: TextStyle(
                             fontSize: 16,
                             color: Colors.grey[600],
@@ -253,7 +253,7 @@ class _PermissionRequestScreenState extends State<PermissionRequestScreen>
                                     borderRadius: BorderRadius.circular(12),
                                   ),
                                   child: Text(
-                                    PermissionService.getPermissionStatusText(status),
+                                    PermissionService.getPermissionStatusText(status, context),
                                     style: TextStyle(
                                       fontSize: 12,
                                       fontWeight: FontWeight.w500,
@@ -301,7 +301,7 @@ class _PermissionRequestScreenState extends State<PermissionRequestScreen>
                               ],
                             )
                           : Text(
-                              'Grant Permissions',
+                              AppLocalizations.of(context)!.grantPermissions,
                               style: TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w600,
@@ -313,7 +313,7 @@ class _PermissionRequestScreenState extends State<PermissionRequestScreen>
                   TextButton(
                     onPressed: () => widget.onPermissionsComplete(),
                     child: Text(
-                      'Skip for Now',
+                      AppLocalizations.of(context)!.skipForNow,
                       style: TextStyle(
                         color: Colors.grey[600],
                         fontSize: 16,
@@ -332,11 +332,11 @@ class _PermissionRequestScreenState extends State<PermissionRequestScreen>
   String _getPermissionDescription(ph.Permission permission) {
     switch (permission) {
       case ph.Permission.camera:
-        return 'Scan food items and take photos of meals';
+        return AppLocalizations.of(context)!.scanFoodItems;
       case ph.Permission.photos:
-        return 'Save scanned images and select photos';
+        return AppLocalizations.of(context)!.saveScannedImages;
       case ph.Permission.notification:
-        return 'Send meal reminders and health alerts';
+        return AppLocalizations.of(context)!.sendMealReminders;
       default:
         return 'App functionality';
     }

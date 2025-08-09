@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'improved_weight_selector.dart';
+import '../l10n/app_localizations.dart';
 
 class ImprovedWeightStep extends StatelessWidget {
   final Animation<double> fadeAnimation;
@@ -35,11 +36,11 @@ class ImprovedWeightStep extends StatelessWidget {
     return weightKg / (heightM * heightM);
   }
 
-  String _getBMICategory(double bmi) {
-    if (bmi < 18.5) return "Underweight";
-    if (bmi < 25) return "Normal weight";
-    if (bmi < 30) return "Overweight";
-    return "Obese";
+  String _getBMICategory(double bmi, BuildContext context) {
+    if (bmi < 18.5) return AppLocalizations.of(context)!.underweight;
+    if (bmi < 25) return AppLocalizations.of(context)!.normalWeight;
+    if (bmi < 30) return AppLocalizations.of(context)!.overweight;
+    return AppLocalizations.of(context)!.obese;
   }
 
   Color _getBMIColor(double bmi, BuildContext context) {
@@ -94,7 +95,7 @@ class ImprovedWeightStep extends StatelessWidget {
             child: Column(
               children: [
                 Text(
-                  'Your current weight',
+                  AppLocalizations.of(context)!.yourCurrentWeight,
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: isSmallScreen ? 24 : 32,
@@ -104,7 +105,7 @@ class ImprovedWeightStep extends StatelessWidget {
                 ),
                 SizedBox(height: 12),
                 Text(
-                  'This helps us track your progress',
+                  AppLocalizations.of(context)!.thisHelpsUsTrackYourProgress,
                   style: TextStyle(
                     color: Colors.grey[600],
                     fontSize: isSmallScreen ? 14 : 16,
@@ -161,7 +162,7 @@ class ImprovedWeightStep extends StatelessWidget {
               child: Column(
                 children: [
                   Text(
-                    'Your BMI:',
+                    AppLocalizations.of(context)!.yourBMI,
                     style: TextStyle(
                       fontSize: 18,
                       color: Colors.grey[600],
@@ -180,7 +181,7 @@ class ImprovedWeightStep extends StatelessWidget {
                   ),
                   SizedBox(height: 8),
                   Text(
-                    _getBMICategory(bmi),
+                    _getBMICategory(bmi, context),
                     style: TextStyle(
                       fontSize: 16,
                       color: _getBMIColor(bmi, context),
@@ -207,7 +208,7 @@ class ImprovedWeightStep extends StatelessWidget {
               elevation: 0,
               textStyle: TextStyle(fontSize: isSmallScreen ? 16 : 18, fontWeight: FontWeight.bold),
             ),
-            child: Text('Continue'),
+            child: Text(AppLocalizations.of(context)!.continueButton),
           ),
         ),
       ],

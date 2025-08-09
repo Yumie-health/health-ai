@@ -14,6 +14,7 @@ import 'widgets/improved_height_selector.dart';
 import 'widgets/improved_height_step.dart';
 import 'widgets/improved_weight_step.dart';
 import 'widgets/improved_goal_weight_step.dart';
+import 'l10n/app_localizations.dart';
 
 class OnboardingFlowPage extends StatefulWidget {
   const OnboardingFlowPage({Key? key}) : super(key: key);
@@ -203,7 +204,7 @@ class _OnboardingFlowPageState extends State<OnboardingFlowPage> with SingleTick
                       if (metric) {
                         selectedHeightCm = ((selectedHeightFeet * 12 + selectedHeightInches) * 2.54).toDouble();
                       } else {
-                        final totalInches = (selectedHeightCm! / 2.54).round();
+                        final totalInches = (selectedHeightCm! / 2.54).round().clamp(36, 87);
                         selectedHeightFeet = totalInches ~/ 12;
                         selectedHeightInches = totalInches % 12;
                       }
@@ -360,7 +361,7 @@ class _OnboardingFlowPageState extends State<OnboardingFlowPage> with SingleTick
                 );
               } else if (step == 15) {
                 if (isLoadingNutritionPlan) {
-                  return NutritionLoadingAnimation(message: "Yumie is cooking up your personalized nutrition plan...");
+                  return NutritionLoadingAnimation(message: AppLocalizations.of(context)!.yumieIsCookingUp);
                 }
                 if (aiNutritionPlan != null) {
                 return _NutritionPlanSummaryStep(
@@ -443,7 +444,7 @@ class _OnboardingFlowPageState extends State<OnboardingFlowPage> with SingleTick
                       children: [
                         Icon(Icons.error, color: Colors.red, size: 48),
                         SizedBox(height: 16),
-                        Text('Could not generate your plan. Please try again.', style: TextStyle(fontSize: 18)),
+                        Text(AppLocalizations.of(context)!.couldNotGenerateYourPlan, style: TextStyle(fontSize: 18)),
                         SizedBox(height: 24),
                         ElevatedButton(
                           onPressed: () {
@@ -452,7 +453,7 @@ class _OnboardingFlowPageState extends State<OnboardingFlowPage> with SingleTick
                               _fetchNutritionPlan();
                             });
                           },
-                          child: Text('Retry'),
+                          child: Text(AppLocalizations.of(context)!.retry),
                         ),
                       ],
                     ),
@@ -460,7 +461,7 @@ class _OnboardingFlowPageState extends State<OnboardingFlowPage> with SingleTick
                 }
                 // Trigger AI fetch on first build of this step
                 Future.microtask(_fetchNutritionPlan);
-                return NutritionLoadingAnimation(message: "Yumie is cooking up your personalized nutrition plan...");
+                return NutritionLoadingAnimation(message: AppLocalizations.of(context)!.yumieIsCookingUp);
               } else {
                 // Fallback UI for unknown steps
                 return Center(
@@ -469,7 +470,7 @@ class _OnboardingFlowPageState extends State<OnboardingFlowPage> with SingleTick
                     children: [
                       Icon(Icons.error, color: Colors.red, size: 48),
                       SizedBox(height: 16),
-                      Text('Something went wrong. Please restart the onboarding process.', style: TextStyle(fontSize: 18)),
+                      Text(AppLocalizations.of(context)!.somethingWentWrongRestart, style: TextStyle(fontSize: 18)),
                       SizedBox(height: 24),
                       ElevatedButton(
                         onPressed: () {
@@ -477,7 +478,7 @@ class _OnboardingFlowPageState extends State<OnboardingFlowPage> with SingleTick
                             step = 0;
                           });
                         },
-                        child: Text('Restart Onboarding'),
+                        child: Text(AppLocalizations.of(context)!.restartOnboarding),
                       ),
                     ],
                   ),
@@ -609,13 +610,25 @@ class _GoalStep extends StatelessWidget {
   final VoidCallback onBack;
   _GoalStep({required this.fadeAnimation, required this.slideAnimation, required this.selectedGoal, required this.onSelect, required this.onContinue, required this.onBack});
 
-  final List<Map<String, dynamic>> goals = const [
-    {'icon': Icons.trending_down, 'label': 'Lose body weight', 'color': Color(0xFFFF6B6B)},
-    {'icon': Icons.favorite, 'label': 'Gain weight', 'color': Color(0xFF4ECDC4)},
-    {'icon': Icons.fitness_center, 'label': 'Build muscle', 'color': Color(0xFFFFD93D)},
-    {'icon': Icons.restaurant, 'label': 'Eat healthier', 'color': Color(0xFF95E1D3)},
-    {'icon': Icons.balance, 'label': 'Maintain body weight', 'color': Color(0xFF9C27B0)},
+  // Goals stored in English for consistency in Firebase
+  static const List<Map<String, dynamic>> _goalData = [
+    {'icon': Icons.trending_down, 'value': 'Lose body weight', 'color': Color(0xFFFF6B6B)},
+    {'icon': Icons.favorite, 'value': 'Gain weight', 'color': Color(0xFF4ECDC4)},
+    {'icon': Icons.fitness_center, 'value': 'Build muscle', 'color': Color(0xFFFFD93D)},
+    {'icon': Icons.restaurant, 'value': 'Eat healthier', 'color': Color(0xFF95E1D3)},
+    {'icon': Icons.balance, 'value': 'Maintain body weight', 'color': Color(0xFF9C27B0)},
   ];
+  
+  List<Map<String, dynamic>> _getLocalizedGoals(BuildContext context) {
+    final localizations = AppLocalizations.of(context)!;
+    return [
+      {'icon': Icons.trending_down, 'label': localizations.loseBodyWeight, 'value': 'Lose body weight', 'color': Color(0xFFFF6B6B)},
+      {'icon': Icons.favorite, 'label': localizations.gainWeight, 'value': 'Gain weight', 'color': Color(0xFF4ECDC4)},
+      {'icon': Icons.fitness_center, 'label': localizations.buildMuscle, 'value': 'Build muscle', 'color': Color(0xFFFFD93D)},
+      {'icon': Icons.restaurant, 'label': localizations.eatHealthier, 'value': 'Eat healthier', 'color': Color(0xFF95E1D3)},
+      {'icon': Icons.balance, 'label': localizations.maintainBodyWeight, 'value': 'Maintain body weight', 'color': Color(0xFF9C27B0)},
+    ];
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -666,7 +679,7 @@ class _GoalStep extends StatelessWidget {
             child: Column(
               children: [
                 Text(
-                  'What is your main goal?',
+                  AppLocalizations.of(context)!.whatIsYourMainGoal,
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 32,
@@ -676,7 +689,7 @@ class _GoalStep extends StatelessWidget {
                 ),
                 SizedBox(height: 12),
                 Text(
-                  'Choose the goal that best aligns with your journey',
+                  AppLocalizations.of(context)!.chooseGoalDescription,
                   style: TextStyle(
                     color: Colors.grey[600],
                     fontSize: 16,
@@ -691,10 +704,10 @@ class _GoalStep extends StatelessWidget {
                 ListView.builder(
                   shrinkWrap: true,
                   physics: NeverScrollableScrollPhysics(),
-            itemCount: goals.length,
+            itemCount: _getLocalizedGoals(context).length,
             itemBuilder: (context, index) {
-              final goal = goals[index];
-              final isSelected = selectedGoal == goal['label'];
+              final goal = _getLocalizedGoals(context)[index];
+              final isSelected = selectedGoal == goal['value']; // Compare with stored English value
               return FadeTransition(
                 opacity: fadeAnimation,
                 child: SlideTransition(
@@ -729,7 +742,7 @@ class _GoalStep extends StatelessWidget {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Text('Continue'),
+                Text(AppLocalizations.of(context)!.continueButton),
                 SizedBox(width: 8),
                 Icon(Icons.arrow_forward, size: 20),
               ],
@@ -766,7 +779,7 @@ class _GoalStep extends StatelessWidget {
 
   Widget _buildGoalCard(Map<String, dynamic> goal, bool isSelected, ThemeData theme, void Function(String) onSelect) {
     return GestureDetector(
-      onTap: () => onSelect(goal['label']),
+      onTap: () => onSelect(goal['value']), // Store English value
       child: AnimatedContainer(
         duration: Duration(milliseconds: 200),
         padding: EdgeInsets.all(20),
@@ -831,12 +844,15 @@ class _MotivationStep extends StatelessWidget {
   final VoidCallback onBack;
   _MotivationStep({required this.fadeAnimation, required this.slideAnimation, required this.selectedMotivation, required this.onSelect, required this.onContinue, required this.onBack});
 
-  final List<Map<String, dynamic>> motivations = const [
-    {'icon': Icons.wb_sunny_outlined, 'label': 'Feel energetic every day', 'color': Color(0xFFFFB74D)},
-    {'icon': Icons.emoji_events, 'label': 'Achieve a personal milestone', 'color': Color(0xFFBA68C8)},
-    {'icon': Icons.self_improvement, 'label': 'Boost my confidence', 'color': Color(0xFF64B5F6)},
-    {'icon': Icons.health_and_safety, 'label': 'Long term health', 'color': Color(0xFF4CAF50)},
-  ];
+  List<Map<String, dynamic>> _getLocalizedMotivations(BuildContext context) {
+    final localizations = AppLocalizations.of(context)!;
+    return [
+      {'icon': Icons.wb_sunny_outlined, 'label': localizations.feelEnergeticEveryDay, 'value': 'Feel energetic every day', 'color': Color(0xFFFFB74D)},
+      {'icon': Icons.emoji_events, 'label': localizations.achievePersonalMilestone, 'value': 'Achieve a personal milestone', 'color': Color(0xFFBA68C8)},
+      {'icon': Icons.self_improvement, 'label': localizations.boostMyConfidence, 'value': 'Boost my confidence', 'color': Color(0xFF64B5F6)},
+      {'icon': Icons.health_and_safety, 'label': localizations.longTermHealth, 'value': 'Long term health', 'color': Color(0xFF4CAF50)},
+    ];
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -887,7 +903,7 @@ class _MotivationStep extends StatelessWidget {
             child: Column(
               children: [
                 Text(
-                  'What motivates you?',
+                  AppLocalizations.of(context)!.whatMotivatesYou,
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 32,
@@ -897,7 +913,7 @@ class _MotivationStep extends StatelessWidget {
                 ),
                 SizedBox(height: 12),
                 Text(
-                  'Choose what drives you to achieve your goals',
+                  AppLocalizations.of(context)!.chooseWhatDrivesYou,
                   style: TextStyle(
                     color: Colors.grey[600],
                     fontSize: 16,
@@ -912,10 +928,10 @@ class _MotivationStep extends StatelessWidget {
                 ListView.builder(
                   shrinkWrap: true,
                   physics: NeverScrollableScrollPhysics(),
-            itemCount: motivations.length,
+            itemCount: _getLocalizedMotivations(context).length,
             itemBuilder: (context, index) {
-              final motivation = motivations[index];
-              final isSelected = selectedMotivation == motivation['label'];
+              final motivation = _getLocalizedMotivations(context)[index];
+              final isSelected = selectedMotivation == motivation['value']; // Compare with stored English value
               return FadeTransition(
                 opacity: fadeAnimation,
                 child: SlideTransition(
@@ -950,7 +966,7 @@ class _MotivationStep extends StatelessWidget {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Text('Continue'),
+                Text(AppLocalizations.of(context)!.continueButton),
                 SizedBox(width: 8),
                 Icon(Icons.arrow_forward, size: 20),
               ],
@@ -987,7 +1003,7 @@ class _MotivationStep extends StatelessWidget {
 
   Widget _buildMotivationCard(Map<String, dynamic> motivation, bool isSelected, ThemeData theme, void Function(String) onSelect) {
     return GestureDetector(
-      onTap: () => onSelect(motivation['label']),
+      onTap: () => onSelect(motivation['value']), // Store English value
       child: AnimatedContainer(
         duration: Duration(milliseconds: 200),
         padding: EdgeInsets.all(20),
@@ -1095,7 +1111,7 @@ class _CalorieIntroStep extends StatelessWidget {
             child: Column(
               children: [
                 Text(
-                  'Track your meals with ease',
+                  AppLocalizations.of(context)!.trackYourMealsWithEase,
                   style: TextStyle(fontWeight: FontWeight.bold, fontSize: 28),
                   textAlign: TextAlign.center,
                 ),
@@ -1103,25 +1119,25 @@ class _CalorieIntroStep extends StatelessWidget {
                 _AnimatedCalorieRing(caloriesLeft: 1857, goal: 2200),
                 SizedBox(height: 24),
                 _SampleMealCard(
-                  mealType: 'Breakfast',
+                  mealType: AppLocalizations.of(context)!.breakfast,
                   color: Color(0xFFFFD93D),
-                  mealName: 'Avocado Toast',
+                  mealName: AppLocalizations.of(context)!.avocadoToast,
                   calories: 195,
                   macros: '20g carb  •  5g protein  •  11g fat  •  8g fibre',
                 ),
                 SizedBox(height: 12),
                 _SampleMealCard(
-                  mealType: 'Lunch',
+                  mealType: AppLocalizations.of(context)!.lunch,
                   color: Color(0xFFFFB74D),
-                  mealName: 'Italian Salad',
+                  mealName: AppLocalizations.of(context)!.italianSalad,
                   calories: 189,
                   macros: '11g carb  •  12g protein  •  10g fat  •  4g fibre',
                 ),
                 SizedBox(height: 12),
                 _SampleMealCard(
-                  mealType: 'Dinner',
+                  mealType: AppLocalizations.of(context)!.dinner,
                   color: Color(0xFF64B5F6),
-                  mealName: 'Chicken Katsu Rice Bowl',
+                  mealName: AppLocalizations.of(context)!.chickenKatsuRiceBowl,
                   calories: 479,
                   macros: '51g carb  •  52g protein  •  6g fat  •  4g fibre',
                 ),
@@ -1141,7 +1157,7 @@ class _CalorieIntroStep extends StatelessWidget {
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
               textStyle: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
-            child: Text('Continue'),
+            child: Text(AppLocalizations.of(context)!.continueButton),
           ),
         ),
       ],
@@ -1198,7 +1214,7 @@ class _AnimatedCalorieRing extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text('$caloriesLeft', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 32)),
-                Text('calories left', style: TextStyle(color: Colors.grey[600], fontSize: 15)),
+                Text(AppLocalizations.of(context)!.caloriesLeft, style: TextStyle(color: Colors.grey[600], fontSize: 15)),
               ],
             ),
           ],
@@ -1253,7 +1269,7 @@ class _SampleMealCard extends StatelessWidget {
               children: [
                 Text(mealName, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
                 SizedBox(height: 2),
-                Text('$calories Calories', style: TextStyle(color: Colors.grey[700], fontSize: 13)),
+                Text('$calories ${AppLocalizations.of(context)!.calories}', style: TextStyle(color: Colors.grey[700], fontSize: 13)),
                 SizedBox(height: 2),
                 Text(macros, style: TextStyle(color: Colors.grey[500], fontSize: 12)),
               ],
@@ -1308,7 +1324,7 @@ class _AgeStep extends StatelessWidget {
             child: Column(
               children: [
                 Text(
-                  'How old are you?',
+                  AppLocalizations.of(context)!.howOldAreYou,
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 32,
@@ -1318,7 +1334,7 @@ class _AgeStep extends StatelessWidget {
                 ),
                 SizedBox(height: 12),
                 Text(
-                  'This helps us personalize your experience',
+                  AppLocalizations.of(context)!.thisHelpsUsPersonalizeExperience,
                   style: TextStyle(
                     color: Colors.grey[600],
                     fontSize: 16,
@@ -1353,7 +1369,7 @@ class _AgeStep extends StatelessWidget {
               elevation: 0,
               textStyle: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
-            child: Text('Continue'),
+            child: Text(AppLocalizations.of(context)!.continueButton),
           ),
         ),
       ],
@@ -1415,7 +1431,7 @@ class _HeightStep extends StatelessWidget {
             child: Column(
               children: [
                 Text(
-                  'Your height',
+                  AppLocalizations.of(context)!.yourHeight,
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 32,
@@ -1436,7 +1452,7 @@ class _HeightStep extends StatelessWidget {
                           border: Border.all(color: theme.primaryColor, width: 2),
                         ),
                         padding: EdgeInsets.symmetric(horizontal: 22, vertical: 8),
-                        child: Text('cm', style: TextStyle(color: useMetric ? Colors.white : theme.primaryColor, fontWeight: FontWeight.bold, fontSize: 20)),
+                        child: Text(AppLocalizations.of(context)!.cm, style: TextStyle(color: useMetric ? Colors.white : theme.primaryColor, fontWeight: FontWeight.bold, fontSize: 20)),
                       ),
                     ),
                     SizedBox(width: 8),
@@ -1449,7 +1465,7 @@ class _HeightStep extends StatelessWidget {
                           border: Border.all(color: theme.primaryColor, width: 2),
                         ),
                         padding: EdgeInsets.symmetric(horizontal: 22, vertical: 8),
-                        child: Text('ft', style: TextStyle(color: !useMetric ? Colors.white : theme.primaryColor, fontWeight: FontWeight.bold, fontSize: 20)),
+                        child: Text(AppLocalizations.of(context)!.ft, style: TextStyle(color: !useMetric ? Colors.white : theme.primaryColor, fontWeight: FontWeight.bold, fontSize: 20)),
                       ),
                     ),
                   ],
@@ -1529,7 +1545,7 @@ class _HeightStep extends StatelessWidget {
               elevation: 0,
               textStyle: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
-            child: Text('Continue'),
+            child: Text(AppLocalizations.of(context)!.continueButton),
           ),
         ),
       ],
@@ -1660,7 +1676,7 @@ class _WeightStep extends StatelessWidget {
             child: Column(
               children: [
                 Text(
-                  'Your current weight',
+                  AppLocalizations.of(context)!.yourCurrentWeight,
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 32,
@@ -1681,7 +1697,7 @@ class _WeightStep extends StatelessWidget {
                           border: Border.all(color: theme.primaryColor, width: 2),
                         ),
                         padding: EdgeInsets.symmetric(horizontal: 22, vertical: 8),
-                        child: Text('kg', style: TextStyle(color: useMetric ? Colors.white : theme.primaryColor, fontWeight: FontWeight.bold, fontSize: 20)),
+                        child: Text(AppLocalizations.of(context)!.kg, style: TextStyle(color: useMetric ? Colors.white : theme.primaryColor, fontWeight: FontWeight.bold, fontSize: 20)),
                       ),
                     ),
                     SizedBox(width: 8),
@@ -1694,7 +1710,7 @@ class _WeightStep extends StatelessWidget {
                           border: Border.all(color: theme.primaryColor, width: 2),
                         ),
                         padding: EdgeInsets.symmetric(horizontal: 22, vertical: 8),
-                        child: Text('lbs', style: TextStyle(color: !useMetric ? Colors.white : theme.primaryColor, fontWeight: FontWeight.bold, fontSize: 20)),
+                        child: Text(AppLocalizations.of(context)!.lbs, style: TextStyle(color: !useMetric ? Colors.white : theme.primaryColor, fontWeight: FontWeight.bold, fontSize: 20)),
                       ),
                     ),
                   ],
@@ -1755,7 +1771,7 @@ class _WeightStep extends StatelessWidget {
             padding: const EdgeInsets.only(bottom: 8),
             child: Column(
               children: [
-                Text('Your BMI:', style: TextStyle(fontSize: 18, color: Colors.black)),
+                Text(AppLocalizations.of(context)!.yourBMI, style: TextStyle(fontSize: 18, color: Colors.black)),
                 SizedBox(height: 4),
                 Text(bmi.toStringAsFixed(1), style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: bmiColor(bmi))),
               ],
@@ -1773,7 +1789,7 @@ class _WeightStep extends StatelessWidget {
               elevation: 0,
               textStyle: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
-            child: Text('Continue'),
+            child: Text(AppLocalizations.of(context)!.continueButton),
           ),
         ),
       ],
@@ -1935,7 +1951,7 @@ class _GoalWeightStep extends StatelessWidget {
             child: Column(
               children: [
                 Text(
-                  'Your goal weight',
+                  AppLocalizations.of(context)!.yourGoalWeight,
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 32,
@@ -1946,8 +1962,8 @@ class _GoalWeightStep extends StatelessWidget {
                 SizedBox(height: 18),
                 Text(
                   (selectedGoal == 'Build muscle' || selectedGoal == 'Eat healthier')
-                      ? 'Your target weight is set to your current weight'
-                      : 'Set a realistic goal for your journey',
+                      ? AppLocalizations.of(context)!.targetWeightSetToCurrent
+                      : AppLocalizations.of(context)!.setRealisticGoalForJourney,
                   style: TextStyle(
                     color: Colors.grey[600],
                     fontSize: 16,
@@ -2013,7 +2029,7 @@ class _GoalWeightStep extends StatelessWidget {
               elevation: 0,
               textStyle: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
-            child: Text('Continue'),
+            child: Text(AppLocalizations.of(context)!.continueButton),
           ),
         ),
       ],
@@ -2034,10 +2050,10 @@ class _ActivityLevelStep extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final List<Map<String, dynamic>> activityLevels = [
-      {'label': 'Sedentary', 'desc': 'Little or no exercise', 'icon': Icons.self_improvement},
-      {'label': 'Lightly active', 'desc': 'Light exercise/sports 1-3 days/week', 'icon': Icons.directions_walk},
-      {'label': 'Active', 'desc': 'Moderate exercise/sports 3-5 days/week', 'icon': Icons.directions_run},
-      {'label': 'Very active', 'desc': 'Hard exercise/sports 6-7 days/week', 'icon': Icons.fitness_center},
+      {'label': AppLocalizations.of(context)!.sedentary, 'value': 'Sedentary', 'desc': AppLocalizations.of(context)!.littleOrNoExercise, 'icon': Icons.self_improvement},
+      {'label': AppLocalizations.of(context)!.lightlyActive, 'value': 'Lightly active', 'desc': AppLocalizations.of(context)!.lightExercise, 'icon': Icons.directions_walk},
+      {'label': AppLocalizations.of(context)!.moderatelyActive, 'value': 'Active', 'desc': AppLocalizations.of(context)!.moderateExercise, 'icon': Icons.directions_run},
+      {'label': AppLocalizations.of(context)!.veryActive, 'value': 'Very active', 'desc': AppLocalizations.of(context)!.hardExercise, 'icon': Icons.fitness_center},
     ];
     return Column(
       children: [
@@ -2074,7 +2090,7 @@ class _ActivityLevelStep extends StatelessWidget {
             child: Column(
               children: [
                 Text(
-                  'Your activity level',
+                  AppLocalizations.of(context)!.yourActivityLevel,
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 32,
@@ -2084,7 +2100,7 @@ class _ActivityLevelStep extends StatelessWidget {
                 ),
                 SizedBox(height: 18),
                 Text(
-                  'This helps us personalize your plan',
+                  AppLocalizations.of(context)!.thisHelpsUsPersonalizeYourPlan,
                   style: TextStyle(
                     color: Colors.grey[600],
                     fontSize: 16,
@@ -2102,11 +2118,11 @@ class _ActivityLevelStep extends StatelessWidget {
             itemCount: activityLevels.length,
             itemBuilder: (context, i) {
               final level = activityLevels[i];
-              final isSelected = activityLevel == level['label'];
+              final isSelected = activityLevel == level['value']; // Compare with stored English value
               return Padding(
                 padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
                 child: GestureDetector(
-                  onTap: () => onActivityLevelChanged(level['label']),
+                  onTap: () => onActivityLevelChanged(level['value']), // Store English value
                   child: AnimatedContainer(
                     duration: Duration(milliseconds: 200),
                     padding: EdgeInsets.all(20),
@@ -2181,7 +2197,7 @@ class _ActivityLevelStep extends StatelessWidget {
               elevation: 0,
               textStyle: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
-            child: Text('Continue'),
+            child: Text(AppLocalizations.of(context)!.continueButton),
             ),
           ),
         ),
@@ -2229,7 +2245,7 @@ class _ProfileSummaryStep extends StatelessWidget {
     final theme = Theme.of(context);
     final double heightM = heightCm / 100.0;
     final double bmi = weightKg / (heightM * heightM);
-    final String bmiLabel = bmi < 18.5 ? 'Underweight' : bmi < 25 ? 'Healthy' : bmi < 30 ? 'Overweight' : 'Obese';
+    final String bmiLabel = bmi < 18.5 ? AppLocalizations.of(context)!.underweight : bmi < 25 ? AppLocalizations.of(context)!.healthy : bmi < 30 ? AppLocalizations.of(context)!.overweight : AppLocalizations.of(context)!.obese;
     final Color bmiColor = bmi < 18.5 ? Colors.blue : bmi < 25 ? Colors.green : bmi < 30 ? Colors.orange : Colors.red;
     final double weightDisplay = useMetricWeight ? weightKg : weightKg * 2.20462;
     final double targetWeightDisplay = useMetricWeight ? targetWeightKg : targetWeightKg * 2.20462;
@@ -2265,7 +2281,7 @@ class _ProfileSummaryStep extends StatelessWidget {
             child: Column(
               children: [
                 Text(
-                  'Your fitness profile due to your answers',
+                  AppLocalizations.of(context)!.yourFitnessProfileDueToYourAnswers,
                   style: TextStyle(fontWeight: FontWeight.bold, fontSize: 26),
                   textAlign: TextAlign.center,
                 ),
@@ -2289,7 +2305,7 @@ class _ProfileSummaryStep extends StatelessWidget {
                     children: [
                       Row(
                         children: [
-                          Text('Current BMI', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 18)),
+                          Text(AppLocalizations.of(context)!.currentBMI, style: TextStyle(fontWeight: FontWeight.w600, fontSize: 18)),
                           SizedBox(width: 10),
                           Container(
                             padding: EdgeInsets.symmetric(horizontal: 10, vertical: 4),
@@ -2307,7 +2323,7 @@ class _ProfileSummaryStep extends StatelessWidget {
                         children: [
                           Text(bmi.toStringAsFixed(1), style: TextStyle(fontSize: 38, fontWeight: FontWeight.bold, color: bmiColor)),
                           SizedBox(width: 10),
-                          Text('BMI', style: TextStyle(fontSize: 18, color: Colors.grey[700])),
+                          Text(AppLocalizations.of(context)!.bmi, style: TextStyle(fontSize: 18, color: Colors.grey[700])),
                         ],
                       ),
                       SizedBox(height: 10),
@@ -2322,7 +2338,7 @@ class _ProfileSummaryStep extends StatelessWidget {
                         children: [
                           Icon(Icons.cake, color: theme.primaryColor),
                           SizedBox(width: 6),
-                          Text('Age: ', style: TextStyle(fontWeight: FontWeight.w600)),
+                          Text('${AppLocalizations.of(context)!.age}: ', style: TextStyle(fontWeight: FontWeight.w600)),
                           Text('$age', style: TextStyle(fontWeight: FontWeight.bold)),
                         ],
                       ),
@@ -2331,7 +2347,7 @@ class _ProfileSummaryStep extends StatelessWidget {
                         children: [
                           Icon(Icons.monitor_weight, color: theme.primaryColor),
                           SizedBox(width: 6),
-                          Text('Weight: ', style: TextStyle(fontWeight: FontWeight.w600)),
+                          Text('${AppLocalizations.of(context)!.weight}: ', style: TextStyle(fontWeight: FontWeight.w600)),
                           Text('${weightDisplay.toStringAsFixed(1)} $weightUnit', style: TextStyle(fontWeight: FontWeight.bold)),
                         ],
                       ),
@@ -2340,7 +2356,7 @@ class _ProfileSummaryStep extends StatelessWidget {
                         children: [
                           Icon(Icons.flag, color: theme.primaryColor),
                           SizedBox(width: 6),
-                          Text('Target Weight: ', style: TextStyle(fontWeight: FontWeight.w600)),
+                          Text('${AppLocalizations.of(context)!.targetWeight}: ', style: TextStyle(fontWeight: FontWeight.w600)),
                           Text('${targetWeightDisplay.toStringAsFixed(1)} $weightUnit', style: TextStyle(fontWeight: FontWeight.bold)),
                         ],
                       ),
@@ -2349,7 +2365,7 @@ class _ProfileSummaryStep extends StatelessWidget {
                         children: [
                           Icon(Icons.directions_run, color: theme.primaryColor),
                           SizedBox(width: 6),
-                          Text('Activity Level: ', style: TextStyle(fontWeight: FontWeight.w600)),
+                          Text('${AppLocalizations.of(context)!.activityLevelLabel}: ', style: TextStyle(fontWeight: FontWeight.w600)),
                           Text(activityLevel ?? '', style: TextStyle(fontWeight: FontWeight.bold)),
                         ],
                       ),
@@ -2358,7 +2374,7 @@ class _ProfileSummaryStep extends StatelessWidget {
                         children: [
                           Icon(Icons.bloodtype, color: theme.primaryColor),
                           SizedBox(width: 6),
-                          Text('Blood Type: ', style: TextStyle(fontWeight: FontWeight.w600)),
+                          Text('${AppLocalizations.of(context)!.bloodTypeLabel}: ', style: TextStyle(fontWeight: FontWeight.w600)),
                           Text(bloodType ?? '-', style: TextStyle(fontWeight: FontWeight.bold)),
                         ],
                       ),
@@ -2367,8 +2383,8 @@ class _ProfileSummaryStep extends StatelessWidget {
                         children: [
                           Icon(Icons.check_circle, color: theme.primaryColor),
                           SizedBox(width: 6),
-                          Text('Diabetic: ', style: TextStyle(fontWeight: FontWeight.w600)),
-                          Text(isDiabetic == null ? '-' : (isDiabetic! ? 'Yes' : 'No'), style: TextStyle(fontWeight: FontWeight.bold)),
+                          Text('${AppLocalizations.of(context)!.diabetic}: ', style: TextStyle(fontWeight: FontWeight.w600)),
+                          Text(isDiabetic == null ? '-' : (isDiabetic! ? AppLocalizations.of(context)!.yes : AppLocalizations.of(context)!.no), style: TextStyle(fontWeight: FontWeight.bold)),
                         ],
                       ),
                       SizedBox(height: 8),
@@ -2376,7 +2392,7 @@ class _ProfileSummaryStep extends StatelessWidget {
                         children: [
                           Icon(Icons.water_drop, color: theme.primaryColor),
                           SizedBox(width: 6),
-                          Text('Water Intake: ', style: TextStyle(fontWeight: FontWeight.w600)),
+                          Text('${AppLocalizations.of(context)!.howMuchWaterDaily}: ', style: TextStyle(fontWeight: FontWeight.w600)),
                           Text(waterIntake ?? '-', style: TextStyle(fontWeight: FontWeight.bold)),
                         ],
                       ),
@@ -2400,7 +2416,7 @@ class _ProfileSummaryStep extends StatelessWidget {
               elevation: 0,
               textStyle: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
-            child: Text('Continue'),
+            child: Text(AppLocalizations.of(context)!.continueButton),
           ),
         ),
       ],
@@ -2484,7 +2500,7 @@ class _NutritionPlanSummaryStepState extends State<_NutritionPlanSummaryStep> wi
                         ),
                         SizedBox(height: 36),
                         Text(
-                          "You're all set! 🎉",
+                          AppLocalizations.of(context)!.yourAllSet,
                           style: TextStyle(fontWeight: FontWeight.bold, fontSize: 32, color: theme.primaryColor, letterSpacing: -1.2),
                           textAlign: TextAlign.center,
                         ),
@@ -2492,7 +2508,7 @@ class _NutritionPlanSummaryStepState extends State<_NutritionPlanSummaryStep> wi
                         Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 24.0),
                           child: Text(
-                            "Here's your personalized nutrition plan. Welcome to your health journey with Yumie!",
+                            AppLocalizations.of(context)!.heresYourPersonalizedNutritionPlan,
                             style: TextStyle(fontSize: 18, color: Colors.grey[700]),
                             textAlign: TextAlign.center,
                           ),
@@ -2518,28 +2534,28 @@ class _NutritionPlanSummaryStepState extends State<_NutritionPlanSummaryStep> wi
                               children: [
                                 _NutritionRow(
                                   icon: Icons.local_fire_department,
-                                  label: 'Calories',
+                                  label: AppLocalizations.of(context)!.calories,
                                   value: '${widget.calories} kcal',
                                   iconColor: Color(0xFF43A047),
                                 ),
                                 SizedBox(height: 18),
                                 _NutritionRow(
                                   icon: Icons.fitness_center,
-                                  label: 'Protein',
+                                  label: AppLocalizations.of(context)!.protein,
                                   value: '${widget.protein} g',
                                   iconColor: Color(0xFF1976D2),
                                 ),
                                 SizedBox(height: 18),
                                 _NutritionRow(
                                   icon: Icons.opacity,
-                                  label: 'Fat',
+                                  label: AppLocalizations.of(context)!.fat,
                                   value: '${widget.fat} g',
                                   iconColor: Color(0xFFFBC02D),
                                 ),
                                 SizedBox(height: 18),
                                 _NutritionRow(
                                   icon: Icons.grain,
-                                  label: 'Carbs',
+                                  label: AppLocalizations.of(context)!.carbs,
                                   value: '${widget.carbs} g',
                                   iconColor: Color(0xFF8D6E63),
                                 ),
@@ -2572,7 +2588,7 @@ class _NutritionPlanSummaryStepState extends State<_NutritionPlanSummaryStep> wi
                         children: [
                           Icon(Icons.check_circle, size: 26, color: Colors.white),
                           SizedBox(width: 12),
-                          Text('Get Started'),
+                          Text(AppLocalizations.of(context)!.getStarted),
                         ],
                       ),
                     ),
@@ -2688,9 +2704,9 @@ class _BloodTypeStep extends StatelessWidget {
           ),
         ),
         SizedBox(height: 32),
-        Text('What is your blood type?', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 28)),
+        Text(AppLocalizations.of(context)!.whatIsYourBloodType, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 28)),
         SizedBox(height: 18),
-        Text('This helps us personalize your health insights.', style: TextStyle(color: Colors.grey[600], fontSize: 16)),
+        Text(AppLocalizations.of(context)!.thisHelpsUsPersonalizeExperience, style: TextStyle(color: Colors.grey[600], fontSize: 16)),
         SizedBox(height: 32),
         Wrap(
           spacing: 18,
@@ -2745,7 +2761,7 @@ class _BloodTypeStep extends StatelessWidget {
               elevation: 0,
               textStyle: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
-            child: Text('Continue'),
+            child: Text(AppLocalizations.of(context)!.continueButton),
             ),
           ),
         ),
@@ -2794,15 +2810,15 @@ class _DiabeticStep extends StatelessWidget {
           ),
         ),
         SizedBox(height: 32),
-        Text('Are you diabetic?', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 28)),
+        Text(AppLocalizations.of(context)!.areYouDiabetic, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 28)),
         SizedBox(height: 18),
-        Text('This helps us personalize your health plan.', style: TextStyle(color: Colors.grey[600], fontSize: 16)),
+        Text(AppLocalizations.of(context)!.thisHelpsUsPersonalizeYourPlan, style: TextStyle(color: Colors.grey[600], fontSize: 16)),
         SizedBox(height: 32),
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             _DiabeticOption(
-              label: 'Yes',
+              label: AppLocalizations.of(context)!.yes,
               icon: Icons.check_circle,
               selected: isDiabetic == true,
               color: Colors.green,
@@ -2810,7 +2826,7 @@ class _DiabeticStep extends StatelessWidget {
             ),
             SizedBox(width: 32),
             _DiabeticOption(
-              label: 'No',
+              label: AppLocalizations.of(context)!.no,
               icon: Icons.cancel,
               selected: isDiabetic == false,
               color: Colors.red,
@@ -2837,7 +2853,7 @@ class _DiabeticStep extends StatelessWidget {
               elevation: 0,
               textStyle: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
-            child: Text('Continue'),
+            child: Text(AppLocalizations.of(context)!.continueButton),
             ),
           ),
         ),
@@ -2925,9 +2941,9 @@ class _WaterIntakeStep extends StatelessWidget {
           ),
         ),
         SizedBox(height: 32),
-        Text('How much water do you drink per day?', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 28)),
+        Text(AppLocalizations.of(context)!.howMuchWaterDaily, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 28)),
         SizedBox(height: 18),
-        Text('Staying hydrated is key to your health.', style: TextStyle(color: Colors.grey[600], fontSize: 16)),
+        Text(AppLocalizations.of(context)!.stayingHydratedIsKeyToYourHealth, style: TextStyle(color: Colors.grey[600], fontSize: 16)),
         SizedBox(height: 32),
         Wrap(
           spacing: 18,
@@ -2978,7 +2994,7 @@ class _WaterIntakeStep extends StatelessWidget {
               elevation: 0,
               textStyle: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
-            child: Text('Continue'),
+            child: Text(AppLocalizations.of(context)!.continueButton),
             ),
           ),
         ),
@@ -3003,11 +3019,14 @@ class _SexStep extends StatelessWidget {
     required this.onBack,
   });
 
-  final List<Map<String, dynamic>> options = const [
-    {'label': 'Male', 'icon': Icons.male, 'color': Color(0xFF64B5F6)},
-    {'label': 'Female', 'icon': Icons.female, 'color': Color(0xFFFFB6C1)},
-    {'label': 'Other', 'icon': Icons.transgender, 'color': Color(0xFFBA68C8)},
-  ];
+  List<Map<String, dynamic>> _getLocalizedSexOptions(BuildContext context) {
+    final localizations = AppLocalizations.of(context)!;
+    return [
+      {'label': localizations.male, 'value': 'Male', 'icon': Icons.male, 'color': Color(0xFF64B5F6)},
+      {'label': localizations.female, 'value': 'Female', 'icon': Icons.female, 'color': Color(0xFFFFB6C1)},
+      {'label': localizations.other, 'value': 'Other', 'icon': Icons.transgender, 'color': Color(0xFFBA68C8)},
+    ];
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -3043,13 +3062,13 @@ class _SexStep extends StatelessWidget {
             child: Column(
               children: [
                 Text(
-                  'What is your sex?',
+                  AppLocalizations.of(context)!.whatIsYourSex,
                   style: TextStyle(fontWeight: FontWeight.bold, fontSize: 32, letterSpacing: -0.5),
                   textAlign: TextAlign.center,
                 ),
                 SizedBox(height: 18),
                 Text(
-                  'This helps us personalize your nutrition plan.',
+                  AppLocalizations.of(context)!.thisHelpsUsPersonalizeNutrition,
                   style: TextStyle(color: Colors.grey[600], fontSize: 16),
                   textAlign: TextAlign.center,
                 ),
@@ -3060,10 +3079,10 @@ class _SexStep extends StatelessWidget {
         SizedBox(height: 36),
         Expanded(
           child: ListView.builder(
-            itemCount: options.length,
+            itemCount: _getLocalizedSexOptions(context).length,
             itemBuilder: (context, i) {
-              final opt = options[i];
-              final isSelected = selectedSex == opt['label'];
+              final opt = _getLocalizedSexOptions(context)[i];
+              final isSelected = selectedSex == opt['value']; // Compare with stored English value
               return FadeTransition(
                 opacity: fadeAnimation,
                 child: SlideTransition(
@@ -3071,7 +3090,7 @@ class _SexStep extends StatelessWidget {
                   child: Padding(
                     padding: EdgeInsets.only(bottom: 16),
                     child: GestureDetector(
-                      onTap: () => onSelect(opt['label']),
+                      onTap: () => onSelect(opt['value']), // Store English value
                       child: AnimatedContainer(
                         duration: Duration(milliseconds: 200),
                         padding: EdgeInsets.all(20),
@@ -3146,7 +3165,7 @@ class _SexStep extends StatelessWidget {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Text('Continue'),
+                Text(AppLocalizations.of(context)!.continueButton),
                 SizedBox(width: 8),
                 Icon(Icons.arrow_forward, size: 20),
               ],
@@ -3199,17 +3218,20 @@ class _RemindersStep extends StatelessWidget {
   final VoidCallback onBack;
   _RemindersStep({required this.fadeAnimation, required this.slideAnimation, required this.selectedReminders, required this.onReminderToggle, required this.onContinue, required this.onBack});
 
-  // Reminders to choose from
-  final List<Map<String, dynamic>> reminders = [
-    {'emoji': '🍽️', 'label': 'Meal Logging Prompts'},
-    {'emoji': '💧', 'label': 'Water Intake Reminders'},
-    {'emoji': '🚶‍♂️', 'label': 'Mindful Walks Reminders'},
-    {'emoji': '🧘‍♀️', 'label': 'Moment of Calm After Meals'},
-  ];
+  // Helper method to get localized reminders list
+  List<Map<String, dynamic>> _getLocalizedReminders(BuildContext context) {
+    return [
+      {'emoji': '🍽️', 'label': AppLocalizations.of(context)!.mealReminders, 'value': 'Meal Logging Prompts'},
+      {'emoji': '💧', 'label': AppLocalizations.of(context)!.waterReminders, 'value': 'Water Intake Reminders'},
+      {'emoji': '🚶‍♂️', 'label': AppLocalizations.of(context)!.workoutReminders, 'value': 'Mindful Walks Reminders'},
+      {'emoji': '🧘‍♀️', 'label': AppLocalizations.of(context)!.dailyTips, 'value': 'Moment of Calm After Meals'},
+    ];
+  }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final localizedReminders = _getLocalizedReminders(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
@@ -3241,7 +3263,7 @@ class _RemindersStep extends StatelessWidget {
             child: Column(
               children: [
                 Text(
-                  'Which reminders would you like to receive?',
+                  AppLocalizations.of(context)!.remindersWouldYouLike,
                   style: TextStyle(fontWeight: FontWeight.bold, fontSize: 26),
                   textAlign: TextAlign.center,
                 ),
@@ -3253,14 +3275,14 @@ class _RemindersStep extends StatelessWidget {
         SizedBox(height: 12),
         Expanded(
           child: ListView.builder(
-            itemCount: reminders.length,
+            itemCount: localizedReminders.length,
             itemBuilder: (context, i) {
-              final reminder = reminders[i];
-              final isSelected = selectedReminders.contains(reminder['label']);
+              final reminder = localizedReminders[i];
+              final isSelected = selectedReminders.contains(reminder['value']); // Check against stored English value
               return Padding(
                 padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
                 child: GestureDetector(
-                  onTap: () => onReminderToggle(reminder['label']),
+                  onTap: () => onReminderToggle(reminder['value']), // Store English value
                   child: AnimatedContainer(
                     duration: Duration(milliseconds: 200),
                     padding: EdgeInsets.all(18),
@@ -3317,7 +3339,7 @@ class _RemindersStep extends StatelessWidget {
               elevation: 0,
               textStyle: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
-            child: Text('Continue'),
+            child: Text(AppLocalizations.of(context)!.continueButton),
             ),
           ),
         ),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import '../l10n/app_localizations.dart';
 
 class ImprovedAgeSelector extends StatefulWidget {
   final int? selectedAge;
@@ -78,27 +79,27 @@ class _ImprovedAgeSelectorState extends State<ImprovedAgeSelector>
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
               _DecadeButton(
-                label: "Teens",
+                label: AppLocalizations.of(context)!.teens,
                 isActive: currentAge >= 16 && currentAge < 20,
                 onTap: () => _jumpToDecade(1),
               ),
               _DecadeButton(
-                label: "20s",
+                label: AppLocalizations.of(context)!.twenties,
                 isActive: currentAge >= 20 && currentAge < 30,
                 onTap: () => _jumpToDecade(2),
               ),
               _DecadeButton(
-                label: "30s",
+                label: AppLocalizations.of(context)!.thirties,
                 isActive: currentAge >= 30 && currentAge < 40,
                 onTap: () => _jumpToDecade(3),
               ),
               _DecadeButton(
-                label: "40s",
+                label: AppLocalizations.of(context)!.forties,
                 isActive: currentAge >= 40 && currentAge < 50,
                 onTap: () => _jumpToDecade(4),
               ),
               _DecadeButton(
-                label: "50+",
+                label: AppLocalizations.of(context)!.fiftyPlus,
                 isActive: currentAge >= 50,
                 onTap: () => _jumpToDecade(5),
               ),
@@ -146,7 +147,7 @@ class _ImprovedAgeSelectorState extends State<ImprovedAgeSelector>
                               ),
                               SizedBox(height: 8),
                               Text(
-                                "Younger",
+                                AppLocalizations.of(context)!.younger,
                                 style: TextStyle(
                                   fontSize: 14,
                                   fontWeight: FontWeight.w600,
@@ -209,7 +210,7 @@ class _ImprovedAgeSelectorState extends State<ImprovedAgeSelector>
                               ),
                             ),
                             Text(
-                              "years old",
+                              AppLocalizations.of(context)!.yearsOld,
                               style: TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w600,
@@ -259,7 +260,7 @@ class _ImprovedAgeSelectorState extends State<ImprovedAgeSelector>
                               ),
                               SizedBox(height: 8),
                               Text(
-                                "Older",
+                                AppLocalizations.of(context)!.older,
                                 style: TextStyle(
                                   fontSize: 14,
                                   fontWeight: FontWeight.w600,
@@ -292,7 +293,7 @@ class _ImprovedAgeSelectorState extends State<ImprovedAgeSelector>
             ),
           ),
           child: Text(
-            'Selected: $currentAge years',
+            '${AppLocalizations.of(context)!.selected}: $currentAge ${AppLocalizations.of(context)!.yearsOld}',
             style: TextStyle(
               fontSize: 18,
               color: Theme.of(context).primaryColor,

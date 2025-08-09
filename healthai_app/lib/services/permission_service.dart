@@ -102,11 +102,11 @@ class PermissionService {
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(false),
-              child: Text('Not Now'),
+              child: Text(AppLocalizations.of(context)!.notNow),
             ),
             TextButton(
               onPressed: () => Navigator.of(context).pop(true),
-              child: Text('Continue'),
+              child: Text(AppLocalizations.of(context)!.continueButton),
             ),
           ],
         );
@@ -124,9 +124,9 @@ class PermissionService {
     if (!await isPermissionGranted(ph.Permission.camera)) {
       final shouldRequest = await showPermissionDialog(
         context,
-        title: 'Camera Access',
-        message: 'Yumie needs camera access to scan food items and help you log your meals accurately.',
-        permissionName: 'Camera',
+        title: AppLocalizations.of(context)!.cameraAccess,
+        message: AppLocalizations.of(context)!.cameraAccessMessage,
+        permissionName: AppLocalizations.of(context)!.camera,
       );
       
       if (shouldRequest) {
@@ -141,9 +141,9 @@ class PermissionService {
     // Photos Permission - Always request this one
     final shouldRequestPhotos = await showPermissionDialog(
       context,
-      title: 'Photo Library Access',
-      message: 'Yumie needs access to your photo library to save scanned images and select photos for meal logging.',
-      permissionName: 'Photos',
+      title: AppLocalizations.of(context)!.photoLibraryAccess,
+      message: AppLocalizations.of(context)!.photoLibraryAccessMessage,
+      permissionName: AppLocalizations.of(context)!.photoLibrary,
     );
     
     if (shouldRequestPhotos) {
@@ -156,9 +156,9 @@ class PermissionService {
     if (!await isPermissionGranted(ph.Permission.notification)) {
       final shouldRequest = await showPermissionDialog(
         context,
-        title: 'Notification Access',
-        message: 'Yumie needs notification access to send you meal reminders, water intake alerts, and mindful walk prompts.',
-        permissionName: 'Notifications',
+        title: AppLocalizations.of(context)!.notificationAccess,
+        message: AppLocalizations.of(context)!.notificationAccessMessage,
+        permissionName: AppLocalizations.of(context)!.notifications,
       );
       
       if (shouldRequest) {
@@ -175,22 +175,43 @@ class PermissionService {
   }
 
   // Get permission status summary for UI
-  static String getPermissionStatusText(ph.PermissionStatus status) {
-    switch (status) {
-      case ph.PermissionStatus.granted:
-        return 'Granted';
-      case ph.PermissionStatus.denied:
-        return 'Denied';
-      case ph.PermissionStatus.permanentlyDenied:
-        return 'Permanently Denied';
-      case ph.PermissionStatus.restricted:
-        return 'Restricted';
-      case ph.PermissionStatus.limited:
-        return 'Limited';
-      case ph.PermissionStatus.provisional:
-        return 'Provisional';
-      default:
-        return 'Unknown';
+  static String getPermissionStatusText(ph.PermissionStatus status, [BuildContext? context]) {
+    if (context != null) {
+      final localizations = AppLocalizations.of(context)!;
+      switch (status) {
+        case ph.PermissionStatus.granted:
+          return localizations.granted;
+        case ph.PermissionStatus.denied:
+          return localizations.denied;
+        case ph.PermissionStatus.permanentlyDenied:
+          return localizations.denied;
+        case ph.PermissionStatus.restricted:
+          return localizations.denied;
+        case ph.PermissionStatus.limited:
+          return localizations.granted;
+        case ph.PermissionStatus.provisional:
+          return localizations.granted;
+        default:
+          return localizations.unknown;
+      }
+    } else {
+      // Fallback for when context is not available
+      switch (status) {
+        case ph.PermissionStatus.granted:
+          return 'Granted';
+        case ph.PermissionStatus.denied:
+          return 'Denied';
+        case ph.PermissionStatus.permanentlyDenied:
+          return 'Permanently Denied';
+        case ph.PermissionStatus.restricted:
+          return 'Restricted';
+        case ph.PermissionStatus.limited:
+          return 'Limited';
+        case ph.PermissionStatus.provisional:
+          return 'Provisional';
+        default:
+          return 'Unknown';
+      }
     }
   }
 

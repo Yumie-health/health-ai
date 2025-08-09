@@ -1019,9 +1019,9 @@ class _AuthScreenState extends State<AuthScreen> {
                   children: [
                     Icon(Icons.lock_reset, size: 48, color: kPrimaryGreen),
                     SizedBox(height: 16),
-                    Text('Reset Password', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+                    Text(AppLocalizations.of(context)!.resetPasswordTitle, style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
                     SizedBox(height: 8),
-                    Text('Enter your email address to receive a password reset link',
+                    Text(AppLocalizations.of(context)!.enterEmailForReset,
                       style: TextStyle(fontSize: 16, color: Colors.grey[600]),
                       textAlign: TextAlign.center,
                     ),
@@ -1029,7 +1029,7 @@ class _AuthScreenState extends State<AuthScreen> {
                     TextField(
                       controller: resetEmailController,
                       decoration: InputDecoration(
-                        labelText: 'Email Address',
+                        labelText: AppLocalizations.of(context)!.emailAddress,
                         hintText: 'your.email@example.com',
                         prefixIcon: Icon(Icons.email_outlined, color: kPrimaryGreen),
                         filled: true,
@@ -1074,7 +1074,7 @@ class _AuthScreenState extends State<AuthScreen> {
                               borderRadius: BorderRadius.circular(12),
                             ),
                           ),
-                          child: Text('Cancel'),
+                          child: Text(AppLocalizations.of(context)!.cancel),
                         ),
                         SizedBox(width: 12),
                         ElevatedButton(
@@ -1161,7 +1161,7 @@ class _AuthScreenState extends State<AuthScreen> {
                           ),
                           child: resetLoading
                               ? SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                              : Text('Send Reset Link'),
+                              : Text(AppLocalizations.of(context)!.sendResetLink),
                         ),
                       ],
                     ),
@@ -1291,7 +1291,7 @@ class _AuthScreenState extends State<AuthScreen> {
             content: Text(errorMessage),
             duration: Duration(seconds: 5),
             action: SnackBarAction(
-              label: 'Help',
+              label: AppLocalizations.of(context)!.help,
               onPressed: () {
                 // Could show a help dialog or navigate to help page
                 showDialog(
@@ -1307,7 +1307,7 @@ class _AuthScreenState extends State<AuthScreen> {
                     actions: [
                       TextButton(
                         onPressed: () => Navigator.pop(context),
-                        child: Text('OK'),
+                        child: Text(AppLocalizations.of(context)!.ok),
                       ),
                     ],
                   ),
@@ -1807,15 +1807,15 @@ class _AuthScreenState extends State<AuthScreen> {
                     ),
                     const SizedBox(height: 24),
                     Text(
-                      showSignUp ? 'Create Account' : 'Sign In',
+                      showSignUp ? AppLocalizations.of(context)!.createAccount : AppLocalizations.of(context)!.signIn,
                       style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: 8),
                     Text(
                       showSignUp
-                          ? 'Sign up to get started with Yumie'
-                          : 'Sign in to access your account',
+                          ? AppLocalizations.of(context)!.signUpToGetStarted
+                          : AppLocalizations.of(context)!.signInToAccessAccount,
                       style: TextStyle(
                         color: Colors.grey[600],
                         fontSize: 16,
@@ -1828,12 +1828,12 @@ class _AuthScreenState extends State<AuthScreen> {
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text('Full Name', style: TextStyle(fontWeight: FontWeight.w500)),
+                          Text(AppLocalizations.of(context)!.fullName, style: TextStyle(fontWeight: FontWeight.w500)),
                           const SizedBox(height: 8),
                           TextField(
                             controller: nameController,
                             decoration: InputDecoration(
-                              hintText: 'John Doe',
+                              hintText: AppLocalizations.of(context)!.johnDoe,
                               prefixIcon: Icon(Icons.person, color: Colors.grey[400]),
                               filled: true,
                               fillColor: Colors.white,
@@ -1856,13 +1856,13 @@ class _AuthScreenState extends State<AuthScreen> {
                       ),
                     Align(
                       alignment: Alignment.centerLeft,
-                      child: const Text('Email', style: TextStyle(fontWeight: FontWeight.w500)),
+                      child: Text(AppLocalizations.of(context)!.email, style: TextStyle(fontWeight: FontWeight.w500)),
                     ),
                     const SizedBox(height: 8),
                     TextField(
                       controller: emailController,
                       decoration: InputDecoration(
-                        hintText: 'your.email@example.com',
+                        hintText: AppLocalizations.of(context)!.yourEmailExample,
                         prefixIcon: Icon(Icons.email_outlined, color: Colors.grey[400]),
                         filled: true,
                         fillColor: Colors.white,
@@ -1884,7 +1884,7 @@ class _AuthScreenState extends State<AuthScreen> {
                     const SizedBox(height: 18),
                     Align(
                       alignment: Alignment.centerLeft,
-                      child: const Text('Password', style: TextStyle(fontWeight: FontWeight.w500)),
+                      child: Text(AppLocalizations.of(context)!.password, style: TextStyle(fontWeight: FontWeight.w500)),
                     ),
                     const SizedBox(height: 8),
                     TextField(
@@ -1933,7 +1933,7 @@ class _AuthScreenState extends State<AuthScreen> {
                         child: GestureDetector(
                           onTap: _showForgotPasswordDialog,
                           child: Text(
-                            'Forgot Password?',
+                            AppLocalizations.of(context)!.forgotPassword,
                             style: TextStyle(
                               color: kPrimaryGreen,
                               fontSize: 14,
@@ -1959,7 +1959,7 @@ class _AuthScreenState extends State<AuthScreen> {
                               crossAxisAlignment: WrapCrossAlignment.center,
                               children: [
                                 Text(
-                                  'I accept the ',
+                                  AppLocalizations.of(context)!.iAcceptThe + ' ',
                                   style: TextStyle(
                                     color: Colors.grey[700],
                                     fontSize: 14,
@@ -1974,7 +1974,7 @@ class _AuthScreenState extends State<AuthScreen> {
                                       }
                                     } catch (e) {
                                       ScaffoldMessenger.of(context).showSnackBar(
-                                        SnackBar(content: Text('Could not open Terms of Service')),
+                                        SnackBar(content: Text(AppLocalizations.of(context)!.couldNotOpenTermsOfService)),
                                       );
                                     }
                                   },
@@ -1989,7 +1989,7 @@ class _AuthScreenState extends State<AuthScreen> {
                                   ),
                                 ),
                                 Text(
-                                  ' and ',
+                                  ' ' + AppLocalizations.of(context)!.and + ' ',
                                   style: TextStyle(
                                     color: Colors.grey[700],
                                     fontSize: 14,
@@ -2004,7 +2004,7 @@ class _AuthScreenState extends State<AuthScreen> {
                                       }
                                     } catch (e) {
                                       ScaffoldMessenger.of(context).showSnackBar(
-                                        SnackBar(content: Text('Could not open Privacy Policy')),
+                                        SnackBar(content: Text(AppLocalizations.of(context)!.couldNotOpenPrivacyPolicy)),
                                       );
                                     }
                                   },
@@ -2038,7 +2038,7 @@ class _AuthScreenState extends State<AuthScreen> {
                                 height: 24,
                                 child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
                               )
-                            : Text(showSignUp ? 'Create Account' : 'Sign In'),
+                            : Text(showSignUp ? AppLocalizations.of(context)!.createAccount : AppLocalizations.of(context)!.signIn),
                       ),
                     ),
                     const SizedBox(height: 18),
@@ -2046,10 +2046,10 @@ class _AuthScreenState extends State<AuthScreen> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          const Text("Don't have an account? ", style: TextStyle(color: Colors.black54)),
+                          Text(AppLocalizations.of(context)!.dontHaveAccount + " ", style: TextStyle(color: Colors.black54)),
                           GestureDetector(
                             onTap: () => setState(() => showSignUp = true),
-                            child: Text('Sign up', style: TextStyle(color: kPrimaryGreen, fontWeight: FontWeight.w500)),
+                            child: Text(AppLocalizations.of(context)!.signUp, style: TextStyle(color: kPrimaryGreen, fontWeight: FontWeight.w500)),
                           ),
                         ],
                       ),
@@ -2057,10 +2057,10 @@ class _AuthScreenState extends State<AuthScreen> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          const Text('Already have an account? ', style: TextStyle(color: Colors.black54)),
+                          Text(AppLocalizations.of(context)!.alreadyHaveAccount + " ", style: TextStyle(color: Colors.black54)),
                           GestureDetector(
                             onTap: () => setState(() => showSignUp = false),
-                            child: Text('Sign in', style: TextStyle(color: kPrimaryGreen, fontWeight: FontWeight.w500)),
+                            child: Text(AppLocalizations.of(context)!.signIn, style: TextStyle(color: kPrimaryGreen, fontWeight: FontWeight.w500)),
                           ),
                         ],
                       ),
@@ -2101,7 +2101,7 @@ class _AuthScreenState extends State<AuthScreen> {
                           crossAxisAlignment: WrapCrossAlignment.center,
                           children: [
                             Text(
-                              'By continuing, you agree to our ',
+                              AppLocalizations.of(context)!.byContinuingYouAgreeToOur + ' ',
                               style: TextStyle(
                                 color: Colors.grey[600],
                                 fontSize: 12,
@@ -2116,7 +2116,7 @@ class _AuthScreenState extends State<AuthScreen> {
                                   }
                                 } catch (e) {
                                   ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(content: Text('Could not open Terms of Service')),
+                                    SnackBar(content: Text(AppLocalizations.of(context)!.couldNotOpenTermsOfService)),
                                   );
                                 }
                               },
@@ -2146,7 +2146,7 @@ class _AuthScreenState extends State<AuthScreen> {
                                   }
                                 } catch (e) {
                                   ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(content: Text('Could not open Privacy Policy')),
+                                    SnackBar(content: Text(AppLocalizations.of(context)!.couldNotOpenPrivacyPolicy)),
                                   );
                                 }
                               },
@@ -2193,7 +2193,7 @@ class _GoogleSignInButton extends StatelessWidget {
       ),
       icon: Image.asset('assets/google_logo.png', height: 24, color: isDisabled ? Colors.grey[600] : null),
       label: Text(
-        isSignUp ? 'Sign up with Google' : 'Sign in with Google', 
+        isSignUp ? AppLocalizations.of(context)!.signUpWithGoogle : AppLocalizations.of(context)!.signInWithGoogle, 
         style: TextStyle(
           fontWeight: FontWeight.w600,
           color: isDisabled ? Colors.grey[600] : Colors.black,
@@ -2216,7 +2216,7 @@ class _AppleSignInButton extends StatelessWidget {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
       icon: Icon(Icons.apple, size: 26),
-      label: Text('Sign in with Apple', style: TextStyle(fontWeight: FontWeight.w600)),
+      label: Text(AppLocalizations.of(context)!.signInWithApple, style: TextStyle(fontWeight: FontWeight.w600)),
       onPressed: onTap,
     );
   }
@@ -2290,7 +2290,7 @@ class _StartupProfileScreenState extends State<StartupProfileScreen> {
               const SizedBox(height: 24),
               TextFormField(
                 controller: nameController,
-                decoration: const InputDecoration(labelText: 'Name'),
+                decoration: InputDecoration(labelText: AppLocalizations.of(context)!.name),
                 validator: (v) => v == null || v.isEmpty ? 'Enter your name' : null,
               ),
               const SizedBox(height: 12),
@@ -2319,7 +2319,7 @@ class _StartupProfileScreenState extends State<StartupProfileScreen> {
               const SizedBox(height: 12),
               TextFormField(
                 controller: calorieController,
-                decoration: const InputDecoration(labelText: 'Daily Calorie Goal'),
+                decoration: InputDecoration(labelText: AppLocalizations.of(context)!.dailyCalorieGoal),
                 keyboardType: TextInputType.number,
                 validator: (v) => v == null || v.isEmpty ? 'Enter calorie goal' : null,
               ),
@@ -2492,17 +2492,17 @@ class _FoodLogFormState extends State<FoodLogForm> {
         const SizedBox(height: 8),
         TextField(
           controller: foodController,
-          decoration: const InputDecoration(labelText: 'Food Name'),
+          decoration: InputDecoration(labelText: AppLocalizations.of(context)!.foodName),
         ),
         const SizedBox(height: 8),
         _NumericTextField(
           controller: caloriesController,
-          decoration: const InputDecoration(labelText: 'Calories'),
+          decoration: InputDecoration(labelText: AppLocalizations.of(context)!.calories),
         ),
         const SizedBox(height: 8),
         ElevatedButton(
           onPressed: addFoodLog,
-          child: const Text('Add Log'),
+          child: Text(AppLocalizations.of(context)!.addLog),
         ),
         if (message.isNotEmpty)
           Text(
@@ -3392,7 +3392,7 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
                             child: _AnimatedScaleOnTap(
                               child: _QuickActionCard(
                                 icon: Icons.camera_alt,
-                                label: AppLocalizations.of(context)!.logMeal,
+                                label: AppLocalizations.of(context)!.scan,
                                 color: kPrimaryGreen,
                                 onTap: () {
                                   Navigator.of(context).push(
@@ -3899,7 +3899,7 @@ class _MealCardModernState extends State<_MealCardModern> {
                         ],
                       );
                     } else {
-                      return Text('No ingredients listed.', style: TextStyle(color: Colors.grey[600], fontStyle: FontStyle.italic));
+                      return Text(AppLocalizations.of(context)!.noIngredientsListed, style: TextStyle(color: Colors.grey[600], fontStyle: FontStyle.italic));
                     }
                   },
                 ),
@@ -4173,7 +4173,7 @@ Track your calories, scan food with AI, and get personalized nutrition insights 
                   if (didUpdate && mounted) setState(() {}); // Only refresh parent if needed
                 }
               },
-              child: const Text('Save'),
+              child: Text(AppLocalizations.of(context)!.save),
             ),
           ],
         ),
@@ -4207,7 +4207,7 @@ Track your calories, scan food with AI, and get personalized nutrition insights 
                 TextField(
                   controller: nameController,
                   decoration: InputDecoration(
-                    labelText: 'Name',
+                    labelText: AppLocalizations.of(context)!.name,
                     prefixIcon: Icon(Icons.person, color: theme.iconTheme.color),
                     filled: true,
                     fillColor: theme.cardColor,
@@ -4291,7 +4291,7 @@ Track your calories, scan food with AI, and get personalized nutrition insights 
                           if (mounted) {
                             Navigator.pop(context);
                             ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('Profile updated successfully')),
+                              SnackBar(content: Text(AppLocalizations.of(context)!.profileUpdatedSuccessfully)),
                             );
                           }
                         } catch (e) {
@@ -4335,7 +4335,7 @@ Track your calories, scan food with AI, and get personalized nutrition insights 
             mainAxisSize: MainAxisSize.min,
             children: [
               _NumericTextField(
-                decoration: const InputDecoration(labelText: 'Daily Calorie Goal'),
+                decoration: InputDecoration(labelText: AppLocalizations.of(context)!.dailyCalorieGoal),
                 controller: caloriesController,
               ),
               _NumericTextField(
@@ -4370,7 +4370,7 @@ Track your calories, scan food with AI, and get personalized nutrition insights 
                 if (mounted) {
                   Navigator.pop(context);
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Goals updated successfully')),
+                    SnackBar(content: Text(AppLocalizations.of(context)!.goalsUpdatedSuccessfully)),
                   );
                 }
               } catch (e) {
@@ -4381,7 +4381,7 @@ Track your calories, scan food with AI, and get personalized nutrition insights 
                 }
               }
             },
-            child: const Text('Save'),
+            child: Text(AppLocalizations.of(context)!.save),
           ),
         ],
       ),
@@ -4796,7 +4796,7 @@ Track your calories, scan food with AI, and get personalized nutrition insights 
                                   if (isPremium)
                                     _ProfileMenuTile(
                                       icon: Icons.settings,
-                                      label: 'Manage Subscription',
+                                      label: AppLocalizations.of(context)!.manageSubscription,
                                       iconColor: Colors.grey[600],
                                       onTap: () {
                                         // Open device subscription management
@@ -4824,7 +4824,7 @@ Track your calories, scan food with AI, and get personalized nutrition insights 
                           Divider(height: 1, color: Colors.grey[200]),
                           _ProfileMenuTile(
                             icon: Icons.star,
-                            label: 'Rate us on Play Store',
+                            label: AppLocalizations.of(context)!.rateUsOn + ' Play Store',
                             iconColor: Colors.amber[600],
                             onTap: () async {
                               try {
@@ -4834,12 +4834,12 @@ Track your calories, scan food with AI, and get personalized nutrition insights 
                                   await launchUrl(uri, mode: LaunchMode.externalApplication);
                                 } else {
                                   ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(content: Text('Could not open Play Store')),
+                                    SnackBar(content: Text(AppLocalizations.of(context)!.couldNotOpenPlayStore)),
                                   );
                                 }
                               } catch (e) {
                                 ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(content: Text('Error opening Play Store')),
+                                  SnackBar(content: Text(AppLocalizations.of(context)!.errorOpeningPlayStore)),
                                 );
                               }
                             },
@@ -5041,12 +5041,12 @@ Track your calories, scan food with AI, and get personalized nutrition insights 
                                   await launchUrl(uri, mode: LaunchMode.externalApplication);
                                 } else {
                                   ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(content: Text('Could not open website')),
+                                    SnackBar(content: Text(AppLocalizations.of(context)!.couldNotOpenWebsite)),
                                   );
                                 }
                               } catch (e) {
                                 ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(content: Text('Error opening website')),
+                                  SnackBar(content: Text(AppLocalizations.of(context)!.errorOpeningWebsite)),
                                 );
                               }
                             },
@@ -6474,17 +6474,17 @@ class _FoodScreenState extends State<FoodScreen> with TickerProviderStateMixin {
     return 'snack';
   }
 
-  String get _currentMealLabel {
+  String _getCurrentMealLabel(BuildContext context) {
     final period = _currentMealPeriod;
     switch (period) {
       case 'breakfast':
-        return 'Morning Sunshine ☀️';
+        return AppLocalizations.of(context)!.breakfastTime + ' ☀️';
       case 'lunch':
-        return 'Lunch Time! 🌤️';
+        return AppLocalizations.of(context)!.lunchTime + '! 🌤️';
       case 'dinner':
-        return 'Dinner Tastic! 🌇';
+        return AppLocalizations.of(context)!.dinnerTime + '! 🌇';
       default:
-        return 'Healthy Snacks! 🌙';
+        return AppLocalizations.of(context)!.snackTime + '! 🌙';
     }
   }
 
@@ -6897,7 +6897,7 @@ class _FoodScreenState extends State<FoodScreen> with TickerProviderStateMixin {
                                 children: [
                                   Padding(
                                     padding: const EdgeInsets.fromLTRB(20, 18, 20, 0),
-                                    child: Text(_currentMealLabel, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 22)),
+                                    child: Text(_getCurrentMealLabel(context), style: TextStyle(fontWeight: FontWeight.bold, fontSize: 22)),
                                   ),
                                   ...List.generate(meals.length, (i) {
                                     final meal = meals[i];
@@ -7234,7 +7234,7 @@ class _FoodMealCardState extends State<_FoodMealCard> {
                         ],
                       );
                     } else {
-                      return Text('No ingredients listed.', style: TextStyle(color: Colors.grey[600], fontStyle: FontStyle.italic));
+                      return Text(AppLocalizations.of(context)!.noIngredientsListed, style: TextStyle(color: Colors.grey[600], fontStyle: FontStyle.italic));
                     }
                   },
                 ),
@@ -7959,7 +7959,7 @@ class _WaterLogSliderDialogState extends State<_WaterLogSliderDialog> {
               if (_hasWaterLogged) ...[
                 SizedBox(width: 12),
                 ChoiceChip(
-                  label: Text('Remove'),
+                  label: Text(AppLocalizations.of(context)!.remove),
                   selected: !_isAdd,
                   selectedColor: Colors.red[100],
                   onSelected: (selected) => setState(() => _isAdd = false),
@@ -8101,12 +8101,12 @@ class _LegalLinkTile extends StatelessWidget {
             await launchUrl(uri, mode: LaunchMode.externalApplication);
           } else {
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('Could not open link')),
+              SnackBar(content: Text(AppLocalizations.of(context)!.couldNotOpenLink)),
             );
           }
         } catch (e) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Error opening link')),
+            SnackBar(content: Text(AppLocalizations.of(context)!.errorOpeningLink)),
           );
         }
       },

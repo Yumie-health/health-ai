@@ -344,7 +344,7 @@ class _SessionManagementDialogState extends State<_SessionManagementDialog> {
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              'Manage your active sessions across different devices',
+              AppLocalizations.of(context)!.manageActiveSessionsAcrossDevices,
               style: TextStyle(color: Colors.grey[600]),
             ),
             SizedBox(height: 16),
@@ -352,7 +352,7 @@ class _SessionManagementDialogState extends State<_SessionManagementDialog> {
               Padding(
                 padding: EdgeInsets.all(32),
                 child: Text(
-                  'No active sessions found',
+                  AppLocalizations.of(context)!.noActiveSessionsFound,
                   style: TextStyle(color: Colors.grey[500]),
                 ),
               )

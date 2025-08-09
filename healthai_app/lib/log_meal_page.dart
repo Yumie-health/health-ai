@@ -353,7 +353,7 @@ class _SearchableMealInputState extends State<SearchableMealInput> {
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               Text(
-                                'AI Search',
+                                AppLocalizations.of(context)!.aiSearch,
                                 style: TextStyle(
                                   color: Colors.white,
                                   fontWeight: FontWeight.bold,

@@ -306,7 +306,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get yumie => 'Yumie';
 
   @override
-  String get askAboutMeals => 'Pregunta sobre comidas, nutrición o recibe consejos personalizados';
+  String get askAboutMeals => 'Tu asistente de nutrición personal';
 
   @override
   String get coachQuick1 => '¿Qué debo comer hoy?';
@@ -342,13 +342,13 @@ class AppLocalizationsEs extends AppLocalizations {
   String get calorieGoal => 'Meta calórica';
 
   @override
-  String get proteinGoal => 'Meta de proteína';
+  String get proteinGoal => 'Objetivo de Proteína';
 
   @override
   String get carbGoal => 'Meta de carbohidratos';
 
   @override
-  String get fatGoal => 'Meta de grasa';
+  String get fatGoal => 'Objetivo de Grasa';
 
   @override
   String get waterIntake => 'Ingesta de agua';
@@ -426,7 +426,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get clearAll => 'Borrar todo';
 
   @override
-  String get foodName => 'Nombre del alimento';
+  String get foodName => 'Nombre del Alimento';
 
   @override
   String get saveMeal => 'Guardar comida';
@@ -525,7 +525,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get drink => 'BEBIDA';
 
   @override
-  String get kg => 'kilogramo';
+  String get kg => 'kg';
 
   @override
   String get g => 'gramo';
@@ -534,7 +534,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get mg => 'miligramo';
 
   @override
-  String get cm => 'centímetro';
+  String get cm => 'cm';
 
   @override
   String get m => 'metro';
@@ -552,7 +552,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get oz => 'onza';
 
   @override
-  String get ft => 'pie';
+  String get ft => 'pies';
 
   @override
   String get inches => 'pulgada';
@@ -641,7 +641,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get cameraNotificationsAndMore => 'Cámara, notificaciones y más';
 
   @override
-  String get deleteMeal => 'Eliminar Comida';
+  String get deleteMeal => 'Eliminar comida';
 
   @override
   String get areYouSureDeleteMeal => '¿Estás seguro de que quieres eliminar esta comida?';
@@ -719,7 +719,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get failedToUpdateName => 'Error al actualizar el nombre';
 
   @override
-  String get profileUpdatedSuccessfully => 'Perfil actualizado con éxito';
+  String get profileUpdatedSuccessfully => 'Perfil actualizado exitosamente';
 
   @override
   String get errorUpdatingProfile => 'Error al actualizar el perfil';
@@ -728,7 +728,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get editGoals => 'Editar Objetivos';
 
   @override
-  String get goalsUpdatedSuccessfully => 'Objetivos actualizados con éxito';
+  String get goalsUpdatedSuccessfully => 'Objetivos actualizados exitosamente';
 
   @override
   String get errorUpdatingGoals => 'Error al actualizar los objetivos';
@@ -770,7 +770,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get scanFoodItems => 'Escanear elementos de comida y tomar fotos de comidas';
 
   @override
-  String get photoLibrary => 'Biblioteca de Fotos';
+  String get photoLibrary => 'Fotos';
 
   @override
   String get saveScannedImages => 'Guardar imágenes escaneadas y seleccionar fotos';
@@ -788,7 +788,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get permanentlyDeniedHelp => 'Si los permisos están permanentemente denegados, puedes habilitarlos en la configuración de tu dispositivo';
 
   @override
-  String get openDeviceSettings => 'Abrir Configuración del Dispositivo';
+  String get openDeviceSettings => 'Abrir Configuraciones del Dispositivo';
 
   @override
   String get goodMorning => 'Buenos días';
@@ -902,13 +902,13 @@ class AppLocalizationsEs extends AppLocalizations {
   String get deleteAccountWarning => 'Esta acción no se puede deshacer. Todos tus datos incluyendo comidas, progreso y configuraciones serán eliminados permanentemente.';
 
   @override
-  String get typeDeleteToConfirm => 'Escribe \'DELETE\' para confirmar la eliminación de la cuenta';
+  String get typeDeleteToConfirm => 'Escribe \"DELETE\" para confirmar';
 
   @override
   String get deleteAccountFinalConfirmation => 'DELETE';
 
   @override
-  String get accountDeleted => 'Cuenta eliminada exitosamente';
+  String get accountDeleted => 'Cuenta Eliminada';
 
   @override
   String get errorDeletingAccount => 'Error al eliminar la cuenta';
@@ -947,7 +947,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get bySubscribing => 'Al suscribirte, aceptas nuestros Términos de Servicio y Política de Privacidad. Las suscripciones se renuevan automáticamente a menos que se cancelen';
 
   @override
-  String get permissionsComplete => '¡Permisos Completos!';
+  String get permissionsComplete => '¡Permisos Completados!';
 
   @override
   String get enterYourPassword => 'Ingresa tu contraseña';
@@ -1041,4 +1041,700 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get riskLevelHigh => 'ALTO';
+
+  @override
+  String get welcomeToYumiePermissions => 'Bienvenido a Yumie';
+
+  @override
+  String get provideBestExperience => 'Para brindarte la mejor experiencia, necesitamos algunos permisos';
+
+  @override
+  String get grantPermissions => 'Conceder Permisos';
+
+  @override
+  String get skipForNow => 'Omitir por Ahora';
+
+  @override
+  String get denied => 'Denegado';
+
+  @override
+  String get granted => 'Concedido';
+
+  @override
+  String get createAccount => 'Crear Cuenta';
+
+  @override
+  String get signUpToGetStarted => 'Regístrate para comenzar con Yumie';
+
+  @override
+  String get fullName => 'Nombre Completo';
+
+  @override
+  String get email => 'Correo Electrónico';
+
+  @override
+  String get password => 'Contraseña';
+
+  @override
+  String get agreeToTerms => 'y Términos de Servicio Acepto la Política de Privacidad';
+
+  @override
+  String get alreadyHaveAccount => '¿Ya tienes una cuenta?';
+
+  @override
+  String get signIn => 'Iniciar Sesión';
+
+  @override
+  String get signUp => 'Registrarse';
+
+  @override
+  String get signInToAccessAccount => 'Inicia sesión para acceder a tu cuenta';
+
+  @override
+  String get forgotPassword => '¿Olvidaste tu contraseña?';
+
+  @override
+  String get dontHaveAccount => '¿No tienes una cuenta?';
+
+  @override
+  String get signUpWithGoogle => 'Registrarse con Google';
+
+  @override
+  String get signInWithGoogle => 'Iniciar sesión con Google';
+
+  @override
+  String get signUpWithApple => 'Registrarse con Apple';
+
+  @override
+  String get signInWithApple => 'Iniciar sesión con Apple';
+
+  @override
+  String get resetPasswordTitle => 'Restablecer Contraseña';
+
+  @override
+  String get enterEmailForReset => 'Introduce tu dirección de correo electrónico para recibir un enlace de restablecimiento de contraseña';
+
+  @override
+  String get emailAddress => 'Dirección de Correo Electrónico';
+
+  @override
+  String get rateUsOn => 'Califícanos en';
+
+  @override
+  String get deleteAccountTitle => 'Eliminar Cuenta';
+
+  @override
+  String get deleteAccountWarningTitle => 'Esta acción es permanente y no se puede deshacer';
+
+  @override
+  String get deleteAccountDataList => 'Cuando elimines tu cuenta, eliminaremos permanentemente:';
+
+  @override
+  String get allMealLogsAndNutrition => 'Todos tus registros de comidas y datos nutricionales';
+
+  @override
+  String get profileAndPersonalInfo => 'Tu perfil e información personal';
+
+  @override
+  String get allUploadedPhotos => 'Todas las fotos y archivos subidos';
+
+  @override
+  String get customMealsAndRecipes => 'Tus comidas y recetas personalizadas';
+
+  @override
+  String get allAppPreferences => 'Todas las preferencias y configuraciones de la aplicación';
+
+  @override
+  String get activeSessionsAllDevices => 'Sesiones activas en todos los dispositivos';
+
+  @override
+  String get exportDataWarning => 'Asegúrate de exportar cualquier dato que quieras conservar antes de continuar';
+
+  @override
+  String get understandActionPermanent => 'Entiendo que esta acción es permanente';
+
+  @override
+  String get typeDeleteHere => 'Escribe DELETE aquí';
+
+  @override
+  String get deleteForever => 'Eliminar Para Siempre';
+
+  @override
+  String get noSecurityAlertsFound => 'No hay alertas de seguridad';
+
+  @override
+  String get yourAccountLooksGood => '¡Tu cuenta se ve bien! No se ha detectado actividad sospechosa.';
+
+  @override
+  String get manageActiveSessionsAcrossDevices => 'Gestiona tus sesiones activas en diferentes dispositivos';
+
+  @override
+  String get noActiveSessionsFound => 'No se encontraron sesiones activas';
+
+  @override
+  String get signOutAllOtherSessions => 'Cerrar Todas las Demás Sesiones';
+
+  @override
+  String get aiSearch => 'Búsqueda IA';
+
+  @override
+  String get aiSearchDescription => 'Buscar elementos de comida usando IA';
+
+  @override
+  String get noIngredientsListedText => 'No hay ingredientes listados';
+
+  @override
+  String get breakfastTime => 'Hora del Desayuno';
+
+  @override
+  String get lunchTime => 'Hora del Almuerzo';
+
+  @override
+  String get dinnerTime => 'Hora de la Cena';
+
+  @override
+  String get snackTime => 'Hora de la Merienda';
+
+  @override
+  String get deletingYourAccount => 'Eliminando tu cuenta...';
+
+  @override
+  String get thisMayTakeAFewMoments => 'Esto puede tomar unos momentos';
+
+  @override
+  String get redirectingToSignIn => 'Redirigiendo al inicio de sesión...';
+
+  @override
+  String get accountSuccessfullyDeleted => 'Cuenta Eliminada Exitosamente';
+
+  @override
+  String get pleaseCloseAndRestartApp => 'Por favor cierra y reinicia la aplicación para continuar.';
+
+  @override
+  String get restartApp => 'Reiniciar App';
+
+  @override
+  String get cameraAccess => 'Acceso a la Cámara';
+
+  @override
+  String get cameraAccessMessage => 'Yumie necesita acceso a la cámara para escanear elementos de comida y ayudarte a registrar tus comidas con precisión.';
+
+  @override
+  String get photoLibraryAccess => 'Acceso a la Biblioteca de Fotos';
+
+  @override
+  String get photoLibraryAccessMessage => 'Yumie necesita acceso a tu biblioteca de fotos para guardar imágenes escaneadas y seleccionar fotos para el registro de comidas.';
+
+  @override
+  String get notificationAccess => 'Acceso a Notificaciones';
+
+  @override
+  String get notificationAccessMessage => 'Yumie necesita acceso a notificaciones para enviarte recordatorios de comidas, alertas de ingesta de agua y recordatorios de caminatas conscientes.';
+
+  @override
+  String get notNow => 'Ahora No';
+
+  @override
+  String get permissionsCompleted => '¡Permisos Completados!';
+
+  @override
+  String get allPermissionsGranted => '¡Todos los permisos concedidos! Ya estás listo para usar Yumie.';
+
+  @override
+  String get whatIsYourMainGoal => '¿Cuál es tu objetivo principal?';
+
+  @override
+  String get chooseGoalDescription => 'Elige el objetivo que mejor se alinee con tu viaje';
+
+  @override
+  String get loseBodyWeight => 'Perder peso corporal';
+
+  @override
+  String get gainWeight => 'Ganar peso';
+
+  @override
+  String get buildMuscle => 'Desarrollar músculo';
+
+  @override
+  String get eatHealthier => 'Comer más saludable';
+
+  @override
+  String get maintainBodyWeight => 'Mantener peso corporal';
+
+  @override
+  String get setRealisticGoalForJourney => 'Establece una meta realista para tu viaje';
+
+  @override
+  String get targetWeightSetToCurrent => 'Tu peso objetivo está establecido a tu peso actual';
+
+  @override
+  String get iAcceptThe => 'Acepto los';
+
+  @override
+  String get and => 'y';
+
+  @override
+  String get johnDoe => 'Juan Pérez';
+
+  @override
+  String get yourEmailExample => 'tu.email@ejemplo.com';
+
+  @override
+  String get byContinuingYouAgreeToOur => 'Al continuar, aceptas nuestros';
+
+  @override
+  String get whatMotivatesYou => '¿Qué te motiva?';
+
+  @override
+  String get chooseWhatDrivesYou => 'Elige lo que te impulsa a lograr tus objetivos';
+
+  @override
+  String get feelEnergeticEveryDay => 'Sentirme enérgico todos los días';
+
+  @override
+  String get achievePersonalMilestone => 'Lograr un hito personal';
+
+  @override
+  String get boostMyConfidence => 'Aumentar mi confianza';
+
+  @override
+  String get longTermHealth => 'Salud a largo plazo';
+
+  @override
+  String get trackYourMealsWithEase => 'Rastrea tus comidas con facilidad';
+
+  @override
+  String get caloriesLeft => 'calorías restantes';
+
+  @override
+  String get thisHelpsUsPersonalizeNutrition => 'Esto nos ayuda a personalizar tu plan de nutrición';
+
+  @override
+  String get male => 'Masculino';
+
+  @override
+  String get female => 'Femenino';
+
+  @override
+  String get other => 'Otro';
+
+  @override
+  String get thisHelpsUsPersonalizeExperience => 'Esto nos ayuda a personalizar tu experiencia';
+
+  @override
+  String get older => 'Mayor';
+
+  @override
+  String get younger => 'Menor';
+
+  @override
+  String get yearsOld => 'años';
+
+  @override
+  String get selected => 'Seleccionado';
+
+  @override
+  String get teens => 'Adolescentes';
+
+  @override
+  String get yourCurrentWeight => 'Tu peso actual';
+
+  @override
+  String get activityLevel => 'Nivel de actividad';
+
+  @override
+  String get diabetic => '¿Diabético?';
+
+  @override
+  String get howMuchWaterADay => '¿Cuánta agua al día?';
+
+  @override
+  String get fitnessProfile => 'Perfil de fitness';
+
+  @override
+  String get dueToCurrentAnswers => 'Según tus respuestas actuales';
+
+  @override
+  String get remindersWouldYouLike => '¿Qué recordatorios te gustaría recibir?';
+
+  @override
+  String get yumieIsCookingUp => 'Yumie está preparando tu plan de nutrición personalizado...';
+
+  @override
+  String get yourAllSet => '¡Ya estás listo!';
+
+  @override
+  String get google => 'Google';
+
+  @override
+  String get fiftyPlus => '50+';
+
+  @override
+  String get forties => '40s';
+
+  @override
+  String get thirties => '30s';
+
+  @override
+  String get twenties => '20s';
+
+  @override
+  String get weightUnit => 'kg';
+
+  @override
+  String get heightUnit => 'cm';
+
+  @override
+  String get feetUnit => 'pies';
+
+  @override
+  String get inchesUnit => 'pulgadas';
+
+  @override
+  String get poundsUnit => 'libras';
+
+  @override
+  String get whatIsYourAge => '¿Cuál es tu edad?';
+
+  @override
+  String get whatIsYourHeight => '¿Cuál es tu altura?';
+
+  @override
+  String get whatIsYourWeight => '¿Cuál es tu peso actual?';
+
+  @override
+  String get whatIsYourGoalWeight => '¿Cuál es tu peso objetivo?';
+
+  @override
+  String get whatIsYourActivityLevel => '¿Cuál es tu nivel de actividad?';
+
+  @override
+  String get howMuchWaterDaily => '¿Cuánta agua bebes diariamente?';
+
+  @override
+  String get sedentary => 'Sedentario';
+
+  @override
+  String get lightlyActive => 'Ligeramente Activo';
+
+  @override
+  String get moderatelyActive => 'Moderadamente Activo';
+
+  @override
+  String get veryActive => 'Muy Activo';
+
+  @override
+  String get extremelyActive => 'Extremadamente Activo';
+
+  @override
+  String get aPositive => 'A+';
+
+  @override
+  String get aNegative => 'A-';
+
+  @override
+  String get bPositive => 'B+';
+
+  @override
+  String get bNegative => 'B-';
+
+  @override
+  String get abPositive => 'AB+';
+
+  @override
+  String get abNegative => 'AB-';
+
+  @override
+  String get oPositive => 'O+';
+
+  @override
+  String get oNegative => 'O-';
+
+  @override
+  String get oneToTwoGlasses => '1-2 vasos';
+
+  @override
+  String get threeToFourGlasses => '3-4 vasos';
+
+  @override
+  String get fiveToSixGlasses => '5-6 vasos';
+
+  @override
+  String get sevenToEightGlasses => '7-8 vasos';
+
+  @override
+  String get moreThanEightGlasses => 'Más de 8 vasos';
+
+  @override
+  String get mealReminders => 'Recordatorios de comidas';
+
+  @override
+  String get waterReminders => 'Recordatorios de agua';
+
+  @override
+  String get workoutReminders => 'Recordatorios de ejercicio';
+
+  @override
+  String get progressUpdates => 'Actualizaciones de progreso';
+
+  @override
+  String get dailyTips => 'Consejos diarios';
+
+  @override
+  String get youAreAllSet => '¡Ya estás todo listo!';
+
+  @override
+  String get welcomeToYourHealthJourney => 'Bienvenido a tu viaje de salud';
+
+  @override
+  String get letsGetStarted => '¡Comencemos!';
+
+  @override
+  String get pleaseWait => 'Por favor espera...';
+
+  @override
+  String get cookingUpYourPlan => 'Preparando tu plan personalizado';
+
+  @override
+  String get analyzingYourData => 'Analizando tus datos';
+
+  @override
+  String get creatingCustomPlan => 'Creando tu plan de nutrición personalizado';
+
+  @override
+  String get almostDone => '¡Casi terminamos!';
+
+  @override
+  String get subscriptionRequired => 'Suscripción Requerida';
+
+  @override
+  String get upgradeToUnlock => 'Actualiza para desbloquear todas las funciones';
+
+  @override
+  String get startFreeTrial => 'Iniciar Prueba Gratuita';
+
+  @override
+  String get month => 'mes';
+
+  @override
+  String get year => 'año';
+
+  @override
+  String get free => 'Gratis';
+
+  @override
+  String get mostPopular => 'Más Popular';
+
+  @override
+  String get skip => 'Omitir';
+
+  @override
+  String get next => 'Siguiente';
+
+  @override
+  String get back => 'Atrás';
+
+  @override
+  String get done => 'Hecho';
+
+  @override
+  String get error => 'Error';
+
+  @override
+  String get success => 'Éxito';
+
+  @override
+  String get warning => 'Advertencia';
+
+  @override
+  String get info => 'Información';
+
+  @override
+  String get retry => 'Reintentar';
+
+  @override
+  String get loading => 'Cargando...';
+
+  @override
+  String get noDataAvailable => 'No hay datos disponibles';
+
+  @override
+  String get tryAgain => 'Intentar de nuevo';
+
+  @override
+  String get somethingWentWrong => 'Algo salió mal';
+
+  @override
+  String get internetConnectionRequired => 'Se requiere conexión a internet';
+
+  @override
+  String get pleaseCheckConnection => 'Por favor verifica tu conexión a internet';
+
+  @override
+  String get restartOnboarding => 'Reiniciar Configuración';
+
+  @override
+  String get getStarted => 'Comenzar';
+
+  @override
+  String get couldNotOpenPlayStore => 'No se pudo abrir Play Store';
+
+  @override
+  String get errorOpeningPlayStore => 'Error al abrir Play Store';
+
+  @override
+  String get remove => 'Remover';
+
+  @override
+  String get couldNotOpenLink => 'No se pudo abrir el enlace';
+
+  @override
+  String get errorOpeningLink => 'Error al abrir el enlace';
+
+  @override
+  String get help => 'Ayuda';
+
+  @override
+  String get name => 'Nombre';
+
+  @override
+  String get dailyCalorieGoal => 'Objetivo Diario de Calorías';
+
+  @override
+  String get manageSubscription => 'Gestionar Suscripción';
+
+  @override
+  String get deletionFailed => 'Fallo en la Eliminación';
+
+  @override
+  String get dismiss => 'Descartar';
+
+  @override
+  String get grantPermission => 'Conceder Permiso';
+
+  @override
+  String get littleOrNoExercise => 'Poco o ningún ejercicio';
+
+  @override
+  String get lightExercise => 'Ejercicio ligero/deportes 1-3 días/semana';
+
+  @override
+  String get moderateExercise => 'Ejercicio moderado/deportes 3-5 días/semana';
+
+  @override
+  String get hardExercise => 'Ejercicio intenso/deportes 6-7 días/semana';
+
+  @override
+  String get share => 'Compartir';
+
+  @override
+  String get openSettings => 'Abrir Configuraciones';
+
+  @override
+  String get notificationsForMealLogging => 'Notificaciones para recordatorios de registro de comidas';
+
+  @override
+  String get notificationsForWaterIntake => 'Notificaciones para recordatorios de ingesta de agua';
+
+  @override
+  String get notificationsForMindfulWalk => 'Notificaciones para recordatorios de caminata consciente';
+
+  @override
+  String get increment => 'Incrementar';
+
+  @override
+  String get enterNewName => 'Ingresa nuevo nombre';
+
+  @override
+  String get readOurPrivacyPolicy => 'Lee nuestra política de privacidad';
+
+  @override
+  String get readOurTermsOfService => 'Lee nuestros términos de servicio';
+
+  @override
+  String get helpUsCalculateYourHealthGoals => 'Ayúdanos a calcular tus objetivos de salud';
+
+  @override
+  String get thisHelpsUsTrackYourProgress => 'Esto nos ayuda a seguir tu progreso';
+
+  @override
+  String get setARealisticGoalForYourJourney => 'Establece una meta realista para tu viaje';
+
+  @override
+  String get thisHelpsUsPersonalizeYourPlan => 'Esto nos ayuda a personalizar tu plan';
+
+  @override
+  String get stayingHydratedIsKeyToYourHealth => 'Mantenerse hidratado es clave para tu salud';
+
+  @override
+  String get yourFitnessProfileDueToYourAnswers => 'Tu perfil de fitness según tus respuestas';
+
+  @override
+  String get currentBMI => 'IMC Actual';
+
+  @override
+  String get obese => 'Obeso';
+
+  @override
+  String get activityLevelLabel => 'Nivel de Actividad';
+
+  @override
+  String get bloodTypeLabel => 'Tipo de Sangre';
+
+  @override
+  String get diabeticLabel => 'Diabético';
+
+  @override
+  String get waterIntakeLabel => 'Ingesta de Agua';
+
+  @override
+  String get heresYourPersonalizedNutritionPlan => 'Aquí está tu plan de nutrición personalizado. Bienvenido a tu viaje de salud con Yumie';
+
+  @override
+  String get caloriesGoal => 'Objetivo de Calorías';
+
+  @override
+  String get carbsGoal => 'Objetivo de Carbohidratos';
+
+  @override
+  String get startNow => 'Comenzar Ahora';
+
+  @override
+  String get underweight => 'Bajo peso';
+
+  @override
+  String get normalWeight => 'Peso normal';
+
+  @override
+  String get healthy => 'Saludable';
+
+  @override
+  String get overweight => 'Sobrepeso';
+
+  @override
+  String get avocadoToast => 'Tostada de Aguacate';
+
+  @override
+  String get italianSalad => 'Ensalada Italiana';
+
+  @override
+  String get chickenKatsuRiceBowl => 'Bowl de Arroz con Pollo Katsu';
+
+  @override
+  String get yourTargetWeightIsSetToCurrent => 'Tu peso objetivo está establecido a tu peso actual';
+
+  @override
+  String get couldNotGenerateYourPlan => 'No se pudo generar tu plan. Por favor intenta de nuevo.';
+
+  @override
+  String get somethingWentWrongRestart => 'Algo salió mal. Por favor reinicia el proceso de configuración.';
+
+  @override
+  String get yourBMI => 'Tu IMC:';
+
+  @override
+  String get lbs => 'libras';
+
+  @override
+  String get yourActivityLevel => 'Tu nivel de actividad';
 }

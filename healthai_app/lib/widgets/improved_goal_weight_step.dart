@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'dart:async';
+import '../l10n/app_localizations.dart';
 
 class ImprovedGoalWeightStep extends StatefulWidget {
   final Animation<double> fadeAnimation;
@@ -154,9 +155,9 @@ class _ImprovedGoalWeightStepState extends State<ImprovedGoalWeightStep>
 
   String _getSubtitle() {
     if (widget.selectedGoal == 'Build muscle' || widget.selectedGoal == 'Eat healthier') {
-      return 'Your target weight is set to your current weight';
+      return AppLocalizations.of(context)!.yourTargetWeightIsSetToCurrent;
     }
-    return 'Set a realistic goal for your journey';
+    return AppLocalizations.of(context)!.setARealisticGoalForYourJourney;
   }
 
   bool _shouldShowSlider() {
@@ -208,7 +209,7 @@ class _ImprovedGoalWeightStepState extends State<ImprovedGoalWeightStep>
             child: Column(
               children: [
                 Text(
-                  'Your goal weight',
+                  AppLocalizations.of(context)!.yourGoalWeight,
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: isSmallScreen ? 24 : 32,
@@ -448,7 +449,7 @@ class _ImprovedGoalWeightStepState extends State<ImprovedGoalWeightStep>
               elevation: 0,
               textStyle: TextStyle(fontSize: isSmallScreen ? 16 : 18, fontWeight: FontWeight.bold),
             ),
-            child: Text('Continue'),
+            child: Text(AppLocalizations.of(context)!.continueButton),
           ),
         ),
       ],

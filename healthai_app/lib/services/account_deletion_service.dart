@@ -5,6 +5,7 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'logging_service.dart';
+import '../l10n/app_localizations.dart';
 
 class AccountDeletionService {
   static final AccountDeletionService _instance = AccountDeletionService._internal();
@@ -103,7 +104,7 @@ class AccountDeletionService {
                     backgroundColor: Colors.green,
                     foregroundColor: Colors.white,
                   ),
-                  child: Text('Continue'),
+                  child: Text(AppLocalizations.of(context)!.continueButton),
                 ),
               ],
             ),
@@ -121,7 +122,7 @@ class AccountDeletionService {
         showDialog(
           context: context,
           builder: (context) => AlertDialog(
-            title: Text('Deletion Failed'),
+            title: Text(AppLocalizations.of(context)!.deletionFailed),
             content: Text(_getErrorMessage(e)),
             actions: [
               TextButton(
@@ -344,7 +345,7 @@ class _AccountDeletionDialogState extends State<_AccountDeletionDialog> {
         children: [
           Icon(Icons.warning, color: Colors.red, size: 28),
           SizedBox(width: 8),
-          Text('Delete Account'),
+          Text(AppLocalizations.of(context)!.deleteAccountTitle),
         ],
       ),
       content: SingleChildScrollView(
@@ -353,7 +354,7 @@ class _AccountDeletionDialogState extends State<_AccountDeletionDialog> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'This action is permanent and cannot be undone.',
+              AppLocalizations.of(context)!.deleteAccountWarningTitle,
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
@@ -362,16 +363,16 @@ class _AccountDeletionDialogState extends State<_AccountDeletionDialog> {
             ),
             SizedBox(height: 16),
             Text(
-              'When you delete your account, we will permanently remove:',
+              AppLocalizations.of(context)!.deleteAccountDataList,
               style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
             ),
             SizedBox(height: 8),
-            _buildDeletionItem('All your meal logs and nutrition data'),
-            _buildDeletionItem('Your profile and personal information'),
-            _buildDeletionItem('All uploaded photos and files'),
-            _buildDeletionItem('Your custom meals and recipes'),
-            _buildDeletionItem('All app preferences and settings'),
-            _buildDeletionItem('Active sessions on all devices'),
+            _buildDeletionItem(AppLocalizations.of(context)!.allMealLogsAndNutrition),
+            _buildDeletionItem(AppLocalizations.of(context)!.profileAndPersonalInfo),
+            _buildDeletionItem(AppLocalizations.of(context)!.allUploadedPhotos),
+            _buildDeletionItem(AppLocalizations.of(context)!.customMealsAndRecipes),
+            _buildDeletionItem(AppLocalizations.of(context)!.allAppPreferences),
+            _buildDeletionItem(AppLocalizations.of(context)!.activeSessionsAllDevices),
             SizedBox(height: 16),
             Container(
               padding: EdgeInsets.all(12),
@@ -386,7 +387,7 @@ class _AccountDeletionDialogState extends State<_AccountDeletionDialog> {
                   SizedBox(width: 8),
                   Expanded(
                     child: Text(
-                      'Make sure to export any data you want to keep before proceeding.',
+                      AppLocalizations.of(context)!.exportDataWarning,
                       style: TextStyle(fontSize: 12, color: Colors.orange[700]),
                     ),
                   ),
@@ -402,7 +403,7 @@ class _AccountDeletionDialogState extends State<_AccountDeletionDialog> {
                 });
               },
               title: Text(
-                'I understand this action is permanent',
+                AppLocalizations.of(context)!.understandActionPermanent,
                 style: TextStyle(fontSize: 14),
               ),
               controlAffinity: ListTileControlAffinity.leading,
@@ -410,14 +411,14 @@ class _AccountDeletionDialogState extends State<_AccountDeletionDialog> {
             ),
             SizedBox(height: 8),
             Text(
-              'Type "$_confirmationText" to confirm:',
+              AppLocalizations.of(context)!.typeDeleteToConfirm,
               style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
             ),
             SizedBox(height: 8),
             TextField(
               controller: _confirmationController,
               decoration: InputDecoration(
-                hintText: 'Type $_confirmationText here',
+                hintText: AppLocalizations.of(context)!.typeDeleteHere,
                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
                 contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               ),
@@ -429,7 +430,7 @@ class _AccountDeletionDialogState extends State<_AccountDeletionDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context, false),
-          child: Text('Cancel'),
+          child: Text(AppLocalizations.of(context)!.cancel),
         ),
         ElevatedButton(
           onPressed: _canConfirmDeletion
@@ -439,7 +440,7 @@ class _AccountDeletionDialogState extends State<_AccountDeletionDialog> {
             backgroundColor: Colors.red,
             foregroundColor: Colors.white,
           ),
-          child: Text('Delete Forever'),
+          child: Text(AppLocalizations.of(context)!.deleteForever),
         ),
       ],
     );
@@ -487,12 +488,12 @@ class _DeletionProgressDialog extends StatelessWidget {
           CircularProgressIndicator(),
           SizedBox(height: 16),
           Text(
-            'Deleting your account...',
+            AppLocalizations.of(context)!.deletingYourAccount,
             style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
           ),
           SizedBox(height: 8),
           Text(
-            'This may take a few moments',
+            AppLocalizations.of(context)!.thisMayTakeAFewMoments,
             style: TextStyle(color: Colors.grey[600]),
           ),
         ],
@@ -534,7 +535,7 @@ class _RedirectScreenState extends State<_RedirectScreen> {
             Icon(Icons.check_circle, color: Colors.green, size: 48),
             SizedBox(height: 16),
             Text(
-              'Account Deleted',
+              AppLocalizations.of(context)!.accountDeleted,
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.w600,
@@ -542,7 +543,7 @@ class _RedirectScreenState extends State<_RedirectScreen> {
             ),
             SizedBox(height: 8),
             Text(
-              'Redirecting to sign-in...',
+              AppLocalizations.of(context)!.redirectingToSignIn,
               style: TextStyle(color: Colors.grey[600]),
             ),
             SizedBox(height: 24),
@@ -566,7 +567,7 @@ class _ExitScreen extends StatelessWidget {
             Icon(Icons.check_circle, color: Colors.green, size: 64),
             SizedBox(height: 24),
             Text(
-              'Account Successfully Deleted',
+              AppLocalizations.of(context)!.accountSuccessfullyDeleted,
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.w600,
@@ -576,7 +577,7 @@ class _ExitScreen extends StatelessWidget {
             ),
             SizedBox(height: 16),
             Text(
-              'Please close and restart the app to continue.',
+              AppLocalizations.of(context)!.pleaseCloseAndRestartApp,
               style: TextStyle(
                 fontSize: 16,
                 color: Colors.grey[600],
@@ -594,7 +595,7 @@ class _ExitScreen extends StatelessWidget {
                 foregroundColor: Colors.white,
                 padding: EdgeInsets.symmetric(horizontal: 32, vertical: 12),
               ),
-              child: Text('Restart App'),
+              child: Text(AppLocalizations.of(context)!.restartApp),
             ),
           ],
         ),
