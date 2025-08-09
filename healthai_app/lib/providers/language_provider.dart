@@ -48,23 +48,26 @@ class LanguageProvider extends ChangeNotifier {
     }
   }
 
-  // Get all supported languages with their native names
+  // Get all supported languages with their native names and flags
   List<Map<String, String>> getAllSupportedLanguages() {
     return [
       {
         'code': 'en',
         'name': 'English',
         'nativeName': 'English',
+        'flag': '🇺🇸',
       },
       {
         'code': 'ar',
         'name': 'Arabic',
         'nativeName': 'العربية',
+        'flag': '🇸🇦',
       },
       {
         'code': 'es',
         'name': 'Spanish',
         'nativeName': 'Español',
+        'flag': '🇪🇸',
       },
     ];
   }

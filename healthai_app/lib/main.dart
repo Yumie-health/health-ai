@@ -4048,7 +4048,7 @@ Track your calories, scan food with AI, and get personalized nutrition insights 
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
             title: Row(
               children: [
-                Icon(Icons.language, color: Colors.blue),
+                Text('🌍', style: TextStyle(fontSize: 24)),
                 SizedBox(width: 8),
                 Text(AppLocalizations.of(context)!.selectLanguageTitle),
               ],
@@ -4074,9 +4074,9 @@ Track your calories, scan food with AI, and get personalized nutrition insights 
                         margin: EdgeInsets.only(bottom: 8),
                         color: isSelected ? Colors.blue.withOpacity(0.1) : null,
                         child: ListTile(
-                          leading: Icon(
-                            Icons.language,
-                            color: isSelected ? Colors.blue : Colors.grey,
+                          leading: Text(
+                            language['flag'] ?? '🌐',
+                            style: TextStyle(fontSize: 28),
                           ),
                           title: Text(
                             language['nativeName']!,
@@ -7584,21 +7584,6 @@ class SettingsPage extends StatelessWidget {
               value: prefs.useMetric,
               onChanged: (v) => prefs.setUseMetric(v),
               secondary: Icon(Icons.straighten),
-            ),
-                    Divider(height: 1, thickness: 1, indent: 16, endIndent: 16),
-            ListTile(
-              leading: Icon(Icons.language),
-              title: Text(AppLocalizations.of(context)!.language, style: TextStyle(fontWeight: FontWeight.w600)),
-              subtitle: Text(AppLocalizations.of(context)!.selectLanguage),
-              trailing: DropdownButton<String>(
-                value: prefs.language,
-                items: [
-                  DropdownMenuItem(value: 'en', child: Text(AppLocalizations.of(context)!.english)),
-                  DropdownMenuItem(value: 'ar', child: Text(AppLocalizations.of(context)!.arabic)),
-                  DropdownMenuItem(value: 'es', child: Text(AppLocalizations.of(context)!.spanish)),
-                ],
-                onChanged: (v) => prefs.setLanguage(v!),
-              ),
             ),
                   ],
                 ),
