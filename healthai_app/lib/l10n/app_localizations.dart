@@ -1974,6 +1974,192 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Permissions Complete!'**
   String get permissionsComplete;
+
+  /// No description provided for @enterYourPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your password'**
+  String get enterYourPassword;
+
+  /// No description provided for @securityAlerts.
+  ///
+  /// In en, this message translates to:
+  /// **'Security Alerts'**
+  String get securityAlerts;
+
+  /// No description provided for @manageSessions.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage Sessions'**
+  String get manageSessions;
+
+  /// No description provided for @selectLanguageTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Select Language'**
+  String get selectLanguageTitle;
+
+  /// No description provided for @chooseYourPreferredLanguage.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose your preferred language for the app'**
+  String get chooseYourPreferredLanguage;
+
+  /// No description provided for @languageChangedTo.
+  ///
+  /// In en, this message translates to:
+  /// **'Language changed to'**
+  String get languageChangedTo;
+
+  /// No description provided for @activeSessions.
+  ///
+  /// In en, this message translates to:
+  /// **'Active Sessions'**
+  String get activeSessions;
+
+  /// No description provided for @thisDevice.
+  ///
+  /// In en, this message translates to:
+  /// **'This device'**
+  String get thisDevice;
+
+  /// No description provided for @sessionRevoked.
+  ///
+  /// In en, this message translates to:
+  /// **'Session revoked'**
+  String get sessionRevoked;
+
+  /// No description provided for @allOtherSessionsSignedOut.
+  ///
+  /// In en, this message translates to:
+  /// **'All other sessions signed out'**
+  String get allOtherSessionsSignedOut;
+
+  /// No description provided for @signOutAllOthers.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign Out All Others'**
+  String get signOutAllOthers;
+
+  /// No description provided for @noSecurityAlerts.
+  ///
+  /// In en, this message translates to:
+  /// **'No security alerts'**
+  String get noSecurityAlerts;
+
+  /// No description provided for @passwordStrengthWeak.
+  ///
+  /// In en, this message translates to:
+  /// **'Weak'**
+  String get passwordStrengthWeak;
+
+  /// No description provided for @passwordStrengthFair.
+  ///
+  /// In en, this message translates to:
+  /// **'Fair'**
+  String get passwordStrengthFair;
+
+  /// No description provided for @passwordStrengthGood.
+  ///
+  /// In en, this message translates to:
+  /// **'Good'**
+  String get passwordStrengthGood;
+
+  /// No description provided for @passwordStrengthStrong.
+  ///
+  /// In en, this message translates to:
+  /// **'Strong'**
+  String get passwordStrengthStrong;
+
+  /// No description provided for @passwordStrengthVeryStrong.
+  ///
+  /// In en, this message translates to:
+  /// **'Very Strong'**
+  String get passwordStrengthVeryStrong;
+
+  /// No description provided for @addLowercaseLetters.
+  ///
+  /// In en, this message translates to:
+  /// **'Add lowercase letters'**
+  String get addLowercaseLetters;
+
+  /// No description provided for @addUppercaseLetters.
+  ///
+  /// In en, this message translates to:
+  /// **'Add uppercase letters'**
+  String get addUppercaseLetters;
+
+  /// No description provided for @addNumbers.
+  ///
+  /// In en, this message translates to:
+  /// **'Add numbers'**
+  String get addNumbers;
+
+  /// No description provided for @addSpecialCharacters.
+  ///
+  /// In en, this message translates to:
+  /// **'Add special characters (!@#\$%^&*)'**
+  String get addSpecialCharacters;
+
+  /// No description provided for @avoidCommonPatterns.
+  ///
+  /// In en, this message translates to:
+  /// **'Avoid common patterns'**
+  String get avoidCommonPatterns;
+
+  /// No description provided for @requiresAtLeast8Characters.
+  ///
+  /// In en, this message translates to:
+  /// **'Requires at least 8 characters'**
+  String get requiresAtLeast8Characters;
+
+  /// No description provided for @tooManySignInAttempts.
+  ///
+  /// In en, this message translates to:
+  /// **'Too many sign-in attempts. Please try again later.'**
+  String get tooManySignInAttempts;
+
+  /// No description provided for @tooManySignUpAttempts.
+  ///
+  /// In en, this message translates to:
+  /// **'Too many sign-up attempts. Please try again later.'**
+  String get tooManySignUpAttempts;
+
+  /// No description provided for @tooManyPasswordResetRequests.
+  ///
+  /// In en, this message translates to:
+  /// **'Too many password reset requests. Please try again later.'**
+  String get tooManyPasswordResetRequests;
+
+  /// No description provided for @multipleFailedSignInAttempts.
+  ///
+  /// In en, this message translates to:
+  /// **'Multiple Failed Sign-in Attempts'**
+  String get multipleFailedSignInAttempts;
+
+  /// No description provided for @excessivePasswordResetRequests.
+  ///
+  /// In en, this message translates to:
+  /// **'Excessive Password Reset Requests'**
+  String get excessivePasswordResetRequests;
+
+  /// No description provided for @suspiciousActivityDetected.
+  ///
+  /// In en, this message translates to:
+  /// **'Suspicious Activity Detected'**
+  String get suspiciousActivityDetected;
+
+  /// No description provided for @riskLevelMedium.
+  ///
+  /// In en, this message translates to:
+  /// **'MEDIUM'**
+  String get riskLevelMedium;
+
+  /// No description provided for @riskLevelHigh.
+  ///
+  /// In en, this message translates to:
+  /// **'HIGH'**
+  String get riskLevelHigh;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

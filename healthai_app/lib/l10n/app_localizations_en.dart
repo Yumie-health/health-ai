@@ -948,4 +948,97 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get permissionsComplete => 'Permissions Complete!';
+
+  @override
+  String get enterYourPassword => 'Enter your password';
+
+  @override
+  String get securityAlerts => 'Security Alerts';
+
+  @override
+  String get manageSessions => 'Manage Sessions';
+
+  @override
+  String get selectLanguageTitle => 'Select Language';
+
+  @override
+  String get chooseYourPreferredLanguage => 'Choose your preferred language for the app';
+
+  @override
+  String get languageChangedTo => 'Language changed to';
+
+  @override
+  String get activeSessions => 'Active Sessions';
+
+  @override
+  String get thisDevice => 'This device';
+
+  @override
+  String get sessionRevoked => 'Session revoked';
+
+  @override
+  String get allOtherSessionsSignedOut => 'All other sessions signed out';
+
+  @override
+  String get signOutAllOthers => 'Sign Out All Others';
+
+  @override
+  String get noSecurityAlerts => 'No security alerts';
+
+  @override
+  String get passwordStrengthWeak => 'Weak';
+
+  @override
+  String get passwordStrengthFair => 'Fair';
+
+  @override
+  String get passwordStrengthGood => 'Good';
+
+  @override
+  String get passwordStrengthStrong => 'Strong';
+
+  @override
+  String get passwordStrengthVeryStrong => 'Very Strong';
+
+  @override
+  String get addLowercaseLetters => 'Add lowercase letters';
+
+  @override
+  String get addUppercaseLetters => 'Add uppercase letters';
+
+  @override
+  String get addNumbers => 'Add numbers';
+
+  @override
+  String get addSpecialCharacters => 'Add special characters (!@#\$%^&*)';
+
+  @override
+  String get avoidCommonPatterns => 'Avoid common patterns';
+
+  @override
+  String get requiresAtLeast8Characters => 'Requires at least 8 characters';
+
+  @override
+  String get tooManySignInAttempts => 'Too many sign-in attempts. Please try again later.';
+
+  @override
+  String get tooManySignUpAttempts => 'Too many sign-up attempts. Please try again later.';
+
+  @override
+  String get tooManyPasswordResetRequests => 'Too many password reset requests. Please try again later.';
+
+  @override
+  String get multipleFailedSignInAttempts => 'Multiple Failed Sign-in Attempts';
+
+  @override
+  String get excessivePasswordResetRequests => 'Excessive Password Reset Requests';
+
+  @override
+  String get suspiciousActivityDetected => 'Suspicious Activity Detected';
+
+  @override
+  String get riskLevelMedium => 'MEDIUM';
+
+  @override
+  String get riskLevelHigh => 'HIGH';
 }

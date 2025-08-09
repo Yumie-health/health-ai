@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import '../l10n/app_localizations.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'logging_service.dart';
@@ -29,8 +30,17 @@ class ErrorHandler {
           return 'Too many failed attempts. Please try again later.';
         case 'network-request-failed':
           return 'Network error. Please check your internet connection.';
+        case 'user-disabled':
+          return 'This account has been disabled. Please contact support.';
+        case 'invalid-credential':
+          return 'Invalid credentials. Please check your email and password.';
+        case 'account-exists-with-different-credential':
+          return 'An account already exists with this email using a different sign-in method.';
+        case 'requires-recent-login':
+          return 'Please sign out and sign in again to complete this action.';
         default:
-          return 'Authentication failed. Please try again.';
+          log.error('Unhandled Firebase Auth error code: ${error.code}', error);
+          return 'Authentication failed: ${error.message ?? 'Unknown error'}';
       }
     }
     

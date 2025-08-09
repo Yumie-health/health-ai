@@ -41,6 +41,9 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'l10n/app_localizations.dart';
 import 'utils/constants.dart';
 import 'providers/preferences_provider.dart';
+import 'providers/language_provider.dart';
+
+import 'widgets/password_strength_indicator.dart';
 import 'utils/onboarding_helper.dart';
 import 'services/permission_service.dart';
 import 'subscription_popup_page.dart';
@@ -52,6 +55,12 @@ import 'package:share_plus/share_plus.dart';
 import 'package:in_app_review/in_app_review.dart';
 import 'utils/validation.dart';
 import 'services/error_handler.dart';
+import 'services/auth_service.dart';
+import 'services/device_session_service.dart';
+import 'services/account_deletion_service.dart';
+import 'services/rate_limiting_service.dart';
+import 'services/security_monitoring_service.dart';
+
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'config/payment_config.dart';
 import 'services/subscription_service.dart';
@@ -268,12 +277,23 @@ void main() async {
     MobileAds.instance.initialize(); // Initialize AdMob
 
     runApp(
-      ChangeNotifierProvider(
-        create: (_) {
-          final prefs = PreferencesProvider();
-          prefs.loadPreferences(); // Load preferences when provider is created
-          return prefs;
-        },
+      MultiProvider(
+        providers: [
+          ChangeNotifierProvider(
+            create: (_) {
+              final prefs = PreferencesProvider();
+              prefs.loadPreferences(); // Load preferences when provider is created
+              return prefs;
+            },
+          ),
+          ChangeNotifierProvider(
+            create: (_) {
+              final languageProvider = LanguageProvider();
+              languageProvider.initialize(); // Initialize language on startup
+              return languageProvider;
+            },
+          ),
+        ],
         child: const HealthAIApp(),
       ),
     );
@@ -321,39 +341,44 @@ class HealthAIApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final prefs = Provider.of<PreferencesProvider>(context);
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      title: 'HealthAI App',
-      navigatorObservers: [
-        // FirebaseAnalyticsObserver removed due to Kotlin conflicts
-      ],
-      // Localization setup
-      supportedLocales: const [
-        Locale('en'),
-        Locale('ar'),
-        Locale('es'),
-      ],
-      localizationsDelegates: const [
-        AppLocalizations.delegate,
-        GlobalMaterialLocalizations.delegate,
-        GlobalWidgetsLocalizations.delegate,
-        GlobalCupertinoLocalizations.delegate,
-      ],
-      locale: _getLocale(prefs.language),
-      localeResolutionCallback: (deviceLocale, supportedLocales) {
-        // If user has selected a language, use it
-        if (prefs.language.isNotEmpty &&
-            supportedLocales.any((l) => l.languageCode == prefs.language)) {
-          return Locale(prefs.language);
-        }
-        // Otherwise, use device language if supported
-        if (deviceLocale != null &&
-            supportedLocales.any((l) => l.languageCode == deviceLocale.languageCode)) {
-          return Locale(deviceLocale.languageCode!);
-        }
-        // Default to English
-        return const Locale('en');
-      },
+    return Consumer<LanguageProvider>(
+      builder: (context, languageProvider, child) {
+        return MaterialApp(
+          debugShowCheckedModeBanner: false,
+          title: 'Yumie App',
+          navigatorObservers: [
+            // FirebaseAnalyticsObserver removed due to Kotlin conflicts
+          ],
+          // Localization setup
+          supportedLocales: const [
+            Locale('en'),
+            Locale('ar'),
+            Locale('es'),
+          ],
+          localizationsDelegates: const [
+            AppLocalizations.delegate,
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
+          locale: languageProvider.isInitialized ? languageProvider.currentLocale : _getLocale(prefs.language),
+          localeResolutionCallback: (deviceLocale, supportedLocales) {
+            if (languageProvider.isInitialized) {
+              return languageProvider.currentLocale;
+            }
+            // Fallback to existing logic if language provider not initialized
+            if (prefs.language.isNotEmpty &&
+                supportedLocales.any((l) => l.languageCode == prefs.language)) {
+              return Locale(prefs.language);
+            }
+            // Otherwise, use device language if supported
+            if (deviceLocale != null &&
+                supportedLocales.any((l) => l.languageCode == deviceLocale.languageCode)) {
+              return Locale(deviceLocale.languageCode!);
+            }
+            // Default to English
+            return const Locale('en');
+          },
       theme: ThemeData(
         colorScheme: ColorScheme(
           brightness: Brightness.light,
@@ -475,8 +500,10 @@ class HealthAIApp extends StatelessWidget {
         iconTheme: const IconThemeData(color: Colors.white),
         dividerColor: Colors.white24,
       ),
-              themeMode: ThemeMode.light,
-      home: const SplashOrApp(),
+                  themeMode: ThemeMode.light,
+          home: const SplashOrApp(),
+        );
+      },
     );
   }
 }
@@ -719,11 +746,34 @@ class _AuthScreenState extends State<AuthScreen> {
   bool isIOS = Platform.isIOS;
   bool isAndroid = Platform.isAndroid;
   // final FirebaseAnalytics analytics = FirebaseAnalytics.instance;  // Removed due to Kotlin conflicts
+  String _currentPassword = '';
+  bool _isPasswordVisible = false;
+  final AuthService _authService = AuthService();
+  final RateLimitingService _rateLimitingService = RateLimitingService();
+  final SecurityMonitoringService _securityService = SecurityMonitoringService();
 
   @override
   void initState() {
     super.initState();
+    // Listen to password changes for strength indicator
+    passwordController.addListener(_onPasswordChanged);
+    // Initialize security monitoring
+    _securityService.initialize();
   }
+
+  @override
+  void dispose() {
+    passwordController.removeListener(_onPasswordChanged);
+    super.dispose();
+  }
+
+  void _onPasswordChanged() {
+    setState(() {
+      _currentPassword = passwordController.text;
+    });
+  }
+
+
 
   void _showAccountNotFoundDialog() {
     showDialog(
@@ -947,6 +997,184 @@ class _AuthScreenState extends State<AuthScreen> {
     );
   }
 
+  void _showForgotPasswordDialog() {
+    final resetEmailController = TextEditingController();
+    String resetMessage = '';
+    bool resetLoading = false;
+
+    showDialog(
+      context: context,
+      barrierDismissible: true,
+      builder: (BuildContext context) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return Dialog(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Container(
+                padding: EdgeInsets.all(24),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.lock_reset, size: 48, color: kPrimaryGreen),
+                    SizedBox(height: 16),
+                    Text('Reset Password', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+                    SizedBox(height: 8),
+                    Text('Enter your email address to receive a password reset link',
+                      style: TextStyle(fontSize: 16, color: Colors.grey[600]),
+                      textAlign: TextAlign.center,
+                    ),
+                    SizedBox(height: 20),
+                    TextField(
+                      controller: resetEmailController,
+                      decoration: InputDecoration(
+                        labelText: 'Email Address',
+                        hintText: 'your.email@example.com',
+                        prefixIcon: Icon(Icons.email_outlined, color: kPrimaryGreen),
+                        filled: true,
+                        fillColor: Colors.white,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(color: Colors.grey[300]!),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(color: Colors.grey[300]!),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(color: kPrimaryGreen, width: 2),
+                        ),
+                      ),
+                      keyboardType: TextInputType.emailAddress,
+                    ),
+                    SizedBox(height: 16),
+                    if (resetMessage.isNotEmpty)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 16),
+                        child: Text(
+                          resetMessage,
+                          style: TextStyle(
+                            color: resetMessage.startsWith('Success') ? kPrimaryGreen : kWarningRed,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        OutlinedButton(
+                          onPressed: () => Navigator.pop(context),
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: kPrimaryGreen,
+                            side: BorderSide(color: kPrimaryGreen),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          child: Text('Cancel'),
+                        ),
+                        SizedBox(width: 12),
+                        ElevatedButton(
+                          onPressed: resetLoading
+                              ? null
+                              : () async {
+                                  final email = resetEmailController.text.trim();
+                                  if (email.isEmpty) {
+                                    setDialogState(() {
+                                      resetMessage = 'Please enter your email address';
+                                    });
+                                    return;
+                                  }
+                                  
+                                  if (!ValidationUtils.isValidEmail(email)) {
+                                    setDialogState(() {
+                                      resetMessage = 'Please enter a valid email address';
+                                    });
+                                    return;
+                                  }
+
+                                  setDialogState(() { 
+                                    resetLoading = true; 
+                                    resetMessage = ''; 
+                                  });
+                                  
+                                  // Check rate limit for forgot password
+                                  final rateLimitResult = await _rateLimitingService.checkRateLimit('forgot_password_dialog', identifier: email);
+                                  if (!rateLimitResult.allowed) {
+                                    setDialogState(() {
+                                      resetMessage = rateLimitResult.message ?? 'Too many password reset requests. Please try again later.';
+                                      resetLoading = false;
+                                    });
+                                    return;
+                                  }
+
+                                  // Record the attempt
+                                  await _rateLimitingService.recordAttempt('forgot_password_dialog', identifier: email);
+                                  
+                                  try {
+                                    await FirebaseAuth.instance.sendPasswordResetEmail(email: email);
+                                    
+                                    // Record password reset request for security monitoring
+                                    await _securityService.recordSecurityEvent(
+                                      'password_reset_request',
+                                      email: email,
+                                      successful: true,
+                                      metadata: {'source': 'forgot_password_dialog'},
+                                    );
+                                    
+                                    setDialogState(() {
+                                      resetMessage = 'Success! Check your email for a reset link.';
+                                      resetLoading = false;
+                                    });
+                                  } catch (e) {
+                                    String errorMessage = 'Error sending reset email.';
+                                    if (e is FirebaseAuthException) {
+                                      switch (e.code) {
+                                        case 'user-not-found':
+                                          errorMessage = 'No account found with this email address.';
+                                          break;
+                                        case 'invalid-email':
+                                          errorMessage = 'Please enter a valid email address.';
+                                          break;
+                                        case 'too-many-requests':
+                                          errorMessage = 'Too many requests. Please try again later.';
+                                          break;
+                                        default:
+                                          errorMessage = 'Error: ${e.message}';
+                                      }
+                                    }
+                                    setDialogState(() {
+                                      resetMessage = errorMessage;
+                                      resetLoading = false;
+                                    });
+                                  }
+                                },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: kPrimaryGreen,
+                            foregroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          child: resetLoading
+                              ? SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                              : Text('Send Reset Link'),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
   Future<void> _handleGoogleSignIn() async {
     setState(() => isLoading = true);
     try {
@@ -1003,6 +1231,7 @@ class _AuthScreenState extends State<AuthScreen> {
       print('📊 Google Auth Result: isNewUser=$isNewUser, signUpMode=$showSignUp');
       
       // await analytics.logLogin(loginMethod: 'google');  // Removed due to Kotlin conflicts
+
       final userService = UserService();
       final user = FirebaseAuth.instance.currentUser;
       if (user != null) {
@@ -1046,15 +1275,15 @@ class _AuthScreenState extends State<AuthScreen> {
         // Handle specific Google authentication errors
         if (e.toString().contains('SecurityException') || e.toString().contains('Unknown calling package')) {
           errorMessage = 'Google Sign-In configuration error. This is typically caused by:\n'
-              '• Debug signing certificate not added to Firebase Console\n'
-              '• Package name mismatch\n'
-              '• SHA1 fingerprint not configured\n\n'
+              '� Debug signing certificate not added to Firebase Console\n'
+              '� Package name mismatch\n'
+              '� SHA1 fingerprint not configured\n\n'
               'Please check the Firebase Console configuration.';
         } else if (e.toString().contains('DEVELOPER_ERROR')) {
           errorMessage = 'Google Sign-In setup error. Please ensure:\n'
-              '• google-services.json is properly configured\n'
-              '• OAuth client is set up in Google Cloud Console\n'
-              '• App signing certificate is added to Firebase';
+              '� google-services.json is properly configured\n'
+              '� OAuth client is set up in Google Cloud Console\n'
+              '� App signing certificate is added to Firebase';
         }
         
         ScaffoldMessenger.of(context).showSnackBar(
@@ -1149,6 +1378,8 @@ class _AuthScreenState extends State<AuthScreen> {
         // await analytics.logLogin(loginMethod: 'apple');  // Removed due to Kotlin conflicts
         log.logUserAction('sign_in_successful', {'method': 'apple'});
         
+
+        
         // Check if user profile exists, if not, create it
         final userService = UserService();
         final doc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
@@ -1237,20 +1468,36 @@ class _AuthScreenState extends State<AuthScreen> {
     final email = emailController.text.trim();
     final password = passwordController.text;
 
+    // Check rate limit
+    final rateLimitResult = await _rateLimitingService.checkRateLimit('sign_in_attempt', identifier: email);
+    if (!rateLimitResult.allowed) {
+      if (mounted) {
+        setState(() {
+          isLoading = false;
+          message = rateLimitResult.message ?? 'Too many sign-in attempts. Please try again later.';
+        });
+      }
+      return;
+    }
+
     if (!ValidationUtils.isValidEmail(email)) {
-      setState(() {
-        isLoading = false;
-        message = 'Please enter a valid email address';
-      });
+      if (mounted) {
+        setState(() {
+          isLoading = false;
+          message = 'Please enter a valid email address';
+        });
+      }
       ValidationUtils.showValidationError(context, 'Please enter a valid email address');
       return;
     }
 
     if (password.isEmpty) {
-      setState(() {
-        isLoading = false;
-        message = 'Password is required';
-      });
+      if (mounted) {
+        setState(() {
+          isLoading = false;
+          message = 'Password is required';
+        });
+      }
       ValidationUtils.showValidationError(context, 'Password is required');
       return;
     }
@@ -1268,7 +1515,9 @@ class _AuthScreenState extends State<AuthScreen> {
         
         if (now - deletedTime < twentyFourHours) {
           // Account was recently deleted
-          setState(() => isLoading = false);
+          if (mounted) {
+            setState(() => isLoading = false);
+          }
           _showAccountNotFoundDialog();
           return;
         } else {
@@ -1277,20 +1526,26 @@ class _AuthScreenState extends State<AuthScreen> {
         }
       }
       
-      // First check if account exists
-      final signInMethods = await FirebaseAuth.instance.fetchSignInMethodsForEmail(email);
-      if (signInMethods.isEmpty) {
-        // No account exists - show the account not found dialog
-        setState(() => isLoading = false);
-        _showAccountNotFoundDialog();
-        return;
-      }
+      log.info('Attempting Firebase sign-in', {'email': email});
+      
+      // Record sign-in attempt before trying
+      await _rateLimitingService.recordAttempt('sign_in_attempt', identifier: email);
       
       await FirebaseAuth.instance.signInWithEmailAndPassword(
         email: email,
         password: password,
       );
       
+      log.info('Firebase sign-in successful', {'email': email});
+      
+      // Record successful sign-in for security monitoring
+      await _securityService.recordSecurityEvent(
+        'sign_in_attempt',
+        userId: FirebaseAuth.instance.currentUser?.uid,
+        email: email,
+        successful: true,
+        metadata: {'method': 'email_password'},
+      );
       // await analytics.logLogin(loginMethod: 'email');  // Removed due to Kotlin conflicts
       log.logUserAction('sign_in_successful', {'method': 'email'});
       
@@ -1315,14 +1570,43 @@ class _AuthScreenState extends State<AuthScreen> {
         }
         return;
       }
-      setState(() => message = 'Sign in successful!');
+      if (mounted) {
+        setState(() => message = 'Sign in successful!');
+      }
     } catch (e) {
       log.error('Sign in failed', e);
+      log.error('Error details - Type: ${e.runtimeType}, Message: ${e.toString()}');
+      
+      // Record failed sign-in for security monitoring
+      await _securityService.recordSecurityEvent(
+        'sign_in_attempt',
+        email: email,
+        successful: false,
+        metadata: {
+          'method': 'email_password',
+          'error_code': e is FirebaseAuthException ? e.code : 'unknown',
+          'error_message': e.toString(),
+        },
+      );
+      
+      // Handle user-not-found specifically
+      if (e is FirebaseAuthException && e.code == 'user-not-found') {
+        if (mounted) {
+          setState(() => isLoading = false);
+        }
+        _showAccountNotFoundDialog();
+        return;
+      }
+      
       final errorMessage = errorHandler.handleAuthError(e);
-      setState(() => message = errorMessage);
+      if (mounted) {
+        setState(() => message = errorMessage);
+      }
       // await analytics.logEvent(name: 'login_failed', parameters: {'method': 'email', 'error': e.toString()});  // Removed due to Kotlin conflicts
     } finally {
-      setState(() => isLoading = false);
+      if (mounted) {
+        setState(() => isLoading = false);
+      }
     }
   }
 
@@ -1337,31 +1621,49 @@ class _AuthScreenState extends State<AuthScreen> {
     final password = passwordController.text;
     final name = nameController.text.trim();
 
+    // Check rate limit
+    final rateLimitResult = await _rateLimitingService.checkRateLimit('sign_up_attempt', identifier: email);
+    if (!rateLimitResult.allowed) {
+      if (mounted) {
+        setState(() {
+          isLoading = false;
+          message = rateLimitResult.message ?? 'Too many sign-up attempts. Please try again later.';
+        });
+      }
+      return;
+    }
+
     if (!ValidationUtils.isValidEmail(email)) {
-      setState(() {
-        isLoading = false;
-        message = 'Please enter a valid email address';
-      });
+      if (mounted) {
+        setState(() {
+          isLoading = false;
+          message = 'Please enter a valid email address';
+        });
+      }
       ValidationUtils.showValidationError(context, 'Please enter a valid email address');
       return;
     }
 
     final passwordError = ValidationUtils.validatePassword(password);
     if (passwordError != null) {
-      setState(() {
-        isLoading = false;
-        message = passwordError;
-      });
+      if (mounted) {
+        setState(() {
+          isLoading = false;
+          message = passwordError;
+        });
+      }
       ValidationUtils.showValidationError(context, passwordError);
       return;
     }
 
     final nameError = ValidationUtils.validateName(name);
     if (nameError != null) {
-      setState(() {
-        isLoading = false;
-        message = nameError;
-      });
+      if (mounted) {
+        setState(() {
+          isLoading = false;
+          message = nameError;
+        });
+      }
       ValidationUtils.showValidationError(context, nameError);
       return;
     }
@@ -1388,10 +1690,15 @@ class _AuthScreenState extends State<AuthScreen> {
       final signInMethods = await FirebaseAuth.instance.fetchSignInMethodsForEmail(email);
       if (signInMethods.isNotEmpty) {
         // Account already exists - show the account exists dialog
-        setState(() => isLoading = false);
+        if (mounted) {
+          setState(() => isLoading = false);
+        }
         _showAccountExistsDialog();
         return;
       }
+      
+      // Record sign-up attempt before trying
+      await _rateLimitingService.recordAttempt('sign_up_attempt', identifier: email);
       
       await FirebaseAuth.instance.createUserWithEmailAndPassword(
         email: email,
@@ -1405,8 +1712,10 @@ class _AuthScreenState extends State<AuthScreen> {
       final userService = UserService();
       await userService.createInitialUserProfile(email, name);
       
-      setState(() => message = 'Sign up successful!');
-      ValidationUtils.showSuccessMessage(context, 'Account created successfully!');
+      if (mounted) {
+        setState(() => message = 'Sign up successful!');
+        ValidationUtils.showSuccessMessage(context, 'Account created successfully!');
+      }
       
       // Show onboarding after sign up
       final user = FirebaseAuth.instance.currentUser;
@@ -1415,11 +1724,15 @@ class _AuthScreenState extends State<AuthScreen> {
       }
     } catch (e) {
       final errorMessage = errorHandler.handleAuthError(e);
-      setState(() => message = errorMessage);
+      if (mounted) {
+        setState(() => message = errorMessage);
+      }
       log.error('Sign up failed', e);
       // await analytics.logEvent(name: 'signup_failed', parameters: {'method': 'email', 'error': e.toString()});  // Removed due to Kotlin conflicts
     } finally {
-      setState(() => isLoading = false);
+      if (mounted) {
+        setState(() => isLoading = false);
+      }
     }
   }
 
@@ -1501,7 +1814,7 @@ class _AuthScreenState extends State<AuthScreen> {
                     const SizedBox(height: 8),
                     Text(
                       showSignUp
-                          ? 'Sign up to get started with HealthAI'
+                          ? 'Sign up to get started with Yumie'
                           : 'Sign in to access your account',
                       style: TextStyle(
                         color: Colors.grey[600],
@@ -1577,8 +1890,19 @@ class _AuthScreenState extends State<AuthScreen> {
                     TextField(
                       controller: passwordController,
                       decoration: InputDecoration(
-                        hintText: '••••••••',
+                        hintText: AppLocalizations.of(context)!.enterYourPassword,
                         prefixIcon: Icon(Icons.vpn_key_outlined, color: Colors.grey[400]),
+                        suffixIcon: IconButton(
+                          icon: Icon(
+                            _isPasswordVisible ? Icons.visibility : Icons.visibility_off,
+                            color: Colors.grey[400],
+                          ),
+                          onPressed: () {
+                            setState(() {
+                              _isPasswordVisible = !_isPasswordVisible;
+                            });
+                          },
+                        ),
                         filled: true,
                         fillColor: Colors.white,
                         border: OutlineInputBorder(
@@ -1594,8 +1918,32 @@ class _AuthScreenState extends State<AuthScreen> {
                           borderSide: BorderSide(color: kPrimaryGreen, width: 2),
                         ),
                       ),
-                      obscureText: true,
+                      obscureText: !_isPasswordVisible,
                     ),
+                    // Password strength indicator for sign-up
+                    if (showSignUp)
+                      PasswordStrengthIndicator(
+                        password: _currentPassword,
+                        showSuggestions: true,
+                      ),
+                    if (!showSignUp) ...[
+                      const SizedBox(height: 8),
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: GestureDetector(
+                          onTap: _showForgotPasswordDialog,
+                          child: Text(
+                            'Forgot Password?',
+                            style: TextStyle(
+                              color: kPrimaryGreen,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                              decoration: TextDecoration.underline,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
                     const SizedBox(height: 18),
                     if (showSignUp)
                       Row(
@@ -2216,12 +2564,12 @@ class HomeScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('HealthAI - Food Log'),
+        title: const Text('Yumie - Food Log'),
         actions: [
           IconButton(
             icon: const Icon(Icons.logout),
             onPressed: () async {
-              await FirebaseAuth.instance.signOut();
+              await AuthService().logout();
             },
           ),
         ],
@@ -2269,6 +2617,9 @@ class _MainNavScreenState extends State<MainNavScreen> with TickerProviderStateM
     } else {
       _footerController.value = 1.0;
     }
+    
+    // Initialize device session tracking for authenticated users
+    DeviceSessionService().initialize();
     
     // Check for post-onboarding popup
     WidgetsBinding.instance.addPostFrameCallback((_) async {
@@ -3544,7 +3895,7 @@ class _MealCardModernState extends State<_MealCardModern> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text('Ingredients:', style: TextStyle(fontWeight: FontWeight.w600, color: kPrimaryGreen)),
-                          ...ingredients.map((ing) => Text('• $ing', style: TextStyle(color: Colors.black87))).toList(),
+                          ...ingredients.map((ing) => Text('� $ing', style: TextStyle(color: Colors.black87))).toList(),
                         ],
                       );
                     } else {
@@ -3606,25 +3957,37 @@ class ProfileScreen extends StatefulWidget {
 
 class _ProfileScreenState extends State<ProfileScreen> {
   final UserService _userService = UserService();
+  final RateLimitingService _rateLimitingService = RateLimitingService();
+  final SecurityMonitoringService _securityService = SecurityMonitoringService();
+
+  // Check if the current user signed in with a social provider (Google or Apple)
+  bool _isSocialUser() {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return false;
+    
+    // Check if user has Google or Apple as a provider
+    return user.providerData.any((provider) => 
+      provider.providerId == 'google.com' || provider.providerId == 'apple.com');
+  }
 
   // Helper functions for sharing and rating
   Future<void> _shareApp(BuildContext context) async {
     try {
       const String shareText = '''
-🌟 Check out HealthAI - Your Personal Nutrition Assistant! 🌟
+� Check out Yumie - Your Personal Nutrition Assistant! �
 
 Track your calories, scan food with AI, and get personalized nutrition insights to achieve your health goals!
 
-📱 Download HealthAI now:
-• iOS: https://apps.apple.com/us/app/yumie-ai/id6748360245
-• Android: https://play.google.com/store/apps/details?id=com.yumie.healthai
+📱 Download Yumie now:
+� iOS: https://apps.apple.com/us/app/yumie-ai/id6748360245
+� Android: https://play.google.com/store/apps/details?id=com.yumie.healthai
 
-#HealthAI #Nutrition #Fitness #HealthyLiving
+#Yumie #Nutrition #Fitness #HealthyLiving
       ''';
       
       await Share.share(
         shareText,
-        subject: 'HealthAI - Your Personal Nutrition Assistant',
+        subject: 'Yumie - Your Personal Nutrition Assistant',
       );
     } catch (e) {
       if (context.mounted) {
@@ -3672,6 +4035,94 @@ Track your calories, scan food with AI, and get personalized nutrition insights 
       Navigator.of(context, rootNavigator: true).pop();
     }
   }
+
+  // Show language selection dialog
+  void _showLanguageSelectionDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => Consumer<LanguageProvider>(
+        builder: (context, languageProvider, child) {
+          final supportedLanguages = languageProvider.getAllSupportedLanguages();
+          
+          return AlertDialog(
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            title: Row(
+              children: [
+                Icon(Icons.language, color: Colors.blue),
+                SizedBox(width: 8),
+                Text(AppLocalizations.of(context)!.selectLanguageTitle),
+              ],
+            ),
+            content: SizedBox(
+              width: double.maxFinite,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    AppLocalizations.of(context)!.chooseYourPreferredLanguage,
+                    style: TextStyle(color: Colors.grey[600]),
+                  ),
+                  SizedBox(height: 16),
+                  ListView.builder(
+                    shrinkWrap: true,
+                    itemCount: supportedLanguages.length,
+                    itemBuilder: (context, index) {
+                      final language = supportedLanguages[index];
+                      final isSelected = languageProvider.currentLanguageCode == language['code'];
+                      
+                      return Card(
+                        margin: EdgeInsets.only(bottom: 8),
+                        color: isSelected ? Colors.blue.withOpacity(0.1) : null,
+                        child: ListTile(
+                          leading: Icon(
+                            Icons.language,
+                            color: isSelected ? Colors.blue : Colors.grey,
+                          ),
+                          title: Text(
+                            language['nativeName']!,
+                            style: TextStyle(
+                              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                            ),
+                          ),
+                          subtitle: Text(
+                            language['name']!,
+                            style: TextStyle(fontSize: 12),
+                          ),
+                          trailing: isSelected
+                              ? Icon(Icons.check_circle, color: Colors.blue)
+                              : null,
+                          onTap: () async {
+                            await languageProvider.changeLanguage(language['code']!);
+                            Navigator.pop(context);
+                            
+                            // Show confirmation
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text('${AppLocalizations.of(context)!.languageChangedTo} ${language['nativeName']}'),
+                                backgroundColor: Colors.green,
+                              ),
+                            );
+                          },
+                        ),
+                      );
+                    },
+                  ),
+                ],
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: Text(AppLocalizations.of(context)!.close),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+
+
 
   Future<void> _changeProfileName(String currentName) async {
     final controller = TextEditingController(text: currentName);
@@ -4394,10 +4845,43 @@ Track your calories, scan food with AI, and get personalized nutrition insights 
                             },
                           ),
                           Divider(height: 1, color: Colors.grey[200]),
+                          
+                          // Session Management
                           _ProfileMenuTile(
-                            icon: Icons.lock_reset,
-                            label: AppLocalizations.of(context)!.resetPassword,
+                            icon: Icons.devices,
+                            label: AppLocalizations.of(context)!.manageSessions,
                             onTap: () {
+                              DeviceSessionService().showSessionManagementDialog(context);
+                            },
+                          ),
+                          Divider(height: 1, color: Colors.grey[200]),
+                          
+                          // Security Alerts
+                          _ProfileMenuTile(
+                            icon: Icons.security,
+                            label: AppLocalizations.of(context)!.securityAlerts,
+                            onTap: () {
+                              _securityService.showSecurityAlertsDialog(context);
+                            },
+                          ),
+                          Divider(height: 1, color: Colors.grey[200]),
+                          
+                          // Language Settings
+                          _ProfileMenuTile(
+                            icon: Icons.language,
+                            label: AppLocalizations.of(context)!.language,
+                            onTap: () {
+                              _showLanguageSelectionDialog(context);
+                            },
+                          ),
+                          Divider(height: 1, color: Colors.grey[200]),
+                          
+                          // Only show Reset Password for email/password users, not social users (Google/Apple)
+                          if (!_isSocialUser())
+                            _ProfileMenuTile(
+                              icon: Icons.lock_reset,
+                              label: AppLocalizations.of(context)!.resetPassword,
+                              onTap: () {
                               showDialog(
                                 context: context,
                                 builder: (context) {
@@ -4479,12 +4963,49 @@ Track your calories, scan food with AI, and get personalized nutrition insights 
                                                     ? null
                                                     : () async {
                                                         setState(() { isLoading = true; message = ''; });
-                                                        try {
-                                                          await FirebaseAuth.instance.sendPasswordResetEmail(email: email);
+                                                        
+                                                        // Check rate limit for password reset
+                                                        final rateLimitResult = await _rateLimitingService.checkRateLimit('password_reset', identifier: email);
+                                                        if (!rateLimitResult.allowed) {
                                                           setState(() {
-                                                            message = 'Success! Check your email for a reset link.';
+                                                            message = rateLimitResult.message ?? 'Too many password reset requests. Please try again later.';
                                                             isLoading = false;
                                                           });
+                                                          return;
+                                                        }
+
+                                                        // Record the attempt
+                                                        await _rateLimitingService.recordAttempt('password_reset', identifier: email);
+                                                        
+                                                        try {
+                                                          await FirebaseAuth.instance.sendPasswordResetEmail(email: email);
+                                                          
+                                                          // Record password reset request for security monitoring
+                                                          await _securityService.recordSecurityEvent(
+                                                            'password_reset_request',
+                                                            userId: FirebaseAuth.instance.currentUser?.uid,
+                                                            email: email,
+                                                            successful: true,
+                                                            metadata: {'source': 'profile_screen'},
+                                                          );
+                                                          
+                                                          setState(() {
+                                                            message = 'Success! Check your email for a reset link. Logging you out for security...';
+                                                            isLoading = false;
+                                                          });
+                                                          // Show message briefly, then logout and navigate properly
+                                                          await Future.delayed(Duration(seconds: 2));
+                                                          // Log out the user after sending password reset email
+                                                          await FirebaseAuth.instance.signOut();
+                                                          // Close the dialog first
+                                                          if (mounted) {
+                                                            Navigator.of(context).pop();
+                                                            // Navigate to a redirect screen to properly handle logout
+                                                            Navigator.of(context).pushAndRemoveUntil(
+                                                              MaterialPageRoute(builder: (_) => _PasswordResetRedirectScreen()),
+                                                              (route) => false,
+                                                            );
+                                                          }
                                                         } catch (e) {
                                                           setState(() {
                                                             message = 'Error: ${e.toString()}';
@@ -4507,13 +5028,7 @@ Track your calories, scan food with AI, and get personalized nutrition insights 
                               );
                             },
                           ),
-                          Divider(height: 1, color: Colors.grey[200]),
-                          _ProfileMenuTile(
-                            icon: Icons.delete_forever,
-                            label: AppLocalizations.of(context)!.deleteAccount,
-                            iconColor: Colors.red[700],
-                            onTap: () => _showDeleteAccountDialog(context),
-                          ),
+
                           Divider(height: 1, color: Colors.grey[200]),
                           _ProfileMenuTile(
                             icon: Icons.help_outline,
@@ -4623,6 +5138,19 @@ Track your calories, scan food with AI, and get personalized nutrition insights 
                             },
                           ),
                           Divider(height: 1, color: Colors.grey[200]),
+                          
+                          // Account Deletion
+                          _ProfileMenuTile(
+                            icon: Icons.delete_forever,
+                            label: AppLocalizations.of(context)!.deleteAccount,
+                            iconColor: Colors.red[800],
+                            labelColor: Colors.red[800],
+                            onTap: () {
+                              AccountDeletionService().showAccountDeletionDialog(context);
+                            },
+                          ),
+                          Divider(height: 1, color: Colors.grey[200]),
+                          
                           _ProfileMenuTile(
                             icon: Icons.logout,
                             label: AppLocalizations.of(context)!.logOut,
@@ -4681,7 +5209,7 @@ Track your calories, scan food with AI, and get personalized nutrition insights 
                                             ElevatedButton(
                                               onPressed: () async {
                                                 Navigator.pop(context);
-                                                await FirebaseAuth.instance.signOut();
+                                                await AuthService().logout();
                                                 Navigator.of(context).pushAndRemoveUntil(
                                                   MaterialPageRoute(builder: (_) => AuthScreen()),
                                                   (route) => false,
@@ -4719,13 +5247,7 @@ Track your calories, scan food with AI, and get personalized nutrition insights 
     );
   }
 
-  // Delete Account Dialog
-  void _showDeleteAccountDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) => _DeleteAccountDialog(),
-    );
-  }
+
 }
 
 // Helper widget for menu tiles
@@ -6708,7 +7230,7 @@ class _FoodMealCardState extends State<_FoodMealCard> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text('Ingredients:', style: TextStyle(fontWeight: FontWeight.w600, color: kPrimaryGreen)),
-                          ...ingredients.map((ing) => Text('• $ing', style: TextStyle(color: Colors.black87))).toList(),
+                          ...ingredients.map((ing) => Text('� $ing', style: TextStyle(color: Colors.black87))).toList(),
                         ],
                       );
                     } else {
@@ -7627,241 +8149,86 @@ class _LegalLinkTile extends StatelessWidget {
       ),
     );
   }
-
-
 }
 
-class _DeleteAccountDialog extends StatefulWidget {
+// Password reset redirect screen that shows success message and redirects to sign-in
+class _PasswordResetRedirectScreen extends StatefulWidget {
   @override
-  _DeleteAccountDialogState createState() => _DeleteAccountDialogState();
+  State<_PasswordResetRedirectScreen> createState() => _PasswordResetRedirectScreenState();
 }
 
-class _DeleteAccountDialogState extends State<_DeleteAccountDialog> {
-  final TextEditingController _confirmationController = TextEditingController();
-  bool _isLoading = false;
-  String _message = '';
-
+class _PasswordResetRedirectScreenState extends State<_PasswordResetRedirectScreen> {
   @override
-  void dispose() {
-    _confirmationController.dispose();
-    super.dispose();
-  }
-
-  Future<void> _deleteAccount() async {
-    final user = FirebaseAuth.instance.currentUser;
-    if (user == null) return;
-
-    setState(() {
-      _isLoading = true;
-      _message = '';
-    });
-
-    try {
-      // Store email for deleted account tracking
-      final email = user.email;
-      
-      // 1. Delete user data from Firestore
-      await FirebaseFirestore.instance.collection('users').doc(user.uid).delete();
-      
-      // 2. Clear local storage (but preserve permissions_requested flag)
-      final prefs = await SharedPreferences.getInstance();
-      final hadRequestedPermissions = prefs.getBool('permissions_requested') ?? false;
-      await prefs.clear();
-      if (hadRequestedPermissions) {
-        await prefs.setBool('permissions_requested', true);
-      }
-      
-      // 3. Track deleted account email for 24 hours
-      if (email != null) {
-        await prefs.setString('deleted_account_${email}', DateTime.now().millisecondsSinceEpoch.toString());
-      }
-      
-      // 4. Delete Firebase Auth account (handle re-authentication requirement)
-      try {
-        await user.delete();
-      } catch (e) {
-        // If re-authentication is required, try to force delete by refreshing token
-        if (e.toString().contains('requires-recent-login')) {
-          try {
-            await user.reload();
-            await user.delete();
-          } catch (e2) {
-            // If still fails, sign out instead and show a message
-            await FirebaseAuth.instance.signOut();
-            if (mounted) {
-              Navigator.of(context).pushAndRemoveUntil(
-                MaterialPageRoute(builder: (_) => AuthScreen()),
-                (route) => false,
-              );
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('Account data deleted. Please sign in again to complete account deletion.')),
-              );
-              return;
-            }
-          }
-        } else {
-          throw e;
-        }
-      }
-      
-      // 5. Navigate to auth screen
+  void initState() {
+    super.initState();
+    // Redirect after 3 seconds
+    Timer(Duration(seconds: 3), () {
       if (mounted) {
+        // Navigate back to AuthScreen since user is now logged out
         Navigator.of(context).pushAndRemoveUntil(
           MaterialPageRoute(builder: (_) => AuthScreen()),
           (route) => false,
         );
-        
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(AppLocalizations.of(context)!.accountDeleted)),
-        );
       }
-    } catch (e) {
-      setState(() {
-        _message = '${AppLocalizations.of(context)!.errorDeletingAccount}: ${e.toString()}';
-        _isLoading = false;
-      });
-    }
+    });
   }
 
   @override
   Widget build(BuildContext context) {
-    final screenHeight = MediaQuery.of(context).size.height;
-    final keyboardHeight = MediaQuery.of(context).viewInsets.bottom;
-    final availableHeight = screenHeight - keyboardHeight;
-    
-    return Dialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-      child: Container(
-        constraints: BoxConstraints(
-          maxHeight: availableHeight * 0.8,
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Scrollable content
-            Expanded(
-              child: SingleChildScrollView(
-                child: Padding(
-                  padding: const EdgeInsets.all(24.0),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        Icons.warning_rounded,
-                        color: Colors.red[600],
-                        size: 64,
-                      ),
-                      SizedBox(height: 16),
-                      Text(
-                        AppLocalizations.of(context)!.confirmDeleteAccount,
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.red[700],
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                      SizedBox(height: 16),
-                      Text(
-                        AppLocalizations.of(context)!.deleteAccountWarning,
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: Colors.grey[700],
-                          height: 1.4,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                      SizedBox(height: 24),
-                      Text(
-                        AppLocalizations.of(context)!.typeDeleteToConfirm,
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.grey[800],
-                        ),
-                      ),
-                      SizedBox(height: 12),
-                      TextField(
-                        controller: _confirmationController,
-                        decoration: InputDecoration(
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          hintText: AppLocalizations.of(context)!.deleteAccountFinalConfirmation,
-                        ),
-                        onChanged: (value) => setState(() {}),
-                      ),
-                      if (_message.isNotEmpty) ...[
-                        SizedBox(height: 16),
-                        Container(
-                          padding: EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: Colors.red[50],
-                            borderRadius: BorderRadius.circular(8),
-                            border: Border.all(color: Colors.red[200]!),
-                          ),
-                          child: Text(
-                            _message,
-                            style: TextStyle(color: Colors.red[700], fontSize: 12),
-                            textAlign: TextAlign.center,
-                          ),
-                        ),
-                      ],
-                    ],
-                  ),
+    return Scaffold(
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(32.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.mail_outline, color: Colors.blue, size: 64),
+              SizedBox(height: 24),
+              Text(
+                'Password Reset Email Sent',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.blue[700],
                 ),
+                textAlign: TextAlign.center,
               ),
-            ),
-            // Fixed buttons at bottom
-            SafeArea(
-              minimum: EdgeInsets.fromLTRB(24, 0, 24, 24),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              SizedBox(height: 16),
+              Text(
+                'Check your email for a password reset link.',
+                style: TextStyle(
+                  fontSize: 16,
+                  color: Colors.grey[600],
+                ),
+                textAlign: TextAlign.center,
+              ),
+              SizedBox(height: 8),
+              Text(
+                'You have been logged out for security.',
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Colors.grey[500],
+                ),
+                textAlign: TextAlign.center,
+              ),
+              SizedBox(height: 32),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Expanded(
-                    child: OutlinedButton(
-                      onPressed: _isLoading ? null : () => Navigator.pop(context),
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: Colors.grey[600],
-                        side: BorderSide(color: Colors.grey[300]!),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                      child: Text(AppLocalizations.of(context)!.cancel),
-                    ),
+                  Text(
+                    'Redirecting to sign-in...',
+                    style: TextStyle(color: Colors.grey[600]),
                   ),
                   SizedBox(width: 12),
-                  Expanded(
-                    child: ElevatedButton(
-                      onPressed: (_isLoading || 
-                          _confirmationController.text.trim() != 
-                          AppLocalizations.of(context)!.deleteAccountFinalConfirmation)
-                        ? null
-                        : _deleteAccount,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.red[600],
-                        foregroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                      child: _isLoading
-                        ? SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: Colors.white,
-                            ),
-                          )
-                        : Text(AppLocalizations.of(context)!.deleteAccount),
-                    ),
+                  SizedBox(
+                    width: 16,
+                    height: 16,
+                    child: CircularProgressIndicator(strokeWidth: 2),
                   ),
                 ],
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

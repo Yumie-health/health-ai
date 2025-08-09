@@ -948,4 +948,97 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get permissionsComplete => 'اكتملت الأذونات!';
+
+  @override
+  String get enterYourPassword => 'أدخل كلمة المرور';
+
+  @override
+  String get securityAlerts => 'تنبيهات الأمان';
+
+  @override
+  String get manageSessions => 'إدارة الجلسات';
+
+  @override
+  String get selectLanguageTitle => 'اختر اللغة';
+
+  @override
+  String get chooseYourPreferredLanguage => 'اختر لغتك المفضلة للتطبيق';
+
+  @override
+  String get languageChangedTo => 'تم تغيير اللغة إلى';
+
+  @override
+  String get activeSessions => 'الجلسات النشطة';
+
+  @override
+  String get thisDevice => 'هذا الجهاز';
+
+  @override
+  String get sessionRevoked => 'تم إلغاء الجلسة';
+
+  @override
+  String get allOtherSessionsSignedOut => 'تم تسجيل الخروج من جميع الجلسات الأخرى';
+
+  @override
+  String get signOutAllOthers => 'تسجيل الخروج من الكل';
+
+  @override
+  String get noSecurityAlerts => 'لا توجد تنبيهات أمنية';
+
+  @override
+  String get passwordStrengthWeak => 'ضعيفة';
+
+  @override
+  String get passwordStrengthFair => 'مقبولة';
+
+  @override
+  String get passwordStrengthGood => 'جيدة';
+
+  @override
+  String get passwordStrengthStrong => 'قوية';
+
+  @override
+  String get passwordStrengthVeryStrong => 'قوية جداً';
+
+  @override
+  String get addLowercaseLetters => 'أضف أحرف صغيرة';
+
+  @override
+  String get addUppercaseLetters => 'أضف أحرف كبيرة';
+
+  @override
+  String get addNumbers => 'أضف أرقام';
+
+  @override
+  String get addSpecialCharacters => 'أضف رموز خاصة (!@#\$%^&*)';
+
+  @override
+  String get avoidCommonPatterns => 'تجنب الأنماط الشائعة';
+
+  @override
+  String get requiresAtLeast8Characters => 'يتطلب 8 أحرف على الأقل';
+
+  @override
+  String get tooManySignInAttempts => 'محاولات تسجيل دخول كثيرة. حاول مرة أخرى لاحقاً.';
+
+  @override
+  String get tooManySignUpAttempts => 'محاولات تسجيل كثيرة. حاول مرة أخرى لاحقاً.';
+
+  @override
+  String get tooManyPasswordResetRequests => 'طلبات إعادة تعيين كلمة مرور كثيرة. حاول مرة أخرى لاحقاً.';
+
+  @override
+  String get multipleFailedSignInAttempts => 'محاولات تسجيل دخول فاشلة متعددة';
+
+  @override
+  String get excessivePasswordResetRequests => 'طلبات إعادة تعيين كلمة مرور مفرطة';
+
+  @override
+  String get suspiciousActivityDetected => 'تم اكتشاف نشاط مشبوه';
+
+  @override
+  String get riskLevelMedium => 'متوسط';
+
+  @override
+  String get riskLevelHigh => 'عالي';
 }

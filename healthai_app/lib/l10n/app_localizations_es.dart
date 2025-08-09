@@ -948,4 +948,97 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get permissionsComplete => '¡Permisos Completos!';
+
+  @override
+  String get enterYourPassword => 'Ingresa tu contraseña';
+
+  @override
+  String get securityAlerts => 'Alertas de Seguridad';
+
+  @override
+  String get manageSessions => 'Gestionar Sesiones';
+
+  @override
+  String get selectLanguageTitle => 'Seleccionar Idioma';
+
+  @override
+  String get chooseYourPreferredLanguage => 'Elige tu idioma preferido para la aplicación';
+
+  @override
+  String get languageChangedTo => 'Idioma cambiado a';
+
+  @override
+  String get activeSessions => 'Sesiones Activas';
+
+  @override
+  String get thisDevice => 'Este dispositivo';
+
+  @override
+  String get sessionRevoked => 'Sesión revocada';
+
+  @override
+  String get allOtherSessionsSignedOut => 'Todas las demás sesiones cerradas';
+
+  @override
+  String get signOutAllOthers => 'Cerrar Todas las Demás';
+
+  @override
+  String get noSecurityAlerts => 'No hay alertas de seguridad';
+
+  @override
+  String get passwordStrengthWeak => 'Débil';
+
+  @override
+  String get passwordStrengthFair => 'Regular';
+
+  @override
+  String get passwordStrengthGood => 'Buena';
+
+  @override
+  String get passwordStrengthStrong => 'Fuerte';
+
+  @override
+  String get passwordStrengthVeryStrong => 'Muy Fuerte';
+
+  @override
+  String get addLowercaseLetters => 'Agregar letras minúsculas';
+
+  @override
+  String get addUppercaseLetters => 'Agregar letras mayúsculas';
+
+  @override
+  String get addNumbers => 'Agregar números';
+
+  @override
+  String get addSpecialCharacters => 'Agregar caracteres especiales (!@#\$%^&*)';
+
+  @override
+  String get avoidCommonPatterns => 'Evitar patrones comunes';
+
+  @override
+  String get requiresAtLeast8Characters => 'Requiere al menos 8 caracteres';
+
+  @override
+  String get tooManySignInAttempts => 'Demasiados intentos de inicio de sesión. Inténtalo de nuevo más tarde.';
+
+  @override
+  String get tooManySignUpAttempts => 'Demasiados intentos de registro. Inténtalo de nuevo más tarde.';
+
+  @override
+  String get tooManyPasswordResetRequests => 'Demasiadas solicitudes de restablecimiento de contraseña. Inténtalo de nuevo más tarde.';
+
+  @override
+  String get multipleFailedSignInAttempts => 'Múltiples Intentos de Inicio de Sesión Fallidos';
+
+  @override
+  String get excessivePasswordResetRequests => 'Solicitudes Excesivas de Restablecimiento de Contraseña';
+
+  @override
+  String get suspiciousActivityDetected => 'Actividad Sospechosa Detectada';
+
+  @override
+  String get riskLevelMedium => 'MEDIO';
+
+  @override
+  String get riskLevelHigh => 'ALTO';
 }
