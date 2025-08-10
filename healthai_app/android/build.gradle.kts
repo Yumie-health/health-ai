@@ -1,6 +1,6 @@
 plugins {
     id("com.google.gms.google-services") version "4.4.1" apply false
-    id("org.jetbrains.kotlin.android") apply false
+    // Kotlin plugin will be provided via buildscript classpath
 }
 
 buildscript {
@@ -10,7 +10,17 @@ buildscript {
     }
     dependencies {
         classpath("com.android.tools.build:gradle:8.12.0")
-        classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:2.0.0")
+        classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:2.1.21")
+    }
+
+    // Force any subproject buildscript classpaths to use Kotlin 2.1.21
+    configurations.classpath { 
+        resolutionStrategy.eachDependency {
+            if (requested.group == "org.jetbrains.kotlin") {
+                useVersion("2.1.21")
+                because("Align Kotlin toolchain across all included builds")
+            }
+        }
     }
 }
 
@@ -18,6 +28,16 @@ allprojects {
     repositories {
         google()
         mavenCentral()
+    }
+
+    // Ensure all runtime/compile configurations use Kotlin 2.1.21 artifacts
+    configurations.all {
+        resolutionStrategy.eachDependency {
+            if (requested.group == "org.jetbrains.kotlin") {
+                useVersion("2.1.21")
+                because("Force Kotlin stdlib/compiler embeddables to 2.1.21 to match plugin")
+            }
+        }
     }
 }
 

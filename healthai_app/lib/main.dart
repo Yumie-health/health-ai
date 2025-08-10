@@ -31,8 +31,7 @@ import 'generated_meal_fridge_page.dart';
 import 'package:flutter/services.dart';
 import 'dart:convert';
 
-// import 'package:firebase_analytics/firebase_analytics.dart';  // Removed due to Kotlin conflicts
-// import 'package:firebase_analytics/observer.dart';  // Removed due to Kotlin conflicts
+import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:timezone/data/latest.dart' as tz;

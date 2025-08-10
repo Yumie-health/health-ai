@@ -36,6 +36,11 @@ class SubscriptionPopupPage extends StatefulWidget {
         return true;
       }
       
+      // If user previously had premium but lost it, encourage re-subscribe more often
+      if ((await SharedPreferences.getInstance()).getBool('hadPremiumEver') == true) {
+        return true;
+      }
+
       // For regular app launches, use the existing occasional logic
       final prefs = await SharedPreferences.getInstance();
       final showCount = prefs.getInt('subscription_popup_shown_count') ?? 0;

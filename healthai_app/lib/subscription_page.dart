@@ -23,6 +23,9 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
   bool _isProcessingPayment = false;
   String? _errorMessage;
   late Stream<List<PurchaseDetails>> _purchaseStream;
+  // Restore/purchase coordination
+  Timer? _restoreCheckTimer;
+  bool _sawRestoredOrPurchased = false;
 
   @override
   void initState() {
@@ -106,11 +109,20 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
       
       if (purchase.status == PurchaseStatus.purchased || purchase.status == PurchaseStatus.restored) {
         try {
+          _sawRestoredOrPurchased = true;
+          _restoreCheckTimer?.cancel();
           // Google Play/App Store has confirmed the purchase - trust it
           print('Purchase confirmed by store: ${purchase.productID}');
           
           // Save the subscription immediately
           await ReceiptValidationService.saveValidatedSubscription(purchase);
+
+          // Ensure app state reflects premium immediately and logs analytics
+          try {
+            await SubscriptionService().setSubscription(purchase.productID);
+          } catch (e) {
+            print('Non-fatal: setSubscription failed: $e');
+          }
           
           // Acknowledge the purchase to Google Play
           if (purchase.pendingCompletePurchase) {
@@ -122,21 +134,15 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
           
           if (mounted) {
             if (purchase.status == PurchaseStatus.restored) {
-              // Show success message for restored purchases
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(AppLocalizations.of(context)!.purchasesRestored),
-                  backgroundColor: kPrimaryGreen,
-                  duration: Duration(seconds: 3),
-                ),
+              // Show success animation for restored purchases too!
+              SubscriptionSuccessPage.show(
+                context,
+                purchase.productID,
+                onComplete: () {
+                  Navigator.of(context).pop(); // Close success animation
+                  Navigator.of(context).pop(); // Close subscription page
+                },
               );
-              
-              // Close the subscription page after successful restore
-              Timer(Duration(seconds: 2), () {
-                if (mounted) {
-                  Navigator.of(context).pop();
-                }
-              });
             } else {
               // Show beautiful success animation for new purchases
               SubscriptionSuccessPage.show(
@@ -218,6 +224,7 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
   void _restore() async {
     print('Restoring purchases...');
     setState(() => _isProcessingPayment = true);
+    _sawRestoredOrPurchased = false;
     
     try {
       // Show initial feedback
@@ -234,7 +241,9 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
       await _iap.restorePurchases();
       
       // Set a timer to check if any purchases were restored
-      Timer(Duration(seconds: 3), () {
+      // Reduced delay to 2 seconds for faster response
+      _restoreCheckTimer?.cancel();
+      _restoreCheckTimer = Timer(Duration(seconds: 2), () {
         if (mounted) {
           // Check if any purchases were actually restored by looking at the subscription status
           _checkRestoreResult();
@@ -258,12 +267,18 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
 
   void _checkRestoreResult() async {
     try {
+      print('Checking restore result...');
       final subscriptionService = SubscriptionService();
-      final isPremium = await subscriptionService.isPremiumUser();
+      // Force refresh and check subscription status
+      final isPremium = await subscriptionService.forceRefreshAndCheck();
+      
+      print('Restore result - isPremium: $isPremium');
       
       if (mounted) {
-        if (isPremium) {
-          // Purchases were restored successfully
+        if (isPremium || _sawRestoredOrPurchased) {
+          // Purchases were restored successfully - this should be handled by _onPurchaseUpdated
+          // But if we get here, it means the purchase stream didn't fire, so we'll show a message
+          print('Restore successful - showing success message');
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(AppLocalizations.of(context)!.purchasesRestored),
@@ -280,6 +295,7 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
           });
         } else {
           // No purchases were found
+          print('No purchases found - showing no purchases message');
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(AppLocalizations.of(context)!.noPurchasesFound),

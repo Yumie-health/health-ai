@@ -20,8 +20,6 @@ android {
     kotlinOptions {
         jvmTarget = "17"
         freeCompilerArgs += listOf("-Xjvm-default=all")
-        apiVersion = "1.9"
-        languageVersion = "1.9"
     }
 
     defaultConfig {
@@ -35,8 +33,10 @@ android {
         versionName = flutter.versionName
         multiDexEnabled = true
         
+        // Support common ABIs to avoid device coverage drop warnings
         ndk {
-            abiFilters += listOf("arm64-v8a", "armeabi-v7a", "x86_64", "x86")
+            abiFilters.clear()
+            abiFilters += listOf("arm64-v8a", "armeabi-v7a", "x86_64")
         }
     }
 
@@ -55,7 +55,8 @@ android {
             isMinifyEnabled = false
             isShrinkResources = false
             ndk {
-                debugSymbolLevel = "NONE"
+                // Generate native debug symbols zip for Play Console
+                debugSymbolLevel = "SYMBOL_TABLE"
             }
         }
     }
@@ -63,10 +64,24 @@ android {
     lint {
         disable += "InvalidPackage"
     }
+
+    // Use standard symbol stripping; symbols are exported separately via ndk.debugSymbolLevel
 }
 
 dependencies {
-    // Add other Firebase dependencies as needed
+    // Import the BoM for the Firebase platform (pinned to a version compatible with Kotlin 1.9.x)
+    implementation(platform("com.google.firebase:firebase-bom:33.6.0"))
+    
+    // Add Firebase dependencies (versions managed by BoM)
+    implementation("com.google.firebase:firebase-analytics")
+    implementation("com.google.firebase:firebase-auth")
+    implementation("com.google.firebase:firebase-firestore")
+    implementation("com.google.firebase:firebase-functions")
+    implementation("com.google.firebase:firebase-messaging")
+    implementation("com.google.firebase:firebase-storage")
+    implementation("com.google.firebase:firebase-config")
+    
+    // Add other dependencies
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
     implementation("androidx.multidex:multidex:2.0.1")
     
@@ -82,4 +97,5 @@ dependencies {
     
     // Google Sign-In
     implementation("com.google.android.gms:play-services-auth:20.7.0")
+
 }

@@ -1,5 +1,5 @@
 import 'package:logger/logger.dart';
-// import 'package:firebase_analytics/firebase_analytics.dart';  // Removed due to Kotlin conflicts
+import 'package:firebase_analytics/firebase_analytics.dart';
 
 class LoggingService {
   static final LoggingService _instance = LoggingService._internal();
@@ -7,7 +7,7 @@ class LoggingService {
   LoggingService._internal();
 
   late final Logger _logger;
-  // late final FirebaseAnalytics _analytics;  // Removed due to Kotlin conflicts
+  late final FirebaseAnalytics _analytics;
 
   void initialize() {
     _logger = Logger(
@@ -20,7 +20,7 @@ class LoggingService {
         printTime: true,
       ),
     );
-    // _analytics = FirebaseAnalytics.instance;  // Removed due to Kotlin conflicts
+    _analytics = FirebaseAnalytics.instance;
   }
 
   // Info logging
@@ -30,9 +30,9 @@ class LoggingService {
     } else {
       _logger.i(message);
     }
-    // if (data != null) {
-    //   _analytics.logEvent(name: 'app_info', parameters: data.cast<String, Object>());
-    // }  // Removed due to Kotlin conflicts
+    if (data != null) {
+      _analytics.logEvent(name: 'app_info', parameters: data.cast<String, Object>());
+    }
   }
 
   // Warning logging
@@ -42,21 +42,21 @@ class LoggingService {
     } else {
       _logger.w(message);
     }
-    // if (data != null) {
-    //   _analytics.logEvent(name: 'app_warning', parameters: data.cast<String, Object>());
-    // }  // Removed due to Kotlin conflicts
+    if (data != null) {
+      _analytics.logEvent(name: 'app_warning', parameters: data.cast<String, Object>());
+    }
   }
 
   // Error logging
   void error(String message, [dynamic error, StackTrace? stackTrace]) {
     _logger.e(message, error: error, stackTrace: stackTrace);
-    // _analytics.logEvent(
-    //   name: 'app_error',
-    //   parameters: {
-    //     'message': message,
-    //     'error': error?.toString() ?? 'Unknown error',
-    //   }.cast<String, Object>(),
-    // );  // Removed due to Kotlin conflicts
+    _analytics.logEvent(
+      name: 'app_error',
+      parameters: {
+        'message': message,
+        'error': error?.toString() ?? 'Unknown error',
+      }.cast<String, Object>(),
+    );
   }
 
   // Debug logging (only in debug mode)

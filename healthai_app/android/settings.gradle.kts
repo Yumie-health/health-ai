@@ -14,9 +14,7 @@ pluginManagement {
         mavenCentral()
         gradlePluginPortal()
     }
-    plugins {
-        id("org.jetbrains.kotlin.android") version "2.0.0"
-    }
+    // Do not pin Kotlin plugin here; it will be supplied via buildscript classpath
 }
 
 plugins {

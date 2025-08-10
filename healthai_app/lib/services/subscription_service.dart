@@ -6,6 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:in_app_purchase/in_app_purchase.dart';
+import 'package:firebase_analytics/firebase_analytics.dart';
 import 'logging_service.dart';
 import 'native_billing_service.dart';
 import 'production_integrity_service.dart';
@@ -56,31 +57,42 @@ class SubscriptionService {
   Future<void> forceSubscriptionCheck() async {
     await refreshSubscriptionStatus();
   }
+  
+  // Force refresh subscription status and return current status
+  Future<bool> forceRefreshAndCheck() async {
+    try {
+      await refreshSubscriptionStatus();
+      return await isPremiumUser();
+    } catch (e) {
+      print('Error in force refresh and check: $e');
+      return false;
+    }
+  }
 
   // Check if user has premium subscription
   Future<bool> isPremiumUser() async {
     try {
-      // First check integrity before subscription operations
-      final isIntegrityValid = await ProductionIntegrityService.checkBeforePremiumAccess();
-      if (!isIntegrityValid) {
-        print('Integrity check failed - denying premium access');
-        return false;
-      }
-      
+      // 1) Trust local entitlement immediately for a smooth UX (especially after restore)
       final prefs = await SharedPreferences.getInstance();
       final isPremium = prefs.getBool('isPremium') ?? false;
-      
+      final subscriptionType = prefs.getString('subscriptionType');
+      print('Checking premium status - local isPremium: $isPremium, type: $subscriptionType');
+
       if (isPremium) {
-        // Check with Google Play for real-time subscription status
-        final isValid = await GooglePlayValidationService.checkSubscriptionValidity();
-        if (!isValid) {
-          // Subscription is no longer valid, clear premium status
-          await clearSubscription();
-          return false;
-        }
+        // Background validation will correct stale/invalid entitlements if needed
+        return true;
       }
-      
-      return isPremium;
+
+      // 2) If no local entitlement, perform integrity check as an additional guard
+      //    but do NOT block users who legitimately restored purchases earlier.
+      final isIntegrityValid = await ProductionIntegrityService.checkBeforePremiumAccess();
+      if (!isIntegrityValid) {
+        print('Integrity check failed and no local entitlement present');
+        return false;
+      }
+
+      // 3) No local entitlement and integrity OK → not premium
+      return false;
     } catch (e) {
       print('Error checking premium status: $e');
       return false;
@@ -135,7 +147,20 @@ class SubscriptionService {
       await prefs.setBool('isPremium', true);
       await prefs.setString('subscriptionType', productId);
       await prefs.setString('purchaseDate', DateTime.now().toIso8601String());
+      await prefs.setBool('hadPremiumEver', true);
       print('Subscription set: $productId');
+      
+      // Track subscription event in Firebase Analytics
+      await FirebaseAnalytics.instance.logEvent(
+        name: 'subscription_start',
+        parameters: {
+          'product_id': productId,
+          'subscription_type': productId.contains('yearly') ? 'yearly' : 'monthly',
+          'platform': Platform.isAndroid ? 'android' : 'ios',
+        },
+      );
+      
+      // Do not invalidate immediately; reflect premium now and validate later
     } catch (e) {
       print('Error setting subscription: $e');
     }
