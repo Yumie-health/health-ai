@@ -950,6 +950,21 @@ class AppLocalizationsAr extends AppLocalizations {
   String get restorePurchases => 'استعادة المشتريات';
 
   @override
+  String get checkingForPurchases => 'البحث عن المشتريات الموجودة...';
+
+  @override
+  String get purchasesRestored => 'تمت استعادة المشتريات بنجاح!';
+
+  @override
+  String get noPurchasesFound => 'لم يتم العثور على مشتريات سابقة';
+
+  @override
+  String get restoreFailed => 'فشل في استعادة المشتريات. يرجى المحاولة مرة أخرى.';
+
+  @override
+  String get restoreInProgress => 'جاري استعادة المشتريات...';
+
+  @override
   String get bySubscribing => 'بالاشتراك، فإنك توافق على شروط الخدمة وسياسة الخصوصية. تتجدد الاشتراكات تلقائياً ما لم يتم إلغاؤها';
 
   @override

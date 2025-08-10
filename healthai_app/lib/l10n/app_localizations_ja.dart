@@ -950,6 +950,21 @@ class AppLocalizationsJa extends AppLocalizations {
   String get restorePurchases => '購入を復元';
 
   @override
+  String get checkingForPurchases => '既存の購入を確認中...';
+
+  @override
+  String get purchasesRestored => '購入が正常に復元されました！';
+
+  @override
+  String get noPurchasesFound => '以前の購入が見つかりませんでした';
+
+  @override
+  String get restoreFailed => '購入の復元に失敗しました。もう一度お試しください。';
+
+  @override
+  String get restoreInProgress => '購入を復元中...';
+
+  @override
   String get bySubscribing => '購読することで、利用規約とプライバシーポリシーに同意します。キャンセルしない限り、サブスクリプションは自動的に更新されます';
 
   @override

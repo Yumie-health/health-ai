@@ -950,6 +950,21 @@ class AppLocalizationsEn extends AppLocalizations {
   String get restorePurchases => 'Restore Purchases';
 
   @override
+  String get checkingForPurchases => 'Checking for existing purchases...';
+
+  @override
+  String get purchasesRestored => 'Purchases restored successfully!';
+
+  @override
+  String get noPurchasesFound => 'No previous purchases found';
+
+  @override
+  String get restoreFailed => 'Failed to restore purchases. Please try again.';
+
+  @override
+  String get restoreInProgress => 'Restoring purchases...';
+
+  @override
   String get bySubscribing => 'By subscribing, you agree to our Terms of Service and Privacy Policy. Subscriptions automatically renew unless cancelled';
 
   @override

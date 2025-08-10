@@ -950,6 +950,21 @@ class AppLocalizationsHi extends AppLocalizations {
   String get restorePurchases => 'खरीदारी पुनर्स्थापित करें';
 
   @override
+  String get checkingForPurchases => 'मौजूदा खरीदारी की जांच कर रहा है...';
+
+  @override
+  String get purchasesRestored => 'खरीदारी सफलतापूर्वक पुनर्स्थापित की गई!';
+
+  @override
+  String get noPurchasesFound => 'कोई पिछली खरीदारी नहीं मिली';
+
+  @override
+  String get restoreFailed => 'खरीदारी पुनर्स्थापित करने में विफल। कृपया पुनः प्रयास करें।';
+
+  @override
+  String get restoreInProgress => 'खरीदारी पुनर्स्थापित की जा रही है...';
+
+  @override
   String get bySubscribing => 'सदस्यता लेने से, आप हमारी सेवा की शर्तों और गोपनीयता नीति से सहमत होते हैं। सदस्यताएं स्वचालित रूप से नवीनीकृत होती हैं जब तक कि रद्द न की जाएं';
 
   @override

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:lottie/lottie.dart';
 import 'utils/constants.dart';
 import 'package:confetti/confetti.dart';
 
@@ -8,10 +7,10 @@ class SubscriptionSuccessPage extends StatefulWidget {
   final VoidCallback? onComplete;
   
   const SubscriptionSuccessPage({
-    Key? key, 
+    super.key, 
     required this.subscriptionType,
     this.onComplete,
-  }) : super(key: key);
+  });
 
   @override
   State<SubscriptionSuccessPage> createState() => _SubscriptionSuccessPageState();
@@ -177,8 +176,8 @@ class _SubscriptionSuccessPageState extends State<SubscriptionSuccessPage>
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
                   colors: [
-                    kPrimaryGreen.withOpacity(0.95),
-                    kPrimaryGreen.withOpacity(0.8),
+                    kPrimaryGreen.withValues(alpha: 0.95),
+                    kPrimaryGreen.withValues(alpha: 0.8),
                   ],
                 ),
               ),
@@ -223,7 +222,7 @@ class _SubscriptionSuccessPageState extends State<SubscriptionSuccessPage>
                   borderRadius: BorderRadius.circular(32),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.3),
+                      color: Colors.black.withValues(alpha: 0.3),
                       blurRadius: 30,
                       offset: const Offset(0, 15),
                     ),
@@ -243,7 +242,7 @@ class _SubscriptionSuccessPageState extends State<SubscriptionSuccessPage>
                           shape: BoxShape.circle,
                           boxShadow: [
                             BoxShadow(
-                              color: kPrimaryGreen.withOpacity(0.3),
+                              color: kPrimaryGreen.withValues(alpha: 0.3),
                               blurRadius: 20,
                               offset: const Offset(0, 10),
                             ),

@@ -950,6 +950,21 @@ class AppLocalizationsTr extends AppLocalizations {
   String get restorePurchases => 'Satın Alımları Geri Yükle';
 
   @override
+  String get checkingForPurchases => 'Mevcut satın alımlar kontrol ediliyor...';
+
+  @override
+  String get purchasesRestored => 'Satın alımlar başarıyla geri yüklendi!';
+
+  @override
+  String get noPurchasesFound => 'Önceki satın alım bulunamadı';
+
+  @override
+  String get restoreFailed => 'Satın alımları geri yükleme başarısız. Lütfen tekrar deneyin.';
+
+  @override
+  String get restoreInProgress => 'Satın alımlar geri yükleniyor...';
+
+  @override
   String get bySubscribing => 'Abone olarak Hizmet Şartlarımızı ve Gizlilik Politikamızı kabul etmiş olursunuz. Abonelikler iptal edilmediği sürece otomatik olarak yenilenir';
 
   @override

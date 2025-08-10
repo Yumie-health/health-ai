@@ -950,6 +950,21 @@ class AppLocalizationsIt extends AppLocalizations {
   String get restorePurchases => 'Ripristina Acquisti';
 
   @override
+  String get checkingForPurchases => 'Controllo degli acquisti esistenti...';
+
+  @override
+  String get purchasesRestored => 'Acquisti ripristinati con successo!';
+
+  @override
+  String get noPurchasesFound => 'Nessun acquisto precedente trovato';
+
+  @override
+  String get restoreFailed => 'Impossibile ripristinare gli acquisti. Riprova.';
+
+  @override
+  String get restoreInProgress => 'Ripristino degli acquisti...';
+
+  @override
   String get bySubscribing => 'Abbonandoti, accetti i nostri Termini di Servizio e la Politica sulla Privacy. Gli abbonamenti si rinnovano automaticamente a meno che non vengano cancellati';
 
   @override

@@ -950,6 +950,21 @@ class AppLocalizationsFr extends AppLocalizations {
   String get restorePurchases => 'Restore Purchases';
 
   @override
+  String get checkingForPurchases => 'Recherche d\'achats existants...';
+
+  @override
+  String get purchasesRestored => 'Achats restaurés avec succès !';
+
+  @override
+  String get noPurchasesFound => 'Aucun achat précédent trouvé';
+
+  @override
+  String get restoreFailed => 'Échec de la restauration des achats. Veuillez réessayer.';
+
+  @override
+  String get restoreInProgress => 'Restauration des achats...';
+
+  @override
   String get bySubscribing => 'En vous abonnant, vous acceptez nos Conditions d\'Utilisation et notre Politique de Confidentialité. Les abonnements se renouvellent automatiquement sauf annulation';
 
   @override

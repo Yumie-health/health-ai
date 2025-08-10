@@ -1995,6 +1995,36 @@ abstract class AppLocalizations {
   /// **'Restore Purchases'**
   String get restorePurchases;
 
+  /// No description provided for @checkingForPurchases.
+  ///
+  /// In en, this message translates to:
+  /// **'Checking for existing purchases...'**
+  String get checkingForPurchases;
+
+  /// No description provided for @purchasesRestored.
+  ///
+  /// In en, this message translates to:
+  /// **'Purchases restored successfully!'**
+  String get purchasesRestored;
+
+  /// No description provided for @noPurchasesFound.
+  ///
+  /// In en, this message translates to:
+  /// **'No previous purchases found'**
+  String get noPurchasesFound;
+
+  /// No description provided for @restoreFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to restore purchases. Please try again.'**
+  String get restoreFailed;
+
+  /// No description provided for @restoreInProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'Restoring purchases...'**
+  String get restoreInProgress;
+
   /// No description provided for @bySubscribing.
   ///
   /// In en, this message translates to:

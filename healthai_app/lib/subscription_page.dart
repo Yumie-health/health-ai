@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:in_app_purchase/in_app_purchase.dart';
 import 'dart:io';
+import 'dart:async';
 import 'services/receipt_validation_service.dart';
 import 'services/subscription_service.dart';
 import 'utils/constants.dart';
@@ -120,15 +121,33 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
           print('Subscription activated: ${purchase.productID}');
           
           if (mounted) {
-            // Show beautiful success animation
-            SubscriptionSuccessPage.show(
-              context,
-              purchase.productID,
-              onComplete: () {
-                Navigator.of(context).pop(); // Close success animation
-                Navigator.of(context).pop(); // Close subscription page
-              },
-            );
+            if (purchase.status == PurchaseStatus.restored) {
+              // Show success message for restored purchases
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(AppLocalizations.of(context)!.purchasesRestored),
+                  backgroundColor: kPrimaryGreen,
+                  duration: Duration(seconds: 3),
+                ),
+              );
+              
+              // Close the subscription page after successful restore
+              Timer(Duration(seconds: 2), () {
+                if (mounted) {
+                  Navigator.of(context).pop();
+                }
+              });
+            } else {
+              // Show beautiful success animation for new purchases
+              SubscriptionSuccessPage.show(
+                context,
+                purchase.productID,
+                onComplete: () {
+                  Navigator.of(context).pop(); // Close success animation
+                  Navigator.of(context).pop(); // Close subscription page
+                },
+              );
+            }
           }
         } catch (e) {
           print('Error processing subscription: $e');
@@ -201,30 +220,90 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
     setState(() => _isProcessingPayment = true);
     
     try {
-      await _iap.restorePurchases();
-      
-      // Show feedback that restore is in progress
+      // Show initial feedback
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Checking for existing purchases...'),
+            content: Text(AppLocalizations.of(context)!.checkingForPurchases),
             backgroundColor: kPrimaryGreen,
             duration: Duration(seconds: 2),
           ),
         );
       }
+      
+      await _iap.restorePurchases();
+      
+      // Set a timer to check if any purchases were restored
+      Timer(Duration(seconds: 3), () {
+        if (mounted) {
+          // Check if any purchases were actually restored by looking at the subscription status
+          _checkRestoreResult();
+        }
+      });
+      
     } catch (e) {
       print('Error restoring purchases: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error restoring purchases: $e'),
-            backgroundColor: Colors.red,
-            duration: Duration(seconds: 3),
+            content: Text(AppLocalizations.of(context)!.restoreFailed),
+            backgroundColor: kWarningRed,
+            duration: Duration(seconds: 4),
           ),
         );
       }
       setState(() => _isProcessingPayment = false);
+    }
+  }
+
+  void _checkRestoreResult() async {
+    try {
+      final subscriptionService = SubscriptionService();
+      final isPremium = await subscriptionService.isPremiumUser();
+      
+      if (mounted) {
+        if (isPremium) {
+          // Purchases were restored successfully
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(AppLocalizations.of(context)!.purchasesRestored),
+              backgroundColor: kPrimaryGreen,
+              duration: Duration(seconds: 3),
+            ),
+          );
+          
+          // Close the subscription page after successful restore
+          Timer(Duration(seconds: 2), () {
+            if (mounted) {
+              Navigator.of(context).pop();
+            }
+          });
+        } else {
+          // No purchases were found
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(AppLocalizations.of(context)!.noPurchasesFound),
+              backgroundColor: Colors.orange,
+              duration: Duration(seconds: 3),
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      print('Error checking restore result: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(AppLocalizations.of(context)!.restoreFailed),
+            backgroundColor: kWarningRed,
+            duration: Duration(seconds: 4),
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isProcessingPayment = false);
+      }
     }
   }
 

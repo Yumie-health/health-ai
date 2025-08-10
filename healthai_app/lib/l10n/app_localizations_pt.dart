@@ -950,6 +950,21 @@ class AppLocalizationsPt extends AppLocalizations {
   String get restorePurchases => 'Restaurar Compras';
 
   @override
+  String get checkingForPurchases => 'Verificando compras existentes...';
+
+  @override
+  String get purchasesRestored => 'Compras restauradas com sucesso!';
+
+  @override
+  String get noPurchasesFound => 'Nenhuma compra anterior encontrada';
+
+  @override
+  String get restoreFailed => 'Falha ao restaurar compras. Tente novamente.';
+
+  @override
+  String get restoreInProgress => 'Restaurando compras...';
+
+  @override
   String get bySubscribing => 'Ao assinar, você concorda com nossos Termos de Serviço e Política de Privacidade. As assinaturas são renovadas automaticamente, a menos que canceladas';
 
   @override

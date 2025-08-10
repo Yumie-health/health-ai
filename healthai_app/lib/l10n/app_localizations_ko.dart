@@ -950,6 +950,21 @@ class AppLocalizationsKo extends AppLocalizations {
   String get restorePurchases => '구매 복원';
 
   @override
+  String get checkingForPurchases => '기존 구매 확인 중...';
+
+  @override
+  String get purchasesRestored => '구매가 성공적으로 복원되었습니다!';
+
+  @override
+  String get noPurchasesFound => '이전 구매를 찾을 수 없습니다';
+
+  @override
+  String get restoreFailed => '구매 복원에 실패했습니다. 다시 시도해 주세요.';
+
+  @override
+  String get restoreInProgress => '구매 복원 중...';
+
+  @override
   String get bySubscribing => '구독하면 이용약관과 개인정보처리방침에 동의하는 것입니다. 구독은 취소하지 않는 한 자동으로 갱신됩니다';
 
   @override

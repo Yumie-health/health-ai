@@ -950,6 +950,21 @@ class AppLocalizationsRu extends AppLocalizations {
   String get restorePurchases => 'Восстановить покупки';
 
   @override
+  String get checkingForPurchases => 'Проверка существующих покупок...';
+
+  @override
+  String get purchasesRestored => 'Покупки успешно восстановлены!';
+
+  @override
+  String get noPurchasesFound => 'Предыдущие покупки не найдены';
+
+  @override
+  String get restoreFailed => 'Не удалось восстановить покупки. Попробуйте еще раз.';
+
+  @override
+  String get restoreInProgress => 'Восстановление покупок...';
+
+  @override
   String get bySubscribing => 'Подписываясь, вы соглашаетесь с нашими Условиями использования и Политикой конфиденциальности. Подписки автоматически продлеваются, если не отменены';
 
   @override

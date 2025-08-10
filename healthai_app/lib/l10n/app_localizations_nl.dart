@@ -950,6 +950,21 @@ class AppLocalizationsNl extends AppLocalizations {
   String get restorePurchases => 'Aankopen herstellen';
 
   @override
+  String get checkingForPurchases => 'Controleren op bestaande aankopen...';
+
+  @override
+  String get purchasesRestored => 'Aankopen succesvol hersteld!';
+
+  @override
+  String get noPurchasesFound => 'Geen eerdere aankopen gevonden';
+
+  @override
+  String get restoreFailed => 'Herstellen van aankopen mislukt. Probeer het opnieuw.';
+
+  @override
+  String get restoreInProgress => 'Aankopen herstellen...';
+
+  @override
   String get bySubscribing => 'Door je te abonneren ga je akkoord met onze Algemene Voorwaarden en Privacybeleid. Abonnementen verlengen automatisch tenzij geannuleerd';
 
   @override
