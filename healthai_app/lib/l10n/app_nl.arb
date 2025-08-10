@@ -45,6 +45,8 @@
   "resetPassword": "Reset password",
   "close": "Close",
   "sendResetLink": "Send Reset Link",
+  "send": "Versturen",
+  "resend": "Opnieuw versturen",
   "helpSupport": "Help & Support",
   "legal": "Legal",
   "privacyPolicy": "Privacy Policy",

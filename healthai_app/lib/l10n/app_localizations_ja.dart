@@ -147,6 +147,12 @@ class AppLocalizationsJa extends AppLocalizations {
   String get sendResetLink => 'リセットリンクを送信';
 
   @override
+  String get send => '送信';
+
+  @override
+  String get resend => '再送信';
+
+  @override
   String get helpSupport => 'ヘルプ＆サポート';
 
   @override

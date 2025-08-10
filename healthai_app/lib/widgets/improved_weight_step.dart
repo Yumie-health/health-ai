@@ -13,6 +13,7 @@ class ImprovedWeightStep extends StatelessWidget {
   final void Function(double) onSelectLb;
   final VoidCallback? onContinue;
   final VoidCallback onBack;
+  final bool isSmallScreen;
 
   const ImprovedWeightStep({
     Key? key,
@@ -26,34 +27,14 @@ class ImprovedWeightStep extends StatelessWidget {
     required this.onSelectLb,
     required this.onContinue,
     required this.onBack,
+    required this.isSmallScreen,
   }) : super(key: key);
 
-  double _calculateBMI() {
-    final weightKg = this.weightKg ?? 70.0;
-    // Using a default height of 170cm for BMI calculation
-    // In a real implementation, you'd get this from the previous step
-    final heightM = 1.70;
-    return weightKg / (heightM * heightM);
-  }
 
-  String _getBMICategory(double bmi, BuildContext context) {
-    if (bmi < 18.5) return AppLocalizations.of(context)!.underweight;
-    if (bmi < 25) return AppLocalizations.of(context)!.normalWeight;
-    if (bmi < 30) return AppLocalizations.of(context)!.overweight;
-    return AppLocalizations.of(context)!.obese;
-  }
-
-  Color _getBMIColor(double bmi, BuildContext context) {
-    if (bmi < 18.5) return Colors.blue;
-    if (bmi < 25) return Theme.of(context).primaryColor;
-    if (bmi < 30) return Colors.orange;
-    return Colors.red;
-  }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final bmi = _calculateBMI();
     final screenHeight = MediaQuery.of(context).size.height;
     final screenWidth = MediaQuery.of(context).size.width;
     final isSmallScreen = screenHeight < 700 || screenWidth < 400;
@@ -134,64 +115,6 @@ class ImprovedWeightStep extends StatelessWidget {
             ),
           ),
         ),
-        
-        SizedBox(height: isSmallScreen ? 15 : 30),
-        
-        // BMI Display
-        if (weightKg != null)
-          FadeTransition(
-            opacity: fadeAnimation,
-            child: Container(
-              padding: EdgeInsets.symmetric(horizontal: 30, vertical: 24),
-              margin: EdgeInsets.symmetric(horizontal: 20),
-              decoration: BoxDecoration(
-                color: _getBMIColor(bmi, context).withOpacity(0.1),
-                borderRadius: BorderRadius.circular(25),
-                border: Border.all(
-                  color: _getBMIColor(bmi, context).withOpacity(0.3),
-                  width: 2,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: _getBMIColor(bmi, context).withOpacity(0.1),
-                    blurRadius: 15,
-                    offset: Offset(0, 5),
-                  ),
-                ],
-              ),
-              child: Column(
-                children: [
-                  Text(
-                    AppLocalizations.of(context)!.yourBMI,
-                    style: TextStyle(
-                      fontSize: 18,
-                      color: Colors.grey[600],
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                  SizedBox(height: 12),
-                  Text(
-                    bmi.toStringAsFixed(1),
-                    style: TextStyle(
-                      fontSize: 42,
-                      fontWeight: FontWeight.bold,
-                      color: _getBMIColor(bmi, context),
-                      height: 1.0,
-                    ),
-                  ),
-                  SizedBox(height: 8),
-                  Text(
-                    _getBMICategory(bmi, context),
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: _getBMIColor(bmi, context),
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
         
         Spacer(flex: isSmallScreen ? 1 : 2),
         

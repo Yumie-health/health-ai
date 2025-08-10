@@ -147,6 +147,12 @@ class AppLocalizationsFr extends AppLocalizations {
   String get sendResetLink => 'Envoyer le Lien de Réinitialisation';
 
   @override
+  String get send => 'Envoyer';
+
+  @override
+  String get resend => 'Renvoyer';
+
+  @override
   String get helpSupport => 'Aide & Support';
 
   @override

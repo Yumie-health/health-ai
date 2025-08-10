@@ -715,12 +715,15 @@ class _ScanResultFridgePageState extends State<ScanResultFridgePage> {
                             ),
                           ),
                           const SizedBox(width: 12),
-                          Text(
-                            AppLocalizations.of(context)!.detectedFridgeItems,
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 18,
-                              color: Colors.black87,
+                          Expanded(
+                            child: Text(
+                              AppLocalizations.of(context)!.detectedFridgeItems,
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                                color: Colors.black87,
+                              ),
+                              overflow: TextOverflow.ellipsis,
                             ),
                           ),
                         ],

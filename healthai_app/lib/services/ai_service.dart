@@ -851,7 +851,7 @@ You are a kitchen assistant AI. Given this photo of a fridge, return a JSON arra
     }
     final prompt = '''
 You are a nutrition AI. Given this user profile: ${jsonEncode(userProfile)} and these fridge items: ${jsonEncode(fridgeItems)}, suggest a healthy meal the user can make, including:
-- meal_name: string
+- meal_name: string (max 18 characters)
 - ingredients: array of strings (all ingredients needed for the meal)
 - recipe: array of steps (strings)
 - calories: integer
@@ -925,7 +925,7 @@ You are a nutrition AI. Suggest 3 healthy $mealPeriod meals with maximum diversi
 - Flavor profiles (sweet, savory, spicy, tangy, etc.)
 
 For each meal, provide:
-- meal_name: string (max 30 characters)
+- meal_name: string (max 18 characters)
 - time: string (e.g. "10 mins")
 - benefits: array of 2 short strings (e.g. ["High Protein", "Low Sugar"])
 - calories: integer

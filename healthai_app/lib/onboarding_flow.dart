@@ -123,6 +123,7 @@ class _OnboardingFlowPageState extends State<OnboardingFlowPage> with SingleTick
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final isSmallScreen = MediaQuery.of(context).size.height < 700;
     final double sliderMinCm = 100;
     final double sliderMaxCm = 220;
     final int sliderMinIn = 36;
@@ -171,6 +172,7 @@ class _OnboardingFlowPageState extends State<OnboardingFlowPage> with SingleTick
                   slideAnimation: _slideAnimation,
                   onContinue: nextStep,
                   onBack: prevStep,
+                  isSmallScreen: isSmallScreen,
                 );
               } else if (step == 3) {
                 return _SexStep(
@@ -189,6 +191,7 @@ class _OnboardingFlowPageState extends State<OnboardingFlowPage> with SingleTick
                   onSelect: (age) => setState(() => selectedAge = age),
                   onContinue: selectedAge == null ? null : nextStep,
                   onBack: prevStep,
+                  isSmallScreen: isSmallScreen,
                 );
               } else if (step == 5) {
                 return ImprovedHeightStep(
@@ -198,6 +201,7 @@ class _OnboardingFlowPageState extends State<OnboardingFlowPage> with SingleTick
                   heightCm: selectedHeightCm,
                   heightFeet: selectedHeightFeet,
                   heightInches: selectedHeightInches,
+                  isSmallScreen: isSmallScreen,
                   onUnitToggle: (metric) => setState(() {
                     useMetricHeight = metric;
                     if (selectedHeightCm != null) {
@@ -228,6 +232,7 @@ class _OnboardingFlowPageState extends State<OnboardingFlowPage> with SingleTick
                   useMetric: useMetricWeight,
                   weightKg: selectedWeightKg,
                   weightLb: selectedWeightLb,
+                  isSmallScreen: isSmallScreen,
                   onUnitToggle: (metric) {
                     // This won't be called anymore since we removed the toggle
                   },
@@ -249,6 +254,7 @@ class _OnboardingFlowPageState extends State<OnboardingFlowPage> with SingleTick
                   useMetric: useMetricWeight,
                   goalWeightKg: targetWeightKg ?? selectedWeightKg ?? 70,
                   currentWeightKg: selectedWeightKg ?? 70,
+                  isSmallScreen: isSmallScreen,
                   onGoalWeightChanged: (v) => setState(() => targetWeightKg = v),
                   onContinue: (targetWeightKg != null) ? nextStep : null,
                   onBack: prevStep,
@@ -634,97 +640,97 @@ class _GoalStep extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Column(
-      children: [
-        Expanded(
-          child: SingleChildScrollView(
-            child: Column(
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        Align(
-          alignment: Alignment.centerLeft,
-          child: Container(
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
-                  blurRadius: 8,
-                  offset: Offset(0, 2),
-                ),
-              ],
-            ),
-            child: IconButton(
-              icon: Icon(Icons.arrow_back, color: theme.primaryColor, size: 24),
-              onPressed: onBack,
-            ),
-          ),
-        ),
-        SizedBox(height: 24),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            _buildProgressDot(context, true),
-            _buildProgressLine(context, true),
-            _buildProgressDot(context, false),
-            _buildProgressLine(context, false),
-            _buildProgressDot(context, false),
-          ],
-        ),
-        SizedBox(height: 32),
-        FadeTransition(
-          opacity: fadeAnimation,
-          child: SlideTransition(
-            position: slideAnimation,
-            child: Column(
-              children: [
-                Text(
-                  AppLocalizations.of(context)!.whatIsYourMainGoal,
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 32,
-                    letterSpacing: -0.5,
+                      children: [
+                  Expanded(
+                    child: SingleChildScrollView(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          Align(
+                            alignment: Alignment.centerLeft,
+                            child: Container(
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(12),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.05),
+                                    blurRadius: 8,
+                                    offset: Offset(0, 2),
+                                  ),
+                                ],
+                              ),
+                              child: IconButton(
+                                icon: Icon(Icons.arrow_back, color: theme.primaryColor, size: 24),
+                                onPressed: onBack,
+                              ),
+                            ),
+                          ),
+                          SizedBox(height: 24),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              _buildProgressDot(context, true),
+                              _buildProgressLine(context, true),
+                              _buildProgressDot(context, false),
+                              _buildProgressLine(context, false),
+                              _buildProgressDot(context, false),
+                            ],
+                          ),
+                          SizedBox(height: 32),
+                          FadeTransition(
+                            opacity: fadeAnimation,
+                            child: SlideTransition(
+                              position: slideAnimation,
+                              child: Column(
+                                children: [
+                                  Text(
+                                    AppLocalizations.of(context)!.whatIsYourMainGoal,
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 32,
+                                      letterSpacing: -0.5,
+                                    ),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                  SizedBox(height: 12),
+                                  Text(
+                                    AppLocalizations.of(context)!.chooseGoalDescription,
+                                    style: TextStyle(
+                                      color: Colors.grey[600],
+                                      fontSize: 16,
+                                    ),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                          SizedBox(height: 32),
+                          ListView.builder(
+                            shrinkWrap: true,
+                            physics: NeverScrollableScrollPhysics(),
+                            itemCount: _getLocalizedGoals(context).length,
+                            itemBuilder: (context, index) {
+                              final goal = _getLocalizedGoals(context)[index];
+                              final isSelected = selectedGoal == goal['value']; // Compare with stored English value
+                              return FadeTransition(
+                                opacity: fadeAnimation,
+                                child: SlideTransition(
+                                  position: slideAnimation,
+                                  child: Padding(
+                                    padding: EdgeInsets.only(bottom: 16),
+                                    child: _buildGoalCard(goal, isSelected, theme, onSelect),
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                          SizedBox(height: 24),
+                        ],
+                      ),
+                    ),
                   ),
-                  textAlign: TextAlign.center,
-                ),
-                SizedBox(height: 12),
-                Text(
-                  AppLocalizations.of(context)!.chooseGoalDescription,
-                  style: TextStyle(
-                    color: Colors.grey[600],
-                    fontSize: 16,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-              ],
-            ),
-          ),
-        ),
-        SizedBox(height: 32),
-                ListView.builder(
-                  shrinkWrap: true,
-                  physics: NeverScrollableScrollPhysics(),
-            itemCount: _getLocalizedGoals(context).length,
-            itemBuilder: (context, index) {
-              final goal = _getLocalizedGoals(context)[index];
-              final isSelected = selectedGoal == goal['value']; // Compare with stored English value
-              return FadeTransition(
-                opacity: fadeAnimation,
-                child: SlideTransition(
-                  position: slideAnimation,
-                  child: Padding(
-                    padding: EdgeInsets.only(bottom: 16),
-                    child: _buildGoalCard(goal, isSelected, theme, onSelect),
-                  ),
-                ),
-              );
-            },
-          ),
-                SizedBox(height: 24),
-              ],
-            ),
-          ),
-        ),
         SafeArea(
           minimum: EdgeInsets.only(left: 16, right: 16, bottom: 16),
           child: SizedBox(
@@ -858,97 +864,97 @@ class _MotivationStep extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Column(
-      children: [
-        Expanded(
-          child: SingleChildScrollView(
-            child: Column(
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        Align(
-          alignment: Alignment.centerLeft,
-          child: Container(
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
-                  blurRadius: 8,
-                  offset: Offset(0, 2),
-                ),
-              ],
-            ),
-            child: IconButton(
-              icon: Icon(Icons.arrow_back, color: theme.primaryColor, size: 24),
-              onPressed: onBack,
-            ),
-          ),
-        ),
-        SizedBox(height: 24),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            _buildProgressDot(context, true),
-            _buildProgressLine(context, true),
-            _buildProgressDot(context, true),
-            _buildProgressLine(context, false),
-            _buildProgressDot(context, false),
-          ],
-        ),
-        SizedBox(height: 32),
-        FadeTransition(
-          opacity: fadeAnimation,
-          child: SlideTransition(
-            position: slideAnimation,
-            child: Column(
-              children: [
-                Text(
-                  AppLocalizations.of(context)!.whatMotivatesYou,
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 32,
-                    letterSpacing: -0.5,
+                      children: [
+                  Expanded(
+                    child: SingleChildScrollView(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          Align(
+                            alignment: Alignment.centerLeft,
+                            child: Container(
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(12),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.05),
+                                    blurRadius: 8,
+                                    offset: Offset(0, 2),
+                                  ),
+                                ],
+                              ),
+                              child: IconButton(
+                                icon: Icon(Icons.arrow_back, color: theme.primaryColor, size: 24),
+                                onPressed: onBack,
+                              ),
+                            ),
+                          ),
+                          SizedBox(height: 24),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              _buildProgressDot(context, true),
+                              _buildProgressLine(context, true),
+                              _buildProgressDot(context, true),
+                              _buildProgressLine(context, false),
+                              _buildProgressDot(context, false),
+                            ],
+                          ),
+                          SizedBox(height: 32),
+                          FadeTransition(
+                            opacity: fadeAnimation,
+                            child: SlideTransition(
+                              position: slideAnimation,
+                              child: Column(
+                                children: [
+                                  Text(
+                                    AppLocalizations.of(context)!.whatMotivatesYou,
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 32,
+                                      letterSpacing: -0.5,
+                                    ),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                  SizedBox(height: 12),
+                                  Text(
+                                    AppLocalizations.of(context)!.chooseWhatDrivesYou,
+                                    style: TextStyle(
+                                      color: Colors.grey[600],
+                                      fontSize: 16,
+                                    ),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                          SizedBox(height: 32),
+                          ListView.builder(
+                            shrinkWrap: true,
+                            physics: NeverScrollableScrollPhysics(),
+                            itemCount: _getLocalizedMotivations(context).length,
+                            itemBuilder: (context, index) {
+                              final motivation = _getLocalizedMotivations(context)[index];
+                              final isSelected = selectedMotivation == motivation['value']; // Compare with stored English value
+                              return FadeTransition(
+                                opacity: fadeAnimation,
+                                child: SlideTransition(
+                                  position: slideAnimation,
+                                  child: Padding(
+                                    padding: EdgeInsets.only(bottom: 16),
+                                    child: _buildMotivationCard(motivation, isSelected, theme, onSelect),
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                          SizedBox(height: 24),
+                        ],
+                      ),
+                    ),
                   ),
-                  textAlign: TextAlign.center,
-                ),
-                SizedBox(height: 12),
-                Text(
-                  AppLocalizations.of(context)!.chooseWhatDrivesYou,
-                  style: TextStyle(
-                    color: Colors.grey[600],
-                    fontSize: 16,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-              ],
-            ),
-          ),
-        ),
-        SizedBox(height: 32),
-                ListView.builder(
-                  shrinkWrap: true,
-                  physics: NeverScrollableScrollPhysics(),
-            itemCount: _getLocalizedMotivations(context).length,
-            itemBuilder: (context, index) {
-              final motivation = _getLocalizedMotivations(context)[index];
-              final isSelected = selectedMotivation == motivation['value']; // Compare with stored English value
-              return FadeTransition(
-                opacity: fadeAnimation,
-                child: SlideTransition(
-                  position: slideAnimation,
-                  child: Padding(
-                    padding: EdgeInsets.only(bottom: 16),
-                    child: _buildMotivationCard(motivation, isSelected, theme, onSelect),
-                  ),
-                ),
-              );
-            },
-          ),
-                SizedBox(height: 24),
-              ],
-            ),
-          ),
-        ),
         SafeArea(
           minimum: EdgeInsets.only(left: 16, right: 16, bottom: 16),
           child: SizedBox(
@@ -1064,103 +1070,128 @@ class _CalorieIntroStep extends StatelessWidget {
   final Animation<Offset> slideAnimation;
   final VoidCallback onContinue;
   final VoidCallback onBack;
-  _CalorieIntroStep({required this.fadeAnimation, required this.slideAnimation, required this.onContinue, required this.onBack});
+  final bool isSmallScreen;
+  _CalorieIntroStep({required this.fadeAnimation, required this.slideAnimation, required this.onContinue, required this.onBack, required this.isSmallScreen});
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        Align(
-          alignment: Alignment.centerLeft,
-          child: Container(
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
-                  blurRadius: 8,
-                  offset: Offset(0, 2),
-                ),
-              ],
-            ),
-            child: IconButton(
-              icon: Icon(Icons.arrow_back, color: theme.primaryColor, size: 24),
-              onPressed: onBack,
-            ),
-          ),
-        ),
-        SizedBox(height: 24),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            _buildProgressDot(context, true),
-            _buildProgressLine(context, true),
-            _buildProgressDot(context, true),
-            _buildProgressLine(context, true),
-            _buildProgressDot(context, true),
-          ],
-        ),
-        SizedBox(height: 32),
-        FadeTransition(
-          opacity: fadeAnimation,
-          child: SlideTransition(
-            position: slideAnimation,
+    return SafeArea(
+      child: Column(
+        children: [
+          // Header with back button and progress
+          Container(
+            padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             child: Column(
               children: [
-                Text(
-                  AppLocalizations.of(context)!.trackYourMealsWithEase,
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 28),
-                  textAlign: TextAlign.center,
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.05),
+                          blurRadius: 8,
+                          offset: Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: IconButton(
+                      icon: Icon(Icons.arrow_back, color: theme.primaryColor, size: 24),
+                      onPressed: onBack,
+                    ),
+                  ),
                 ),
-                SizedBox(height: 24),
-                _AnimatedCalorieRing(caloriesLeft: 1857, goal: 2200),
-                SizedBox(height: 24),
-                _SampleMealCard(
-                  mealType: AppLocalizations.of(context)!.breakfast,
-                  color: Color(0xFFFFD93D),
-                  mealName: AppLocalizations.of(context)!.avocadoToast,
-                  calories: 195,
-                  macros: '20g carb  •  5g protein  •  11g fat  •  8g fibre',
-                ),
-                SizedBox(height: 12),
-                _SampleMealCard(
-                  mealType: AppLocalizations.of(context)!.lunch,
-                  color: Color(0xFFFFB74D),
-                  mealName: AppLocalizations.of(context)!.italianSalad,
-                  calories: 189,
-                  macros: '11g carb  •  12g protein  •  10g fat  •  4g fibre',
-                ),
-                SizedBox(height: 12),
-                _SampleMealCard(
-                  mealType: AppLocalizations.of(context)!.dinner,
-                  color: Color(0xFF64B5F6),
-                  mealName: AppLocalizations.of(context)!.chickenKatsuRiceBowl,
-                  calories: 479,
-                  macros: '51g carb  •  52g protein  •  6g fat  •  4g fibre',
+                SizedBox(height: isSmallScreen ? 16 : 24),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    _buildProgressDot(context, true),
+                    _buildProgressLine(context, true),
+                    _buildProgressDot(context, true),
+                    _buildProgressLine(context, true),
+                    _buildProgressDot(context, true),
+                  ],
                 ),
               ],
             ),
           ),
-        ),
-        Spacer(),
-        SizedBox(
-          width: double.infinity,
-          child: ElevatedButton(
-            onPressed: onContinue,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: theme.primaryColor,
-              foregroundColor: Colors.white,
-              padding: EdgeInsets.symmetric(vertical: 18),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-              textStyle: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          // Scrollable content
+          Expanded(
+            child: SingleChildScrollView(
+              padding: EdgeInsets.symmetric(horizontal: 16),
+              child: FadeTransition(
+                opacity: fadeAnimation,
+                child: SlideTransition(
+                  position: slideAnimation,
+                  child: Column(
+                    children: [
+                      SizedBox(height: isSmallScreen ? 16 : 32),
+                      Text(
+                        AppLocalizations.of(context)!.trackYourMealsWithEase,
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold, 
+                          fontSize: isSmallScreen ? 24 : 28
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                      SizedBox(height: isSmallScreen ? 16 : 24),
+                      _AnimatedCalorieRing(caloriesLeft: 1857, goal: 2200),
+                      SizedBox(height: isSmallScreen ? 16 : 24),
+                      _SampleMealCard(
+                        mealType: AppLocalizations.of(context)!.breakfast,
+                        color: Color(0xFFFFD93D),
+                        mealName: AppLocalizations.of(context)!.avocadoToast,
+                        calories: 195,
+                        macros: '20g carb  •  5g protein  •  11g fat  •  8g fibre',
+                      ),
+                      SizedBox(height: isSmallScreen ? 8 : 12),
+                      _SampleMealCard(
+                        mealType: AppLocalizations.of(context)!.lunch,
+                        color: Color(0xFFFFB74D),
+                        mealName: AppLocalizations.of(context)!.italianSalad,
+                        calories: 189,
+                        macros: '11g carb  •  12g protein  •  10g fat  •  4g fibre',
+                      ),
+                      SizedBox(height: isSmallScreen ? 8 : 12),
+                      _SampleMealCard(
+                        mealType: AppLocalizations.of(context)!.dinner,
+                        color: Color(0xFF64B5F6),
+                        mealName: AppLocalizations.of(context)!.chickenKatsuRiceBowl,
+                        calories: 479,
+                        macros: '51g carb  •  52g protein  •  6g fat  •  4g fibre',
+                      ),
+                      SizedBox(height: 20), // Bottom padding for scroll
+                    ],
+                  ),
+                ),
+              ),
             ),
-            child: Text(AppLocalizations.of(context)!.continueButton),
           ),
-        ),
-      ],
+          // Continue button always visible at bottom
+          SafeArea(
+            child: Container(
+              padding: EdgeInsets.all(16),
+              child: SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: onContinue,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: theme.primaryColor,
+                    foregroundColor: Colors.white,
+                    padding: EdgeInsets.symmetric(vertical: 18),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                    textStyle: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                  child: Text(AppLocalizations.of(context)!.continueButton),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -1288,91 +1319,114 @@ class _AgeStep extends StatelessWidget {
   final void Function(int) onSelect;
   final VoidCallback? onContinue;
   final VoidCallback onBack;
-  _AgeStep({required this.fadeAnimation, required this.slideAnimation, required this.selectedAge, required this.onSelect, required this.onContinue, required this.onBack});
+  final bool isSmallScreen;
+  _AgeStep({required this.fadeAnimation, required this.slideAnimation, required this.selectedAge, required this.onSelect, required this.onContinue, required this.onBack, required this.isSmallScreen});
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        Align(
-          alignment: Alignment.centerLeft,
-          child: Container(
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
-                  blurRadius: 8,
-                  offset: Offset(0, 2),
+    return SafeArea(
+      child: Column(
+        children: [
+          // Header
+          Container(
+            padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.05),
+                      blurRadius: 8,
+                      offset: Offset(0, 2),
+                    ),
+                  ],
                 ),
-              ],
-            ),
-            child: IconButton(
-              icon: Icon(Icons.arrow_back, color: theme.primaryColor, size: 24),
-              onPressed: onBack,
+                child: IconButton(
+                  icon: Icon(Icons.arrow_back, color: theme.primaryColor, size: 24),
+                  onPressed: onBack,
+                ),
+              ),
             ),
           ),
-        ),
-        SizedBox(height: 32),
-        FadeTransition(
-          opacity: fadeAnimation,
-          child: SlideTransition(
-            position: slideAnimation,
-            child: Column(
-              children: [
-                Text(
-                  AppLocalizations.of(context)!.howOldAreYou,
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 32,
-                    letterSpacing: -0.5,
+          // Scrollable content
+          Expanded(
+            child: SingleChildScrollView(
+              padding: EdgeInsets.symmetric(horizontal: 16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  SizedBox(height: isSmallScreen ? 16 : 32),
+                  FadeTransition(
+                    opacity: fadeAnimation,
+                    child: SlideTransition(
+                      position: slideAnimation,
+                      child: Column(
+                        children: [
+                          Text(
+                            AppLocalizations.of(context)!.howOldAreYou,
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: isSmallScreen ? 28 : 32,
+                              letterSpacing: -0.5,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                          SizedBox(height: isSmallScreen ? 8 : 12),
+                          Text(
+                            AppLocalizations.of(context)!.thisHelpsUsPersonalizeExperience,
+                            style: TextStyle(
+                              color: Colors.grey[600],
+                              fontSize: isSmallScreen ? 14 : 16,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
-                  textAlign: TextAlign.center,
-                ),
-                SizedBox(height: 12),
-                Text(
-                  AppLocalizations.of(context)!.thisHelpsUsPersonalizeExperience,
-                  style: TextStyle(
-                    color: Colors.grey[600],
-                    fontSize: 16,
+                  SizedBox(height: isSmallScreen ? 32 : 48),
+                  FadeTransition(
+                    opacity: fadeAnimation,
+                    child: SlideTransition(
+                      position: slideAnimation,
+                      child: ImprovedAgeSelector(
+                        selectedAge: selectedAge,
+                        onSelect: onSelect,
+                      ),
+                    ),
                   ),
-                  textAlign: TextAlign.center,
+                  SizedBox(height: 20), // Bottom padding for scroll
+                ],
+              ),
+            ),
+          ),
+          // Continue button always visible at bottom
+          SafeArea(
+            child: Container(
+              padding: EdgeInsets.all(16),
+              child: SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: onContinue,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Theme.of(context).primaryColor,
+                    foregroundColor: Colors.white,
+                    padding: EdgeInsets.symmetric(vertical: 20),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    elevation: 0,
+                    textStyle: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                  child: Text(AppLocalizations.of(context)!.continueButton),
                 ),
-              ],
+              ),
             ),
           ),
-        ),
-        SizedBox(height: 48),
-        FadeTransition(
-          opacity: fadeAnimation,
-          child: SlideTransition(
-            position: slideAnimation,
-            child: ImprovedAgeSelector(
-              selectedAge: selectedAge,
-              onSelect: onSelect,
-            ),
-          ),
-        ),
-        Spacer(),
-        SizedBox(
-          width: double.infinity,
-          child: ElevatedButton(
-            onPressed: onContinue,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Theme.of(context).primaryColor,
-              foregroundColor: Colors.white,
-              padding: EdgeInsets.symmetric(vertical: 20),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-              elevation: 0,
-              textStyle: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            child: Text(AppLocalizations.of(context)!.continueButton),
-          ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }
@@ -2250,9 +2304,11 @@ class _ProfileSummaryStep extends StatelessWidget {
     final double weightDisplay = useMetricWeight ? weightKg : weightKg * 2.20462;
     final double targetWeightDisplay = useMetricWeight ? targetWeightKg : targetWeightKg * 2.20462;
     final String weightUnit = useMetricWeight ? 'kg' : 'lbs';
+    final isSmallScreen = MediaQuery.of(context).size.height < 700;
+    
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
+        // Back button
         Align(
           alignment: Alignment.centerLeft,
           child: Container(
@@ -2274,149 +2330,163 @@ class _ProfileSummaryStep extends StatelessWidget {
           ),
         ),
         SizedBox(height: 24),
-        FadeTransition(
-          opacity: fadeAnimation,
-          child: SlideTransition(
-            position: slideAnimation,
-            child: Column(
-              children: [
-                Text(
-                  AppLocalizations.of(context)!.yourFitnessProfileDueToYourAnswers,
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 26),
-                  textAlign: TextAlign.center,
-                ),
-                SizedBox(height: 18),
-                Container(
-                  width: double.infinity,
-                  padding: EdgeInsets.all(20),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(20),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.04),
-                        blurRadius: 8,
-                        offset: Offset(0, 2),
+        
+        // Scrollable content
+        Expanded(
+          child: SingleChildScrollView(
+            child: FadeTransition(
+              opacity: fadeAnimation,
+              child: SlideTransition(
+                position: slideAnimation,
+                child: Column(
+                  children: [
+                    Text(
+                      AppLocalizations.of(context)!.yourFitnessProfileDueToYourAnswers,
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold, 
+                        fontSize: isSmallScreen ? 22 : 26
                       ),
-                    ],
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Text(AppLocalizations.of(context)!.currentBMI, style: TextStyle(fontWeight: FontWeight.w600, fontSize: 18)),
-                          SizedBox(width: 10),
-                          Container(
-                            padding: EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                            decoration: BoxDecoration(
-                              color: bmiColor.withOpacity(0.15),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Text(bmiLabel, style: TextStyle(color: bmiColor, fontWeight: FontWeight.bold)),
+                      textAlign: TextAlign.center,
+                    ),
+                    SizedBox(height: isSmallScreen ? 16 : 18),
+                    Container(
+                      width: double.infinity,
+                      padding: EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(20),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.04),
+                            blurRadius: 8,
+                            offset: Offset(0, 2),
                           ),
                         ],
                       ),
-                      SizedBox(height: 8),
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.end,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(bmi.toStringAsFixed(1), style: TextStyle(fontSize: 38, fontWeight: FontWeight.bold, color: bmiColor)),
-                          SizedBox(width: 10),
-                          Text(AppLocalizations.of(context)!.bmi, style: TextStyle(fontSize: 18, color: Colors.grey[700])),
+                          Row(
+                            children: [
+                              Text(AppLocalizations.of(context)!.currentBMI, style: TextStyle(fontWeight: FontWeight.w600, fontSize: 18)),
+                              SizedBox(width: 10),
+                              Container(
+                                padding: EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                decoration: BoxDecoration(
+                                  color: bmiColor.withOpacity(0.15),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Text(bmiLabel, style: TextStyle(color: bmiColor, fontWeight: FontWeight.bold)),
+                              ),
+                            ],
+                          ),
+                          SizedBox(height: 8),
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            children: [
+                              Text(bmi.toStringAsFixed(1), style: TextStyle(fontSize: 38, fontWeight: FontWeight.bold, color: bmiColor)),
+                              SizedBox(width: 10),
+                              Text(AppLocalizations.of(context)!.bmi, style: TextStyle(fontSize: 18, color: Colors.grey[700])),
+                            ],
+                          ),
+                          SizedBox(height: 10),
+                          LinearProgressIndicator(
+                            value: (bmi / 40).clamp(0.0, 1.0),
+                            backgroundColor: Colors.grey[200],
+                            color: bmiColor,
+                            minHeight: 8,
+                          ),
+                          SizedBox(height: 18),
+                          Row(
+                            children: [
+                              Icon(Icons.cake, color: theme.primaryColor),
+                              SizedBox(width: 6),
+                              Text('${AppLocalizations.of(context)!.age}: ', style: TextStyle(fontWeight: FontWeight.w600)),
+                              Text('$age', style: TextStyle(fontWeight: FontWeight.bold)),
+                            ],
+                          ),
+                          SizedBox(height: 8),
+                          Row(
+                            children: [
+                              Icon(Icons.monitor_weight, color: theme.primaryColor),
+                              SizedBox(width: 6),
+                              Text('${AppLocalizations.of(context)!.weight}: ', style: TextStyle(fontWeight: FontWeight.w600)),
+                              Text('${weightDisplay.toStringAsFixed(1)} $weightUnit', style: TextStyle(fontWeight: FontWeight.bold)),
+                            ],
+                          ),
+                          SizedBox(height: 8),
+                          Row(
+                            children: [
+                              Icon(Icons.flag, color: theme.primaryColor),
+                              SizedBox(width: 6),
+                              Text('${AppLocalizations.of(context)!.targetWeight}: ', style: TextStyle(fontWeight: FontWeight.w600)),
+                              Text('${targetWeightDisplay.toStringAsFixed(1)} $weightUnit', style: TextStyle(fontWeight: FontWeight.bold)),
+                            ],
+                          ),
+                          SizedBox(height: 8),
+                          Row(
+                            children: [
+                              Icon(Icons.directions_run, color: theme.primaryColor),
+                              SizedBox(width: 6),
+                              Text('${AppLocalizations.of(context)!.activityLevelLabel}: ', style: TextStyle(fontWeight: FontWeight.w600)),
+                              Text(activityLevel ?? '', style: TextStyle(fontWeight: FontWeight.bold)),
+                            ],
+                          ),
+                          SizedBox(height: 8),
+                          Row(
+                            children: [
+                              Icon(Icons.bloodtype, color: theme.primaryColor),
+                              SizedBox(width: 6),
+                              Text('${AppLocalizations.of(context)!.bloodTypeLabel}: ', style: TextStyle(fontWeight: FontWeight.w600)),
+                              Text(bloodType ?? '-', style: TextStyle(fontWeight: FontWeight.bold)),
+                            ],
+                          ),
+                          SizedBox(height: 8),
+                          Row(
+                            children: [
+                              Icon(Icons.check_circle, color: theme.primaryColor),
+                              SizedBox(width: 6),
+                              Text('${AppLocalizations.of(context)!.diabetic}: ', style: TextStyle(fontWeight: FontWeight.w600)),
+                              Text(isDiabetic == null ? '-' : (isDiabetic! ? AppLocalizations.of(context)!.yes : AppLocalizations.of(context)!.no), style: TextStyle(fontWeight: FontWeight.bold)),
+                            ],
+                          ),
+                          SizedBox(height: 8),
+                          Row(
+                            children: [
+                              Icon(Icons.water_drop, color: theme.primaryColor),
+                              SizedBox(width: 6),
+                              Text('Water per day: ', style: TextStyle(fontWeight: FontWeight.w600)),
+                              Text(waterIntake ?? '-', style: TextStyle(fontWeight: FontWeight.bold)),
+                            ],
+                          ),
                         ],
                       ),
-                      SizedBox(height: 10),
-                      LinearProgressIndicator(
-                        value: (bmi / 40).clamp(0.0, 1.0),
-                        backgroundColor: Colors.grey[200],
-                        color: bmiColor,
-                        minHeight: 8,
-                      ),
-                      SizedBox(height: 18),
-                      Row(
-                        children: [
-                          Icon(Icons.cake, color: theme.primaryColor),
-                          SizedBox(width: 6),
-                          Text('${AppLocalizations.of(context)!.age}: ', style: TextStyle(fontWeight: FontWeight.w600)),
-                          Text('$age', style: TextStyle(fontWeight: FontWeight.bold)),
-                        ],
-                      ),
-                      SizedBox(height: 8),
-                      Row(
-                        children: [
-                          Icon(Icons.monitor_weight, color: theme.primaryColor),
-                          SizedBox(width: 6),
-                          Text('${AppLocalizations.of(context)!.weight}: ', style: TextStyle(fontWeight: FontWeight.w600)),
-                          Text('${weightDisplay.toStringAsFixed(1)} $weightUnit', style: TextStyle(fontWeight: FontWeight.bold)),
-                        ],
-                      ),
-                      SizedBox(height: 8),
-                      Row(
-                        children: [
-                          Icon(Icons.flag, color: theme.primaryColor),
-                          SizedBox(width: 6),
-                          Text('${AppLocalizations.of(context)!.targetWeight}: ', style: TextStyle(fontWeight: FontWeight.w600)),
-                          Text('${targetWeightDisplay.toStringAsFixed(1)} $weightUnit', style: TextStyle(fontWeight: FontWeight.bold)),
-                        ],
-                      ),
-                      SizedBox(height: 8),
-                      Row(
-                        children: [
-                          Icon(Icons.directions_run, color: theme.primaryColor),
-                          SizedBox(width: 6),
-                          Text('${AppLocalizations.of(context)!.activityLevelLabel}: ', style: TextStyle(fontWeight: FontWeight.w600)),
-                          Text(activityLevel ?? '', style: TextStyle(fontWeight: FontWeight.bold)),
-                        ],
-                      ),
-                      SizedBox(height: 8),
-                      Row(
-                        children: [
-                          Icon(Icons.bloodtype, color: theme.primaryColor),
-                          SizedBox(width: 6),
-                          Text('${AppLocalizations.of(context)!.bloodTypeLabel}: ', style: TextStyle(fontWeight: FontWeight.w600)),
-                          Text(bloodType ?? '-', style: TextStyle(fontWeight: FontWeight.bold)),
-                        ],
-                      ),
-                      SizedBox(height: 8),
-                      Row(
-                        children: [
-                          Icon(Icons.check_circle, color: theme.primaryColor),
-                          SizedBox(width: 6),
-                          Text('${AppLocalizations.of(context)!.diabetic}: ', style: TextStyle(fontWeight: FontWeight.w600)),
-                          Text(isDiabetic == null ? '-' : (isDiabetic! ? AppLocalizations.of(context)!.yes : AppLocalizations.of(context)!.no), style: TextStyle(fontWeight: FontWeight.bold)),
-                        ],
-                      ),
-                      SizedBox(height: 8),
-                      Row(
-                        children: [
-                          Icon(Icons.water_drop, color: theme.primaryColor),
-                          SizedBox(width: 6),
-                          Text('${AppLocalizations.of(context)!.howMuchWaterDaily}: ', style: TextStyle(fontWeight: FontWeight.w600)),
-                          Text(waterIntake ?? '-', style: TextStyle(fontWeight: FontWeight.bold)),
-                        ],
-                      ),
-                    ],
-                  ),
+                    ),
+                    SizedBox(height: 24),
+                  ],
                 ),
-              ],
+              ),
             ),
           ),
         ),
-        Spacer(),
-        SizedBox(
-          width: double.infinity,
-          child: ElevatedButton(
-            onPressed: onContinue,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: theme.primaryColor,
-              foregroundColor: Colors.white,
-              padding: EdgeInsets.symmetric(vertical: 20),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-              elevation: 0,
-              textStyle: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+        
+        // Continue button in SafeArea
+        SafeArea(
+          minimum: EdgeInsets.only(left: 16, right: 16, bottom: 16),
+          child: SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: onContinue,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: theme.primaryColor,
+                foregroundColor: Colors.white,
+                padding: EdgeInsets.symmetric(vertical: isSmallScreen ? 16 : 20),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                elevation: 0,
+                textStyle: TextStyle(fontSize: isSmallScreen ? 16 : 18, fontWeight: FontWeight.bold),
+              ),
+              child: Text(AppLocalizations.of(context)!.continueButton),
             ),
-            child: Text(AppLocalizations.of(context)!.continueButton),
           ),
         ),
       ],

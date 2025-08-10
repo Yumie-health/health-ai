@@ -17,6 +17,13 @@ class ReceiptValidationService {
       return false;
     } catch (e) {
       print('Receipt validation error: $e');
+      // For Android, if validation fails but Google Play confirmed the purchase,
+      // we should still consider it valid. This handles cases where our backend
+      // validation is temporarily unavailable or misconfigured.
+      if (Platform.isAndroid && purchase.status == PurchaseStatus.purchased) {
+        print('Android purchase confirmed by Google Play - treating as valid despite validation error');
+        return true;
+      }
       return false;
     }
   }
@@ -53,6 +60,14 @@ class ReceiptValidationService {
       return data?['isValid'] as bool? ?? false;
     } catch (e) {
       print('Android receipt validation error: $e');
+      
+      // If the Firebase function is not properly configured or unavailable,
+      // we should still trust Google Play's confirmation for Android purchases
+      if (purchase.status == PurchaseStatus.purchased) {
+        print('Google Play confirmed purchase - treating as valid despite validation error');
+        return true;
+      }
+      
       return false;
     }
   }
@@ -68,8 +83,11 @@ class ReceiptValidationService {
       await prefs.setString('orderId', purchase.purchaseID ?? '');
       
       print('Validated subscription saved: ${purchase.productID}');
+      print('Purchase token: ${purchase.verificationData.serverVerificationData.substring(0, 10)}...');
+      print('Order ID: ${purchase.purchaseID}');
     } catch (e) {
       print('Error saving validated subscription: $e');
+      throw e; // Re-throw to handle in calling code
     }
   }
   

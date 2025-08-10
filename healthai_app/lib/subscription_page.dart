@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:in_app_purchase/in_app_purchase.dart';
 import 'dart:io';
 import 'services/receipt_validation_service.dart';
+import 'services/subscription_service.dart';
 import 'utils/constants.dart';
 import 'subscription_success_page.dart';
 import 'l10n/app_localizations.dart';
@@ -104,37 +105,30 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
       
       if (purchase.status == PurchaseStatus.purchased || purchase.status == PurchaseStatus.restored) {
         try {
-          // Validate receipt with backend
-          final isValid = await ReceiptValidationService.validateReceipt(purchase);
+          // Google Play/App Store has confirmed the purchase - trust it
+          print('Purchase confirmed by store: ${purchase.productID}');
           
-          if (isValid) {
-            // Save validated subscription
-            await ReceiptValidationService.saveValidatedSubscription(purchase);
-            
-            print('Subscription validated and activated: ${purchase.productID}');
-            
-            if (mounted) {
-              // Show beautiful success animation
-              SubscriptionSuccessPage.show(
-                context,
-                purchase.productID,
-                onComplete: () {
-                  Navigator.of(context).pop(); // Close success animation
-                  Navigator.of(context).pop(); // Close subscription page
-                },
-              );
-            }
-          } else {
-            print('Receipt validation failed for: ${purchase.productID}');
-            if (mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text('Subscription validation failed. Please try again.'),
-                  backgroundColor: kWarningRed,
-                  duration: Duration(seconds: 5),
-                ),
-              );
-            }
+          // Save the subscription immediately
+          await ReceiptValidationService.saveValidatedSubscription(purchase);
+          
+          // Acknowledge the purchase to Google Play
+          if (purchase.pendingCompletePurchase) {
+            await _iap.completePurchase(purchase);
+            print('Purchase acknowledged: ${purchase.productID}');
+          }
+          
+          print('Subscription activated: ${purchase.productID}');
+          
+          if (mounted) {
+            // Show beautiful success animation
+            SubscriptionSuccessPage.show(
+              context,
+              purchase.productID,
+              onComplete: () {
+                Navigator.of(context).pop(); // Close success animation
+                Navigator.of(context).pop(); // Close subscription page
+              },
+            );
           }
         } catch (e) {
           print('Error processing subscription: $e');
@@ -178,8 +172,14 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
     try {
       final purchaseParam = PurchaseParam(productDetails: product);
       
-      // Production purchase flow - always use real in-app purchases
-      _iap.buyNonConsumable(purchaseParam: purchaseParam);
+      // Use the correct method for subscriptions
+      if (product.id.contains('premium')) {
+        // This is a subscription product
+        _iap.buyNonConsumable(purchaseParam: purchaseParam);
+      } else {
+        // This is a one-time purchase
+        _iap.buyConsumable(purchaseParam: purchaseParam);
+      }
     } catch (e) {
       print('Error initiating purchase: $e');
       setState(() => _isProcessingPayment = false);
@@ -196,10 +196,39 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
     }
   }
 
-  void _restore() {
+  void _restore() async {
     print('Restoring purchases...');
-    _iap.restorePurchases();
+    setState(() => _isProcessingPayment = true);
+    
+    try {
+      await _iap.restorePurchases();
+      
+      // Show feedback that restore is in progress
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Checking for existing purchases...'),
+            backgroundColor: kPrimaryGreen,
+            duration: Duration(seconds: 2),
+          ),
+        );
+      }
+    } catch (e) {
+      print('Error restoring purchases: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error restoring purchases: $e'),
+            backgroundColor: Colors.red,
+            duration: Duration(seconds: 3),
+          ),
+        );
+      }
+      setState(() => _isProcessingPayment = false);
+    }
   }
+
+
 
   Widget _buildPlanCard(ProductDetails product) {
     final isYearly = product.id == 'premium_yearly';

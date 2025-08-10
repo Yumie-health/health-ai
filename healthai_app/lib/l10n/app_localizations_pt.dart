@@ -147,6 +147,12 @@ class AppLocalizationsPt extends AppLocalizations {
   String get sendResetLink => 'Enviar Link de Redefinição';
 
   @override
+  String get send => 'Enviar';
+
+  @override
+  String get resend => 'Reenviar';
+
+  @override
   String get helpSupport => 'Ajuda e Suporte';
 
   @override

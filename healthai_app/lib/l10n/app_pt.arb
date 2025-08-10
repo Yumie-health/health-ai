@@ -45,6 +45,8 @@
   "resetPassword": "Redefinir senha",
   "close": "Fechar",
   "sendResetLink": "Enviar Link de Redefinição",
+  "send": "Enviar",
+  "resend": "Reenviar",
   "helpSupport": "Ajuda e Suporte",
   "legal": "Legal",
   "privacyPolicy": "Política de Privacidade",

@@ -45,6 +45,8 @@
   "resetPassword": "Réinitialiser le mot de passe",
   "close": "Fermer",
   "sendResetLink": "Envoyer le Lien de Réinitialisation",
+  "send": "Envoyer",
+  "resend": "Renvoyer",
   "helpSupport": "Aide & Support",
   "legal": "Mentions Légales",
   "privacyPolicy": "Politique de Confidentialité",

@@ -455,9 +455,15 @@ class _SecurityAlertsDialog extends StatelessWidget {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       title: Row(
         children: [
-          Icon(Icons.security, color: Colors.orange),
+          Icon(Icons.security, color: Colors.orange, size: 20),
           SizedBox(width: 8),
-          Text(AppLocalizations.of(context)!.securityAlerts),
+          Expanded(
+            child: Text(
+              AppLocalizations.of(context)!.securityAlerts,
+              style: TextStyle(fontSize: 18),
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
         ],
       ),
       content: SizedBox(

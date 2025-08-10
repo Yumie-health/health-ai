@@ -147,6 +147,12 @@ class AppLocalizationsAr extends AppLocalizations {
   String get sendResetLink => 'إرسال رابط إعادة التعيين';
 
   @override
+  String get send => 'إرسال';
+
+  @override
+  String get resend => 'إعادة إرسال';
+
+  @override
   String get helpSupport => 'المساعدة والدعم';
 
   @override

@@ -147,6 +147,12 @@ class AppLocalizationsKo extends AppLocalizations {
   String get sendResetLink => '재설정 링크 보내기';
 
   @override
+  String get send => '보내기';
+
+  @override
+  String get resend => '다시 보내기';
+
+  @override
   String get helpSupport => '도움말 및 지원';
 
   @override

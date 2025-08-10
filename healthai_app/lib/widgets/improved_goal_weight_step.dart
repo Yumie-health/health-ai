@@ -13,6 +13,7 @@ class ImprovedGoalWeightStep extends StatefulWidget {
   final VoidCallback? onContinue;
   final VoidCallback onBack;
   final String? selectedGoal;
+  final bool isSmallScreen;
 
   const ImprovedGoalWeightStep({
     Key? key,
@@ -25,6 +26,7 @@ class ImprovedGoalWeightStep extends StatefulWidget {
     required this.onContinue,
     required this.onBack,
     required this.selectedGoal,
+    required this.isSmallScreen,
   }) : super(key: key);
 
   @override
@@ -311,8 +313,31 @@ class _ImprovedGoalWeightStepState extends State<ImprovedGoalWeightStep>
                 margin: EdgeInsets.symmetric(horizontal: 20),
                 child: Column(
                   children: [
-                    // Precise control buttons with longer slider
+                    // Slider takes full width
+                    SliderTheme(
+                      data: SliderTheme.of(context).copyWith(
+                        trackHeight: 8.0,
+                        thumbShape: CustomSliderThumbShape(isSmallScreen: isSmallScreen),
+                        overlayShape: RoundSliderOverlayShape(overlayRadius: isSmallScreen ? 24.0 : 20.0),
+                        activeTrackColor: theme.primaryColor,
+                        inactiveTrackColor: theme.primaryColor.withOpacity(0.2),
+                        thumbColor: theme.primaryColor,
+                        overlayColor: theme.primaryColor.withOpacity(0.1),
+                      ),
+                      child: Slider(
+                        value: currentSliderValue,
+                        min: _getMinValue(),
+                        max: _getMaxValue(),
+                        divisions: (_getMaxValue() - _getMinValue()).toInt(),
+                        onChanged: _onSliderChanged,
+                      ),
+                    ),
+                    
+                    SizedBox(height: 20),
+                    
+                    // Buttons below slider
                     Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: [
                         // Decrease button
                         GestureDetector(
@@ -344,32 +369,6 @@ class _ImprovedGoalWeightStepState extends State<ImprovedGoalWeightStep>
                             ),
                           ),
                         ),
-                        
-                        SizedBox(width: 12),
-                        
-                        // Slider takes up most of the space - much longer
-                        Expanded(
-                          child: SliderTheme(
-                            data: SliderTheme.of(context).copyWith(
-                              trackHeight: 8.0,
-                              thumbShape: CustomSliderThumbShape(),
-                              overlayShape: RoundSliderOverlayShape(overlayRadius: 28.0),
-                              activeTrackColor: theme.primaryColor,
-                              inactiveTrackColor: theme.primaryColor.withOpacity(0.2),
-                              thumbColor: theme.primaryColor,
-                              overlayColor: theme.primaryColor.withOpacity(0.1),
-                            ),
-                            child: Slider(
-                              value: currentSliderValue,
-                              min: _getMinValue(),
-                              max: _getMaxValue(),
-                              divisions: (_getMaxValue() - _getMinValue()).toInt(),
-                              onChanged: _onSliderChanged,
-                            ),
-                          ),
-                        ),
-                        
-                        SizedBox(width: 12),
                         
                         // Increase button
                         GestureDetector(
@@ -458,9 +457,13 @@ class _ImprovedGoalWeightStepState extends State<ImprovedGoalWeightStep>
 }
 
 class CustomSliderThumbShape extends SliderComponentShape {
+  final bool isSmallScreen;
+
+  CustomSliderThumbShape({this.isSmallScreen = false});
+
   @override
   Size getPreferredSize(bool isEnabled, bool isDiscrete) {
-    return Size(48.0, 48.0);  // Much larger touch target
+    return Size(isSmallScreen ? 24.0 : 24.0, isSmallScreen ? 24.0 : 24.0);
   }
 
   @override
@@ -488,19 +491,19 @@ class CustomSliderThumbShape extends SliderComponentShape {
     final Paint shadowPaint = Paint()
       ..color = Colors.black.withOpacity(0.1)
       ..style = PaintingStyle.fill
-      ..maskFilter = MaskFilter.blur(BlurStyle.normal, 2);
+      ..maskFilter = MaskFilter.blur(BlurStyle.normal, 3);
     
-    // Draw shadow - larger
-    canvas.drawCircle(center + Offset(0, 1), 18.0, shadowPaint);
+    // Draw shadow
+    canvas.drawCircle(center + Offset(0, 2), 14.0, shadowPaint);
     
-    // Draw outer white circle - larger
-    canvas.drawCircle(center, 18.0, outerPaint);
+    // Draw outer white circle
+    canvas.drawCircle(center, 14.0, outerPaint);
     
-    // Draw inner colored circle - larger
+    // Draw inner colored circle
     final Paint innerPaint = Paint()
       ..color = sliderTheme.thumbColor!
       ..style = PaintingStyle.fill;
     
-    canvas.drawCircle(center, 14.0, innerPaint);
+    canvas.drawCircle(center, 10.0, innerPaint);
   }
 }

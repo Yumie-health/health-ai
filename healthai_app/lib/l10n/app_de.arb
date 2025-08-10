@@ -45,6 +45,8 @@
   "resetPassword": "Passwort zurücksetzen",
   "close": "Schließen",
   "sendResetLink": "Reset-Link senden",
+  "send": "Senden",
+  "resend": "Erneut senden",
   "helpSupport": "Hilfe & Support",
   "legal": "Rechtliches",
   "privacyPolicy": "Datenschutzrichtlinie",

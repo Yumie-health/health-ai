@@ -80,6 +80,11 @@ class _ImprovedHeightSelectorState extends State<ImprovedHeightSelector>
     final currentHeightCm = widget.heightCm ?? 170.0;
     final currentSliderValue = _getCurrentSliderValue();
     
+    // Get screen size for responsive design
+    final screenHeight = MediaQuery.of(context).size.height;
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isSmallScreen = screenHeight < 700 || screenWidth < 360;
+    
     return Column(
       children: [
         // Unit toggle buttons (ft first, then cm)
@@ -98,22 +103,25 @@ class _ImprovedHeightSelectorState extends State<ImprovedHeightSelector>
                     BoxShadow(
                       color: Theme.of(context).primaryColor.withOpacity(0.3),
                       blurRadius: 8,
-                      offset: Offset(0, 2),
+                      offset: Offset(0, 4),
                     ),
-                  ] : [],
+                  ] : null,
                 ),
-                padding: EdgeInsets.symmetric(horizontal: 22, vertical: 8),
+                padding: EdgeInsets.symmetric(
+                  horizontal: isSmallScreen ? 16 : 20, 
+                  vertical: isSmallScreen ? 10 : 12
+                ),
                 child: Text(
-                  'ft',
+                  "ft",
                   style: TextStyle(
-                    color: !widget.useMetric ? Colors.white : Theme.of(context).primaryColor,
+                    fontSize: isSmallScreen ? 16 : 18,
                     fontWeight: FontWeight.bold,
-                    fontSize: 20,
+                    color: !widget.useMetric ? Colors.white : Theme.of(context).primaryColor,
                   ),
                 ),
               ),
             ),
-            SizedBox(width: 8),
+            SizedBox(width: isSmallScreen ? 12 : 16),
             GestureDetector(
               onTap: () => widget.onUnitToggle(true),
               child: AnimatedContainer(
@@ -126,17 +134,20 @@ class _ImprovedHeightSelectorState extends State<ImprovedHeightSelector>
                     BoxShadow(
                       color: Theme.of(context).primaryColor.withOpacity(0.3),
                       blurRadius: 8,
-                      offset: Offset(0, 2),
+                      offset: Offset(0, 4),
                     ),
-                  ] : [],
+                  ] : null,
                 ),
-                padding: EdgeInsets.symmetric(horizontal: 22, vertical: 8),
+                padding: EdgeInsets.symmetric(
+                  horizontal: isSmallScreen ? 16 : 20, 
+                  vertical: isSmallScreen ? 10 : 12
+                ),
                 child: Text(
-                  'cm',
+                  "cm",
                   style: TextStyle(
-                    color: widget.useMetric ? Colors.white : Theme.of(context).primaryColor,
+                    fontSize: isSmallScreen ? 16 : 18,
                     fontWeight: FontWeight.bold,
-                    fontSize: 20,
+                    color: widget.useMetric ? Colors.white : Theme.of(context).primaryColor,
                   ),
                 ),
               ),
@@ -144,27 +155,21 @@ class _ImprovedHeightSelectorState extends State<ImprovedHeightSelector>
           ],
         ),
         
-        SizedBox(height: 50),
+        SizedBox(height: isSmallScreen ? 30 : 50),
         
-        // Beautiful height display
+        // Height display
         AnimatedBuilder(
           animation: _bounceAnimation,
           builder: (context, child) {
             return Transform.scale(
               scale: _bounceAnimation.value,
               child: Container(
-                height: 140,
-                width: double.infinity,
-                margin: EdgeInsets.symmetric(horizontal: 20),
+                padding: EdgeInsets.symmetric(
+                  horizontal: isSmallScreen ? 20 : 30, 
+                  vertical: isSmallScreen ? 16 : 24
+                ),
                 decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [
-                      Theme.of(context).primaryColor.withOpacity(0.1),
-                      Theme.of(context).primaryColor.withOpacity(0.2),
-                    ],
-                  ),
+                  color: Theme.of(context).primaryColor.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(25),
                   border: Border.all(
                     color: Theme.of(context).primaryColor.withOpacity(0.3),
@@ -179,35 +184,23 @@ class _ImprovedHeightSelectorState extends State<ImprovedHeightSelector>
                   ],
                 ),
                 child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    widget.useMetric 
-                      ? Text(
-                          "${currentHeightCm.toStringAsFixed(1)}",
-                          style: TextStyle(
-                            fontSize: 56,
-                            fontWeight: FontWeight.bold,
-                            color: Theme.of(context).primaryColor,
-                            height: 1.0,
-                          ),
-                        )
-                      : Directionality(
-                          textDirection: TextDirection.ltr,
-                          child: Text(
-                            "${widget.heightFeet}'${widget.heightInches}\"",
-                            style: TextStyle(
-                              fontSize: 56,
-                              fontWeight: FontWeight.bold,
-                              color: Theme.of(context).primaryColor,
-                              height: 1.0,
-                            ),
-                          ),
-                        ),
-                    SizedBox(height: 4),
+                    Text(
+                      widget.useMetric 
+                        ? "${currentHeightCm.round()} cm"
+                        : "${widget.heightFeet}'${widget.heightInches.toString().padLeft(2, '0')}\"",
+                      style: TextStyle(
+                        fontSize: isSmallScreen ? 32 : 42,
+                        fontWeight: FontWeight.bold,
+                        color: Theme.of(context).primaryColor,
+                        height: 1.0,
+                      ),
+                    ),
+                    SizedBox(height: isSmallScreen ? 2 : 4),
                     Text(
                       widget.useMetric ? "centimeters" : "feet",
                       style: TextStyle(
-                        fontSize: 16,
+                        fontSize: isSmallScreen ? 14 : 16,
                         fontWeight: FontWeight.w600,
                         color: Theme.of(context).primaryColor.withOpacity(0.7),
                       ),
@@ -219,19 +212,21 @@ class _ImprovedHeightSelectorState extends State<ImprovedHeightSelector>
           },
         ),
         
-        SizedBox(height: 50),
+        SizedBox(height: isSmallScreen ? 30 : 50),
         
         // Custom beautiful slider
         Container(
-          margin: EdgeInsets.symmetric(horizontal: 30),
+          margin: EdgeInsets.symmetric(horizontal: isSmallScreen ? 20 : 30),
           child: Column(
             children: [
               // Slider track with custom design
               SliderTheme(
                 data: SliderTheme.of(context).copyWith(
-                  trackHeight: 8.0,
-                  thumbShape: CustomSliderThumbShape(),
-                  overlayShape: RoundSliderOverlayShape(overlayRadius: 20.0),
+                  trackHeight: isSmallScreen ? 6.0 : 8.0,
+                  thumbShape: CustomSliderThumbShape(isSmallScreen: isSmallScreen),
+                  overlayShape: RoundSliderOverlayShape(
+                    overlayRadius: isSmallScreen ? 24.0 : 20.0
+                  ),
                   activeTrackColor: Theme.of(context).primaryColor,
                   inactiveTrackColor: Theme.of(context).primaryColor.withOpacity(0.2),
                   thumbColor: Theme.of(context).primaryColor,
@@ -246,7 +241,7 @@ class _ImprovedHeightSelectorState extends State<ImprovedHeightSelector>
                 ),
               ),
               
-              SizedBox(height: 20),
+              SizedBox(height: isSmallScreen ? 16 : 20),
               
               // Min and max labels
               Row(
@@ -257,7 +252,7 @@ class _ImprovedHeightSelectorState extends State<ImprovedHeightSelector>
                     child: Text(
                       widget.useMetric ? '100 cm' : '3\'0"',
                       style: TextStyle(
-                        fontSize: 14,
+                        fontSize: isSmallScreen ? 12 : 14,
                         color: Theme.of(context).primaryColor.withOpacity(0.6),
                         fontWeight: FontWeight.w500,
                       ),
@@ -268,7 +263,7 @@ class _ImprovedHeightSelectorState extends State<ImprovedHeightSelector>
                     child: Text(
                       widget.useMetric ? '220 cm' : '7\'3"',
                       style: TextStyle(
-                        fontSize: 14,
+                        fontSize: isSmallScreen ? 12 : 14,
                         color: Theme.of(context).primaryColor.withOpacity(0.6),
                         fontWeight: FontWeight.w500,
                       ),
@@ -285,9 +280,13 @@ class _ImprovedHeightSelectorState extends State<ImprovedHeightSelector>
 }
 
 class CustomSliderThumbShape extends SliderComponentShape {
+  final bool isSmallScreen;
+
+  CustomSliderThumbShape({this.isSmallScreen = false});
+
   @override
   Size getPreferredSize(bool isEnabled, bool isDiscrete) {
-    return Size(24.0, 24.0);
+    return Size(isSmallScreen ? 24.0 : 24.0, isSmallScreen ? 24.0 : 24.0);
   }
 
   @override

@@ -147,6 +147,12 @@ class AppLocalizationsNl extends AppLocalizations {
   String get sendResetLink => 'Send Reset Link';
 
   @override
+  String get send => 'Versturen';
+
+  @override
+  String get resend => 'Opnieuw versturen';
+
+  @override
   String get helpSupport => 'Help & Support';
 
   @override

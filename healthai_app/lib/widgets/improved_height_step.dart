@@ -14,6 +14,7 @@ class ImprovedHeightStep extends StatelessWidget {
   final void Function(int, int) onSelectFtIn;
   final VoidCallback? onContinue;
   final VoidCallback onBack;
+  final bool isSmallScreen;
 
   const ImprovedHeightStep({
     Key? key,
@@ -28,6 +29,7 @@ class ImprovedHeightStep extends StatelessWidget {
     required this.onSelectFtIn,
     required this.onContinue,
     required this.onBack,
+    required this.isSmallScreen,
   }) : super(key: key);
 
   @override

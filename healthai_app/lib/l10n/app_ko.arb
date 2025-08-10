@@ -45,6 +45,8 @@
   "resetPassword": "비밀번호 재설정",
   "close": "닫기",
   "sendResetLink": "재설정 링크 보내기",
+  "send": "보내기",
+  "resend": "다시 보내기",
   "helpSupport": "도움말 및 지원",
   "legal": "법적 고지",
   "privacyPolicy": "개인정보처리방침",

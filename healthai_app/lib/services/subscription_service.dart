@@ -5,14 +5,19 @@ import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:in_app_purchase/in_app_purchase.dart';
 import 'logging_service.dart';
 import 'native_billing_service.dart';
 import 'production_integrity_service.dart';
+import 'receipt_validation_service.dart';
+import 'google_play_validation_service.dart';
 
 class SubscriptionService {
   static final SubscriptionService _instance = SubscriptionService._internal();
   factory SubscriptionService() => _instance;
   SubscriptionService._internal();
+  
+  Timer? _subscriptionCheckTimer;
 
   // Initialize billing service
   Future<void> initializeBilling() async {
@@ -20,9 +25,36 @@ class SubscriptionService {
       if (Platform.isAndroid) {
         await NativeBillingService.initializeBilling();
       }
+      
+      // Initialize Google Play Validation Service
+      await GooglePlayValidationService.initialize();
+      
+      // Start periodic subscription checking (every 24 hours)
+      _startPeriodicSubscriptionCheck();
     } catch (e) {
       print('Error initializing billing: $e');
     }
+  }
+  
+  // Start periodic subscription status checking
+  void _startPeriodicSubscriptionCheck() {
+    _subscriptionCheckTimer?.cancel();
+    _subscriptionCheckTimer = Timer.periodic(Duration(hours: 24), (timer) async {
+      await refreshSubscriptionStatus();
+    });
+  }
+  
+  // Start real-time subscription monitoring (checks every 6 hours)
+  void startRealTimeMonitoring() {
+    _subscriptionCheckTimer?.cancel();
+    _subscriptionCheckTimer = Timer.periodic(Duration(hours: 6), (timer) async {
+      await refreshSubscriptionStatus();
+    });
+  }
+  
+  // Force immediate subscription check
+  Future<void> forceSubscriptionCheck() async {
+    await refreshSubscriptionStatus();
   }
 
   // Check if user has premium subscription
@@ -39,36 +71,13 @@ class SubscriptionService {
       final isPremium = prefs.getBool('isPremium') ?? false;
       
       if (isPremium) {
-        // Check if subscription is still valid (basic validation)
-        final purchaseDate = prefs.getString('purchaseDate');
-        if (purchaseDate != null) {
-          final purchaseDateTime = DateTime.parse(purchaseDate);
-          final now = DateTime.now();
-          
-          // For monthly subscriptions, check if within 30 days
-          final subscriptionType = prefs.getString('subscriptionType');
-          if (subscriptionType == 'premium_monthly') {
-            final daysSincePurchase = now.difference(purchaseDateTime).inDays;
-            if (daysSincePurchase > 30) {
-              // Subscription might have expired, clear premium status
-              await prefs.setBool('isPremium', false);
-              return false;
-            }
-          }
-          // For yearly subscriptions, check if within 365 days
-          else if (subscriptionType == 'premium_yearly') {
-            final daysSincePurchase = now.difference(purchaseDateTime).inDays;
-            if (daysSincePurchase > 365) {
-              // Subscription might have expired, clear premium status
-              await prefs.setBool('isPremium', false);
-              return false;
-            }
-          }
+        // Check with Google Play for real-time subscription status
+        final isValid = await GooglePlayValidationService.checkSubscriptionValidity();
+        if (!isValid) {
+          // Subscription is no longer valid, clear premium status
+          await clearSubscription();
+          return false;
         }
-        
-        // TODO: For production, implement real-time validation with Google Play/App Store
-        // This would check the actual subscription status from the store
-        // For now, we rely on local validation
       }
       
       return isPremium;
@@ -77,6 +86,10 @@ class SubscriptionService {
       return false;
     }
   }
+
+
+
+
 
   Future<String?> getSubscriptionType() async {
     try {
@@ -128,7 +141,7 @@ class SubscriptionService {
     }
   }
 
-  // Get subscription status for debugging
+  // Get subscription status
   Future<Map<String, dynamic>> getSubscriptionStatus() async {
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -143,5 +156,54 @@ class SubscriptionService {
     }
   }
 
-  void dispose() {}
+  // Refresh subscription status from Google Play
+  Future<void> refreshSubscriptionStatus() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final isPremium = prefs.getBool('isPremium') ?? false;
+      
+      if (isPremium) {
+        final isValid = await GooglePlayValidationService.checkSubscriptionValidity();
+        if (!isValid) {
+          await clearSubscription();
+          print('Subscription expired - premium access removed');
+        }
+      }
+    } catch (e) {
+      print('Error refreshing subscription status: $e');
+    }
+  }
+
+  // Check if subscription is about to expire (within 7 days)
+  Future<bool> isSubscriptionExpiringSoon() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final purchaseDate = prefs.getString('purchaseDate');
+      final subscriptionType = prefs.getString('subscriptionType');
+      
+      if (purchaseDate == null || subscriptionType == null) {
+        return false;
+      }
+      
+      final purchaseDateTime = DateTime.parse(purchaseDate);
+      final now = DateTime.now();
+      final daysSincePurchase = now.difference(purchaseDateTime).inDays;
+      
+      if (subscriptionType == 'premium_monthly') {
+        return daysSincePurchase >= 23; // Warn 7 days before expiry
+      } else if (subscriptionType == 'premium_yearly') {
+        return daysSincePurchase >= 358; // Warn 7 days before expiry
+      }
+      
+      return false;
+    } catch (e) {
+      print('Error checking if subscription is expiring soon: $e');
+      return false;
+    }
+  }
+
+
+  void dispose() {
+    _subscriptionCheckTimer?.cancel();
+  }
 } 

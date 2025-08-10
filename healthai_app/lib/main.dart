@@ -272,7 +272,11 @@ void main() async {
   // Firebase configuration verified
   try {
     // Services initialized
-    await SubscriptionService().initializeBilling();
+    final subscriptionService = SubscriptionService();
+    await subscriptionService.initializeBilling();
+    
+    // Check and refresh subscription status on app start
+    await subscriptionService.refreshSubscriptionStatus();
 
     MobileAds.instance.initialize(); // Initialize AdMob
 
@@ -1248,10 +1252,11 @@ class _AuthScreenState extends State<AuthScreen> {
                             ),
                             SizedBox(width: 12),
                           ],
-                          ElevatedButton(
-                          onPressed: resetLoading
-                              ? null
-                              : () async {
+                          Expanded(
+                            child: ElevatedButton(
+                            onPressed: resetLoading
+                                ? null
+                                : () async {
                                   final email = resetEmailController.text.trim();
                                   if (email.isEmpty) {
                                     setDialogState(() {
@@ -1335,11 +1340,17 @@ class _AuthScreenState extends State<AuthScreen> {
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12),
                             ),
+                            textStyle: TextStyle(fontSize: 14),
                           ),
                           child: resetLoading
                               ? SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                              : Text(isResending ? 'Resend Link' : AppLocalizations.of(context)!.sendResetLink),
+                              : Text(
+                                  isResending ? AppLocalizations.of(context)!.resend : AppLocalizations.of(context)!.send,
+                                  style: TextStyle(fontSize: 14),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
                           ),
+                            ),
                         ],
                       ],
                     ),
@@ -2872,6 +2883,9 @@ class _MainNavScreenState extends State<MainNavScreen> with TickerProviderStateM
           print('❌ POST-ONBOARDING: shouldShow=false, not showing popup');
         }
       }
+      
+      // Check subscription status and show expiration warnings
+      await _checkSubscriptionStatus();
     });
     _screens = [
       DashboardScreen(
@@ -2889,6 +2903,33 @@ class _MainNavScreenState extends State<MainNavScreen> with TickerProviderStateM
   void dispose() {
     _footerController.dispose();
     super.dispose();
+  }
+
+  Future<void> _checkSubscriptionStatus() async {
+    try {
+      final subscriptionService = SubscriptionService();
+      final isExpiringSoon = await subscriptionService.isSubscriptionExpiringSoon();
+      
+      if (isExpiringSoon && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Your premium subscription will expire soon. Renew to keep enjoying premium features!'),
+            backgroundColor: Colors.orange,
+            duration: Duration(seconds: 5),
+            action: SnackBarAction(
+              label: 'Renew',
+              onPressed: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => SubscriptionPage()),
+                );
+              },
+            ),
+          ),
+        );
+      }
+    } catch (e) {
+      print('Error checking subscription status: $e');
+    }
   }
 
   void _onItemTapped(int index) async {
@@ -3105,7 +3146,7 @@ class _MainNavScreenState extends State<MainNavScreen> with TickerProviderStateM
                                   onTap: _navigateToWeightLog,
                                   isLarge: false,
                                 ),
-                                const SizedBox(width: 40),
+                                SizedBox(width: MediaQuery.of(context).size.width < 360 ? 20 : 40),
                                 _FabActionButton(
                                   label: AppLocalizations.of(context)!.water,
                                   icon: Icons.water_drop,
@@ -3114,7 +3155,7 @@ class _MainNavScreenState extends State<MainNavScreen> with TickerProviderStateM
                                 ),
                               ],
                             ),
-                            const SizedBox(height: 20),
+                            SizedBox(height: MediaQuery.of(context).size.height < 700 ? 16 : 20),
                             // Second row: Log and Scan (big buttons)
                             Row(
                               mainAxisAlignment: MainAxisAlignment.center,
@@ -3125,7 +3166,7 @@ class _MainNavScreenState extends State<MainNavScreen> with TickerProviderStateM
                                   onTap: _navigateToLog,
                                   isLarge: true,
                                 ),
-                                const SizedBox(width: 40),
+                                SizedBox(width: MediaQuery.of(context).size.width < 360 ? 20 : 40),
                                 _FabActionButton(
                                   label: AppLocalizations.of(context)!.scan,
                                   icon: Icons.camera_alt,
@@ -4270,9 +4311,15 @@ Track your calories, scan food with AI, and get personalized nutrition insights 
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
             title: Row(
               children: [
-                Text('🌍', style: TextStyle(fontSize: 24)),
+                Text('🌍', style: TextStyle(fontSize: 20)),
                 SizedBox(width: 8),
-                Text(AppLocalizations.of(context)!.selectLanguageTitle),
+                Expanded(
+                  child: Text(
+                    AppLocalizations.of(context)!.selectLanguageTitle,
+                    style: TextStyle(fontSize: 18),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
               ],
             ),
             content: SizedBox(
@@ -5132,10 +5179,10 @@ Track your calories, scan food with AI, and get personalized nutrition insights 
                                           children: [
                                             Icon(Icons.lock_reset, size: 48, color: kPrimaryGreen),
                                             SizedBox(height: 16),
-                                            Text(AppLocalizations.of(context)!.resetPassword, style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+                                            Text(AppLocalizations.of(context)!.resetPassword, style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
                                             SizedBox(height: 8),
                                             Text(AppLocalizations.of(context)!.resetPasswordDescription,
-                                              style: TextStyle(fontSize: 16, color: Colors.grey[600]),
+                                              style: TextStyle(fontSize: 14, color: Colors.grey[600]),
                                               textAlign: TextAlign.center,
                                             ),
                                             SizedBox(height: 16),
@@ -5192,65 +5239,74 @@ Track your calories, scan food with AI, and get personalized nutrition insights 
                                                   ),
                                                   SizedBox(width: 12),
                                                 ],
-                                                ElevatedButton(
-                                                  onPressed: (isLoading || email == null)
-                                                    ? null
-                                                    : () async {
-                                                        setState(() { isLoading = true; message = ''; });
-                                                        
-                                                        // Check rate limit for password reset
-                                                        final rateLimitResult = await _rateLimitingService.checkRateLimit('password_reset', identifier: email);
-                                                        if (!rateLimitResult.allowed) {
-                                                          setState(() {
-                                                            message = rateLimitResult.message ?? 'Too many password reset requests. Please try again later.';
-                                                            isLoading = false;
-                                                          });
-                                                          return;
-                                                        }
-
-                                                        try {
-                                                          await FirebaseAuth.instance.sendPasswordResetEmail(email: email);
+                                                Expanded(
+                                                  child: ElevatedButton(
+                                                    onPressed: (isLoading || email == null)
+                                                      ? null
+                                                      : () async {
+                                                          setState(() { isLoading = true; message = ''; });
                                                           
-                                                          // Only record the attempt AFTER successful email send
-                                                          await _rateLimitingService.recordAttempt('password_reset', identifier: email);
-                                                          
-                                                          // Record password reset request for security monitoring
-                                                          await _securityService.recordSecurityEvent(
-                                                            'password_reset_request',
-                                                            userId: FirebaseAuth.instance.currentUser?.uid,
-                                                            email: email,
-                                                            successful: true,
-                                                            metadata: {'source': 'profile_screen'},
-                                                          );
-                                                          
-                                                          setState(() {
-                                                            message = 'Success! Check your email for a reset link. Logging you out for security...';
-                                                            isLoading = false;
-                                                            emailSent = true; // Mark email as sent to hide close button
-                                                          });
-                                                          // Show message briefly, then logout and navigate properly
-                                                          await Future.delayed(Duration(seconds: 2));
-                                                          // Log out the user after sending password reset email
-                                                          await FirebaseAuth.instance.signOut();
-                                                          // Close the dialog first
-                                                          if (mounted) {
-                                                            Navigator.of(context).pop();
-                                                            // Navigate to a redirect screen to properly handle logout
-                                                            Navigator.of(context).pushAndRemoveUntil(
-                                                              MaterialPageRoute(builder: (_) => _PasswordResetRedirectScreen()),
-                                                              (route) => false,
-                                                            );
+                                                          // Check rate limit for password reset
+                                                          final rateLimitResult = await _rateLimitingService.checkRateLimit('password_reset', identifier: email);
+                                                          if (!rateLimitResult.allowed) {
+                                                            setState(() {
+                                                              message = rateLimitResult.message ?? 'Too many password reset requests. Please try again later.';
+                                                              isLoading = false;
+                                                            });
+                                                            return;
                                                           }
-                                                        } catch (e) {
-                                                          setState(() {
-                                                            message = 'Error: ${e.toString()}';
-                                                            isLoading = false;
-                                                          });
-                                                        }
-                                                      },
-                                                  child: isLoading
-                                                    ? SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                                                    : Text(AppLocalizations.of(context)!.sendResetLink),
+
+                                                          try {
+                                                            await FirebaseAuth.instance.sendPasswordResetEmail(email: email);
+                                                            
+                                                            // Only record the attempt AFTER successful email send
+                                                            await _rateLimitingService.recordAttempt('password_reset', identifier: email);
+                                                            
+                                                            // Record password reset request for security monitoring
+                                                            await _securityService.recordSecurityEvent(
+                                                              'password_reset_request',
+                                                              userId: FirebaseAuth.instance.currentUser?.uid,
+                                                              email: email,
+                                                              successful: true,
+                                                              metadata: {'source': 'profile_screen'},
+                                                            );
+                                                            
+                                                            setState(() {
+                                                              message = 'Success! Check your email for a reset link. Logging you out for security...';
+                                                              isLoading = false;
+                                                              emailSent = true; // Mark email as sent to hide close button
+                                                            });
+                                                            // Show message briefly, then logout and navigate properly
+                                                            await Future.delayed(Duration(seconds: 2));
+                                                            // Log out the user after sending password reset email
+                                                            await FirebaseAuth.instance.signOut();
+                                                            // Close the dialog first
+                                                            if (mounted) {
+                                                              Navigator.of(context).pop();
+                                                              // Navigate to a redirect screen to properly handle logout
+                                                              Navigator.of(context).pushAndRemoveUntil(
+                                                                MaterialPageRoute(builder: (_) => _PasswordResetRedirectScreen()),
+                                                                (route) => false,
+                                                              );
+                                                            }
+                                                          } catch (e) {
+                                                            setState(() {
+                                                              message = 'Error: ${e.toString()}';
+                                                              isLoading = false;
+                                                            });
+                                                          }
+                                                        },
+                                                    style: ElevatedButton.styleFrom(
+                                                      textStyle: TextStyle(fontSize: 14),
+                                                    ),
+                                                    child: isLoading
+                                                      ? SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                                                      : Text(
+                                                          AppLocalizations.of(context)!.send,
+                                                          style: TextStyle(fontSize: 14),
+                                                          overflow: TextOverflow.ellipsis,
+                                                        ),
+                                                  ),
                                                 ),
                                               ],
                                             ),
@@ -7484,7 +7540,7 @@ class _FoodMealCardState extends State<_FoodMealCard> {
                     Text(
                       meal.name,
                       style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                      maxLines: 1,
+                      maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                       textDirection: AppLocalizations.of(context)!.localeName.startsWith('ar') ? TextDirection.rtl : TextDirection.ltr,
                     ),
@@ -7725,12 +7781,17 @@ class _FabActionButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Get screen size for responsive design
+    final screenHeight = MediaQuery.of(context).size.height;
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isSmallScreen = screenHeight < 700 || screenWidth < 360;
+    
     // Both Log and Scan use kPrimaryGreen
     Color color = kPrimaryGreen;
-    final iconSize = isLarge ? 24.0 : 18.0;
-    final fontSize = isLarge ? 16.0 : 14.0;
-    final horizontalPadding = isLarge ? 24.0 : 18.0;
-    final verticalPadding = isLarge ? 16.0 : 12.0;
+    final iconSize = isLarge ? (isSmallScreen ? 20.0 : 24.0) : (isSmallScreen ? 16.0 : 18.0);
+    final fontSize = isLarge ? (isSmallScreen ? 14.0 : 16.0) : (isSmallScreen ? 12.0 : 14.0);
+    final horizontalPadding = isLarge ? (isSmallScreen ? 18.0 : 24.0) : (isSmallScreen ? 14.0 : 18.0);
+    final verticalPadding = isLarge ? (isSmallScreen ? 12.0 : 16.0) : (isSmallScreen ? 8.0 : 12.0);
     
     return GestureDetector(
       onTap: onTap,
@@ -7751,12 +7812,20 @@ class _FabActionButton extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(icon, color: color, size: iconSize),
-            const SizedBox(width: 8),
+            SizedBox(width: isSmallScreen ? 6 : 8),
             Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(label, style: TextStyle(fontWeight: FontWeight.w600, fontSize: fontSize, color: color, decoration: TextDecoration.none)),
+                Text(
+                  label, 
+                  style: TextStyle(
+                    fontWeight: FontWeight.w600, 
+                    fontSize: fontSize, 
+                    color: color, 
+                    decoration: TextDecoration.none
+                  )
+                ),
               ],
             ),
           ],
@@ -8060,7 +8129,7 @@ class _HealthAwarenessPageState extends State<HealthAwarenessPage> {
       appBar: AppBar(title: Text(AppLocalizations.of(context)!.healthAwareness)),
       body: _saving
           ? Center(child: CircularProgressIndicator())
-          : Padding(
+          : SingleChildScrollView(
               padding: const EdgeInsets.all(24.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -8171,7 +8240,7 @@ class _HealthAwarenessPageState extends State<HealthAwarenessPage> {
                       );
                     },
                   ),
-                  Spacer(),
+                  SizedBox(height: 32),
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(

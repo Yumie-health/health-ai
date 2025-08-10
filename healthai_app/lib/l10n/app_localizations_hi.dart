@@ -147,6 +147,12 @@ class AppLocalizationsHi extends AppLocalizations {
   String get sendResetLink => 'रीसेट लिंक भेजें';
 
   @override
+  String get send => 'भेजें';
+
+  @override
+  String get resend => 'पुनः भेजें';
+
+  @override
   String get helpSupport => 'सहायता और समर्थन';
 
   @override

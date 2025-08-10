@@ -45,6 +45,8 @@
   "resetPassword": "Şifre sıfırla",
   "close": "Kapat",
   "sendResetLink": "Sıfırlama Bağlantısı Gönder",
+  "send": "Gönder",
+  "resend": "Tekrar Gönder",
   "helpSupport": "Yardım ve Destek",
   "legal": "Yasal",
   "privacyPolicy": "Gizlilik Politikası",

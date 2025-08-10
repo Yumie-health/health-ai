@@ -45,6 +45,8 @@
   "resetPassword": "パスワードをリセット",
   "close": "閉じる",
   "sendResetLink": "リセットリンクを送信",
+  "send": "送信",
+  "resend": "再送信",
   "helpSupport": "ヘルプ＆サポート",
   "legal": "法的情報",
   "privacyPolicy": "プライバシーポリシー",

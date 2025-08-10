@@ -147,6 +147,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sendResetLink => 'Send Reset Link';
 
   @override
+  String get send => 'Send';
+
+  @override
+  String get resend => 'Resend';
+
+  @override
   String get helpSupport => 'Help & Support';
 
   @override

@@ -147,6 +147,12 @@ class AppLocalizationsTr extends AppLocalizations {
   String get sendResetLink => 'Sıfırlama Bağlantısı Gönder';
 
   @override
+  String get send => 'Gönder';
+
+  @override
+  String get resend => 'Tekrar Gönder';
+
+  @override
   String get helpSupport => 'Yardım ve Destek';
 
   @override

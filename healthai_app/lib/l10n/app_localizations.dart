@@ -393,6 +393,18 @@ abstract class AppLocalizations {
   /// **'Send Reset Link'**
   String get sendResetLink;
 
+  /// No description provided for @send.
+  ///
+  /// In en, this message translates to:
+  /// **'Send'**
+  String get send;
+
+  /// No description provided for @resend.
+  ///
+  /// In en, this message translates to:
+  /// **'Resend'**
+  String get resend;
+
   /// No description provided for @helpSupport.
   ///
   /// In en, this message translates to:

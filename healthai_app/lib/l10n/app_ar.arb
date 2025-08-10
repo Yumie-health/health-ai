@@ -45,6 +45,8 @@
   "resetPassword": "إعادة تعيين كلمة المرور",
   "close": "إغلاق",
   "sendResetLink": "إرسال رابط إعادة التعيين",
+  "send": "إرسال",
+  "resend": "إعادة إرسال",
   "helpSupport": "المساعدة والدعم",
   "legal": "قانوني",
   "privacyPolicy": "سياسة الخصوصية",

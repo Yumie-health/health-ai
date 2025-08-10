@@ -45,6 +45,8 @@
   "resetPassword": "पासवर्ड रीसेट करें",
   "close": "बंद करें",
   "sendResetLink": "रीसेट लिंक भेजें",
+  "send": "भेजें",
+  "resend": "पुनः भेजें",
   "helpSupport": "सहायता और समर्थन",
   "legal": "कानूनी",
   "privacyPolicy": "गोपनीयता नीति",
