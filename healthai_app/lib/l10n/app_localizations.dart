@@ -1980,13 +1980,13 @@ abstract class AppLocalizations {
   /// No description provided for @yumiePremiumMonthly.
   ///
   /// In en, this message translates to:
-  /// **'YUMIE Premium Monthly'**
+  /// **'Yumie™ Premium Monthly'**
   String get yumiePremiumMonthly;
 
   /// No description provided for @yumiePremiumYearly.
   ///
   /// In en, this message translates to:
-  /// **'YUMIE Premium Yearly'**
+  /// **'Yumie™ Premium Yearly'**
   String get yumiePremiumYearly;
 
   /// No description provided for @restorePurchases.

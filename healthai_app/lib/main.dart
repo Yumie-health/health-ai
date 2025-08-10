@@ -349,7 +349,7 @@ class HealthAIApp extends StatelessWidget {
       builder: (context, languageProvider, child) {
         return MaterialApp(
           debugShowCheckedModeBanner: false,
-          title: 'Yumie App',
+          title: 'Yumie™ App',
           navigatorObservers: [
             // FirebaseAnalyticsObserver removed due to Kotlin conflicts
           ],
@@ -2797,7 +2797,7 @@ class HomeScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Yumie - Food Log'),
+        title: const Text('Yumie™ - Food Log'),
         actions: [
           IconButton(
             icon: const Icon(Icons.logout),
@@ -4237,20 +4237,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Future<void> _shareApp(BuildContext context) async {
     try {
       const String shareText = '''
-� Check out Yumie - Your Personal Nutrition Assistant! �
+� Check out Yumie™ – Calorie Tracker! �
 
 Track your calories, scan food with AI, and get personalized nutrition insights to achieve your health goals!
 
-📱 Download Yumie now:
+📱 Download Yumie™ now:
 � iOS: https://apps.apple.com/us/app/yumie-ai/id6748360245
 � Android: https://play.google.com/store/apps/details?id=com.yumie.healthai
 
-#Yumie #Nutrition #Fitness #HealthyLiving
+#Yumie™ #Nutrition #Fitness #HealthyLiving
       ''';
       
       await Share.share(
         shareText,
-        subject: 'Yumie - Your Personal Nutrition Assistant',
+        subject: 'Yumie™ – Calorie Tracker',
       );
     } catch (e) {
       if (context.mounted) {
@@ -5370,7 +5370,7 @@ Track your calories, scan food with AI, and get personalized nutrition insights 
                                           text: TextSpan(
                                             children: [
                                               TextSpan(
-                                                text: 'YUMIE',
+                                                text: 'Yumie™',
                                                 style: TextStyle(
                                                   fontSize: 24,
                                                   fontWeight: FontWeight.bold,

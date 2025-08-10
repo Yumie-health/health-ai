@@ -941,10 +941,10 @@ class AppLocalizationsKo extends AppLocalizations {
   String get youArePremium => '프리미엄입니다';
 
   @override
-  String get yumiePremiumMonthly => 'YUMIE 프리미엄 월간';
+  String get yumiePremiumMonthly => 'Yumie™ 프리미엄 월간';
 
   @override
-  String get yumiePremiumYearly => 'YUMIE 프리미엄 연간';
+  String get yumiePremiumYearly => 'Yumie™ 프리미엄 연간';
 
   @override
   String get restorePurchases => '구매 복원';

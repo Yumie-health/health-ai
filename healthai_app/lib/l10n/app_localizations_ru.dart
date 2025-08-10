@@ -941,10 +941,10 @@ class AppLocalizationsRu extends AppLocalizations {
   String get youArePremium => 'Вы Premium';
 
   @override
-  String get yumiePremiumMonthly => 'YUMIE Premium Месячный';
+  String get yumiePremiumMonthly => 'Yumie™ Premium Месячный';
 
   @override
-  String get yumiePremiumYearly => 'YUMIE Premium Годовой';
+  String get yumiePremiumYearly => 'Yumie™ Premium Годовой';
 
   @override
   String get restorePurchases => 'Восстановить покупки';

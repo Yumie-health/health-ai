@@ -941,10 +941,10 @@ class AppLocalizationsNl extends AppLocalizations {
   String get youArePremium => 'Je bent Premium';
 
   @override
-  String get yumiePremiumMonthly => 'YUMIE Premium Maandelijks';
+  String get yumiePremiumMonthly => 'Yumie™ Premium Maandelijks';
 
   @override
-  String get yumiePremiumYearly => 'YUMIE Premium Jaarlijks';
+  String get yumiePremiumYearly => 'Yumie™ Premium Jaarlijks';
 
   @override
   String get restorePurchases => 'Aankopen herstellen';
