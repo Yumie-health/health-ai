@@ -98,7 +98,7 @@
   "dietTips": "نصائح غذائية",
   "typeYourMessage": "اكتب رسالتك...",
   "yumie": "يومي",
-  "askAboutMeals": "اسأل عن الوجبات أو التغذية أو احصل على نصيحة شخصية",
+  "askAboutMeals": "اسأل عن الوجبات والتغذية",
   "coachQuick1": "ماذا يجب أن آكل اليوم؟",
   "coachQuick2": "حلل وجبتي الأخيرة",
   "coachQuick3": "ساعدني في تخطيط أسبوعي",
@@ -664,5 +664,9 @@
   "lbs": "رطل",
   "yourGoalWeight": "وزنك المستهدف",
   "yourActivityLevel": "مستوى نشاطك",
-  "fat": "الدهون"
+  "fat": "الدهون",
+  "analyzingFridge": "تحليل ثلاجتك...",
+  "aiDetectingFoodItems": "الذكاء الاصطناعي يكتشف عناصر الطعام",
+  "tryClearerPhoto": "حاول التقاط صورة أوضح لثلاجتك",
+  "generating": "جاري الإنشاء..."
 } 

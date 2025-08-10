@@ -833,35 +833,45 @@ class _LogMealPageState extends State<LogMealPage> with TickerProviderStateMixin
           children: [
             // Meal type selection (breakfast/lunch/dinner/snack)
             Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: _mealTypes.map((type) {
+              children: _mealTypes.asMap().entries.map((entry) {
+                final index = entry.key;
+                final type = entry.value;
                 final selected = _selectedMealType == type;
                 final color = selected ? kPrimaryGreen : Colors.grey[200];
                 final textColor = selected ? Colors.white : Colors.grey[600];
                 return Expanded(
-                  child: GestureDetector(
-                    onTap: () => setState(() => _selectedMealType = type),
-                    child: AnimatedContainer(
-                      duration: Duration(milliseconds: 180),
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      decoration: BoxDecoration(
-                        color: color,
-                        borderRadius: BorderRadius.circular(18),
-                        boxShadow: selected
-                            ? [BoxShadow(color: kPrimaryGreen.withOpacity(0.08), blurRadius: 8, offset: Offset(0, 2))]
-                            : [],
-                      ),
-                      child: Center(
-                        child: Text(
-                          mealTypeLabels[type]!,
-                          style: TextStyle(
-                            fontWeight: FontWeight.w600,
-                            fontSize: 18,
-                            color: textColor,
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: GestureDetector(
+                          onTap: () => setState(() => _selectedMealType = type),
+                          child: AnimatedContainer(
+                            duration: Duration(milliseconds: 180),
+                            padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 8),
+                            decoration: BoxDecoration(
+                              color: color,
+                              borderRadius: BorderRadius.circular(18),
+                              boxShadow: selected
+                                  ? [BoxShadow(color: kPrimaryGreen.withOpacity(0.08), blurRadius: 8, offset: Offset(0, 2))]
+                                  : [],
+                            ),
+                            child: Center(
+                              child: Text(
+                                mealTypeLabels[type]!,
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 15,
+                                  color: textColor,
+                                ),
+                                textAlign: TextAlign.center,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
                           ),
                         ),
                       ),
-                    ),
+                      if (index < _mealTypes.length - 1) SizedBox(width: 8),
+                    ],
                   ),
                 );
               }).toList(),

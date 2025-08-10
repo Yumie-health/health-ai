@@ -306,7 +306,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get yumie => 'Yumie';
 
   @override
-  String get askAboutMeals => 'Ask about meals, nutrition, or get personalized advice';
+  String get askAboutMeals => 'Ask about meals & nutrition';
 
   @override
   String get coachQuick1 => 'What should I eat today?';
@@ -1737,4 +1737,16 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get yourActivityLevel => 'Your activity level';
+
+  @override
+  String get analyzingFridge => 'Analyzing your fridge...';
+
+  @override
+  String get aiDetectingFoodItems => 'AI is detecting food items';
+
+  @override
+  String get tryClearerPhoto => 'Try taking a clearer photo of your fridge';
+
+  @override
+  String get generating => 'Generating...';
 }

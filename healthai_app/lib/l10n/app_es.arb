@@ -98,7 +98,7 @@
   "dietTips": "Consejos de dieta",
   "typeYourMessage": "Escribe tu mensaje...",
   "yumie": "Yumie",
-  "askAboutMeals": "Tu asistente de nutrición personal",
+  "askAboutMeals": "Pregunta sobre comidas y nutrición",
   "coachQuick1": "¿Qué debo comer hoy?",
   "coachQuick2": "Analiza mi última comida",
   "coachQuick3": "Ayúdame a planificar mi semana",
@@ -664,5 +664,9 @@
   "lbs": "libras",
   "yourGoalWeight": "Tu peso objetivo",
   "yourActivityLevel": "Tu nivel de actividad",
-  "fat": "Grasa"
+  "fat": "Grasa",
+  "analyzingFridge": "Analizando tu nevera...",
+  "aiDetectingFoodItems": "La IA está detectando alimentos",
+  "tryClearerPhoto": "Intenta tomar una foto más clara de tu nevera",
+  "generating": "Generando..."
 } 

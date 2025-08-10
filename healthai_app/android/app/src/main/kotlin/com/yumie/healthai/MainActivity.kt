@@ -172,6 +172,22 @@ class MainActivity: FlutterActivity() {
                         result.error("NOTIFICATION_ERROR", "Failed to cancel walk reminders", e.message)
                     }
                 }
+                "isBatteryOptimizationIgnored" -> {
+                    try {
+                        val isIgnored = notificationScheduler.isBatteryOptimizationIgnored()
+                        result.success(isIgnored)
+                    } catch (e: Exception) {
+                        result.error("NOTIFICATION_ERROR", "Failed to check battery optimization", e.message)
+                    }
+                }
+                "requestBatteryOptimizationExemption" -> {
+                    try {
+                        notificationScheduler.requestBatteryOptimizationExemption()
+                        result.success("Battery optimization exemption requested")
+                    } catch (e: Exception) {
+                        result.error("NOTIFICATION_ERROR", "Failed to request battery optimization exemption", e.message)
+                    }
+                }
                 else -> {
                     result.notImplemented()
                 }

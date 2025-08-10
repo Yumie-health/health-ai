@@ -122,4 +122,38 @@ class NativeNotificationService {
       return false;
     }
   }
+  
+  // Check if battery optimization is ignored for the app
+  static Future<bool> isBatteryOptimizationIgnored() async {
+    if (!Platform.isAndroid) {
+      print('⚠️ Battery optimization check is Android-only');
+      return true; // Assume true for non-Android platforms
+    }
+    
+    try {
+      final result = await _channel.invokeMethod('isBatteryOptimizationIgnored');
+      print('🔋 Battery optimization ignored: $result');
+      return result as bool;
+    } catch (e) {
+      print('❌ Failed to check battery optimization: $e');
+      return false;
+    }
+  }
+  
+  // Request battery optimization exemption
+  static Future<bool> requestBatteryOptimizationExemption() async {
+    if (!Platform.isAndroid) {
+      print('⚠️ Battery optimization request is Android-only');
+      return true;
+    }
+    
+    try {
+      final result = await _channel.invokeMethod('requestBatteryOptimizationExemption');
+      print('🔋 Battery optimization exemption requested: $result');
+      return true;
+    } catch (e) {
+      print('❌ Failed to request battery optimization exemption: $e');
+      return false;
+    }
+  }
 }

@@ -204,7 +204,7 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
   Widget _buildPlanCard(ProductDetails product) {
     final isYearly = product.id == 'premium_yearly';
     final price = product.id == 'premium_monthly' ? '7.99' : '49.99';
-    final description = isYearly ? AppLocalizations.of(context)!.save37 : '';
+    final description = '';
     return Card(
       margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       elevation: 4,
@@ -223,27 +223,11 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
                 Text(
                   product.id == 'premium_monthly' ? AppLocalizations.of(context)!.yumiePremiumMonthly : AppLocalizations.of(context)!.yumiePremiumYearly,
                   style: TextStyle(
-                    fontSize: 24,
+                    fontSize: 18,
                     fontWeight: FontWeight.bold,
                     color: kPrimaryGreen,
                   ),
                 ),
-                if (isYearly)
-                  Container(
-                    padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: kSecondaryBlue,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Text(
-                      AppLocalizations.of(context)!.save37,
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
               ],
             ),
             SizedBox(height: 8),

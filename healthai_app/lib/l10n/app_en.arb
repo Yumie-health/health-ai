@@ -98,7 +98,7 @@
   "dietTips": "Diet tips",
   "typeYourMessage": "Type your message...",
   "yumie": "Yumie",
-  "askAboutMeals": "Ask about meals, nutrition, or get personalized advice",
+  "askAboutMeals": "Ask about meals & nutrition",
   "coachQuick1": "What should I eat today?",
   "coachQuick2": "Analyze my last meal",
   "coachQuick3": "Help me plan my week",
@@ -664,5 +664,9 @@
   "lbs": "lbs",
   "yourGoalWeight": "Your goal weight",
   "yourActivityLevel": "Your activity level",
-  "fat": "Fat"
+  "fat": "Fat",
+  "analyzingFridge": "Analyzing your fridge...",
+  "aiDetectingFoodItems": "AI is detecting food items",
+  "tryClearerPhoto": "Try taking a clearer photo of your fridge",
+  "generating": "Generating..."
 } 

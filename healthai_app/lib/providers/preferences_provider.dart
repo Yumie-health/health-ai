@@ -478,13 +478,19 @@ class PreferencesProvider extends ChangeNotifier {
   Future<void> requestBatteryOptimizationExemption() async {
     print('🔋 Requesting battery optimization exemption...');
     
-    final androidPlugin = flutterLocalNotificationsPlugin.resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
-    
-    if (androidPlugin != null) {
-      // This would need a custom Android implementation
-      // For now, we'll guide users manually
-      print('🔋 Please disable battery optimization for Yumie in Android settings');
-      print('📱 Go to Settings > Apps > Yumie > Battery > Not optimized');
+    // Check if already exempted
+    final isIgnored = await NativeNotificationService.isBatteryOptimizationIgnored();
+    if (isIgnored) {
+      print('✅ Battery optimization already disabled for Yumie');
+      return;
     }
+    
+    // Request exemption using native Android service
+    await NativeNotificationService.requestBatteryOptimizationExemption();
+  }
+  
+  // Check if battery optimization is currently ignored
+  Future<bool> isBatteryOptimizationIgnored() async {
+    return await NativeNotificationService.isBatteryOptimizationIgnored();
   }
 }

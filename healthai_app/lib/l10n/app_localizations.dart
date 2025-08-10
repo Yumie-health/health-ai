@@ -6,8 +6,18 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:intl/intl.dart' as intl;
 
 import 'app_localizations_ar.dart';
+import 'app_localizations_de.dart';
 import 'app_localizations_en.dart';
 import 'app_localizations_es.dart';
+import 'app_localizations_fr.dart';
+import 'app_localizations_hi.dart';
+import 'app_localizations_it.dart';
+import 'app_localizations_ja.dart';
+import 'app_localizations_ko.dart';
+import 'app_localizations_nl.dart';
+import 'app_localizations_pt.dart';
+import 'app_localizations_ru.dart';
+import 'app_localizations_tr.dart';
 
 // ignore_for_file: type=lint
 
@@ -93,8 +103,18 @@ abstract class AppLocalizations {
   /// A list of this localizations delegate's supported locales.
   static const List<Locale> supportedLocales = <Locale>[
     Locale('ar'),
+    Locale('de'),
     Locale('en'),
-    Locale('es')
+    Locale('es'),
+    Locale('fr'),
+    Locale('hi'),
+    Locale('it'),
+    Locale('ja'),
+    Locale('ko'),
+    Locale('nl'),
+    Locale('pt'),
+    Locale('ru'),
+    Locale('tr')
   ];
 
   /// No description provided for @settings.
@@ -694,7 +714,7 @@ abstract class AppLocalizations {
   /// No description provided for @askAboutMeals.
   ///
   /// In en, this message translates to:
-  /// **'Ask about meals, nutrition, or get personalized advice'**
+  /// **'Ask about meals & nutrition'**
   String get askAboutMeals;
 
   /// No description provided for @coachQuick1.
@@ -3552,6 +3572,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Your activity level'**
   String get yourActivityLevel;
+
+  /// No description provided for @analyzingFridge.
+  ///
+  /// In en, this message translates to:
+  /// **'Analyzing your fridge...'**
+  String get analyzingFridge;
+
+  /// No description provided for @aiDetectingFoodItems.
+  ///
+  /// In en, this message translates to:
+  /// **'AI is detecting food items'**
+  String get aiDetectingFoodItems;
+
+  /// No description provided for @tryClearerPhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Try taking a clearer photo of your fridge'**
+  String get tryClearerPhoto;
+
+  /// No description provided for @generating.
+  ///
+  /// In en, this message translates to:
+  /// **'Generating...'**
+  String get generating;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {
@@ -3563,7 +3607,7 @@ class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> 
   }
 
   @override
-  bool isSupported(Locale locale) => <String>['ar', 'en', 'es'].contains(locale.languageCode);
+  bool isSupported(Locale locale) => <String>['ar', 'de', 'en', 'es', 'fr', 'hi', 'it', 'ja', 'ko', 'nl', 'pt', 'ru', 'tr'].contains(locale.languageCode);
 
   @override
   bool shouldReload(_AppLocalizationsDelegate old) => false;
@@ -3575,8 +3619,18 @@ AppLocalizations lookupAppLocalizations(Locale locale) {
   // Lookup logic when only language code is specified.
   switch (locale.languageCode) {
     case 'ar': return AppLocalizationsAr();
+    case 'de': return AppLocalizationsDe();
     case 'en': return AppLocalizationsEn();
     case 'es': return AppLocalizationsEs();
+    case 'fr': return AppLocalizationsFr();
+    case 'hi': return AppLocalizationsHi();
+    case 'it': return AppLocalizationsIt();
+    case 'ja': return AppLocalizationsJa();
+    case 'ko': return AppLocalizationsKo();
+    case 'nl': return AppLocalizationsNl();
+    case 'pt': return AppLocalizationsPt();
+    case 'ru': return AppLocalizationsRu();
+    case 'tr': return AppLocalizationsTr();
   }
 
   throw FlutterError(

@@ -306,7 +306,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get yumie => 'يومي';
 
   @override
-  String get askAboutMeals => 'اسأل عن الوجبات أو التغذية أو احصل على نصيحة شخصية';
+  String get askAboutMeals => 'اسأل عن الوجبات والتغذية';
 
   @override
   String get coachQuick1 => 'ماذا يجب أن آكل اليوم؟';
@@ -1737,4 +1737,16 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get yourActivityLevel => 'مستوى نشاطك';
+
+  @override
+  String get analyzingFridge => 'تحليل ثلاجتك...';
+
+  @override
+  String get aiDetectingFoodItems => 'الذكاء الاصطناعي يكتشف عناصر الطعام';
+
+  @override
+  String get tryClearerPhoto => 'حاول التقاط صورة أوضح لثلاجتك';
+
+  @override
+  String get generating => 'جاري الإنشاء...';
 }

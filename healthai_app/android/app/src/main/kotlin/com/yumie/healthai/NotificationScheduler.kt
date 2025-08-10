@@ -5,9 +5,42 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.os.Build
+import android.os.PowerManager
+import android.provider.Settings
+import android.net.Uri
 import java.util.*
 
 class NotificationScheduler(private val context: Context) {
+    
+    /**
+     * Check if the app is whitelisted from battery optimizations
+     */
+    fun isBatteryOptimizationIgnored(): Boolean {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            val powerManager = context.getSystemService(Context.POWER_SERVICE) as PowerManager
+            powerManager.isIgnoringBatteryOptimizations(context.packageName)
+        } else {
+            true // Not applicable for older versions
+        }
+    }
+    
+    /**
+     * Request the user to disable battery optimization for the app
+     */
+    fun requestBatteryOptimizationExemption() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            val intent = Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS).apply {
+                data = Uri.parse("package:${context.packageName}")
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK
+            }
+            try {
+                context.startActivity(intent)
+                android.util.Log.d("NotificationScheduler", "Requesting battery optimization exemption")
+            } catch (e: Exception) {
+                android.util.Log.e("NotificationScheduler", "Failed to request battery optimization exemption", e)
+            }
+        }
+    }
     
     fun scheduleTestNotification() {
         val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
@@ -96,18 +129,82 @@ class NotificationScheduler(private val context: Context) {
             }
             
             try {
-                alarmManager.setRepeating(
-                    AlarmManager.RTC_WAKEUP,
-                    calendar.timeInMillis,
-                    AlarmManager.INTERVAL_DAY, // Repeat daily
-                    pendingIntent
-                )
+                // Use setExactAndAllowWhileIdle for better delivery during doze mode
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                    alarmManager.setExactAndAllowWhileIdle(
+                        AlarmManager.RTC_WAKEUP,
+                        calendar.timeInMillis,
+                        pendingIntent
+                    )
+                } else {
+                    alarmManager.setExact(
+                        AlarmManager.RTC_WAKEUP,
+                        calendar.timeInMillis,
+                        pendingIntent
+                    )
+                }
+                
+                // Schedule the next occurrence (for tomorrow) to simulate repeating
+                calendar.add(Calendar.DAY_OF_MONTH, 1)
+                scheduleNextMealReminder(hour, minute, label, 2000 + i, 3000 + i)
+                
                 android.util.Log.d("NotificationScheduler", "✅ Scheduled meal reminder: $label at $hour:$minute")
                 android.util.Log.d("NotificationScheduler", "⏰ Trigger time: ${calendar.time}")
                 android.util.Log.d("NotificationScheduler", "📱 Current time: ${java.util.Date(System.currentTimeMillis())}")
             } catch (e: SecurityException) {
-                android.util.Log.e("NotificationScheduler", "Permission denied for repeating alarm", e)
+                android.util.Log.e("NotificationScheduler", "Permission denied for exact alarm", e)
             }
+        }
+    }
+    
+    /**
+     * Schedule next meal reminder (used for repeating daily notifications)
+     */
+    fun scheduleNextMealReminder(hour: Int, minute: Int, label: String, notificationId: Int, requestCode: Int) {
+        val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+        val calendar = Calendar.getInstance()
+        
+        val intent = Intent(context, NotificationReceiver::class.java).apply {
+            putExtra("title", label)
+            putExtra("message", "Time to log your meal and track your nutrition! 🍽️")
+            putExtra("notificationType", "meal")
+            putExtra("notificationId", notificationId)
+            putExtra("scheduleNext", true) // Flag to schedule the next occurrence
+            putExtra("hour", hour)
+            putExtra("minute", minute)
+            putExtra("label", label)
+        }
+        
+        val pendingIntent = PendingIntent.getBroadcast(
+            context,
+            requestCode + 1000, // Different request code for next occurrence
+            intent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+        
+        // Set up calendar for next occurrence (tomorrow at the same time)
+        calendar.set(Calendar.HOUR_OF_DAY, hour)
+        calendar.set(Calendar.MINUTE, minute)
+        calendar.set(Calendar.SECOND, 0)
+        calendar.add(Calendar.DAY_OF_MONTH, 1) // Tomorrow
+        
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                alarmManager.setExactAndAllowWhileIdle(
+                    AlarmManager.RTC_WAKEUP,
+                    calendar.timeInMillis,
+                    pendingIntent
+                )
+            } else {
+                alarmManager.setExact(
+                    AlarmManager.RTC_WAKEUP,
+                    calendar.timeInMillis,
+                    pendingIntent
+                )
+            }
+            android.util.Log.d("NotificationScheduler", "Scheduled next meal reminder for $label at ${calendar.time}")
+        } catch (e: SecurityException) {
+            android.util.Log.e("NotificationScheduler", "Permission denied for next meal reminder", e)
         }
     }
     
@@ -167,12 +264,24 @@ class NotificationScheduler(private val context: Context) {
             }
             
             try {
-                alarmManager.setRepeating(
-                    AlarmManager.RTC_WAKEUP,
-                    calendar.timeInMillis,
-                    AlarmManager.INTERVAL_DAY, // Repeat daily
-                    pendingIntent
-                )
+                // Use setExactAndAllowWhileIdle for better delivery during doze mode
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                    alarmManager.setExactAndAllowWhileIdle(
+                        AlarmManager.RTC_WAKEUP,
+                        calendar.timeInMillis,
+                        pendingIntent
+                    )
+                } else {
+                    alarmManager.setExact(
+                        AlarmManager.RTC_WAKEUP,
+                        calendar.timeInMillis,
+                        pendingIntent
+                    )
+                }
+                
+                // Schedule the next occurrence for tomorrow
+                scheduleNextWaterReminder(hour, 4000 + i, 4000 + i)
+                
                 android.util.Log.d("NotificationScheduler", "Scheduled water reminder at $hour:00")
             } catch (e: SecurityException) {
                 android.util.Log.e("NotificationScheduler", "Permission denied for water reminder", e)
@@ -214,12 +323,24 @@ class NotificationScheduler(private val context: Context) {
             }
             
             try {
-                alarmManager.setRepeating(
-                    AlarmManager.RTC_WAKEUP,
-                    calendar.timeInMillis,
-                    AlarmManager.INTERVAL_DAY, // Repeat daily
-                    pendingIntent
-                )
+                // Use setExactAndAllowWhileIdle for better delivery during doze mode
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                    alarmManager.setExactAndAllowWhileIdle(
+                        AlarmManager.RTC_WAKEUP,
+                        calendar.timeInMillis,
+                        pendingIntent
+                    )
+                } else {
+                    alarmManager.setExact(
+                        AlarmManager.RTC_WAKEUP,
+                        calendar.timeInMillis,
+                        pendingIntent
+                    )
+                }
+                
+                // Schedule the next occurrence for tomorrow
+                scheduleNextWalkReminder(hour, 5000 + i, 5000 + i)
+                
                 android.util.Log.d("NotificationScheduler", "Scheduled walk reminder at $hour:00")
             } catch (e: SecurityException) {
                 android.util.Log.e("NotificationScheduler", "Permission denied for walk reminder", e)
@@ -253,5 +374,105 @@ class NotificationScheduler(private val context: Context) {
         }
         
         android.util.Log.d("NotificationScheduler", "Walk reminders canceled")
+    }
+    
+    /**
+     * Schedule next water reminder (used for repeating daily notifications)
+     */
+    fun scheduleNextWaterReminder(hour: Int, notificationId: Int, requestCode: Int) {
+        val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+        val calendar = Calendar.getInstance()
+        
+        val intent = Intent(context, NotificationReceiver::class.java).apply {
+            putExtra("title", "💧 Hydration Time!")
+            putExtra("message", "Time to drink some water and stay hydrated! 💧")
+            putExtra("notificationType", "water")
+            putExtra("notificationId", notificationId)
+            putExtra("scheduleNext", true)
+            putExtra("hour", hour)
+            putExtra("reminderType", "water")
+        }
+        
+        val pendingIntent = PendingIntent.getBroadcast(
+            context,
+            requestCode + 2000, // Different request code for next occurrence
+            intent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+        
+        // Set up calendar for next occurrence (tomorrow at the same time)
+        calendar.set(Calendar.HOUR_OF_DAY, hour)
+        calendar.set(Calendar.MINUTE, 0)
+        calendar.set(Calendar.SECOND, 0)
+        calendar.add(Calendar.DAY_OF_MONTH, 1) // Tomorrow
+        
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                alarmManager.setExactAndAllowWhileIdle(
+                    AlarmManager.RTC_WAKEUP,
+                    calendar.timeInMillis,
+                    pendingIntent
+                )
+            } else {
+                alarmManager.setExact(
+                    AlarmManager.RTC_WAKEUP,
+                    calendar.timeInMillis,
+                    pendingIntent
+                )
+            }
+            android.util.Log.d("NotificationScheduler", "Scheduled next water reminder for $hour:00 at ${calendar.time}")
+        } catch (e: SecurityException) {
+            android.util.Log.e("NotificationScheduler", "Permission denied for next water reminder", e)
+        }
+    }
+    
+    /**
+     * Schedule next walk reminder (used for repeating daily notifications)
+     */
+    fun scheduleNextWalkReminder(hour: Int, notificationId: Int, requestCode: Int) {
+        val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+        val calendar = Calendar.getInstance()
+        
+        val intent = Intent(context, NotificationReceiver::class.java).apply {
+            putExtra("title", "🚶‍♀️ Walk Time!")
+            putExtra("message", "Time for a mindful walk! Get some fresh air and movement. 🌿")
+            putExtra("notificationType", "walk")
+            putExtra("notificationId", notificationId)
+            putExtra("scheduleNext", true)
+            putExtra("hour", hour)
+            putExtra("reminderType", "walk")
+        }
+        
+        val pendingIntent = PendingIntent.getBroadcast(
+            context,
+            requestCode + 3000, // Different request code for next occurrence
+            intent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+        
+        // Set up calendar for next occurrence (tomorrow at the same time)
+        calendar.set(Calendar.HOUR_OF_DAY, hour)
+        calendar.set(Calendar.MINUTE, 0)
+        calendar.set(Calendar.SECOND, 0)
+        calendar.add(Calendar.DAY_OF_MONTH, 1) // Tomorrow
+        
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                alarmManager.setExactAndAllowWhileIdle(
+                    AlarmManager.RTC_WAKEUP,
+                    calendar.timeInMillis,
+                    pendingIntent
+                )
+            } else {
+                alarmManager.setExact(
+                    AlarmManager.RTC_WAKEUP,
+                    calendar.timeInMillis,
+                    pendingIntent
+                )
+            }
+            android.util.Log.d("NotificationScheduler", "Scheduled next walk reminder for $hour:00 at ${calendar.time}")
+        } catch (e: SecurityException) {
+            android.util.Log.e("NotificationScheduler", "Permission denied for next walk reminder", e)
+        }
     }
 }

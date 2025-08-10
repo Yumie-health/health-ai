@@ -9,13 +9,25 @@ class PermissionService {
   static final FlutterLocalNotificationsPlugin _notificationsPlugin = 
       FlutterLocalNotificationsPlugin();
 
-  // Check if permissions have been requested before
+  // Check if this is the first time the app has been launched
+  static Future<bool> _isFirstTimeLaunch() async {
+    final prefs = await SharedPreferences.getInstance();
+    return !(prefs.getBool('first_launch_completed') ?? false);
+  }
+
+  // Mark first launch as completed
+  static Future<void> _markFirstLaunchCompleted() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('first_launch_completed', true);
+  }
+
+  // Check if permissions have been requested before (kept for backward compatibility)
   static Future<bool> _hasRequestedPermissionsBefore() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getBool('permissions_requested') ?? false;
   }
 
-  // Mark permissions as requested
+  // Mark permissions as requested (kept for backward compatibility)
   static Future<void> _markPermissionsRequested() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('permissions_requested', true);
@@ -50,7 +62,8 @@ class PermissionService {
     results[ph.Permission.notification] = await ph.Permission.notification.request();
     
     // Mark as requested
-    await _markPermissionsRequested();
+    await _markFirstLaunchCompleted();
+    await _markPermissionsRequested(); // Keep for backward compatibility
     
     // Log results
     results.forEach((permission, status) {
@@ -62,8 +75,7 @@ class PermissionService {
 
   // Check if this is first launch and permissions should be requested
   static Future<bool> shouldRequestPermissions() async {
-    final hasRequested = await _hasRequestedPermissionsBefore();
-    return !hasRequested;
+    return await _isFirstTimeLaunch();
   }
 
   // Request specific permission
@@ -170,7 +182,8 @@ class PermissionService {
       results[ph.Permission.notification] = ph.PermissionStatus.granted;
     }
 
-    await _markPermissionsRequested();
+    await _markFirstLaunchCompleted();
+    await _markPermissionsRequested(); // Keep for backward compatibility
     return results;
   }
 

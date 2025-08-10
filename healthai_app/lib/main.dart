@@ -997,10 +997,163 @@ class _AuthScreenState extends State<AuthScreen> {
     );
   }
 
-  void _showForgotPasswordDialog() {
+  void _showProviderConflictDialog(String existingProvider, String attemptedProvider) {
+    final isGoogleExisting = existingProvider.contains('google');
+    final isGoogleAttempted = attemptedProvider.contains('google');
+    
+    String title = 'Account Uses Different Sign-In Method';
+    String message;
+    String actionText;
+    VoidCallback? actionCallback;
+    
+    if (isGoogleExisting && !isGoogleAttempted) {
+      // Existing: Google, Attempted: Email
+      message = 'This email is already signed up with Google. Please use "Sign in with Google" instead.';
+      actionText = 'Use Google Sign-In';
+      actionCallback = () {
+        Navigator.of(context).pop();
+        _handleGoogleSignIn();
+      };
+    } else if (!isGoogleExisting && isGoogleAttempted) {
+      // Existing: Email, Attempted: Google  
+      message = 'This email is already signed up with email and password. Please sign in using your password instead.';
+      actionText = 'Sign In with Email';
+      actionCallback = () {
+        Navigator.of(context).pop();
+        setState(() => showSignUp = false);
+      };
+    } else {
+      // Fallback message
+      message = 'This email is already associated with a different sign-in method. Please use the original method you signed up with.';
+      actionText = 'OK';
+      actionCallback = () => Navigator.of(context).pop();
+    }
+
+    showDialog(
+      context: context,
+      barrierDismissible: true,
+      builder: (BuildContext context) {
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(20),
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [Colors.white, Colors.grey[50]!],
+              ),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 80,
+                  height: 80,
+                  decoration: BoxDecoration(
+                    color: Colors.red.withOpacity(0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    Icons.error_outline_rounded,
+                    size: 40,
+                    color: Colors.red[700],
+                  ),
+                ),
+                const SizedBox(height: 20),
+                Text(
+                  title,
+                  style: TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.grey[800],
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  message,
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: Colors.grey[600],
+                    height: 1.4,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 24),
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextButton(
+                        onPressed: () => Navigator.of(context).pop(),
+                        style: TextButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            side: BorderSide(color: Colors.grey[300]!),
+                          ),
+                        ),
+                        child: Text(
+                          'Cancel',
+                          style: TextStyle(
+                            color: Colors.grey[600],
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: actionCallback,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: kPrimaryGreen,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          elevation: 2,
+                        ),
+                        child: Text(
+                          actionText,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  void _showForgotPasswordDialog() async {
     final resetEmailController = TextEditingController();
     String resetMessage = '';
     bool resetLoading = false;
+    bool emailSent = false;
+    
+    // Check if we have a previously saved email
+    final prefs = await SharedPreferences.getInstance();
+    final savedEmail = prefs.getString('last_password_reset_email') ?? '';
+    final lastResetTime = prefs.getInt('last_password_reset_time') ?? 0;
+    final currentTime = DateTime.now().millisecondsSinceEpoch;
+    
+    // If email was saved recently (within 24 hours), pre-fill it
+    bool isResending = false;
+    if (savedEmail.isNotEmpty && (currentTime - lastResetTime) < (24 * 60 * 60 * 1000)) {
+      resetEmailController.text = savedEmail;
+      isResending = true;
+    }
 
     showDialog(
       context: context,
@@ -1065,19 +1218,37 @@ class _AuthScreenState extends State<AuthScreen> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        OutlinedButton(
-                          onPressed: () => Navigator.pop(context),
-                          style: OutlinedButton.styleFrom(
-                            foregroundColor: kPrimaryGreen,
-                            side: BorderSide(color: kPrimaryGreen),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
+                        // Show different buttons based on state
+                        if (emailSent) ...[
+                          // After email is sent, show only Close button
+                          ElevatedButton(
+                            onPressed: () => Navigator.pop(context),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: kPrimaryGreen,
+                              foregroundColor: Colors.white,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
                             ),
+                            child: Text('Close'),
                           ),
-                          child: Text(AppLocalizations.of(context)!.cancel),
-                        ),
-                        SizedBox(width: 12),
-                        ElevatedButton(
+                        ] else ...[
+                          // Before email is sent, show cancel and send/resend buttons
+                          if (!resetLoading) ...[
+                            OutlinedButton(
+                              onPressed: () => Navigator.pop(context),
+                              style: OutlinedButton.styleFrom(
+                                foregroundColor: kPrimaryGreen,
+                                side: BorderSide(color: kPrimaryGreen),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                              ),
+                              child: Text(AppLocalizations.of(context)!.cancel),
+                            ),
+                            SizedBox(width: 12),
+                          ],
+                          ElevatedButton(
                           onPressed: resetLoading
                               ? null
                               : () async {
@@ -1111,11 +1282,16 @@ class _AuthScreenState extends State<AuthScreen> {
                                     return;
                                   }
 
-                                  // Record the attempt
-                                  await _rateLimitingService.recordAttempt('forgot_password_dialog', identifier: email);
-                                  
                                   try {
                                     await FirebaseAuth.instance.sendPasswordResetEmail(email: email);
+                                    
+                                    // Only record the attempt AFTER successful email send
+                                    await _rateLimitingService.recordAttempt('forgot_password_dialog', identifier: email);
+                                    
+                                    // Save the email and timestamp for future resend attempts
+                                    final prefs = await SharedPreferences.getInstance();
+                                    await prefs.setString('last_password_reset_email', email);
+                                    await prefs.setInt('last_password_reset_time', DateTime.now().millisecondsSinceEpoch);
                                     
                                     // Record password reset request for security monitoring
                                     await _securityService.recordSecurityEvent(
@@ -1128,6 +1304,7 @@ class _AuthScreenState extends State<AuthScreen> {
                                     setDialogState(() {
                                       resetMessage = 'Success! Check your email for a reset link.';
                                       resetLoading = false;
+                                      emailSent = true; // Mark email as sent to hide cancel button
                                     });
                                   } catch (e) {
                                     String errorMessage = 'Error sending reset email.';
@@ -1161,8 +1338,9 @@ class _AuthScreenState extends State<AuthScreen> {
                           ),
                           child: resetLoading
                               ? SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                              : Text(AppLocalizations.of(context)!.sendResetLink),
-                        ),
+                              : Text(isResending ? 'Resend Link' : AppLocalizations.of(context)!.sendResetLink),
+                          ),
+                        ],
                       ],
                     ),
                   ],
@@ -1216,6 +1394,22 @@ class _AuthScreenState extends State<AuthScreen> {
         print('🔍 Google Sign-Up Mode: Checking for existing account for ${googleUser.email}');
       } else {
         print('🔑 Google Sign-In Mode: Proceeding with authentication for ${googleUser.email}');
+      }
+      
+      // Check if this email already exists with a different provider
+      final userEmail = googleUser.email;
+      final signInMethods = await FirebaseAuth.instance.fetchSignInMethodsForEmail(userEmail);
+      
+      if (signInMethods.isNotEmpty) {
+        final hasEmailProvider = signInMethods.any((method) => method == 'password');
+        final hasGoogleProvider = signInMethods.any((method) => method.contains('google'));
+        
+        if (hasEmailProvider && !hasGoogleProvider) {
+          // User is trying to sign in with Google but already has email/password account
+          setState(() => isLoading = false);
+          _showProviderConflictDialog('password', 'google.com');
+          return;
+        }
       }
       
       // Proceed with Google authentication
@@ -1528,6 +1722,22 @@ class _AuthScreenState extends State<AuthScreen> {
       
       log.info('Attempting Firebase sign-in', {'email': email});
       
+      // Check if this email exists with a different provider
+      final signInMethods = await FirebaseAuth.instance.fetchSignInMethodsForEmail(email);
+      if (signInMethods.isNotEmpty) {
+        final hasGoogleProvider = signInMethods.any((method) => method.contains('google'));
+        final hasEmailProvider = signInMethods.any((method) => method == 'password');
+        
+        if (hasGoogleProvider && !hasEmailProvider) {
+          // User is trying to sign in with email but account was created with Google
+          if (mounted) {
+            setState(() => isLoading = false);
+          }
+          _showProviderConflictDialog('google.com', 'password');
+          return;
+        }
+      }
+      
       // Record sign-in attempt before trying
       await _rateLimitingService.recordAttempt('sign_in_attempt', identifier: email);
       
@@ -1686,15 +1896,28 @@ class _AuthScreenState extends State<AuthScreen> {
         }
       }
       
-      // Check if account already exists
+      // Check if account already exists with different provider
       final signInMethods = await FirebaseAuth.instance.fetchSignInMethodsForEmail(email);
       if (signInMethods.isNotEmpty) {
-        // Account already exists - show the account exists dialog
-        if (mounted) {
-          setState(() => isLoading = false);
+        // Account already exists - check if it's with a different provider
+        final hasGoogleProvider = signInMethods.any((method) => method.contains('google'));
+        final hasEmailProvider = signInMethods.any((method) => method == 'password');
+        
+        if (hasGoogleProvider) {
+          // User is trying to sign up with email but already has Google account
+          if (mounted) {
+            setState(() => isLoading = false);
+          }
+          _showProviderConflictDialog('google.com', 'password');
+          return;
+        } else if (hasEmailProvider) {
+          // Account already exists with email/password - show the regular account exists dialog
+          if (mounted) {
+            setState(() => isLoading = false);
+          }
+          _showAccountExistsDialog();
+          return;
         }
-        _showAccountExistsDialog();
-        return;
       }
       
       // Record sign-up attempt before trying
@@ -1714,7 +1937,6 @@ class _AuthScreenState extends State<AuthScreen> {
       
       if (mounted) {
         setState(() => message = 'Sign up successful!');
-        ValidationUtils.showSuccessMessage(context, 'Account created successfully!');
       }
       
       // Show onboarding after sign up
@@ -4055,6 +4277,7 @@ Track your calories, scan food with AI, and get personalized nutrition insights 
             ),
             content: SizedBox(
               width: double.maxFinite,
+              height: 400, // Fixed height for the dialog
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -4063,49 +4286,56 @@ Track your calories, scan food with AI, and get personalized nutrition insights 
                     style: TextStyle(color: Colors.grey[600]),
                   ),
                   SizedBox(height: 16),
-                  ListView.builder(
-                    shrinkWrap: true,
-                    itemCount: supportedLanguages.length,
-                    itemBuilder: (context, index) {
-                      final language = supportedLanguages[index];
-                      final isSelected = languageProvider.currentLanguageCode == language['code'];
-                      
-                      return Card(
-                        margin: EdgeInsets.only(bottom: 8),
-                        color: isSelected ? Colors.blue.withOpacity(0.1) : null,
-                        child: ListTile(
-                          leading: Text(
-                            language['flag'] ?? '🌐',
-                            style: TextStyle(fontSize: 28),
-                          ),
-                          title: Text(
-                            language['nativeName']!,
-                            style: TextStyle(
-                              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                            ),
-                          ),
-                          subtitle: Text(
-                            language['name']!,
-                            style: TextStyle(fontSize: 12),
-                          ),
-                          trailing: isSelected
-                              ? Icon(Icons.check_circle, color: Colors.blue)
-                              : null,
-                          onTap: () async {
-                            await languageProvider.changeLanguage(language['code']!);
-                            Navigator.pop(context);
-                            
-                            // Show confirmation
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text('${AppLocalizations.of(context)!.languageChangedTo} ${language['nativeName']}'),
-                                backgroundColor: Colors.green,
+                  Expanded(
+                    child: Scrollbar(
+                      thumbVisibility: true,
+                      trackVisibility: true,
+                      thickness: 6,
+                      radius: Radius.circular(3),
+                      child: ListView.builder(
+                        itemCount: supportedLanguages.length,
+                        itemBuilder: (context, index) {
+                          final language = supportedLanguages[index];
+                          final isSelected = languageProvider.currentLanguageCode == language['code'];
+                          
+                          return Card(
+                            margin: EdgeInsets.only(bottom: 8),
+                            color: isSelected ? Colors.blue.withOpacity(0.1) : null,
+                            child: ListTile(
+                              leading: Text(
+                                language['flag'] ?? '🌐',
+                                style: TextStyle(fontSize: 28),
                               ),
-                            );
-                          },
-                        ),
-                      );
-                    },
+                              title: Text(
+                                language['nativeName']!,
+                                style: TextStyle(
+                                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                                ),
+                              ),
+                              subtitle: Text(
+                                language['name']!,
+                                style: TextStyle(fontSize: 12),
+                              ),
+                              trailing: isSelected
+                                  ? Icon(Icons.check_circle, color: Colors.blue)
+                                  : null,
+                              onTap: () async {
+                                await languageProvider.changeLanguage(language['code']!);
+                                Navigator.pop(context);
+                                
+                                // Show confirmation
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text('${AppLocalizations.of(context)!.languageChangedTo} ${language['nativeName']}'),
+                                    backgroundColor: Colors.green,
+                                  ),
+                                );
+                              },
+                            ),
+                          );
+                        },
+                      ),
+                    ),
                   ),
                 ],
               ),
@@ -4639,7 +4869,7 @@ Track your calories, scan food with AI, and get personalized nutrition insights 
                                             SizedBox(height: 6),
                                             Text(AppLocalizations.of(context)!.startingWeight, style: TextStyle(color: kPrimaryGreen, fontWeight: FontWeight.w600, fontSize: 15), textAlign: TextAlign.center),
                                             SizedBox(height: 2),
-                                            Text('${useMetric ? profile.startingWeight.toStringAsFixed(1) : (profile.startingWeight * 2.20462).toStringAsFixed(1)} ${useMetric ? 'kg' : 'lb'}', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Colors.black)),
+                                            Text('${useMetric ? profile.startingWeight.toStringAsFixed(1) : (profile.startingWeight * 2.20462).toStringAsFixed(1)} ${useMetric ? 'kg' : 'lb'}', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.black)),
                                           ],
                                         ),
                                       ),
@@ -4889,6 +5119,7 @@ Track your calories, scan food with AI, and get personalized nutrition insights 
                                   final String? email = user?.email;
                                   bool isLoading = false;
                                   String message = '';
+                                  bool emailSent = false;
                                   return StatefulBuilder(
                                     builder: (context, setState) => Dialog(
                                       shape: RoundedRectangleBorder(
@@ -4946,18 +5177,21 @@ Track your calories, scan food with AI, and get personalized nutrition insights 
                                             Row(
                                               mainAxisAlignment: MainAxisAlignment.center,
                                               children: [
-                                                OutlinedButton(
-                                                  onPressed: () => Navigator.pop(context),
-                                                  style: OutlinedButton.styleFrom(
-                                                    foregroundColor: kPrimaryGreen,
-                                                    side: BorderSide(color: kPrimaryGreen),
-                                                    shape: RoundedRectangleBorder(
-                                                      borderRadius: BorderRadius.circular(12),
+                                                // Hide close button when loading or email has been sent
+                                                if (!isLoading && !emailSent) ...[
+                                                  OutlinedButton(
+                                                    onPressed: () => Navigator.pop(context),
+                                                    style: OutlinedButton.styleFrom(
+                                                      foregroundColor: kPrimaryGreen,
+                                                      side: BorderSide(color: kPrimaryGreen),
+                                                      shape: RoundedRectangleBorder(
+                                                        borderRadius: BorderRadius.circular(12),
+                                                      ),
                                                     ),
+                                                    child: Text(AppLocalizations.of(context)!.close),
                                                   ),
-                                                  child: Text(AppLocalizations.of(context)!.close),
-                                                ),
-                                                SizedBox(width: 12),
+                                                  SizedBox(width: 12),
+                                                ],
                                                 ElevatedButton(
                                                   onPressed: (isLoading || email == null)
                                                     ? null
@@ -4974,11 +5208,11 @@ Track your calories, scan food with AI, and get personalized nutrition insights 
                                                           return;
                                                         }
 
-                                                        // Record the attempt
-                                                        await _rateLimitingService.recordAttempt('password_reset', identifier: email);
-                                                        
                                                         try {
                                                           await FirebaseAuth.instance.sendPasswordResetEmail(email: email);
+                                                          
+                                                          // Only record the attempt AFTER successful email send
+                                                          await _rateLimitingService.recordAttempt('password_reset', identifier: email);
                                                           
                                                           // Record password reset request for security monitoring
                                                           await _securityService.recordSecurityEvent(
@@ -4992,6 +5226,7 @@ Track your calories, scan food with AI, and get personalized nutrition insights 
                                                           setState(() {
                                                             message = 'Success! Check your email for a reset link. Logging you out for security...';
                                                             isLoading = false;
+                                                            emailSent = true; // Mark email as sent to hide close button
                                                           });
                                                           // Show message briefly, then logout and navigate properly
                                                           await Future.delayed(Duration(seconds: 2));
@@ -6478,13 +6713,13 @@ class _FoodScreenState extends State<FoodScreen> with TickerProviderStateMixin {
     final period = _currentMealPeriod;
     switch (period) {
       case 'breakfast':
-        return AppLocalizations.of(context)!.breakfastTime + ' ☀️';
+        return AppLocalizations.of(context)!.breakfastTime;
       case 'lunch':
-        return AppLocalizations.of(context)!.lunchTime + '! 🌤️';
+        return AppLocalizations.of(context)!.lunchTime + '!';
       case 'dinner':
-        return AppLocalizations.of(context)!.dinnerTime + '! 🌇';
+        return AppLocalizations.of(context)!.dinnerTime + '!';
       default:
-        return AppLocalizations.of(context)!.snackTime + '! 🌙';
+        return AppLocalizations.of(context)!.snackTime + '!';
     }
   }
 
@@ -6895,139 +7130,240 @@ class _FoodScreenState extends State<FoodScreen> with TickerProviderStateMixin {
                               child: ListView(
                                 padding: const EdgeInsets.only(left: 0, right: 0, top: 0, bottom: 24),
                                 children: [
-                                  Padding(
-                                    padding: const EdgeInsets.fromLTRB(20, 18, 20, 0),
-                                    child: Text(_getCurrentMealLabel(context), style: TextStyle(fontWeight: FontWeight.bold, fontSize: 22)),
+                                  // Enhanced meal period header
+                                  Container(
+                                    margin: const EdgeInsets.fromLTRB(20, 20, 20, 16),
+                                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                                    decoration: BoxDecoration(
+                                      gradient: LinearGradient(
+                                        colors: [kPrimaryGreen.withOpacity(0.1), kPrimaryGreen.withOpacity(0.05)],
+                                        begin: Alignment.topLeft,
+                                        end: Alignment.bottomRight,
+                                      ),
+                                      borderRadius: BorderRadius.circular(16),
+                                      border: Border.all(color: kPrimaryGreen.withOpacity(0.2), width: 1),
+                                    ),
+                                    child: Row(
+                                      children: [
+                                        Container(
+                                          padding: const EdgeInsets.all(8),
+                                          decoration: BoxDecoration(
+                                            color: kPrimaryGreen.withOpacity(0.15),
+                                            borderRadius: BorderRadius.circular(12),
+                                          ),
+                                          child: Icon(
+                                            _currentMealPeriod == 'breakfast' ? Icons.wb_sunny :
+                                            _currentMealPeriod == 'lunch' ? Icons.wb_sunny_outlined :
+                                            _currentMealPeriod == 'dinner' ? Icons.nights_stay :
+                                            Icons.nightlight,
+                                            color: kPrimaryGreen,
+                                            size: 24,
+                                          ),
+                                        ),
+                                        const SizedBox(width: 12),
+                                        Expanded(
+                                          child: Text(
+                                            _getCurrentMealLabel(context),
+                                            style: TextStyle(
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 20,
+                                              color: Colors.black87,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
                                   ),
+                                  // Enhanced meal cards
                                   ...List.generate(meals.length, (i) {
                                     final meal = meals[i];
-                                    // Log the image URL for debugging
-                            
-                                    return Padding(
-                                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24), // increased from 20
-                                      child: Stack(
-                                        children: [
-                                          Container(
-                                            padding: const EdgeInsets.fromLTRB(0, 24, 48, 24), // <-- increased top and bottom padding
+                                    return Container(
+                                      margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                                      child: Material(
+                                        color: Colors.transparent,
+                                        child: InkWell(
+                                          borderRadius: BorderRadius.circular(20),
+                                          onTap: () {
+                                            Navigator.of(context).push(
+                                              MaterialPageRoute(
+                                                builder: (_) => GeneratedMealFromFridgePage(meal: meal),
+                                              ),
+                                            );
+                                          },
+                                          child: Container(
+                                            padding: const EdgeInsets.all(20),
                                             decoration: BoxDecoration(
                                               color: Colors.white,
                                               borderRadius: BorderRadius.circular(20),
                                               boxShadow: [
                                                 BoxShadow(
-                                                  color: Colors.black.withOpacity(0.04),
-                                                  blurRadius: 10,
+                                                  color: Colors.black.withOpacity(0.06),
+                                                  blurRadius: 12,
                                                   offset: const Offset(0, 4),
                                                 ),
                                               ],
+                                              border: Border.all(color: Colors.grey.withOpacity(0.1), width: 1),
                                             ),
-                                            child: Row(
+                                            child: Column(
                                               crossAxisAlignment: CrossAxisAlignment.start,
                                               children: [
-                                                // Meal image - AI suggested meals use food type icon
-                                                ClipRRect(
+                                                // Header row with meal name and calories
+                                                Row(
+                                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                                  children: [
+                                                    // Enhanced meal icon
+                                                    Container(
+                                                      width: 60,
+                                                      height: 60,
+                                                      decoration: BoxDecoration(
+                                                        gradient: LinearGradient(
+                                                          colors: [kPrimaryGreen.withOpacity(0.15), kPrimaryGreen.withOpacity(0.08)],
+                                                          begin: Alignment.topLeft,
+                                                          end: Alignment.bottomRight,
+                                                        ),
                                                         borderRadius: BorderRadius.circular(16),
-                                                        child: Container(
-                                                          width: 70,
-                                                          height: 70,
-                                                    decoration: BoxDecoration(
-                                                      color: kPrimaryGreen.withOpacity(0.1),
-                                                      borderRadius: BorderRadius.circular(16),
+                                                        border: Border.all(color: kPrimaryGreen.withOpacity(0.2), width: 1),
+                                                      ),
+                                                      child: Icon(
+                                                        _getFoodTypeIcon('meal'),
+                                                        size: 28,
+                                                        color: kPrimaryGreen,
+                                                      ),
                                                     ),
-                                                    child: Icon(
-                                                      _getFoodTypeIcon('meal'), // AI suggested meals are always meals
-                                                      size: 35,
-                                                      color: kPrimaryGreen,
-                                                    ),
-                                                  ),
-                                                ),
-                                                const SizedBox(width: 14),
-                                                // Meal info
-                                                Expanded(
-                                                  child: Column(
-                                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                                    mainAxisAlignment: MainAxisAlignment.center,
-                                                    children: [
-                                                      Row(
+                                                    const SizedBox(width: 16),
+                                                    // Meal name and calories
+                                                    Expanded(
+                                                      child: Column(
+                                                        crossAxisAlignment: CrossAxisAlignment.start,
                                                         children: [
-                                                          Expanded(
-                                                            child: Text(
-                                                              meal['meal_name'] as String? ?? '',
-                                                              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
-                                                              maxLines: 1,
-                                                              overflow: TextOverflow.ellipsis,
+                                                          Text(
+                                                            meal['meal_name'] as String? ?? '',
+                                                            style: TextStyle(
+                                                              fontWeight: FontWeight.bold,
+                                                              fontSize: 18,
+                                                              color: Colors.black87,
+                                                              height: 1.2,
+                                                            ),
+                                                            maxLines: 2,
+                                                            overflow: TextOverflow.ellipsis,
+                                                          ),
+                                                          const SizedBox(height: 4),
+                                                          Row(
+                                                            children: [
+                                                              Container(
+                                                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                                                decoration: BoxDecoration(
+                                                                  color: kPrimaryGreen.withOpacity(0.1),
+                                                                  borderRadius: BorderRadius.circular(8),
+                                                                ),
+                                                                child: Text(
+                                                                  '${meal['calories']} cal',
+                                                                  style: TextStyle(
+                                                                    fontWeight: FontWeight.w600,
+                                                                    fontSize: 14,
+                                                                    color: kPrimaryGreen,
+                                                                  ),
+                                                                ),
+                                                              ),
+                                                              const SizedBox(width: 8),
+                                                              Container(
+                                                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                                                decoration: BoxDecoration(
+                                                                  color: Colors.blue.withOpacity(0.1),
+                                                                  borderRadius: BorderRadius.circular(8),
+                                                                ),
+                                                                child: Text(
+                                                                  meal['time'] as String? ?? '5 mins',
+                                                                  style: TextStyle(
+                                                                    fontWeight: FontWeight.w500,
+                                                                    fontSize: 14,
+                                                                    color: Colors.blue[700],
+                                                                  ),
+                                                                ),
+                                                              ),
+                                                            ],
+                                                          ),
+                                                        ],
+                                                      ),
+                                                    ),
+                                                    // Add button
+                                                    Container(
+                                                      decoration: BoxDecoration(
+                                                        gradient: LinearGradient(
+                                                          colors: [kPrimaryGreen, kPrimaryGreen.withOpacity(0.8)],
+                                                          begin: Alignment.topLeft,
+                                                          end: Alignment.bottomRight,
+                                                        ),
+                                                        borderRadius: BorderRadius.circular(16),
+                                                        boxShadow: [
+                                                          BoxShadow(
+                                                            color: kPrimaryGreen.withOpacity(0.3),
+                                                            blurRadius: 8,
+                                                            offset: const Offset(0, 2),
+                                                          ),
+                                                        ],
+                                                      ),
+                                                      child: Material(
+                                                        color: Colors.transparent,
+                                                        child: InkWell(
+                                                          borderRadius: BorderRadius.circular(16),
+                                                          onTap: () {
+                                                            Navigator.of(context).push(
+                                                              MaterialPageRoute(
+                                                                builder: (_) => GeneratedMealFromFridgePage(meal: meal),
+                                                              ),
+                                                            );
+                                                          },
+                                                          child: Container(
+                                                            padding: const EdgeInsets.all(12),
+                                                            child: Icon(
+                                                              Icons.add,
+                                                              color: Colors.white,
+                                                              size: 20,
                                                             ),
                                                           ),
-                                                          const SizedBox(width: 8),
-                                                          Text(
-                                                            '${meal['calories']} cal',
-                                                            style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                                // Benefits tags
+                                                if ((meal['benefits'] as List<dynamic>? ?? []).isNotEmpty) ...[
+                                                  const SizedBox(height: 16),
+                                                  Wrap(
+                                                    spacing: 8,
+                                                    runSpacing: 6,
+                                                    children: [
+                                                      for (final tag in (meal['benefits'] as List<dynamic>? ?? []))
+                                                        Container(
+                                                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                                                          decoration: BoxDecoration(
+                                                            gradient: LinearGradient(
+                                                              colors: [Colors.orange.withOpacity(0.15), Colors.orange.withOpacity(0.08)],
+                                                              begin: Alignment.topLeft,
+                                                              end: Alignment.bottomRight,
+                                                            ),
+                                                            borderRadius: BorderRadius.circular(12),
+                                                            border: Border.all(color: Colors.orange.withOpacity(0.3), width: 1),
+                                                          ),
+                                                          child: Text(
+                                                            tag.toString(),
+                                                            style: TextStyle(
+                                                              color: Colors.orange[700],
+                                                              fontWeight: FontWeight.w600,
+                                                              fontSize: 12,
+                                                            ),
                                                             maxLines: 1,
                                                             overflow: TextOverflow.ellipsis,
                                                           ),
-                                                        ],
-                                                      ),
-                                                      const SizedBox(height: 8),
-                                                      Text(meal['time'] as String? ?? '5 mins', style: TextStyle(color: Colors.grey[600], fontSize: 15)),
-                                                      const SizedBox(height: 8),
-                                                      Wrap(
-                                                        spacing: 8,
-                                                        runSpacing: 4,
-                                                        children: [
-                                                          for (final tag in (meal['benefits'] as List<dynamic>? ?? []))
-                                                            Container(
-                                                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                                                              decoration: BoxDecoration(
-                                                                color: Colors.orange[50],
-                                                                borderRadius: BorderRadius.circular(10),
-                                                              ),
-                                                              child: Text(
-                                                                tag.toString(),
-                                                                style: TextStyle(color: Colors.orange[700], fontWeight: FontWeight.w500, fontSize: 13),
-                                                                maxLines: 1,
-                                                                overflow: TextOverflow.ellipsis,
-                                                              ),
-                                                            ),
-                                                        ],
-                                                      ),
+                                                        ),
                                                     ],
                                                   ),
-                                                ),
+                                                ],
                                               ],
                                             ),
                                           ),
-                                          Positioned(
-                                            bottom: 18,
-                                            right: 18,
-                                            child: Material(
-                                              color: Colors.transparent,
-                                              child: InkWell(
-                                                borderRadius: BorderRadius.circular(20),
-                                                onTap: () {
-                                                  Navigator.of(context).push(
-                                                    MaterialPageRoute(
-                                                      builder: (_) => GeneratedMealFromFridgePage(meal: meal),
-                                                    ),
-                                                  );
-                                                },
-                                                child: Container(
-                                                  decoration: BoxDecoration(
-                                                    color: Colors.green,
-                                                    borderRadius: BorderRadius.circular(20),
-                                                    boxShadow: [
-                                                      BoxShadow(
-                                                        color: Colors.green.withOpacity(0.12),
-                                                        blurRadius: 6,
-                                                        offset: Offset(0, 2),
-                                                      ),
-                                                    ],
-                                                  ),
-                                                  padding: const EdgeInsets.all(8),
-                                                  child: Icon(Icons.add, color: Colors.white, size: 24),
-                                                ),
-                                              ),
-                                            ),
-                                          ),
-                                        ],
+                                        ),
                                       ),
                                     );
                                   }).toList(),
@@ -7668,10 +8004,18 @@ class HealthAwarenessPage extends StatefulWidget {
 class _HealthAwarenessPageState extends State<HealthAwarenessPage> {
   String? _bloodType;
   bool? _isDiabetic;
+  String? _activityLevel;
   bool _saving = false;
 
   final List<String> bloodTypes = [
     'A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'
+  ];
+
+  List<Map<String, dynamic>> get activityLevels => [
+    {'label': AppLocalizations.of(context)!.sedentary, 'value': 'Sedentary', 'desc': AppLocalizations.of(context)!.littleOrNoExercise, 'icon': Icons.self_improvement},
+    {'label': AppLocalizations.of(context)!.lightlyActive, 'value': 'Lightly active', 'desc': AppLocalizations.of(context)!.lightExercise, 'icon': Icons.directions_walk},
+    {'label': AppLocalizations.of(context)!.moderatelyActive, 'value': 'Active', 'desc': AppLocalizations.of(context)!.moderateExercise, 'icon': Icons.directions_run},
+    {'label': AppLocalizations.of(context)!.veryActive, 'value': 'Very active', 'desc': AppLocalizations.of(context)!.hardExercise, 'icon': Icons.fitness_center},
   ];
 
   @override
@@ -7688,6 +8032,7 @@ class _HealthAwarenessPageState extends State<HealthAwarenessPage> {
       setState(() {
         _bloodType = data['bloodType'] as String?;
         _isDiabetic = data['isDiabetic'] as bool?;
+        _activityLevel = data['activityLevel'] as String?;
       });
     }
   }
@@ -7699,6 +8044,7 @@ class _HealthAwarenessPageState extends State<HealthAwarenessPage> {
       await FirebaseFirestore.instance.collection('users').doc(user.uid).update({
         'bloodType': _bloodType,
         'isDiabetic': _isDiabetic,
+        'activityLevel': _activityLevel,
         'lastUpdated': DateTime.now(),
       });
       setState(() => _saving = false);
@@ -7766,11 +8112,70 @@ class _HealthAwarenessPageState extends State<HealthAwarenessPage> {
                       ),
                     ],
                   ),
+                  SizedBox(height: 32),
+                  Text(AppLocalizations.of(context)!.activityLevelLabel, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20)),
+                  SizedBox(height: 12),
+                  ListView.builder(
+                    shrinkWrap: true,
+                    physics: NeverScrollableScrollPhysics(),
+                    itemCount: activityLevels.length,
+                    itemBuilder: (context, i) {
+                      final level = activityLevels[i];
+                      final isSelected = _activityLevel == level['value'];
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 4),
+                        child: GestureDetector(
+                          onTap: () => setState(() => _activityLevel = level['value']),
+                          child: AnimatedContainer(
+                            duration: Duration(milliseconds: 200),
+                            padding: EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: isSelected ? theme.primaryColor.withOpacity(0.08) : Colors.white,
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: isSelected ? theme.primaryColor : Colors.grey[300]!,
+                                width: isSelected ? 2 : 1,
+                              ),
+                            ),
+                            child: Row(
+                              children: [
+                                Icon(level['icon'], color: isSelected ? theme.primaryColor : Colors.grey[600]),
+                                SizedBox(width: 12),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        level['label'],
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.w600,
+                                          color: isSelected ? theme.primaryColor : Colors.black,
+                                        ),
+                                      ),
+                                      Text(
+                                        level['desc'],
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          color: Colors.grey[600],
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                if (isSelected)
+                                  Icon(Icons.check_circle, color: theme.primaryColor),
+                              ],
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
                   Spacer(),
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(
-                      onPressed: (_bloodType != null && _isDiabetic != null && !_saving) ? _save : null,
+                      onPressed: (_bloodType != null && _isDiabetic != null && _activityLevel != null && !_saving) ? _save : null,
                       child: Text(AppLocalizations.of(context)!.save),
                     ),
                   ),

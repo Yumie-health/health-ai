@@ -42,9 +42,9 @@ class RateLimitingService {
   // Rate limit configurations
   static const Map<String, Map<String, dynamic>> _rateLimits = {
     'password_reset': {
-      'max_attempts': 3,
-      'window_minutes': 15, // 3 attempts per 15 minutes
-      'cooldown_minutes': 60, // 1 hour cooldown after limit reached
+      'max_attempts': 2,
+      'window_minutes': 30, // 2 attempts per 30 minutes
+      'cooldown_minutes': 120, // 2 hour cooldown after limit reached
     },
     'sign_in_attempt': {
       'max_attempts': 5,
@@ -57,9 +57,9 @@ class RateLimitingService {
       'cooldown_minutes': 30, // 30 minute cooldown
     },
     'forgot_password_dialog': {
-      'max_attempts': 5,
-      'window_minutes': 30, // 5 attempts per 30 minutes
-      'cooldown_minutes': 60, // 1 hour cooldown
+      'max_attempts': 2,
+      'window_minutes': 30, // 2 attempts per 30 minutes
+      'cooldown_minutes': 120, // 2 hour cooldown
     },
   };
 
@@ -262,6 +262,24 @@ class RateLimitingService {
       _log.info('All rate limit data cleared');
     } catch (e) {
       _log.error('Error clearing rate limit data', e);
+    }
+  }
+
+  // Clear rate limit data for specific action (useful for testing/debugging)
+  Future<void> clearRateLimitForAction(String action, {String? identifier}) async {
+    try {
+      final key = _getRateLimitKey(action, identifier);
+      final prefs = await SharedPreferences.getInstance();
+      
+      await prefs.remove('${key}_attempts');
+      await prefs.remove('${key}_cooldown');
+      
+      _log.info('Rate limit data cleared for action', {
+        'action': action,
+        'identifier': identifier,
+      });
+    } catch (e) {
+      _log.error('Error clearing rate limit for action', e);
     }
   }
 

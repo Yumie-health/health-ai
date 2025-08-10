@@ -64,11 +64,8 @@ class ValidationUtils {
     if (name.length < 2) {
       return 'Name must be at least 2 characters long';
     }
-    if (name.length > 50) {
-      return 'Name must be less than 50 characters';
-    }
-    if (!RegExp(r'^[a-zA-Z\s]+$').hasMatch(name)) {
-      return 'Name can only contain letters and spaces';
+    if (name.length > 12) {
+      return 'Name must be 12 characters or less';
     }
     return null;
   }

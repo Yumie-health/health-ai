@@ -298,12 +298,22 @@ class AccountDeletionService {
     }
   }
 
-  // Clear all local data
+  // Clear all local data except app state flags
   Future<void> _clearLocalData() async {
     try {
       final prefs = await SharedPreferences.getInstance();
+      
+      // Save app state flags that should persist after account deletion
+      final permissionsRequested = prefs.getBool('permissions_requested') ?? false;
+      
+      // Clear all data
       await prefs.clear();
-      _log.info('Local data cleared successfully');
+      
+      // Restore app state flags so user doesn't go through onboarding again
+      await prefs.setBool('first_launch_completed', true); // Always set to true after account deletion
+      await prefs.setBool('permissions_requested', permissionsRequested);
+      
+      _log.info('Local data cleared successfully, app state flags preserved');
     } catch (e) {
       _log.error('Error clearing local data', e);
     }
@@ -617,7 +627,7 @@ class _ExitScreen extends StatelessWidget {
             ),
             SizedBox(height: 16),
             Text(
-              AppLocalizations.of(context)!.pleaseCloseAndRestartApp,
+              'You can now create a new account or sign in with a different account.',
               style: TextStyle(
                 fontSize: 16,
                 color: Colors.grey[600],
@@ -627,7 +637,7 @@ class _ExitScreen extends StatelessWidget {
             SizedBox(height: 32),
             ElevatedButton(
               onPressed: () {
-                // Try to restart the app by clearing everything and going to root
+                // Navigate back to main app - user should see sign-in screen
                 Navigator.of(context).pushNamedAndRemoveUntil('/', (route) => false);
               },
               style: ElevatedButton.styleFrom(
@@ -635,7 +645,7 @@ class _ExitScreen extends StatelessWidget {
                 foregroundColor: Colors.white,
                 padding: EdgeInsets.symmetric(horizontal: 32, vertical: 12),
               ),
-              child: Text(AppLocalizations.of(context)!.restartApp),
+              child: Text('Back to Sign In'),
             ),
           ],
         ),
