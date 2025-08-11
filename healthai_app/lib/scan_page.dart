@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:image/image.dart' as img;
 import 'scan_result_page.dart';
@@ -10,7 +11,9 @@ import 'scan_paywall_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'l10n/app_localizations.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
+import 'services/consent_service.dart';
 import 'services/subscription_service.dart';
+import 'config/ad_config.dart';
 
 class ScanPage extends StatefulWidget {
   const ScanPage({Key? key}) : super(key: key);
@@ -35,8 +38,39 @@ class _ScanPageState extends State<ScanPage> {
   void initState() {
     super.initState();
     _initCamera();
-    _loadRewardedAd(() {});
+    _prepareAds();
   }
+  Future<void> _prepareAds() async {
+    // Skip consent - it's already done at app startup in main.dart
+    // Just load the ad using existing consent status
+    if (!mounted) return;
+    
+    debugPrint('=== LOADING REWARDED AD (using existing consent) ===');
+    _loadRewardedAd(() {
+      debugPrint('Rewarded ad loaded successfully');
+    });
+    
+    // Also preload ad when paywall might be shown
+    _preloadAdForPaywall();
+  }
+
+  Future<void> _preloadAdForPaywall() async {
+    // Preload ad when user might need it (after first scan)
+    final prefs = await SharedPreferences.getInstance();
+    final today = DateTime.now();
+    final lastScanDate = prefs.getString('lastScanDate');
+    final scansToday = prefs.getInt('scansToday') ?? 0;
+    final todayStr = '${today.year}-${today.month}-${today.day}';
+    
+    // If user has already scanned today, preload ad for next scan
+    if (lastScanDate == todayStr && scansToday >= 1) {
+      debugPrint('Preloading ad for paywall (user has scanned today)');
+      _loadRewardedAd(() {
+        debugPrint('Paywall ad preloaded successfully');
+      });
+    }
+  }
+
 
   @override
   void dispose() {
@@ -78,6 +112,14 @@ class _ScanPageState extends State<ScanPage> {
     final prefs = await SharedPreferences.getInstance();
     final scansToday = prefs.getInt('scansToday') ?? 0;
     await prefs.setInt('scansToday', scansToday + 1);
+    
+    // Preload ad for next scan if user might need it
+    if (scansToday >= 0) { // After first scan, preload for next one
+      debugPrint('Preloading ad for next scan...');
+      _loadRewardedAd(() {
+        debugPrint('Ad preloaded for next scan');
+      });
+    }
   }
 
   Future<void> _captureImage() async {
@@ -118,6 +160,12 @@ class _ScanPageState extends State<ScanPage> {
 
     final bool showPaywall = await _shouldShowPaywall();
     if (showPaywall) {
+      // Ensure ad is loaded before showing paywall
+      if (!_isRewardedAdLoaded || _rewardedAd == null) {
+        debugPrint('Preloading ad before showing paywall...');
+        await Future.delayed(Duration(milliseconds: 500)); // Give ad a moment to load
+      }
+      
       if (!mounted) return;
       await Navigator.of(context).push(
         MaterialPageRoute(
@@ -194,18 +242,38 @@ class _ScanPageState extends State<ScanPage> {
   }
 
   void _loadRewardedAd(VoidCallback onAdLoaded) {
+    // Don't load if already loading or loaded
+    if (_isRewardedAdLoaded && _rewardedAd != null) {
+      debugPrint('Ad already loaded, skipping load request');
+      onAdLoaded();
+      return;
+    }
+    
+    debugPrint('Loading rewarded ad with unit ID: ${AdConfig.rewardedAdUnitId}');
     RewardedAd.load(
-      adUnitId: 'ca-app-pub-3940256099942544/5224354917', // Official test rewarded ad unit
-      request: AdRequest(),
+      adUnitId: AdConfig.rewardedAdUnitId,
+      request: ConsentService.instance.buildAdRequest(),
       rewardedAdLoadCallback: RewardedAdLoadCallback(
         onAdLoaded: (ad) {
+          debugPrint('✅ Rewarded ad loaded successfully!');
           _rewardedAd = ad;
           _isRewardedAdLoaded = true;
           onAdLoaded();
         },
         onAdFailedToLoad: (error) {
+          debugPrint('❌ Rewarded ad failed to load: $error');
+          debugPrint('Check logcat for test device ID message starting with:');
+          debugPrint('"Use RequestConfiguration.Builder().setTestDeviceIds"');
           _isRewardedAdLoaded = false;
           _rewardedAd = null;
+          
+          // Retry loading after a delay
+          Future.delayed(Duration(seconds: 5), () {
+            if (mounted && !_isRewardedAdLoaded) {
+              debugPrint('Retrying ad load after failure...');
+              _loadRewardedAd(() {});
+            }
+          });
         },
       ),
     );
@@ -215,31 +283,72 @@ class _ScanPageState extends State<ScanPage> {
     if (_isRewardedAdLoaded && _rewardedAd != null) {
       _rewardedAd!.fullScreenContentCallback = FullScreenContentCallback(
         onAdDismissedFullScreenContent: (ad) {
+          debugPrint('Scan ad dismissed');
           ad.dispose();
           _isRewardedAdLoaded = false;
           _rewardedAd = null;
           _loadRewardedAd(() {}); // Preload next ad
         },
         onAdFailedToShowFullScreenContent: (ad, error) {
+          debugPrint('Scan ad failed to show: $error');
           ad.dispose();
           _isRewardedAdLoaded = false;
           _rewardedAd = null;
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Ad failed to show. Please try again.')),
+            SnackBar(content: Text(AppLocalizations.of(context)!.adFailedToShow)),
           );
           _loadRewardedAd(() {});
         },
       );
-      _rewardedAd!.show(
-        onUserEarnedReward: (ad, reward) {
-          onRewardEarned();
-        },
-      );
+      
+      try {
+        await _rewardedAd!.show(
+          onUserEarnedReward: (ad, reward) {
+            debugPrint('User earned reward from scan ad');
+            onRewardEarned();
+          },
+        );
+      } catch (e) {
+        debugPrint('Error showing scan ad: $e');
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(AppLocalizations.of(context)!.adFailedToShow)),
+        );
+        onRewardEarned(); // Continue anyway
+      }
     } else {
+      debugPrint('Scan ad not loaded, attempting to load and show...');
+      
+      // Show loading indicator
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Ad not loaded yet. Please try again.')),
+        SnackBar(
+          content: Row(
+            children: [
+              SizedBox(
+                width: 16,
+                height: 16,
+                child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+              ),
+              SizedBox(width: 12),
+              Text('Loading ad...'),
+            ],
+          ),
+          duration: Duration(seconds: 3),
+        ),
       );
-      _loadRewardedAd(() {});
+      
+      // Try to load ad quickly and show it
+      _loadRewardedAd(() {
+        if (_isRewardedAdLoaded && _rewardedAd != null) {
+          debugPrint('Ad loaded quickly, showing now...');
+          _showRewardedAd(context, onRewardEarned);
+        } else {
+          debugPrint('Ad still not loaded after quick load attempt');
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(AppLocalizations.of(context)!.adNotLoadedYet)),
+          );
+          onRewardEarned(); // Continue anyway
+        }
+      });
     }
   }
 

@@ -938,7 +938,7 @@ class AppLocalizationsNl extends AppLocalizations {
   String get save37 => 'Bespaar 37%';
 
   @override
-  String get youArePremium => 'Je bent Premium';
+  String get youArePremium => 'Je bent Premium!';
 
   @override
   String get yumiePremiumMonthly => 'Yumie™ Premium Maandelijks';
@@ -1571,7 +1571,7 @@ class AppLocalizationsNl extends AppLocalizations {
   String get info => 'Info';
 
   @override
-  String get retry => 'Opnieuw proberen';
+  String get retry => 'Opnieuw Proberen';
 
   @override
   String get loading => 'Laden...';
@@ -1770,4 +1770,43 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get generating => 'Genereren...';
+
+  @override
+  String get premiumStatus => 'Premium Status';
+
+  @override
+  String get thankYouForSupport => 'Bedankt voor je steun! 💚';
+
+  @override
+  String get yourPremiumFeatures => 'Je Premium Functies';
+
+  @override
+  String get subscriptionError => 'Abonnement Fout';
+
+  @override
+  String get unknownErrorOccurred => 'Er is een onbekende fout opgetreden';
+
+  @override
+  String get privacyAndAds => 'Privacy en advertenties';
+
+  @override
+  String get reviewAdPreferences => 'Bekijk je advertentievoorkeuren';
+
+  @override
+  String get privacyOptionsNotAvailable => 'Privacy-opties zijn niet beschikbaar in je regio.';
+
+  @override
+  String get consentFlowCompleted => 'Toestemmingsproces voltooid!';
+
+  @override
+  String get appleSignInFailed => 'Apple sign-in failed';
+
+  @override
+  String get adFailedToShow => 'Ad failed to show. Please try again.';
+
+  @override
+  String get adNotLoadedYet => 'Ad not loaded yet. Please try again.';
+
+  @override
+  String get errorRequestingPermissions => 'Error requesting permissions';
 }

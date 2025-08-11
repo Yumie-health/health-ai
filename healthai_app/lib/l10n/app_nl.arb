@@ -675,5 +675,16 @@
   "analyzingFridge": "Je koelkast analyseren...",
   "aiDetectingFoodItems": "AI detecteert voedingsmiddelen",
   "tryClearerPhoto": "Probeer een duidelijkere foto van je koelkast te maken",
-  "generating": "Genereren..."
+  "generating": "Genereren...",
+  "premiumStatus": "Premium Status",
+  "youArePremium": "Je bent Premium!",
+  "thankYouForSupport": "Bedankt voor je steun! 💚",
+  "yourPremiumFeatures": "Je Premium Functies",
+  "subscriptionError": "Abonnement Fout",
+  "unknownErrorOccurred": "Er is een onbekende fout opgetreden",
+  "retry": "Opnieuw Proberen",
+  "privacyAndAds": "Privacy en advertenties",
+  "reviewAdPreferences": "Bekijk je advertentievoorkeuren",
+  "privacyOptionsNotAvailable": "Privacy-opties zijn niet beschikbaar in je regio.",
+  "consentFlowCompleted": "Toestemmingsproces voltooid!"
 } 

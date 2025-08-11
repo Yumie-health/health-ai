@@ -26,7 +26,7 @@
 	<key>CFBundleVersion</key>
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
 	<key>GADApplicationIdentifier</key>
-	<string>ca-app-pub-6978915708810799~2037285560</string>
+	<string>ca-app-pub-6978915708810799~3336130180</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>NSCameraUsageDescription</key>
@@ -37,6 +37,8 @@
 	<string>This app needs permission to save photos to your photo library.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>This app needs photo library access to select and save images for meal logging.</string>
+	<key>NSUserTrackingUsageDescription</key>
+	<string>We use your device identifier to show relevant ads and measure ad performance. Your consent is requested in compliance with UK/EU regulations.</string>
 	<key>NSUserNotificationUsageDescription</key>
 	<string>This app needs notification access to send you important updates.</string>
 	<key>UIApplicationSupportsIndirectInputEvents</key>

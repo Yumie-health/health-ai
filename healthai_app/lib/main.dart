@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -43,6 +44,9 @@ import 'providers/preferences_provider.dart';
 import 'providers/language_provider.dart';
 
 import 'widgets/password_strength_indicator.dart';
+import 'services/consent_service.dart';
+import 'services/tracking_service.dart';
+
 import 'utils/onboarding_helper.dart';
 import 'services/permission_service.dart';
 import 'subscription_popup_page.dart';
@@ -203,7 +207,7 @@ void main() async {
     initializationSettings,
     onDidReceiveNotificationResponse: (NotificationResponse response) {
       // Handle notification tap
-      print('Notification tapped: ${response.payload}');
+
     },
   );
 
@@ -265,6 +269,26 @@ void main() async {
   // Verify Firebase configuration
       // Firebase initialization complete
   
+  // DEBUG: Force region for testing. Comment/uncomment as needed.
+
+  ConsentService.instance.setDebugRegion(DebugRegion.eea); // EEA/UK test
+  // ConsentService.instance.setDebugRegion(DebugRegion.usa); // US-CPRA test
+  
+
+  // 1) Obtain consent (UK/EEA/US states) and initialize ads BEFORE any ad loads
+  await ConsentService.instance.initializeAndObtainConsent();
+
+  
+
+  await ConsentService.instance.configureMobileAds();
+
+
+  // 2) iOS ATT prompt after consent
+  await TrackingService.instance.requestATTIfNeeded();
+
+  // 3) Respect analytics consent
+  await FirebaseAnalytics.instance.setAnalyticsCollectionEnabled(ConsentService.instance.analyticsAllowed);
+
   log.initialize(); // THEN: Initialize logging service
   
   // Force Firebase to use the correct project
@@ -1401,9 +1425,9 @@ class _AuthScreenState extends State<AuthScreen> {
       
       // For sign-up mode, try authentication and check if it's an existing account
       if (showSignUp) {
-        print('🔍 Google Sign-Up Mode: Checking for existing account for ${googleUser.email}');
+
       } else {
-        print('🔑 Google Sign-In Mode: Proceeding with authentication for ${googleUser.email}');
+
       }
       
       // Check if this email already exists with a different provider
@@ -1432,7 +1456,7 @@ class _AuthScreenState extends State<AuthScreen> {
       
       // Check if this was a new user creation or existing user sign-in
       final isNewUser = userCredential.additionalUserInfo?.isNewUser ?? false;
-      print('📊 Google Auth Result: isNewUser=$isNewUser, signUpMode=$showSignUp');
+
       
       // await analytics.logLogin(loginMethod: 'google');  // Removed due to Kotlin conflicts
 
@@ -1638,7 +1662,7 @@ class _AuthScreenState extends State<AuthScreen> {
         
         // await analytics.logEvent(name: 'login_failed', parameters: {'method': 'apple', 'error': e.toString()});  // Removed due to Kotlin conflicts
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Apple sign-in failed: $e')),
+                                                        SnackBar(content: Text('${AppLocalizations.of(context)!.appleSignInFailed}: $e')),
         );
       }
     }
@@ -2503,7 +2527,7 @@ class _StartupProfileScreenState extends State<StartupProfileScreen> {
     } catch (e) {
       setState(() => isLoading = false);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error saving profile: $e')),
+                                    SnackBar(content: Text('${AppLocalizations.of(context)!.errorSavingProfile}: $e')),
       );
     }
   }
@@ -2859,27 +2883,27 @@ class _MainNavScreenState extends State<MainNavScreen> with TickerProviderStateM
       final justCompletedOnboarding = prefs.getBool('just_completed_onboarding') ?? false;
       
       if (justCompletedOnboarding) {
-        print('🎯 POST-ONBOARDING: Detected just completed onboarding...');
+
         // Clear the flag
         await prefs.setBool('just_completed_onboarding', false);
         
         final shouldShow = await SubscriptionPopupPage.shouldShowPopup(isPostOnboarding: true);
-        print('🎯 POST-ONBOARDING: shouldShow=$shouldShow, mounted=$mounted');
+
         if (shouldShow && mounted) {
           await Future.delayed(Duration(milliseconds: 1000)); // Longer delay for stable navigation
-          print('🎯 POST-ONBOARDING: About to show popup after delay...');
+
           if (mounted) {
-            print('🎯 POST-ONBOARDING: Pushing subscription popup page...');
+
             Navigator.of(context).push(
               MaterialPageRoute(builder: (_) => SubscriptionPopupPage(
                 isOnboardingComplete: true,
               )),
             );
           } else {
-            print('❌ POST-ONBOARDING: Widget not mounted, skipping popup');
+
           }
         } else {
-          print('❌ POST-ONBOARDING: shouldShow=false, not showing popup');
+
         }
       }
       
@@ -2927,7 +2951,7 @@ class _MainNavScreenState extends State<MainNavScreen> with TickerProviderStateM
         );
       }
     } catch (e) {
-      print('Error checking subscription status: $e');
+
     }
   }
 
@@ -4292,7 +4316,7 @@ Track your calories, scan food with AI, and get personalized nutrition insights 
       setState(() {}); // Refresh UI
           } catch (e, stack) {
         // Handle error silently
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to update photo: $e')));
+                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('${AppLocalizations.of(context)!.failedToUpdatePhoto}: $e')));
     } finally {
       Navigator.of(context, rootNavigator: true).pop();
     }
@@ -4442,7 +4466,7 @@ Track your calories, scan food with AI, and get personalized nutrition insights 
                   await user.updateDisplayName(newName);
                   didUpdate = true;
                 } catch (e, stack) {
-                  if (mounted) ScaffoldMessenger.of(parentContext).showSnackBar(SnackBar(content: Text('Failed to update name: $e')));
+                  if (mounted) ScaffoldMessenger.of(parentContext).showSnackBar(SnackBar(content: Text('${AppLocalizations.of(parentContext)!.failedToUpdateName}: $e')));
                 } finally {
                   await Future.delayed(const Duration(milliseconds: 100));
                   Navigator.of(parentContext, rootNavigator: true).maybePop();
@@ -4573,7 +4597,7 @@ Track your calories, scan food with AI, and get personalized nutrition insights 
                         } catch (e) {
                           if (mounted) {
                             ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text('Error updating profile: $e')),
+                              SnackBar(content: Text('${AppLocalizations.of(context)!.errorUpdatingProfile}: $e')),
                             );
                           }
                         }
@@ -4652,7 +4676,7 @@ Track your calories, scan food with AI, and get personalized nutrition insights 
               } catch (e) {
                 if (mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Error updating goals: $e')),
+                                                SnackBar(content: Text('${AppLocalizations.of(context)!.errorUpdatingGoals}: $e')),
                   );
                 }
               }
@@ -5402,6 +5426,38 @@ Track your calories, scan food with AI, and get personalized nutrition insights 
                                           url: 'https://yumie.me/terms',
                                         ),
                                         SizedBox(height: 12),
+
+                                        // Manage Privacy & Ads (reopen consent)
+                                        Container(
+                                          margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                                          decoration: BoxDecoration(
+                                            color: Colors.white,
+                                            borderRadius: BorderRadius.circular(12),
+                                            border: Border.all(color: kPrimaryGreen.withOpacity(0.3)),
+                                            boxShadow: [
+                                              BoxShadow(
+                                                color: Colors.black.withOpacity(0.05),
+                                                blurRadius: 8,
+                                                offset: Offset(0, 2),
+                                              ),
+                                            ],
+                                          ),
+                                          child: ListTile(
+                                            leading: Icon(Icons.shield, color: kPrimaryGreen),
+                                            title: Text(AppLocalizations.of(context)!.privacyAndAds),
+                                            subtitle: Text(AppLocalizations.of(context)!.reviewAdPreferences),
+                                            trailing: Icon(Icons.chevron_right, color: Colors.grey[400]),
+                                            onTap: () async {
+                                              Navigator.pop(context);
+                                              final shown = await ConsentService.instance.showPrivacyOptions();
+                                              if (!shown && context.mounted) {
+                                                ScaffoldMessenger.of(context).showSnackBar(
+                                                  SnackBar(content: Text(AppLocalizations.of(context)!.privacyOptionsNotAvailable)),
+                                                );
+                                              }
+                                            },
+                                          ),
+                                        ),
 
                                         SizedBox(height: 24),
                                         Row(

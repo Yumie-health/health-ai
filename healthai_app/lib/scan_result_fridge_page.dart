@@ -328,7 +328,7 @@ class _ScanResultFridgePageState extends State<ScanResultFridgePage> {
         await _showCalmPopupIfNeeded(() {
         Navigator.of(context).popUntil((route) => route.isFirst);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Meal saved!')),
+          SnackBar(content: Text(AppLocalizations.of(context)!.mealSaved)),
         );
         });
       }

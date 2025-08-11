@@ -894,7 +894,7 @@ abstract class AppLocalizations {
   /// No description provided for @mealSaved.
   ///
   /// In en, this message translates to:
-  /// **'🎉 Meal saved!'**
+  /// **'Meal saved!'**
   String get mealSaved;
 
   /// No description provided for @noRecentFoods.
@@ -1974,7 +1974,7 @@ abstract class AppLocalizations {
   /// No description provided for @youArePremium.
   ///
   /// In en, this message translates to:
-  /// **'You are Premium'**
+  /// **'You Are Premium!'**
   String get youArePremium;
 
   /// No description provided for @yumiePremiumMonthly.
@@ -3638,6 +3638,84 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Generating...'**
   String get generating;
+
+  /// No description provided for @premiumStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Premium Status'**
+  String get premiumStatus;
+
+  /// No description provided for @thankYouForSupport.
+  ///
+  /// In en, this message translates to:
+  /// **'Thank you for your support! 💚'**
+  String get thankYouForSupport;
+
+  /// No description provided for @yourPremiumFeatures.
+  ///
+  /// In en, this message translates to:
+  /// **'Your Premium Features'**
+  String get yourPremiumFeatures;
+
+  /// No description provided for @subscriptionError.
+  ///
+  /// In en, this message translates to:
+  /// **'Subscription Error'**
+  String get subscriptionError;
+
+  /// No description provided for @unknownErrorOccurred.
+  ///
+  /// In en, this message translates to:
+  /// **'An unknown error occurred'**
+  String get unknownErrorOccurred;
+
+  /// No description provided for @privacyAndAds.
+  ///
+  /// In en, this message translates to:
+  /// **'Privacy & Ads'**
+  String get privacyAndAds;
+
+  /// No description provided for @reviewAdPreferences.
+  ///
+  /// In en, this message translates to:
+  /// **'Review your ad preferences'**
+  String get reviewAdPreferences;
+
+  /// No description provided for @privacyOptionsNotAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Privacy options are not available in your region.'**
+  String get privacyOptionsNotAvailable;
+
+  /// No description provided for @consentFlowCompleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Consent flow completed!'**
+  String get consentFlowCompleted;
+
+  /// No description provided for @appleSignInFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Apple sign-in failed'**
+  String get appleSignInFailed;
+
+  /// No description provided for @adFailedToShow.
+  ///
+  /// In en, this message translates to:
+  /// **'Ad failed to show. Please try again.'**
+  String get adFailedToShow;
+
+  /// No description provided for @adNotLoadedYet.
+  ///
+  /// In en, this message translates to:
+  /// **'Ad not loaded yet. Please try again.'**
+  String get adNotLoadedYet;
+
+  /// No description provided for @errorRequestingPermissions.
+  ///
+  /// In en, this message translates to:
+  /// **'Error requesting permissions'**
+  String get errorRequestingPermissions;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

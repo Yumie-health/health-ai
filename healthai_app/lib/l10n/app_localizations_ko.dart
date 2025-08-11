@@ -938,7 +938,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get save37 => '37% 절약';
 
   @override
-  String get youArePremium => '프리미엄입니다';
+  String get youArePremium => '프리미엄입니다!';
 
   @override
   String get yumiePremiumMonthly => 'Yumie™ 프리미엄 월간';
@@ -1770,4 +1770,43 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get generating => '생성 중...';
+
+  @override
+  String get premiumStatus => '프리미엄 상태';
+
+  @override
+  String get thankYouForSupport => '지원해주셔서 감사합니다! 💚';
+
+  @override
+  String get yourPremiumFeatures => '프리미엄 기능';
+
+  @override
+  String get subscriptionError => '구독 오류';
+
+  @override
+  String get unknownErrorOccurred => '알 수 없는 오류가 발생했습니다';
+
+  @override
+  String get privacyAndAds => '개인정보 및 광고';
+
+  @override
+  String get reviewAdPreferences => '광고 기본 설정 검토';
+
+  @override
+  String get privacyOptionsNotAvailable => '귀하의 지역에서는 개인정보 옵션을 사용할 수 없습니다.';
+
+  @override
+  String get consentFlowCompleted => '동의 절차가 완료되었습니다!';
+
+  @override
+  String get appleSignInFailed => 'Apple sign-in failed';
+
+  @override
+  String get adFailedToShow => 'Ad failed to show. Please try again.';
+
+  @override
+  String get adNotLoadedYet => 'Ad not loaded yet. Please try again.';
+
+  @override
+  String get errorRequestingPermissions => 'Error requesting permissions';
 }

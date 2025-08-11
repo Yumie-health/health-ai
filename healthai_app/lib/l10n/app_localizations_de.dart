@@ -396,7 +396,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get continueButton => 'Weiter';
 
   @override
-  String get mealSaved => '🎉 Mahlzeit gespeichert!';
+  String get mealSaved => 'Mahlzeit gespeichert!';
 
   @override
   String get noRecentFoods => 'Keine kürzlichen Lebensmittel.';
@@ -716,13 +716,13 @@ class AppLocalizationsDe extends AppLocalizations {
   String get unableToShareAtThisTime => 'Teilen zu diesem Zeitpunkt nicht möglich. Bitte versuchen Sie es erneut.';
 
   @override
-  String get failedToUpdatePhoto => 'Foto konnte nicht aktualisiert werden';
+  String get failedToUpdatePhoto => 'Fehler beim Aktualisieren des Fotos';
 
   @override
   String get changeProfileName => 'Profilnamen ändern';
 
   @override
-  String get failedToUpdateName => 'Name konnte nicht aktualisiert werden';
+  String get failedToUpdateName => 'Fehler beim Aktualisieren des Namens';
 
   @override
   String get profileUpdatedSuccessfully => 'Profil erfolgreich aktualisiert';
@@ -938,7 +938,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get save37 => 'Sparen Sie 37%';
 
   @override
-  String get youArePremium => 'Sie sind Premium';
+  String get youArePremium => 'Sie sind Premium!';
 
   @override
   String get yumiePremiumMonthly => 'Yumie™ Premium Monatlich';
@@ -1770,4 +1770,43 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get generating => 'Generiere...';
+
+  @override
+  String get premiumStatus => 'Premium Status';
+
+  @override
+  String get thankYouForSupport => 'Vielen Dank für Ihre Unterstützung! 💚';
+
+  @override
+  String get yourPremiumFeatures => 'Ihre Premium-Funktionen';
+
+  @override
+  String get subscriptionError => 'Abonnement-Fehler';
+
+  @override
+  String get unknownErrorOccurred => 'Ein unbekannter Fehler ist aufgetreten';
+
+  @override
+  String get privacyAndAds => 'Datenschutz und Werbung';
+
+  @override
+  String get reviewAdPreferences => 'Überprüfen Sie Ihre Werbeeinstellungen';
+
+  @override
+  String get privacyOptionsNotAvailable => 'Datenschutzoptionen sind in Ihrer Region nicht verfügbar.';
+
+  @override
+  String get consentFlowCompleted => 'Zustimmungsablauf abgeschlossen!';
+
+  @override
+  String get appleSignInFailed => 'Apple-Anmeldung fehlgeschlagen';
+
+  @override
+  String get adFailedToShow => 'Anzeige konnte nicht angezeigt werden. Bitte versuchen Sie es erneut.';
+
+  @override
+  String get adNotLoadedYet => 'Anzeige noch nicht geladen. Bitte versuchen Sie es erneut.';
+
+  @override
+  String get errorRequestingPermissions => 'Fehler beim Anfordern von Berechtigungen';
 }

@@ -4,6 +4,7 @@ import 'package:in_app_purchase/in_app_purchase.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'subscription_service.dart';
+import 'consent_service.dart';
 
 class ReceiptValidationService {
   static final FirebaseFunctions _functions = FirebaseFunctions.instance;
@@ -92,16 +93,20 @@ class ReceiptValidationService {
       print('Premium status set to: true');
       
       // Track purchase event in Firebase Analytics
-      await FirebaseAnalytics.instance.logEvent(
-        name: 'purchase',
-        parameters: {
-          'product_id': purchase.productID,
-          'transaction_id': purchase.purchaseID ?? '',
-          'value': purchase.productID.contains('yearly') ? 49.99 : 7.99,
-          'currency': 'USD',
-          'platform': Platform.isAndroid ? 'android' : 'ios',
-        },
-      );
+      // Respect regional consent preferences for analytics/ads measurement
+      final analyticsAllowed = ConsentService.instance.analyticsAllowed;
+      if (analyticsAllowed) {
+        await FirebaseAnalytics.instance.logEvent(
+          name: 'purchase',
+          parameters: {
+            'product_id': purchase.productID,
+            'transaction_id': purchase.purchaseID ?? '',
+            'value': purchase.productID.contains('yearly') ? 49.99 : 7.99,
+            'currency': 'USD',
+            'platform': Platform.isAndroid ? 'android' : 'ios',
+          },
+        );
+      }
       
       // Immediately reflect premium state in the app
       try {

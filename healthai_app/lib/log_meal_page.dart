@@ -14,6 +14,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'services/subscription_service.dart';
 import 'search_paywall_page.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
+import 'config/ad_config.dart';
+import 'services/consent_service.dart';
 
 // Searchable meal input with dropdown suggestions
 class SearchableMealInput extends StatefulWidget {
@@ -58,11 +60,15 @@ class _SearchableMealInputState extends State<SearchableMealInput> {
     final lastSearchDate = prefs.getString('lastSearchDate');
     final searchesToday = prefs.getInt('searchesToday') ?? 0;
     final todayStr = '${today.year}-${today.month}-${today.day}';
+    
+    // Reset counter if it's a new day
     if (lastSearchDate != todayStr) {
       await prefs.setString('lastSearchDate', todayStr);
       await prefs.setInt('searchesToday', 0);
       return false; // first search of the day
     }
+    
+    // Show paywall after 1 free search per day
     return searchesToday >= 1;
   }
 
@@ -95,16 +101,19 @@ class _SearchableMealInputState extends State<SearchableMealInput> {
   }
 
   void _loadRewardedAd(VoidCallback onAdLoaded) {
+    debugPrint('Loading rewarded ad for search with unit ID: ${AdConfig.rewardedAdUnitId}');
     RewardedAd.load(
-      adUnitId: 'ca-app-pub-3940256099942544/5224354917', // Official test rewarded ad unit
-      request: AdRequest(),
+      adUnitId: AdConfig.rewardedAdUnitId,
+      request: ConsentService.instance.buildAdRequest(),
       rewardedAdLoadCallback: RewardedAdLoadCallback(
         onAdLoaded: (ad) {
+          debugPrint('✅ Search rewarded ad loaded successfully!');
           _rewardedAd = ad;
           _isRewardedAdLoaded = true;
           onAdLoaded();
         },
         onAdFailedToLoad: (error) {
+          debugPrint('❌ Search rewarded ad failed to load: $error');
           _isRewardedAdLoaded = false;
           _rewardedAd = null;
         },
@@ -116,26 +125,46 @@ class _SearchableMealInputState extends State<SearchableMealInput> {
     if (_isRewardedAdLoaded && _rewardedAd != null) {
       _rewardedAd!.fullScreenContentCallback = FullScreenContentCallback(
         onAdDismissedFullScreenContent: (ad) {
+          debugPrint('Search ad dismissed');
           ad.dispose();
           _isRewardedAdLoaded = false;
           _rewardedAd = null;
           _loadRewardedAd(() {}); // Preload next ad
         },
         onAdFailedToShowFullScreenContent: (ad, error) {
+          debugPrint('Search ad failed to show: $error');
           ad.dispose();
           _isRewardedAdLoaded = false;
           _rewardedAd = null;
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(AppLocalizations.of(context)!.adFailedToShow)),
+          );
           _loadRewardedAd(() {});
         },
       );
 
-      await _rewardedAd!.show(
-        onUserEarnedReward: (ad, reward) {
-          onRewardEarned();
-        },
-      );
+      try {
+        await _rewardedAd!.show(
+          onUserEarnedReward: (ad, reward) {
+            debugPrint('User earned reward from search ad');
+            onRewardEarned();
+          },
+        );
+      } catch (e) {
+        debugPrint('Error showing search ad: $e');
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(AppLocalizations.of(context)!.adFailedToShow)),
+        );
+        onRewardEarned(); // Continue anyway
+      }
     } else {
-      // If ad is not loaded, just continue with the action
+      debugPrint('Search ad not loaded, continuing without ad');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(AppLocalizations.of(context)!.adNotLoadedYet)),
+      );
+      // Try to load ad for next time
+      _loadRewardedAd(() {});
+      // Continue with the action
       onRewardEarned();
     }
   }

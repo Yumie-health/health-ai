@@ -675,5 +675,16 @@
   "analyzingFridge": "Analizzando il tuo frigorifero...",
   "aiDetectingFoodItems": "L'IA sta rilevando gli alimenti",
   "tryClearerPhoto": "Prova a scattare una foto più chiara del tuo frigorifero",
-  "generating": "Generando..."
+  "generating": "Generando...",
+  "premiumStatus": "Stato Premium",
+  "youArePremium": "Sei Premium!",
+  "thankYouForSupport": "Grazie per il tuo supporto! 💚",
+  "yourPremiumFeatures": "Le tue funzionalità Premium",
+  "subscriptionError": "Errore di Abbonamento",
+  "unknownErrorOccurred": "Si è verificato un errore sconosciuto",
+  "retry": "Riprova",
+  "privacyAndAds": "Privacy e Pubblicità",
+  "reviewAdPreferences": "Rivedi le tue preferenze pubblicitarie",
+  "privacyOptionsNotAvailable": "Le opzioni di privacy non sono disponibili nella tua regione.",
+  "consentFlowCompleted": "Flusso di consenso completato!"
 } 

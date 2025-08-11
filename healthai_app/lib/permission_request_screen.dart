@@ -83,7 +83,7 @@ class _PermissionRequestScreenState extends State<PermissionRequestScreen>
         _isRequesting = false;
       });
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error requesting permissions: $e')),
+        SnackBar(content: Text('${AppLocalizations.of(context)!.errorRequestingPermissions}: $e')),
       );
     }
   }
@@ -159,14 +159,18 @@ class _PermissionRequestScreenState extends State<PermissionRequestScreen>
                           textAlign: TextAlign.center,
                         ),
                         const SizedBox(height: 12),
-                        Text(
-                          AppLocalizations.of(context)!.provideBestExperience,
-                          style: TextStyle(
-                            fontSize: 16,
-                            color: Colors.grey[600],
-                            height: 1.4,
+                        Flexible(
+                          child: Text(
+                            AppLocalizations.of(context)!.provideBestExperience,
+                            style: TextStyle(
+                              fontSize: 16,
+                              color: Colors.grey[600],
+                              height: 1.4,
+                            ),
+                            textAlign: TextAlign.center,
+                            maxLines: 3,
+                            overflow: TextOverflow.ellipsis,
                           ),
-                          textAlign: TextAlign.center,
                         ),
                       ],
                     ),
@@ -236,6 +240,8 @@ class _PermissionRequestScreenState extends State<PermissionRequestScreen>
                                           color: Colors.grey[600],
                                           fontSize: 14,
                                         ),
+                                        maxLines: 2,
+                                        overflow: TextOverflow.ellipsis,
                                       ),
                                     ],
                                   ),

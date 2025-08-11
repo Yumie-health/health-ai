@@ -1,5 +1,6 @@
 import 'package:logger/logger.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
+import 'consent_service.dart';
 
 class LoggingService {
   static final LoggingService _instance = LoggingService._internal();
@@ -30,7 +31,7 @@ class LoggingService {
     } else {
       _logger.i(message);
     }
-    if (data != null) {
+    if (data != null && ConsentService.instance.analyticsAllowed) {
       _analytics.logEvent(name: 'app_info', parameters: data.cast<String, Object>());
     }
   }
@@ -42,7 +43,7 @@ class LoggingService {
     } else {
       _logger.w(message);
     }
-    if (data != null) {
+    if (data != null && ConsentService.instance.analyticsAllowed) {
       _analytics.logEvent(name: 'app_warning', parameters: data.cast<String, Object>());
     }
   }
@@ -50,13 +51,15 @@ class LoggingService {
   // Error logging
   void error(String message, [dynamic error, StackTrace? stackTrace]) {
     _logger.e(message, error: error, stackTrace: stackTrace);
-    _analytics.logEvent(
-      name: 'app_error',
-      parameters: {
-        'message': message,
-        'error': error?.toString() ?? 'Unknown error',
-      }.cast<String, Object>(),
-    );
+    if (ConsentService.instance.analyticsAllowed) {
+      _analytics.logEvent(
+        name: 'app_error',
+        parameters: {
+          'message': message,
+          'error': error?.toString() ?? 'Unknown error',
+        }.cast<String, Object>(),
+      );
+    }
   }
 
   // Debug logging (only in debug mode)

@@ -675,5 +675,16 @@
   "analyzingFridge": "Analisando sua geladeira...",
   "aiDetectingFoodItems": "IA detectando itens alimentares",
   "tryClearerPhoto": "Tente tirar uma foto mais clara da sua geladeira",
-  "generating": "Gerando..."
+  "generating": "Gerando...",
+  "premiumStatus": "Status Premium",
+  "youArePremium": "Você é Premium!",
+  "thankYouForSupport": "Obrigado pelo seu apoio! 💚",
+  "yourPremiumFeatures": "Suas Funcionalidades Premium",
+  "subscriptionError": "Erro de Assinatura",
+  "unknownErrorOccurred": "Ocorreu um erro desconhecido",
+  "retry": "Tentar Novamente",
+  "privacyAndAds": "Privacidade e Anúncios",
+  "reviewAdPreferences": "Revisar suas preferências de anúncios",
+  "privacyOptionsNotAvailable": "As opções de privacidade não estão disponíveis na sua região.",
+  "consentFlowCompleted": "Fluxo de consentimento concluído!"
 } 

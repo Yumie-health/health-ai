@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<gma-ad-services-config>
+    <!-- Delay app measurement until MobileAds.initialize() is called -->
+    <gma-app-measurement-setup>false</gma-app-measurement-setup>
+    
+    <!-- Enable Google Ad Services -->
+    <gma-ad-services>true</gma-ad-services>
+    
+    <!-- Configure User Messaging Platform -->
+    <gma-ump>
+        <!-- Enable UMP SDK -->
+        <enabled>true</enabled>
+        <!-- Debug mode for testing (set to false for production) -->
+        <debug>false</debug>
+    </gma-ump>
+</gma-ad-services-config>

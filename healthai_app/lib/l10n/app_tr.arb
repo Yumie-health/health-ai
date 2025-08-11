@@ -674,5 +674,16 @@
   "analyzingFridge": "Buzdolabınız analiz ediliyor...",
   "aiDetectingFoodItems": "AI gıda maddelerini tespit ediyor",
   "tryClearerPhoto": "Buzdolabınızın daha net bir fotoğrafını çekmeyi deneyin",
-  "generating": "Oluşturuluyor..."
+  "generating": "Oluşturuluyor...",
+  "premiumStatus": "Premium Durum",
+  "youArePremium": "Premium'sunuz!",
+  "thankYouForSupport": "Desteğiniz için teşekkürler! 💚",
+  "yourPremiumFeatures": "Premium Özellikleriniz",
+  "subscriptionError": "Abonelik Hatası",
+  "unknownErrorOccurred": "Bilinmeyen bir hata oluştu",
+  "retry": "Tekrar Dene",
+  "privacyAndAds": "Gizlilik ve Reklamlar",
+  "reviewAdPreferences": "Reklam tercihlerinizi gözden geçirin",
+  "privacyOptionsNotAvailable": "Gizlilik seçenekleri bölgenizde mevcut değil.",
+  "consentFlowCompleted": "Onay akışı tamamlandı!"
 }

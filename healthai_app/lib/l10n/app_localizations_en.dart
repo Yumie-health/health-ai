@@ -396,7 +396,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get continueButton => 'Continue';
 
   @override
-  String get mealSaved => '🎉 Meal saved!';
+  String get mealSaved => 'Meal saved!';
 
   @override
   String get noRecentFoods => 'No recent foods.';
@@ -938,7 +938,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get save37 => 'Save 37%';
 
   @override
-  String get youArePremium => 'You are Premium';
+  String get youArePremium => 'You Are Premium!';
 
   @override
   String get yumiePremiumMonthly => 'Yumie™ Premium Monthly';
@@ -1770,4 +1770,43 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get generating => 'Generating...';
+
+  @override
+  String get premiumStatus => 'Premium Status';
+
+  @override
+  String get thankYouForSupport => 'Thank you for your support! 💚';
+
+  @override
+  String get yourPremiumFeatures => 'Your Premium Features';
+
+  @override
+  String get subscriptionError => 'Subscription Error';
+
+  @override
+  String get unknownErrorOccurred => 'An unknown error occurred';
+
+  @override
+  String get privacyAndAds => 'Privacy & Ads';
+
+  @override
+  String get reviewAdPreferences => 'Review your ad preferences';
+
+  @override
+  String get privacyOptionsNotAvailable => 'Privacy options are not available in your region.';
+
+  @override
+  String get consentFlowCompleted => 'Consent flow completed!';
+
+  @override
+  String get appleSignInFailed => 'Apple sign-in failed';
+
+  @override
+  String get adFailedToShow => 'Ad failed to show. Please try again.';
+
+  @override
+  String get adNotLoadedYet => 'Ad not loaded yet. Please try again.';
+
+  @override
+  String get errorRequestingPermissions => 'Error requesting permissions';
 }

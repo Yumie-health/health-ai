@@ -396,7 +396,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get continueButton => 'Continuar';
 
   @override
-  String get mealSaved => '🎉 ¡Comida guardada!';
+  String get mealSaved => '¡Comida guardada!';
 
   @override
   String get noRecentFoods => 'No hay alimentos recientes.';
@@ -938,7 +938,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get save37 => 'Ahorra 37%';
 
   @override
-  String get youArePremium => 'Eres Premium';
+  String get youArePremium => '¡Eres Premium!';
 
   @override
   String get yumiePremiumMonthly => 'Yumie™ Premium Mensual';
@@ -1770,4 +1770,43 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get generating => 'Generando...';
+
+  @override
+  String get premiumStatus => 'Estado Premium';
+
+  @override
+  String get thankYouForSupport => '¡Gracias por tu apoyo! 💚';
+
+  @override
+  String get yourPremiumFeatures => 'Tus Características Premium';
+
+  @override
+  String get subscriptionError => 'Error de Suscripción';
+
+  @override
+  String get unknownErrorOccurred => 'Ocurrió un error desconocido';
+
+  @override
+  String get privacyAndAds => 'Privacidad y Anuncios';
+
+  @override
+  String get reviewAdPreferences => 'Revisar tus preferencias de anuncios';
+
+  @override
+  String get privacyOptionsNotAvailable => 'Las opciones de privacidad no están disponibles en tu región.';
+
+  @override
+  String get consentFlowCompleted => '¡Flujo de consentimiento completado!';
+
+  @override
+  String get appleSignInFailed => 'Error en el inicio de sesión con Apple';
+
+  @override
+  String get adFailedToShow => 'Error al mostrar el anuncio. Inténtalo de nuevo.';
+
+  @override
+  String get adNotLoadedYet => 'El anuncio aún no se ha cargado. Inténtalo de nuevo.';
+
+  @override
+  String get errorRequestingPermissions => 'Error al solicitar permisos';
 }

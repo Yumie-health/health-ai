@@ -675,5 +675,16 @@
   "analyzingFridge": "تحليل ثلاجتك...",
   "aiDetectingFoodItems": "الذكاء الاصطناعي يكتشف عناصر الطعام",
   "tryClearerPhoto": "حاول التقاط صورة أوضح لثلاجتك",
-  "generating": "جاري الإنشاء..."
+  "generating": "جاري الإنشاء...",
+  "premiumStatus": "حالة الاشتراك المميز",
+  "youArePremium": "أنت مميز!",
+  "thankYouForSupport": "شكراً لدعمك! 💚",
+  "yourPremiumFeatures": "ميزاتك المميزة",
+  "subscriptionError": "خطأ في الاشتراك",
+  "unknownErrorOccurred": "حدث خطأ غير معروف",
+  "retry": "إعادة المحاولة",
+  "privacyAndAds": "الخصوصية والإعلانات",
+  "reviewAdPreferences": "مراجعة تفضيلات الإعلانات",
+  "privacyOptionsNotAvailable": "خيارات الخصوصية غير متاحة في منطقتك.",
+  "consentFlowCompleted": "اكتمل تدفق الموافقة!"
 } 

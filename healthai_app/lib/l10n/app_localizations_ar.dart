@@ -938,7 +938,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get save37 => 'وفر 37%';
 
   @override
-  String get youArePremium => 'أنت عضو بريميوم';
+  String get youArePremium => 'أنت مميز!';
 
   @override
   String get yumiePremiumMonthly => 'يومي بريميوم شهري';
@@ -1770,4 +1770,43 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get generating => 'جاري الإنشاء...';
+
+  @override
+  String get premiumStatus => 'حالة الاشتراك المميز';
+
+  @override
+  String get thankYouForSupport => 'شكراً لدعمك! 💚';
+
+  @override
+  String get yourPremiumFeatures => 'ميزاتك المميزة';
+
+  @override
+  String get subscriptionError => 'خطأ في الاشتراك';
+
+  @override
+  String get unknownErrorOccurred => 'حدث خطأ غير معروف';
+
+  @override
+  String get privacyAndAds => 'الخصوصية والإعلانات';
+
+  @override
+  String get reviewAdPreferences => 'مراجعة تفضيلات الإعلانات';
+
+  @override
+  String get privacyOptionsNotAvailable => 'خيارات الخصوصية غير متاحة في منطقتك.';
+
+  @override
+  String get consentFlowCompleted => 'اكتمل تدفق الموافقة!';
+
+  @override
+  String get appleSignInFailed => 'Apple sign-in failed';
+
+  @override
+  String get adFailedToShow => 'Ad failed to show. Please try again.';
+
+  @override
+  String get adNotLoadedYet => 'Ad not loaded yet. Please try again.';
+
+  @override
+  String get errorRequestingPermissions => 'Error requesting permissions';
 }

@@ -675,5 +675,16 @@
   "analyzingFridge": "Анализируем ваш холодильник...",
   "aiDetectingFoodItems": "ИИ обнаруживает продукты питания",
   "tryClearerPhoto": "Попробуйте сделать более четкое фото вашего холодильника",
-  "generating": "Генерируем..."
+  "generating": "Генерируем...",
+  "premiumStatus": "Премиум статус",
+  "youArePremium": "Вы премиум!",
+  "thankYouForSupport": "Спасибо за вашу поддержку! 💚",
+  "yourPremiumFeatures": "Ваши премиум функции",
+  "subscriptionError": "Ошибка подписки",
+  "unknownErrorOccurred": "Произошла неизвестная ошибка",
+  "retry": "Повторить",
+  "privacyAndAds": "Конфиденциальность и реклама",
+  "reviewAdPreferences": "Просмотр настроек рекламы",
+  "privacyOptionsNotAvailable": "Параметры конфиденциальности недоступны в вашем регионе.",
+  "consentFlowCompleted": "Процесс согласия завершен!"
 } 
