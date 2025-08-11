@@ -1,8 +1,9 @@
+
 import 'dart:convert';
-import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../config/payment_config.dart';
+import 'google_auth_service.dart';
 
 class GooglePlayValidationService {
   static const String _baseUrl = 'https://androidpublisher.googleapis.com/androidpublisher/v3';
@@ -17,6 +18,8 @@ class GooglePlayValidationService {
   
   // Check if service is properly configured
   static bool isConfigured() {
+    // For full configuration, we need both license key and service account
+    // We can't call async getAccessToken() in a sync method, so we'll check if credentials exist
     return _licenseKey != null && _licenseKey!.isNotEmpty;
   }
   
@@ -46,9 +49,16 @@ class GooglePlayValidationService {
         purchaseToken: purchaseToken,
       );
       
-      final isValid = result['isValid'] as bool? ?? false;
-      print('Google Play Validation: API result - $isValid');
-      return isValid;
+      final isValid = result['isValid'];
+      if (isValid == null) {
+        // API returned null/unknown, use fallback validation
+        print('Google Play Validation: API returned unknown, using fallback');
+        return await _fallbackLocalValidation();
+      } else {
+        final validBool = isValid as bool? ?? false;
+        print('Google Play Validation: API result - $validBool');
+        return validBool;
+      }
     } catch (e) {
       print('Error checking subscription validity: $e');
       // Fall back to local validation if API fails
@@ -63,22 +73,58 @@ class GooglePlayValidationService {
     required String purchaseToken,
   }) async {
     try {
-      // For now, we'll use a simplified validation approach
-      // In production, you'd implement proper OAuth2 with service account
-      
+      // Get OAuth2 access token
+      final accessToken = await GoogleAuthService.getAccessToken();
       final url = '$_baseUrl/applications/$packageName/purchases/subscriptions/$productId/tokens/$purchaseToken';
       
-      // Since we don't have proper OAuth2 setup, we'll use fallback validation
-      print('Google Play API: Would validate at $url');
+      print('Google Play API: Validating subscription at $url');
       
-      return {
-        'isValid': false,
-        'error': 'API not fully configured - using fallback',
-      };
+      final response = await http.get(
+        Uri.parse(url),
+        headers: {
+          'Authorization': 'Bearer $accessToken',
+          'Content-Type': 'application/json',
+        },
+      );
+      
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        
+        // Check if subscription is active
+        // paymentState: 0 = pending, 1 = received
+        // cancelReason: null means not cancelled
+        final paymentState = data['paymentState'] as int?;
+        final cancelReason = data['cancelReason'] as int?;
+        final expiryTimeMillis = data['expiryTimeMillis'] as String?;
+        
+        bool isValid = false;
+        
+        if (paymentState == 1 && cancelReason == null) {
+          // Check if not expired
+          if (expiryTimeMillis != null) {
+            final expiryTime = DateTime.fromMillisecondsSinceEpoch(int.parse(expiryTimeMillis));
+            isValid = expiryTime.isAfter(DateTime.now());
+          } else {
+            isValid = true; // No expiry time means valid
+          }
+        }
+        
+        print('Google Play API: Validation result - $isValid');
+        return {
+          'isValid': isValid,
+          'data': data,
+        };
+      } else {
+        print('Google Play API: Error ${response.statusCode}: ${response.body}');
+        return {
+          'isValid': null, // null means "unknown, use fallback"
+          'error': 'HTTP ${response.statusCode}: ${response.body}',
+        };
+      }
     } catch (e) {
       print('Error validating subscription: $e');
       return {
-        'isValid': false,
+        'isValid': null, // null means "unknown, use fallback"
         'error': e.toString(),
       };
     }

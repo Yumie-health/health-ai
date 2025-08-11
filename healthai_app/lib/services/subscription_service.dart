@@ -1,16 +1,9 @@
-import 'dart:convert';
-import 'dart:io';
 import 'dart:async';
-import 'package:flutter/services.dart';
+import 'dart:io';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:in_app_purchase/in_app_purchase.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
-import 'logging_service.dart';
 import 'native_billing_service.dart';
 import 'production_integrity_service.dart';
-import 'receipt_validation_service.dart';
 import 'google_play_validation_service.dart';
 
 class SubscriptionService {
@@ -188,10 +181,21 @@ class SubscriptionService {
       final isPremium = prefs.getBool('isPremium') ?? false;
       
       if (isPremium) {
-        final isValid = await GooglePlayValidationService.checkSubscriptionValidity();
-        if (!isValid) {
-          await clearSubscription();
-          print('Subscription expired - premium access removed');
+        final purchaseToken = prefs.getString('purchaseToken');
+        final subscriptionType = prefs.getString('subscriptionType');
+        
+        // Only validate if we have complete purchase data
+        // This prevents clearing valid subscriptions due to missing purchase tokens
+        if (purchaseToken != null && subscriptionType != null) {
+          final isValid = await GooglePlayValidationService.checkSubscriptionValidity();
+          if (!isValid) {
+            await clearSubscription();
+            print('Subscription expired - premium access removed');
+          }
+        } else {
+          print('Subscription validation skipped - missing purchase data (purchaseToken: ${purchaseToken != null}, subscriptionType: ${subscriptionType != null})');
+          // Don't clear subscription if we just don't have the purchase token
+          // This can happen for restored purchases or existing subscriptions
         }
       }
     } catch (e) {
