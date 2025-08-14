@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'models/meal.dart';
 import 'models/user.dart';
 import 'services/meal_service.dart';
@@ -58,6 +59,7 @@ import 'package:share_plus/share_plus.dart';
 import 'package:in_app_review/in_app_review.dart';
 import 'utils/validation.dart';
 import 'services/error_handler.dart';
+import 'services/connectivity_service.dart';
 import 'services/auth_service.dart';
 import 'services/device_session_service.dart';
 import 'services/account_deletion_service.dart';
@@ -268,6 +270,13 @@ void main() async {
   
   // Verify Firebase configuration
       // Firebase initialization complete
+  // Enable Firestore offline persistence and set cache size
+  try {
+    FirebaseFirestore.instance.settings = const Settings(
+      persistenceEnabled: true,
+      cacheSizeBytes: 100 * 1024 * 1024,
+    );
+  } catch (_) {}
   
   // DEBUG: Force region for testing. Comment/uncomment as needed.
 
@@ -2857,6 +2866,8 @@ class _MainNavScreenState extends State<MainNavScreen> with TickerProviderStateM
   bool _showFabActions = false;
   static bool _footerEntrancePlayed = false;
   late AnimationController _footerController;
+  bool _isOnline = true;
+  StreamSubscription? _connectivitySubscription;
 
   late final List<Widget> _screens;
 
@@ -2876,6 +2887,39 @@ class _MainNavScreenState extends State<MainNavScreen> with TickerProviderStateM
     
     // Initialize device session tracking for authenticated users
     DeviceSessionService().initialize();
+
+    // Initial connectivity check and listener
+    Connectivity().checkConnectivity().then((result) {
+      final online = result != ConnectivityResult.none;
+      if (mounted) {
+        setState(() {
+          _isOnline = online;
+        });
+      }
+      // Set initial global connectivity state so overlays on other pages reflect it
+      ConnectivityService.instance.online.value = online;
+      if (!online) {
+        _showOfflineSnackBar();
+      }
+    });
+    _connectivitySubscription = Connectivity().onConnectivityChanged.listen((result) {
+      bool online = true;
+      if (result is List<ConnectivityResult>) {
+        online = result.any((r) => r != ConnectivityResult.none);
+      } else if (result is ConnectivityResult) {
+        online = result != ConnectivityResult.none;
+      }
+      if (mounted) {
+        setState(() {
+          _isOnline = online;
+        });
+      }
+      if (!online) {
+        _showOfflineSnackBar();
+      } else {
+        _hideSnackBarAndShowConnected();
+      }
+    });
     
     // Check for post-onboarding popup
     WidgetsBinding.instance.addPostFrameCallback((_) async {
@@ -2925,6 +2969,7 @@ class _MainNavScreenState extends State<MainNavScreen> with TickerProviderStateM
   @override
   void dispose() {
     _footerController.dispose();
+    _connectivitySubscription?.cancel();
     super.dispose();
   }
 
@@ -3027,7 +3072,7 @@ class _MainNavScreenState extends State<MainNavScreen> with TickerProviderStateM
         await FirebaseFirestore.instance.collection('users').doc(user.uid).update({
           'weight': newWeight,
           'lastWeightChange': weightChange,
-          'lastWeightUpdate': DateTime.now(),
+          'lastWeightUpdate': FieldValue.serverTimestamp(),
           'totalWeightChange': newTotalChange,
         });
       }
@@ -3054,7 +3099,7 @@ class _MainNavScreenState extends State<MainNavScreen> with TickerProviderStateM
         final int newAmount = prev + amount;
         await FirebaseFirestore.instance.collection('users').doc(user.uid).update({
           'waterLoggedMl': newAmount < 0 ? 0 : newAmount,
-          'lastUpdated': DateTime.now(),
+          'lastUpdated': FieldValue.serverTimestamp(),
         });
       }
     }
@@ -3143,6 +3188,7 @@ class _MainNavScreenState extends State<MainNavScreen> with TickerProviderStateM
             ),
           ),
         ),
+        // Removed global offline overlay from home. Overlays are now scoped to specific pages.
         // Overlay for Log/Scan
         if (_fabExpanded)
           Positioned.fill(
@@ -3207,6 +3253,39 @@ class _MainNavScreenState extends State<MainNavScreen> with TickerProviderStateM
             ),
           ),
       ],
+    );
+  }
+
+  void _showOfflineSnackBar() {
+    final messenger = ScaffoldMessenger.of(context);
+    messenger.hideCurrentSnackBar();
+    messenger.showSnackBar(
+      SnackBar(
+        content: Row(
+          children: const [
+            SizedBox(
+              height: 16,
+              width: 16,
+              child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+            ),
+            SizedBox(width: 12),
+            Expanded(child: Text('No internet. Trying to reconnect...')),
+          ],
+        ),
+        duration: Duration(days: 1),
+      ),
+    );
+  }
+
+  void _hideSnackBarAndShowConnected() {
+    final messenger = ScaffoldMessenger.of(context);
+    messenger.hideCurrentSnackBar();
+    messenger.showSnackBar(
+      const SnackBar(
+        content: Text('Connected'),
+        backgroundColor: Colors.green,
+        duration: Duration(seconds: 2),
+      ),
     );
   }
 }
@@ -3326,6 +3405,9 @@ class DashboardScreen extends StatefulWidget {
 
 class _DashboardScreenState extends State<DashboardScreen> with TickerProviderStateMixin {
   final MealService _mealService = MealService();
+  Stream<List<Meal>>? _mealsStream;
+  List<Meal>? _lastMeals;
+  UserProfile? _lastProfile;
   final UserService _userService = UserService();
   
   // Helper function to get food type icon
@@ -3357,6 +3439,31 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
     _mealsController = AnimationController(vsync: this, duration: const Duration(milliseconds: 700));
     _playEntranceAnimationsIfNeeded();
     _checkAndResetWaterIntake();
+  }
+  Widget _buildNutritionSummarySkeleton() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
+        boxShadow: [
+          BoxShadow(color: Colors.grey.withOpacity(0.06), blurRadius: 16, offset: const Offset(0, 4)),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(width: 160, height: 16, color: Colors.grey[200]),
+          const SizedBox(height: 14),
+          Container(width: double.infinity, height: 8, color: Colors.grey[200]),
+          const SizedBox(height: 10),
+          Container(width: double.infinity, height: 8, color: Colors.grey[200]),
+          const SizedBox(height: 10),
+          Container(width: double.infinity, height: 8, color: Colors.grey[200]),
+        ],
+      ),
+    );
   }
 
   void _playEntranceAnimationsIfNeeded() {
@@ -3465,18 +3572,23 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: StreamBuilder<UserProfile?>(
                     stream: _userService.getCurrentUserProfile(),
+                    initialData: _lastProfile,
                     builder: (context, userSnap) {
-                      if (!userSnap.hasData) return const SizedBox(height: 220, child: Center(child: CircularProgressIndicator()));
-                      final userProfile = userSnap.data!;
+                      if (userSnap.hasData) _lastProfile = userSnap.data;
+                      final userProfile = userSnap.data ?? _lastProfile;
+                      if (userProfile == null) {
+                        return _buildNutritionSummarySkeleton();
+                      }
                       final dailyCalorieGoal = userProfile.dailyCalorieGoal;
                       final proteinGoal = userProfile.proteinGoal;
                       final carbsGoal = userProfile.carbsGoal;
                       final fatGoal = userProfile.fatGoal;
                       return StreamBuilder<List<Meal>>(
-                        stream: _mealService.getTodayMeals(),
+                        stream: _mealsStream ??= _mealService.getTodayMeals(),
+                        initialData: _lastMeals,
                         builder: (context, snapshot) {
-                          if (!snapshot.hasData) return const SizedBox(height: 220, child: Center(child: CircularProgressIndicator()));
-                          final meals = snapshot.data!;
+                          final meals = snapshot.data ?? _lastMeals ?? const <Meal>[];
+                          if (snapshot.hasData) _lastMeals = snapshot.data;
                           final totalCalories = meals.fold(0, (sum, m) => sum + m.calories);
                           final totalProtein = meals.fold(0, (sum, m) => sum + m.protein);
                           final totalCarbs = meals.fold(0, (sum, m) => sum + m.carbs);
@@ -3587,13 +3699,13 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
                                       // Water Intake Tracker
                                       StreamBuilder<UserProfile?> (
                                         stream: _userService.getCurrentUserProfile(),
+                                        initialData: userProfile,
                                         builder: (context, userSnap) {
-                                          if (!userSnap.hasData) return SizedBox.shrink();
-                                          final userProfile = userSnap.data!;
-                                          final String waterGoalStr = userProfile.waterIntake ?? '2L';
+                                          final userProfile2 = userSnap.data ?? userProfile;
+                                          final String waterGoalStr = userProfile2.waterIntake ?? '2L';
                                           final double waterGoal = double.tryParse(waterGoalStr.replaceAll('L', '').replaceAll('+', '')) ?? 2.0;
                                           final int waterGoalMl = (waterGoal * 1000).round();
-                                          final int waterLoggedMl = userProfile.waterLoggedMl ?? 0;
+                                          final int waterLoggedMl = userProfile2?.waterLoggedMl ?? 0;
                                           final double percent = (waterLoggedMl / waterGoalMl).clamp(0.0, 1.0);
                                           return Container(
                                             padding: const EdgeInsets.only(top: 12.0),
@@ -4859,10 +4971,9 @@ Track your calories, scan food with AI, and get personalized nutrition insights 
                                       ],
                                     ),
                                     SizedBox(height: 4),
-                                    FutureBuilder<bool>(
-                                      future: SubscriptionService().isPremiumUser(),
-                                      builder: (context, snapshot) {
-                                        final isPremium = snapshot.data ?? false;
+                                    ValueListenableBuilder<bool>(
+                                      valueListenable: SubscriptionService().watchPremium(),
+                                      builder: (context, isPremium, _) {
                                         return Container(
                                           padding: EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                                           decoration: BoxDecoration(
@@ -5077,10 +5188,9 @@ Track your calories, scan food with AI, and get personalized nutrition insights 
                             },
                           ),
                           Divider(height: 1, color: Colors.grey[200]),
-                          FutureBuilder<bool>(
-                            future: SubscriptionService().isPremiumUser(),
-                            builder: (context, snapshot) {
-                              final isPremium = snapshot.data ?? false;
+                          ValueListenableBuilder<bool>(
+                            valueListenable: SubscriptionService().watchPremium(),
+                            builder: (context, isPremium, _) {
                               return Column(
                                 children: [
                                   _ProfileMenuTile(
@@ -6376,10 +6486,9 @@ class _CoachScreenState extends State<CoachScreen> with TickerProviderStateMixin
                             // Health Insights (AI-powered)
                             Padding(
                               padding: const EdgeInsets.symmetric(horizontal: 16),
-                              child: FutureBuilder<bool>(
-                                future: SubscriptionService().isPremiumUser(),
-                                builder: (context, snapshot) {
-                                  final isPremium = snapshot.data ?? false;
+                              child: ValueListenableBuilder<bool>(
+                                valueListenable: SubscriptionService().watchPremium(),
+                                builder: (context, isPremium, _) {
                                   
                                   return _insightCard(
                                     child: Stack(
@@ -6638,10 +6747,9 @@ class _CoachScreenState extends State<CoachScreen> with TickerProviderStateMixin
             Column(
               children: [
                 // Message counter for free users
-                FutureBuilder<bool>(
-                  future: SubscriptionService().isPremiumUser(),
-                  builder: (context, snapshot) {
-                    final isPremium = snapshot.data ?? false;
+                ValueListenableBuilder<bool>(
+                  valueListenable: SubscriptionService().watchPremium(),
+                  builder: (context, isPremium, _) {
                     if (isPremium) return SizedBox.shrink();
                     
                     return Padding(
@@ -7012,7 +7120,12 @@ class _FoodScreenState extends State<FoodScreen> with TickerProviderStateMixin {
           return localizations.snack;
       }
     }
-    return Scaffold(
+    return ValueListenableBuilder<bool>(
+      valueListenable: ConnectivityService.instance.online,
+      builder: (context, isOnline, _) {
+        return Stack(
+      children: [
+        Scaffold(
       backgroundColor: const Color(0xFFF9FAFB),
       appBar: PreferredSize(
         preferredSize: Size.fromHeight(80),
@@ -7489,6 +7602,65 @@ class _FoodScreenState extends State<FoodScreen> with TickerProviderStateMixin {
           ),
         ],
       ),
+        ),
+        if (!isOnline && _tabIndex == 1)
+          Positioned.fill(
+            child: Container(
+              color: Colors.black.withOpacity(0.45),
+              child: Center(
+                child: Container(
+                  padding: const EdgeInsets.all(20),
+                  margin: const EdgeInsets.symmetric(horizontal: 24),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.08), blurRadius: 12, offset: Offset(0, 6))],
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.wifi_off_rounded, size: 48, color: Colors.redAccent),
+                      const SizedBox(height: 12),
+                      Text('No internet', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700), textAlign: TextAlign.center),
+                      const SizedBox(height: 8),
+                      Text('Please connect to use this feature. You can still log meals offline and they will sync when you are back online.',
+                          style: TextStyle(fontSize: 15, color: Colors.black54, height: 1.4), textAlign: TextAlign.center),
+                      const SizedBox(height: 16),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: OutlinedButton.icon(
+                              onPressed: () => Navigator.of(context).popUntil((route) => route.isFirst),
+                              icon: Icon(Icons.home),
+                              label: Text('Home'),
+                              style: OutlinedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 12)),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: ElevatedButton.icon(
+                              onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const LogMealPage())),
+                              icon: Icon(Icons.restaurant_menu),
+                              label: Text('Log a meal'),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: kPrimaryGreen,
+                                foregroundColor: Colors.white,
+                                padding: const EdgeInsets.symmetric(vertical: 12),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+      ],
+    );
+      },
     );
   }
 }

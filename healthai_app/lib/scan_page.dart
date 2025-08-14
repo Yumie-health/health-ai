@@ -14,6 +14,8 @@ import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'services/consent_service.dart';
 import 'services/subscription_service.dart';
 import 'config/ad_config.dart';
+import 'services/connectivity_service.dart';
+import 'log_meal_page.dart';
 
 class ScanPage extends StatefulWidget {
   const ScanPage({Key? key}) : super(key: key);
@@ -354,95 +356,159 @@ class _ScanPageState extends State<ScanPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.black,
-      body: _isCameraInitialized
-          ? LayoutBuilder(
-              builder: (context, constraints) {
-                double frameWidth, frameHeight;
-                if (_isFridgeMode) {
-                  frameWidth = constraints.maxWidth * 0.92;
-                  frameHeight = constraints.maxHeight * 0.60;
-                } else {
-                  frameWidth = constraints.maxWidth * 0.7;
-                  frameHeight = frameWidth;
-                }
-                final double frameLeft = (constraints.maxWidth - frameWidth) / 2;
-                final double frameTop = (constraints.maxHeight - frameHeight) / 2;
-                final frameRect = Rect.fromLTWH(frameLeft, frameTop, frameWidth, frameHeight);
-                return Stack(
-                  children: [
-                    Positioned.fill(child: CameraPreview(_controller)),
-                    Positioned.fill(
-                      child: ScannerOverlay(
-                        borderRadius: _frameBorderRadius,
-                        frameRect: frameRect,
-                        borderColor: Colors.greenAccent,
-                        overlayOpacity: 0.7,
-                      ),
-                    ),
-                    // X button at top left
-                    Positioned(
-                      top: 0,
-                      left: 0,
-                      child: SafeArea(
-                        child: IconButton(
-                          icon: Icon(Icons.close, color: Colors.white, size: 32),
-                          onPressed: () => Navigator.of(context).pop(),
+    return Stack(
+      children: [
+        Scaffold(
+          backgroundColor: Colors.black,
+          body: _isCameraInitialized
+              ? LayoutBuilder(
+                  builder: (context, constraints) {
+                    double frameWidth, frameHeight;
+                    if (_isFridgeMode) {
+                      frameWidth = constraints.maxWidth * 0.92;
+                      frameHeight = constraints.maxHeight * 0.60;
+                    } else {
+                      frameWidth = constraints.maxWidth * 0.7;
+                      frameHeight = frameWidth;
+                    }
+                    final double frameLeft = (constraints.maxWidth - frameWidth) / 2;
+                    final double frameTop = (constraints.maxHeight - frameHeight) / 2;
+                    final frameRect = Rect.fromLTWH(frameLeft, frameTop, frameWidth, frameHeight);
+                    return Stack(
+                      children: [
+                        Positioned.fill(child: CameraPreview(_controller)),
+                        Positioned.fill(
+                          child: ScannerOverlay(
+                            borderRadius: _frameBorderRadius,
+                            frameRect: frameRect,
+                            borderColor: Colors.greenAccent,
+                            overlayOpacity: 0.7,
+                          ),
                         ),
-                      ),
+                        // X button at top left
+                        Positioned(
+                          top: 0,
+                          left: 0,
+                          child: SafeArea(
+                            child: IconButton(
+                              icon: Icon(Icons.close, color: Colors.white, size: 32),
+                              onPressed: () => Navigator.of(context).pop(),
+                            ),
+                          ),
+                        ),
+                        // Meal/Fridge toggle buttons
+                        Positioned(
+                          top: 0,
+                          left: 0,
+                          right: 0,
+                          child: SafeArea(
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                _buildModeButton(AppLocalizations.of(context)!.scan, !_isFridgeMode, () {
+                                  setState(() { _isFridgeMode = false; });
+                                }),
+                                const SizedBox(width: 12),
+                                _buildModeButton(AppLocalizations.of(context)!.fridge, _isFridgeMode, () {
+                                  setState(() { _isFridgeMode = true; });
+                                }),
+                              ],
+                            ),
+                          ),
+                        ),
+                        // Instruction overlay just above the frame
+                        Positioned(
+                          top: frameRect.top - 64,
+                          left: 0,
+                          right: 0,
+                          child: Center(
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
+                              decoration: BoxDecoration(
+                                color: Colors.black.withOpacity(0.55),
+                                borderRadius: BorderRadius.circular(22),
+                              ),
+                              child: Text(
+                                AppLocalizations.of(context)!.placeFoodInFrame,
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w700,
+                                  letterSpacing: 0.1,
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                            ),
+                          ),
+                        ),
+                        _buildBottomButtons(),
+                      ],
+                    );
+                  },
+                )
+              : const Center(child: CircularProgressIndicator()),
+        ),
+        ValueListenableBuilder<bool>(
+          valueListenable: ConnectivityService.instance.online,
+          builder: (context, isOnline, _) {
+            if (isOnline) return SizedBox.shrink();
+            return Positioned.fill(
+              child: Container(
+                color: Colors.black.withOpacity(0.45),
+                child: Center(
+                  child: Container(
+                    padding: const EdgeInsets.all(20),
+                    margin: const EdgeInsets.symmetric(horizontal: 24),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.08), blurRadius: 12, offset: Offset(0, 6))],
                     ),
-                    // Meal/Fridge toggle buttons
-                    Positioned(
-                      top: 0,
-                      left: 0,
-                      right: 0,
-                      child: SafeArea(
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.wifi_off_rounded, size: 48, color: Colors.redAccent),
+                        const SizedBox(height: 12),
+                        Text('No internet', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700), textAlign: TextAlign.center),
+                        const SizedBox(height: 8),
+                        Text('Please connect to use this feature. You can still log meals offline and they will sync when you are back online.',
+                            style: TextStyle(fontSize: 15, color: Colors.black54, height: 1.4), textAlign: TextAlign.center),
+                        const SizedBox(height: 16),
+                        Row(
                           children: [
-                            _buildModeButton(AppLocalizations.of(context)!.scan, !_isFridgeMode, () {
-                              setState(() { _isFridgeMode = false; });
-                            }),
+                            Expanded(
+                              child: OutlinedButton.icon(
+                                onPressed: () => Navigator.of(context).popUntil((route) => route.isFirst),
+                                icon: Icon(Icons.home),
+                                label: Text('Home'),
+                                style: OutlinedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 12)),
+                              ),
+                            ),
                             const SizedBox(width: 12),
-                            _buildModeButton(AppLocalizations.of(context)!.fridge, _isFridgeMode, () {
-                              setState(() { _isFridgeMode = true; });
-                            }),
+                            Expanded(
+                              child: ElevatedButton.icon(
+                                onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const LogMealPage())),
+                                icon: Icon(Icons.restaurant_menu),
+                                label: Text('Log a meal'),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.green,
+                                  foregroundColor: Colors.white,
+                                  padding: const EdgeInsets.symmetric(vertical: 12),
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                ),
+                              ),
+                            ),
                           ],
                         ),
-                      ),
+                      ],
                     ),
-                    // Instruction overlay just above the frame
-                    Positioned(
-                      top: frameRect.top - 64,
-                      left: 0,
-                      right: 0,
-                      child: Center(
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
-                          decoration: BoxDecoration(
-                            color: Colors.black.withOpacity(0.55),
-                            borderRadius: BorderRadius.circular(22),
-                          ),
-                          child: Text(
-                            AppLocalizations.of(context)!.placeFoodInFrame,
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 18,
-                              fontWeight: FontWeight.w700,
-                              letterSpacing: 0.1,
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
-                        ),
-                      ),
-                    ),
-                    _buildBottomButtons(),
-                  ],
-                );
-              },
-            )
-          : const Center(child: CircularProgressIndicator()),
+                  ),
+                ),
+              ),
+            );
+          },
+        ),
+      ],
     );
   }
 

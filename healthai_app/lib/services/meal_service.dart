@@ -32,10 +32,14 @@ class MealService {
         .snapshots()
         .map((snapshot) {
           _logger.info('getTodayMeals: Query returned ${snapshot.docs.length} docs');
-          for (var doc in snapshot.docs) {
+          final filtered = snapshot.docs.where((doc) {
+            final data = doc.data();
+            return (data['isDeleted'] ?? false) == false;
+          }).toList();
+          for (var doc in filtered) {
             _logger.fine('Meal doc: ${doc.data()}');
           }
-          return snapshot.docs.map((doc) => Meal.fromFirestore(doc)).toList();
+          return filtered.map((doc) => Meal.fromFirestore(doc)).toList();
         });
   }
 
@@ -55,7 +59,10 @@ class MealService {
         .where('timestamp', isLessThan: Timestamp.fromDate(endOfDay))
         .orderBy('timestamp', descending: true)
         .snapshots()
-        .map((snapshot) => snapshot.docs.map((doc) => Meal.fromFirestore(doc)).toList());
+        .map((snapshot) {
+          final filtered = snapshot.docs.where((doc) => (doc.data()['isDeleted'] ?? false) == false).toList();
+          return filtered.map((doc) => Meal.fromFirestore(doc)).toList();
+        });
   }
 
   // Add a new meal
@@ -68,7 +75,10 @@ class MealService {
 
   // Delete a meal
   Future<void> deleteMeal(String mealId) async {
-    await _firestore.collection('meals').doc(mealId).delete();
+    await _firestore.collection('meals').doc(mealId).update({
+      'isDeleted': true,
+      'deletedAt': FieldValue.serverTimestamp(),
+    });
   }
 
   // Get daily nutrition summary
@@ -92,7 +102,7 @@ class MealService {
     int totalCarbs = 0;
     int totalFat = 0;
 
-    for (var doc in snapshot.docs) {
+    for (var doc in snapshot.docs.where((d) => (d.data()['isDeleted'] ?? false) == false)) {
       final meal = Meal.fromFirestore(doc);
       totalCalories += meal.calories;
       totalProtein += meal.protein;

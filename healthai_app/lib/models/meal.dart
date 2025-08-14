@@ -40,10 +40,13 @@ class Meal {
       'protein': protein,
       'carbs': carbs,
       'fat': fat,
+      // Client timestamp for queries/offline, server timestamp for authoritative ordering when online
       'timestamp': Timestamp.fromDate(timestamp),
+      'serverTimestamp': FieldValue.serverTimestamp(),
       'mealType': mealType,
       'userId': userId,
       'ingredients': ingredients,
+      'isDeleted': false,
       if (imageUrl != null) 'imageUrl': imageUrl,
       if (foodType != null) 'foodType': foodType,
       if (quantity != null) 'quantity': quantity,
@@ -59,6 +62,9 @@ class Meal {
         data['timestamp'] == null) {
       throw Exception('Invalid meal data: missing required fields');
     }
+    final Timestamp? serverTs = data['serverTimestamp'] as Timestamp?;
+    final Timestamp? clientTs = data['timestamp'] as Timestamp?;
+    final DateTime resolvedTs = (serverTs ?? clientTs ?? Timestamp.now()).toDate();
     return Meal(
       id: doc.id,
       name: data['name'] ?? '',
@@ -66,7 +72,7 @@ class Meal {
       protein: data['protein'] ?? 0,
       carbs: data['carbs'] ?? 0,
       fat: data['fat'] ?? 0,
-      timestamp: (data['timestamp'] as Timestamp).toDate(),
+      timestamp: resolvedTs,
       mealType: data['mealType'] ?? '',
       userId: data['userId'] ?? '',
       ingredients: (data['ingredients'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? [],

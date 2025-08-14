@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'models/meal.dart';
@@ -12,10 +13,12 @@ import 'utils/constants.dart';
 import 'widgets/quantity_selection_dialog.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'services/subscription_service.dart';
+import 'dart:async';
 import 'search_paywall_page.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'config/ad_config.dart';
 import 'services/consent_service.dart';
+import 'services/connectivity_service.dart';
 
 // Searchable meal input with dropdown suggestions
 class SearchableMealInput extends StatefulWidget {
@@ -348,60 +351,65 @@ class _SearchableMealInputState extends State<SearchableMealInput> {
       },
       child: Column(
         children: [
-          TextField(
-            controller: widget.controller,
-            focusNode: _focusNode,
-            decoration: InputDecoration(
-              hintText: widget.hintText,
-              filled: true,
-              fillColor: const Color(0xFFF5F5F5),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(14),
-                borderSide: BorderSide.none,
-              ),
-              suffixIcon: _isFocused
-                  ? Container(
-                      margin: EdgeInsets.only(right: 8),
-                      child: InkWell(
-                        onTap: _onCheckmarkTap,
-                        borderRadius: BorderRadius.circular(16),
-                        child: Container(
-                          padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                          decoration: BoxDecoration(
-                            color: kPrimaryGreen,
+          ValueListenableBuilder<bool>(
+            valueListenable: ConnectivityService.instance.online,
+            builder: (context, isOnline, _) {
+              return TextField(
+                controller: widget.controller,
+                focusNode: _focusNode,
+                decoration: InputDecoration(
+                  hintText: widget.hintText,
+                  filled: true,
+                  fillColor: const Color(0xFFF5F5F5),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(14),
+                    borderSide: BorderSide.none,
+                  ),
+                  suffixIcon: _isFocused && isOnline
+                      ? Container(
+                          margin: EdgeInsets.only(right: 8),
+                          child: InkWell(
+                            onTap: _onCheckmarkTap,
                             borderRadius: BorderRadius.circular(16),
-                            boxShadow: [
-                              BoxShadow(
-                                color: kPrimaryGreen.withOpacity(0.3),
-                                blurRadius: 4,
-                                offset: Offset(0, 2),
+                            child: Container(
+                              padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                              decoration: BoxDecoration(
+                                color: kPrimaryGreen,
+                                borderRadius: BorderRadius.circular(16),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: kPrimaryGreen.withOpacity(0.3),
+                                    blurRadius: 4,
+                                    offset: Offset(0, 2),
+                                  ),
+                                ],
                               ),
-                            ],
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text(
+                                    AppLocalizations.of(context)!.aiSearch,
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                  SizedBox(width: 4),
+                                  Icon(
+                                    Icons.search,
+                                    color: Colors.white,
+                                    size: 16,
+                                  ),
+                                ],
+                              ),
+                            ),
                           ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Text(
-                                AppLocalizations.of(context)!.aiSearch,
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 12,
-                                ),
-                              ),
-                              SizedBox(width: 4),
-                              Icon(
-                                Icons.search,
-                                color: Colors.white,
-                                size: 16,
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    )
-                  : null,
-            ),
+                        )
+                      : null,
+                ),
+              );
+            },
           ),
         if (_showDropdown)
           Container(
@@ -563,6 +571,11 @@ class _NumericTextFieldState extends State<_NumericTextField> {
     setState(() {
       _isFocused = _focusNode.hasFocus;
     });
+    if (_focusNode.hasFocus) {
+      if (widget.controller.text == '0') {
+        widget.controller.selection = TextSelection(baseOffset: 0, extentOffset: widget.controller.text.length);
+      }
+    }
   }
 
   void _onCheckmarkTap() {
@@ -582,8 +595,24 @@ class _NumericTextFieldState extends State<_NumericTextField> {
       controller: widget.controller,
       focusNode: _focusNode,
       keyboardType: TextInputType.number,
+      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
       enabled: widget.enabled,
-      onChanged: widget.onChanged,
+      onTap: () {
+        if (widget.controller.text == '0') {
+          widget.controller.selection = TextSelection(baseOffset: 0, extentOffset: widget.controller.text.length);
+        }
+      },
+      onChanged: (value) {
+        String sanitized = value;
+        // Collapse multiple leading zeros
+        if (sanitized.length > 1 && sanitized.startsWith('0')) {
+          sanitized = sanitized.replaceFirst(RegExp(r'^0+'), '');
+          if (sanitized.isEmpty) sanitized = '0';
+          final pos = sanitized.length;
+          widget.controller.value = TextEditingValue(text: sanitized, selection: TextSelection.collapsed(offset: pos));
+        }
+        if (widget.onChanged != null) widget.onChanged!(sanitized);
+      },
       decoration: (widget.decoration ?? InputDecoration(
         hintText: widget.hintText,
         contentPadding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
@@ -616,10 +645,10 @@ class LogMealPage extends StatefulWidget {
 
 class _LogMealPageState extends State<LogMealPage> with TickerProviderStateMixin {
   final TextEditingController _foodNameController = TextEditingController();
-  final TextEditingController _caloriesController = TextEditingController();
-  final TextEditingController _proteinController = TextEditingController();
-  final TextEditingController _carbsController = TextEditingController();
-  final TextEditingController _fatController = TextEditingController();
+  final TextEditingController _caloriesController = TextEditingController(text: '0');
+  final TextEditingController _proteinController = TextEditingController(text: '0');
+  final TextEditingController _carbsController = TextEditingController(text: '0');
+  final TextEditingController _fatController = TextEditingController(text: '0');
   final TextEditingController _ingredientController = TextEditingController();
   List<String> _ingredients = [];
 
@@ -640,7 +669,7 @@ class _LogMealPageState extends State<LogMealPage> with TickerProviderStateMixin
   late AnimationController _macrosController;
   late AnimationController _recentController;
 
-  int _foodTabIndex = 0; // 0: Recent, 1: My Foods
+  int _foodTabIndex = 1; // Default to My Foods (Recent removed)
 
   @override
   void initState() {
@@ -823,33 +852,53 @@ class _LogMealPageState extends State<LogMealPage> with TickerProviderStateMixin
         quantity: _quantity,
         quantityUnit: _quantityUnit,
       );
-      await MealService().addMeal(meal);
+      bool queued = false;
+      try {
+        await MealService().addMeal(meal).timeout(const Duration(seconds: 3));
+        queued = true;
+      } on TimeoutException {
+        // Treat as queued locally (offline). Firestore will sync later.
+        queued = true;
+      }
+      if (!queued) throw Exception('Failed to queue meal');
+      final isOnline = ConnectivityService.instance.online.value;
+      if (!mounted) return;
       setState(() { 
         _ingredients.clear();
         _foodType = null;
         _quantity = null;
         _quantityUnit = null;
+        _isSaving = false;
       });
-      if (mounted) {
-        await _showCalmPopupIfNeeded(() {
-          Navigator.of(context).pop();
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(AppLocalizations.of(context)!.mealSaved),
-              backgroundColor: Colors.black87,
-              behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
-              ),
-              duration: Duration(seconds: 2),
-            ),
-          );
-        });
+      if (!isOnline) {
+        Navigator.of(context).popUntil((route) => route.isFirst);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(AppLocalizations.of(context)!.mealSaved),
+            backgroundColor: Colors.black87,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            duration: Duration(seconds: 2),
+          ),
+        );
+        return;
       }
+      await _showCalmPopupIfNeeded(() {
+        Navigator.of(context).popUntil((route) => route.isFirst);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(AppLocalizations.of(context)!.mealSaved),
+            backgroundColor: Colors.black87,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            duration: Duration(seconds: 2),
+          ),
+        );
+      });
     } catch (e) {
       setState(() => _error = e.toString());
     } finally {
-      setState(() => _isSaving = false);
+      if (mounted) setState(() => _isSaving = false);
     }
   }
 
@@ -1045,57 +1094,8 @@ class _LogMealPageState extends State<LogMealPage> with TickerProviderStateMixin
     );
   }
 
-  Widget _buildRecentFoods() {
-    return FadeTransition(
-      opacity: _recentController,
-      child: SlideTransition(
-        position: Tween<Offset>(begin: Offset(0, 0.10), end: Offset.zero).animate(CurvedAnimation(parent: _recentController, curve: Curves.easeOutCubic)),
-        child: StreamBuilder<List<Meal>>(
-          stream: MealService().getTodayMeals(),
-          builder: (context, snapshot) {
-            final allMeals = snapshot.data ?? [];
-            // Filter out meals with invalid or empty data
-            final meals = allMeals.where((meal) => 
-              meal.name.trim().isNotEmpty && 
-              meal.calories >= 0 && 
-              meal.protein >= 0 && 
-              meal.carbs >= 0 && 
-              meal.fat >= 0
-            ).toList();
-            
-            if (meals.isEmpty) {
-              return Padding(
-                padding: const EdgeInsets.symmetric(vertical: 24),
-                child: Center(child: Text(AppLocalizations.of(context)!.noRecentFoods)),
-              );
-            }
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const SizedBox(height: 8),
-                ...List<Meal>.from(meals.take(5)).asMap().entries.map((entry) {
-                  final int i = entry.key;
-                  final meal = entry.value;
-                  return TweenAnimationBuilder<double>(
-                    tween: Tween<double>(begin: 0, end: 1),
-                    duration: Duration(milliseconds: 400 + i * 80),
-                    builder: (context, value, child) => Opacity(
-                      opacity: value,
-                      child: Transform.translate(
-                        offset: Offset(0, (1 - value) * 24),
-                        child: child,
-                      ),
-                    ),
-                    child: _recentFoodTile(meal),
-                  );
-                }).toList(),
-              ],
-            );
-          },
-        ),
-      ),
-    );
-  }
+  // Recent foods removed from Log Meal page per requirement
+  // Widget _buildRecentFoods() {}
 
   Widget _recentFoodTile(Meal meal) {
     return _ExpandableMealTile(
@@ -1133,6 +1133,7 @@ class _LogMealPageState extends State<LogMealPage> with TickerProviderStateMixin
     List<String> ingredients = [];
     bool isSaving = false;
     String? error;
+    String selectedType = _selectedFoodType;
 
     await showGeneralDialog(
       context: context,
@@ -1147,29 +1148,138 @@ class _LogMealPageState extends State<LogMealPage> with TickerProviderStateMixin
           scale: Curves.easeOutBack.transform(anim1.value),
           child: Opacity(
             opacity: anim1.value,
-            child: AlertDialog(
+            child: StatefulBuilder(
+              builder: (context, setDialogState) => AlertDialog(
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-              title: Text(AppLocalizations.of(context)!.buildCustomMeal, style: TextStyle(fontWeight: FontWeight.bold, color: kPrimaryGreen)),
+              insetPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 24),
+              title: Text('Custom Building', style: TextStyle(fontWeight: FontWeight.bold, color: kPrimaryGreen)),
               content: SingleChildScrollView(
-                child: Column(
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(
+                    maxWidth: MediaQuery.of(context).size.width * 0.92,
+                  ),
+                  child: Column(
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(AppLocalizations.of(context)!.mealName, style: TextStyle(fontWeight: FontWeight.w600, fontSize: 18, color: kPrimaryGreen)),
+                    Text('Name', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 18, color: kPrimaryGreen)),
                     const SizedBox(height: 8),
                     TextField(
                       controller: nameController,
                       decoration: InputDecoration(
-                        hintText: AppLocalizations.of(context)!.searchOrEnterFoodName,
+                        hintText: 'Enter name',
                         filled: true,
                         fillColor: const Color(0xFFF5F5F5),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(14),
                           borderSide: BorderSide.none,
-                        ),
+                  ),
                       ),
                     ),
                     const SizedBox(height: 18),
+                    // Food type selection (ingredient/meal/drink) – same styling as Log Meal page
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        Expanded(
+                          child: GestureDetector(
+                            onTap: () => setDialogState(() => selectedType = 'ingredient'),
+                            child: AnimatedContainer(
+                              duration: Duration(milliseconds: 180),
+                              padding: const EdgeInsets.symmetric(vertical: 10),
+                              margin: const EdgeInsets.symmetric(horizontal: 4),
+                              decoration: BoxDecoration(
+                                color: selectedType == 'ingredient' ? kPrimaryGreen : Colors.grey[200],
+                                borderRadius: BorderRadius.circular(16),
+                                boxShadow: selectedType == 'ingredient'
+                                    ? [BoxShadow(color: kPrimaryGreen.withOpacity(0.08), blurRadius: 8, offset: Offset(0, 2))]
+                                    : [],
+                              ),
+                              child: Column(
+                                children: [
+                                  Text('🥕', style: TextStyle(fontSize: 20)),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    AppLocalizations.of(context)!.ingredient,
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.w600,
+                                      fontSize: 14,
+                                      color: selectedType == 'ingredient' ? Colors.white : Colors.grey[600],
+                                    ),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                        Expanded(
+                          child: GestureDetector(
+                            onTap: () => setDialogState(() => selectedType = 'meal'),
+                            child: AnimatedContainer(
+                              duration: Duration(milliseconds: 180),
+                              padding: const EdgeInsets.symmetric(vertical: 10),
+                              margin: const EdgeInsets.symmetric(horizontal: 4),
+                              decoration: BoxDecoration(
+                                color: selectedType == 'meal' ? kPrimaryGreen : Colors.grey[200],
+                                borderRadius: BorderRadius.circular(16),
+                                boxShadow: selectedType == 'meal'
+                                    ? [BoxShadow(color: kPrimaryGreen.withOpacity(0.08), blurRadius: 8, offset: Offset(0, 2))]
+                                    : [],
+                              ),
+                              child: Column(
+                                children: [
+                                  Text('🍽️', style: TextStyle(fontSize: 20)),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    AppLocalizations.of(context)!.meal,
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.w600,
+                                      fontSize: 14,
+                                      color: selectedType == 'meal' ? Colors.white : Colors.grey[600],
+                                    ),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                        Expanded(
+                          child: GestureDetector(
+                            onTap: () => setDialogState(() => selectedType = 'drink'),
+                            child: AnimatedContainer(
+                              duration: Duration(milliseconds: 180),
+                              padding: const EdgeInsets.symmetric(vertical: 10),
+                              margin: const EdgeInsets.symmetric(horizontal: 4),
+                              decoration: BoxDecoration(
+                                color: selectedType == 'drink' ? kPrimaryGreen : Colors.grey[200],
+                                borderRadius: BorderRadius.circular(16),
+                                boxShadow: selectedType == 'drink'
+                                    ? [BoxShadow(color: kPrimaryGreen.withOpacity(0.08), blurRadius: 8, offset: Offset(0, 2))]
+                                    : [],
+                              ),
+                              child: Column(
+                                children: [
+                                  Text('🥤', style: TextStyle(fontSize: 20)),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    AppLocalizations.of(context)!.drink,
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.w600,
+                                      fontSize: 14,
+                                      color: selectedType == 'drink' ? Colors.white : Colors.grey[600],
+                                    ),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
                     Row(
                       children: [
                         Expanded(child: _macroField('calories', AppLocalizations.of(context)!.calories, caloriesController)),
@@ -1207,7 +1317,7 @@ class _LogMealPageState extends State<LogMealPage> with TickerProviderStateMixin
                           icon: Icon(Icons.add, color: kPrimaryGreen),
                           onPressed: () {
                             if (ingredientController.text.trim().isNotEmpty) {
-                              setState(() {
+                              setDialogState(() {
                                 ingredients.add(ingredientController.text.trim());
                                 ingredientController.clear();
                               });
@@ -1228,26 +1338,28 @@ class _LogMealPageState extends State<LogMealPage> with TickerProviderStateMixin
                     if (error != null)
                       Padding(
                         padding: const EdgeInsets.only(top: 8),
-                        child: Text(error!, style: TextStyle(color: Colors.red)),
+                          child: Text(error!, style: TextStyle(color: Colors.red)),
                       ),
                   ],
                 ),
               ),
+              ),
               actions: [
                 TextButton(
                   onPressed: () => Navigator.pop(context),
+                  style: TextButton.styleFrom(minimumSize: const Size(96, 44), padding: const EdgeInsets.symmetric(horizontal: 16)),
                   child: Text(AppLocalizations.of(context)!.cancel, style: TextStyle(color: kPrimaryGreen)),
                 ),
                 ElevatedButton(
-                  style: ElevatedButton.styleFrom(backgroundColor: kPrimaryGreen),
+                  style: ElevatedButton.styleFrom(backgroundColor: kPrimaryGreen, minimumSize: const Size(110, 44), padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12)),
                   onPressed: isSaving
                       ? null
                       : () async {
-                          setState(() => isSaving = true);
+                          setDialogState(() => isSaving = true);
                           try {
                             final user = FirebaseAuth.instance.currentUser;
                             if (user == null) throw Exception('Not signed in');
-                            final customMeal = CustomMeal(
+                           final customMeal = CustomMeal(
                               id: '',
                               name: nameController.text.trim(),
                               calories: int.tryParse(caloriesController.text) ?? 0,
@@ -1258,9 +1370,22 @@ class _LogMealPageState extends State<LogMealPage> with TickerProviderStateMixin
                               userId: user.uid,
                             );
                             await MealService().addCustomMeal(customMeal);
+                           // Pre-fill the main Log Meal form so the user can save immediately
+                           if (mounted) {
+                             setState(() {
+                               _foodNameController.text = customMeal.name;
+                               _caloriesController.text = customMeal.calories.toString();
+                               _proteinController.text = customMeal.protein.toString();
+                               _carbsController.text = customMeal.carbs.toString();
+                               _fatController.text = customMeal.fat.toString();
+                               _ingredients = List<String>.from(customMeal.ingredients);
+                               _selectedFoodType = selectedType; // carry type
+                               _foodType = selectedType;
+                             });
+                           }
                             Navigator.pop(context);
                           } catch (e) {
-                            setState(() {
+                            setDialogState(() {
                               error = e.toString();
                               isSaving = false;
                             });
@@ -1269,6 +1394,7 @@ class _LogMealPageState extends State<LogMealPage> with TickerProviderStateMixin
                   child: isSaving ? SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)) : Text(AppLocalizations.of(context)!.save),
                 ),
               ],
+            ),
             ),
           ),
         );
@@ -1347,7 +1473,7 @@ class _LogMealPageState extends State<LogMealPage> with TickerProviderStateMixin
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 const SizedBox(height: 32),
-                Text(AppLocalizations.of(context)!.noCustomFoods, style: TextStyle(color: Colors.grey[500], fontSize: 18)),
+                 Text('You don\'t have any saved customs.', style: TextStyle(color: Colors.grey[500], fontSize: 18)),
                 const SizedBox(height: 24),
                 OutlinedButton(
                   onPressed: _showCustomMealDialog,
@@ -1357,7 +1483,7 @@ class _LogMealPageState extends State<LogMealPage> with TickerProviderStateMixin
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                     padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
                   ),
-                  child: Text(AppLocalizations.of(context)!.addCustomFood, style: TextStyle(fontSize: 18)),
+                   child: Text('Saved customs  +', style: TextStyle(fontSize: 18)),
                 ),
               ],
             ),
@@ -1367,21 +1493,21 @@ class _LogMealPageState extends State<LogMealPage> with TickerProviderStateMixin
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const SizedBox(height: 8),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-            OutlinedButton(
-              onPressed: _showCustomMealDialog,
-              style: OutlinedButton.styleFrom(
-                foregroundColor: kPrimaryGreen,
-                side: BorderSide(color: kPrimaryGreen.withOpacity(0.18)),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
-              ),
-              child: Text(AppLocalizations.of(context)!.buildCustomMeal, style: TextStyle(fontSize: 18)),
-                ),
-              ],
-            ),
+             Row(
+               mainAxisAlignment: MainAxisAlignment.center,
+               children: [
+                 OutlinedButton(
+                   onPressed: _showCustomMealDialog,
+                   style: OutlinedButton.styleFrom(
+                     foregroundColor: kPrimaryGreen,
+                     side: BorderSide(color: kPrimaryGreen.withOpacity(0.18)),
+                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                     padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                   ),
+                   child: Text('Custom building', style: TextStyle(fontSize: 18)),
+                 ),
+               ],
+             ),
             const SizedBox(height: 12),
             ...customMeals.map((meal) => _customMealTile(meal)).toList(),
           ],
@@ -1436,24 +1562,27 @@ class _LogMealPageState extends State<LogMealPage> with TickerProviderStateMixin
                 opacity: anim1.value,
                 child: AlertDialog(
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                  title: Text(AppLocalizations.of(context)!.editCustomMeal, style: TextStyle(fontWeight: FontWeight.bold, color: kPrimaryGreen)),
-                  content: SingleChildScrollView(
-                    child: Column(
+                   title: Text('Custom Building', style: TextStyle(fontWeight: FontWeight.bold, color: kPrimaryGreen)),
+                   insetPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 24),
+                   content: SingleChildScrollView(
+                     child: ConstrainedBox(
+                       constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.92),
+                       child: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                        Text(AppLocalizations.of(context)!.mealName, style: TextStyle(fontWeight: FontWeight.w600, fontSize: 18, color: kPrimaryGreen)),
+                        Text('Name', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 18, color: kPrimaryGreen)),
                         const SizedBox(height: 8),
                         TextField(
                           controller: nameController,
                           decoration: InputDecoration(
-                            hintText: AppLocalizations.of(context)!.searchOrEnterFoodName,
+                            hintText: 'Enter food name',
                             filled: true,
                             fillColor: const Color(0xFFF5F5F5),
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(14),
                               borderSide: BorderSide.none,
-                            ),
+                     ),
                           ),
                         ),
                         const SizedBox(height: 18),
@@ -1520,6 +1649,7 @@ class _LogMealPageState extends State<LogMealPage> with TickerProviderStateMixin
                 ],
                     ),
               ),
+              ),
               actions: [
                 TextButton(
                   onPressed: () => Navigator.pop(context),
@@ -1545,7 +1675,18 @@ class _LogMealPageState extends State<LogMealPage> with TickerProviderStateMixin
                                   userId: user.uid,
                                 );
                                 await MealService().updateCustomMeal(updatedMeal);
-                    Navigator.pop(context);
+                                // Reflect updated values back into main form for immediate save if desired
+                                if (mounted) {
+                                  setState(() {
+                                    _foodNameController.text = updatedMeal.name;
+                                    _caloriesController.text = updatedMeal.calories.toString();
+                                    _proteinController.text = updatedMeal.protein.toString();
+                                    _carbsController.text = updatedMeal.carbs.toString();
+                                    _fatController.text = updatedMeal.fat.toString();
+                                    _ingredients = List<String>.from(updatedMeal.ingredients);
+                                  });
+                                }
+                                Navigator.pop(context);
                               } catch (e) {
                                 setState(() {
                                   error = e.toString();
@@ -1561,6 +1702,22 @@ class _LogMealPageState extends State<LogMealPage> with TickerProviderStateMixin
           );
         },
         );
+      },
+      onDelete: () async {
+        final confirmed = await showDialog<bool>(
+          context: context,
+          builder: (c) => AlertDialog(
+            title: Text(AppLocalizations.of(context)!.delete),
+            content: Text(AppLocalizations.of(context)!.areYouSureDeleteMeal),
+            actions: [
+              TextButton(onPressed: () => Navigator.pop(c, false), child: Text(AppLocalizations.of(context)!.cancel)),
+              TextButton(onPressed: () => Navigator.pop(c, true), child: Text(AppLocalizations.of(context)!.delete)),
+            ],
+          ),
+        );
+        if (confirmed == true) {
+          await MealService().deleteCustomMeal(meal.id);
+        }
       },
       isCustomMeal: true,
     );
@@ -1717,12 +1874,8 @@ class _LogMealPageState extends State<LogMealPage> with TickerProviderStateMixin
               )).toList(),
             ),
             const SizedBox(height: 24),
-            // --- ONLY ONE FOOD PICKER TAB (TOP) ---
-            _buildFoodTabs(),
-            if (_foodTabIndex == 0)
-              _buildRecentFoods()
-            else
-              _buildMyFoods(),
+            // Food picker (Recent removed; show only My Foods)
+            _buildMyFoods(),
             if (_error != null)
               Padding(
                 padding: const EdgeInsets.only(top: 12),
@@ -1790,6 +1943,7 @@ class _ExpandableMealTile extends StatefulWidget {
   final Color iconColor;
   final VoidCallback onAdd;
   final VoidCallback? onCustomize;
+  final VoidCallback? onDelete;
   final bool isCustomMeal;
   final String? imageUrl;
   const _ExpandableMealTile({
@@ -1803,6 +1957,7 @@ class _ExpandableMealTile extends StatefulWidget {
     required this.iconColor,
     required this.onAdd,
     this.onCustomize,
+    this.onDelete,
     this.isCustomMeal = false,
     this.imageUrl,
     Key? key,
@@ -1852,8 +2007,8 @@ class _ExpandableMealTileState extends State<_ExpandableMealTile> {
                 _MacroTag(label: 'F', value: '${widget.fat}g', color: kWarningRed),
               ],
             ),
-            trailing: Flexible(
-              child: Wrap(
+             trailing: Flexible(
+               child: Wrap(
                 spacing: 4,
                 crossAxisAlignment: WrapCrossAlignment.center,
                 children: [
@@ -1865,6 +2020,14 @@ class _ExpandableMealTileState extends State<_ExpandableMealTile> {
                     constraints: BoxConstraints(),
                     padding: EdgeInsets.zero,
                   ),
+                   if (widget.isCustomMeal && widget.onDelete != null)
+                     IconButton(
+                       icon: Icon(Icons.delete, color: Colors.redAccent, size: 22),
+                       tooltip: AppLocalizations.of(context)!.delete,
+                       onPressed: widget.onDelete,
+                       constraints: BoxConstraints(),
+                       padding: EdgeInsets.zero,
+                     ),
                   if (widget.onCustomize != null)
                     IconButton(
                       icon: Icon(Icons.edit, color: kPrimaryGreen, size: 22),

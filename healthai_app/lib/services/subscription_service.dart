@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'native_billing_service.dart';
@@ -12,10 +13,26 @@ class SubscriptionService {
   SubscriptionService._internal();
   
   Timer? _subscriptionCheckTimer;
+  final ValueNotifier<bool> premium = ValueNotifier<bool>(false);
+
+  bool get isPremiumCached => premium.value;
+  ValueListenable<bool> watchPremium() => premium;
+
+  Future<void> _initializeCache() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final isPremium = prefs.getBool('isPremium') ?? false;
+      premium.value = isPremium;
+    } catch (e) {
+      // Best-effort; keep default false
+    }
+  }
 
   // Initialize billing service
   Future<void> initializeBilling() async {
     try {
+      // Load cached premium status immediately for offline UX
+      await _initializeCache();
       if (Platform.isAndroid) {
         await NativeBillingService.initializeBilling();
       }
@@ -129,6 +146,7 @@ class SubscriptionService {
       await prefs.remove('subscriptionType');
       await prefs.remove('purchaseDate');
       print('Subscription data cleared');
+      premium.value = false;
     } catch (e) {
       print('Error clearing subscription: $e');
     }
@@ -142,6 +160,7 @@ class SubscriptionService {
       await prefs.setString('purchaseDate', DateTime.now().toIso8601String());
       await prefs.setBool('hadPremiumEver', true);
       print('Subscription set: $productId');
+      premium.value = true;
       
       // Track subscription event in Firebase Analytics
       await FirebaseAnalytics.instance.logEvent(
