@@ -168,6 +168,37 @@ class ConsentService {
   // Opens the privacy options (consent form) so users can change preferences
   /// Attempts to show the privacy options (consent form). Returns true if shown.
   Future<bool> showPrivacyOptions() async {
+    // Refresh consent info first so the SDK can re-evaluate availability
+    final refresh = Completer<void>();
+    final params = (kDebugMode && _debugRegion != null && _debugRegion != DebugRegion.none)
+        ? ConsentRequestParameters(
+            tagForUnderAgeOfConsent: false,
+            consentDebugSettings: ConsentDebugSettings(
+              debugGeography: _debugRegion == DebugRegion.eea
+                  ? DebugGeography.debugGeographyEea
+                  : DebugGeography.debugGeographyNotEea,
+            ),
+          )
+        : ConsentRequestParameters(tagForUnderAgeOfConsent: false);
+
+    ConsentInformation.instance.requestConsentInfoUpdate(
+      params,
+      () async {
+        _lastCanRequestAds = await ConsentInformation.instance.canRequestAds();
+        _isConsentFormAvailable = await ConsentInformation.instance.isConsentFormAvailable();
+        refresh.complete();
+      },
+      (error) async {
+        _isConsentFormAvailable = await ConsentInformation.instance.isConsentFormAvailable();
+        refresh.complete();
+      },
+    );
+    await refresh.future;
+
+    if (!_isConsentFormAvailable) {
+      return false;
+    }
+
     final completed = Completer<bool>();
     ConsentForm.loadConsentForm((form) async {
       form.show((_) async {

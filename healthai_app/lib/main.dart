@@ -38,6 +38,7 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:timezone/data/latest.dart' as tz;
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'l10n/app_localizations.dart';
 import 'utils/constants.dart';
@@ -194,11 +195,13 @@ void main() async {
   // Initialize local notifications
   const AndroidInitializationSettings initializationSettingsAndroid =
       AndroidInitializationSettings('@mipmap/ic_launcher');
+  // Do not auto-request iOS notification permissions at startup.
+  // We'll request explicitly via PermissionService to control UX.
   const DarwinInitializationSettings initializationSettingsIOS =
       DarwinInitializationSettings(
-    requestAlertPermission: true,
-    requestBadgePermission: true,
-    requestSoundPermission: true,
+    requestAlertPermission: false,
+    requestBadgePermission: false,
+    requestSoundPermission: false,
   );
   const InitializationSettings initializationSettings = InitializationSettings(
     android: initializationSettingsAndroid,
@@ -280,20 +283,22 @@ void main() async {
   
   // DEBUG: Force region for testing. Comment/uncomment as needed.
 
-  ConsentService.instance.setDebugRegion(DebugRegion.eea); // EEA/UK test
-  // ConsentService.instance.setDebugRegion(DebugRegion.usa); // US-CPRA test
+  // ConsentService.instance.setDebugRegion(DebugRegion.eea); // EEA/UK test (DEV ONLY)
+  // ConsentService.instance.setDebugRegion(DebugRegion.usa); // US-CPRA test (DEV ONLY)
   
 
-  // 1) Obtain consent (UK/EEA/US states) and initialize ads BEFORE any ad loads
+  // Production behavior: rely on UMP geo to decide when to show consent.
+  // Do not force debug regions.
+  const bool _disableConsentForScreenshots = false;
+
+  // 1) Obtain consent (EEA/UK/US states) and initialize ads BEFORE any ad loads
   await ConsentService.instance.initializeAndObtainConsent();
-
-  
-
   await ConsentService.instance.configureMobileAds();
-
-
-  // 2) iOS ATT prompt after consent
-  await TrackingService.instance.requestATTIfNeeded();
+  
+  // 2) iOS ATT prompt only when UMP indicates privacy options are applicable
+  if (ConsentService.instance.isPrivacyOptionsAvailable && !_disableConsentForScreenshots) {
+    await TrackingService.instance.requestATTIfNeeded();
+  }
 
   // 3) Respect analytics consent
   await FirebaseAnalytics.instance.setAnalyticsCollectionEnabled(ConsentService.instance.analyticsAllowed);
@@ -1399,9 +1404,9 @@ class _AuthScreenState extends State<AuthScreen> {
   Future<void> _handleGoogleSignIn() async {
     setState(() => isLoading = true);
     try {
-      final GoogleSignInAccount? googleUser = await GoogleSignIn(
-        clientId: '389852437815-3e026b99jvv3g0n0bjlmvo33vfp085vi.apps.googleusercontent.com',
-      ).signIn();
+      // On iOS, the client ID is read from GoogleService-Info.plist via REVERSED_CLIENT_ID.
+      // Passing a mismatched clientId can cause the flow to hang or fail silently.
+      final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
       if (googleUser == null) {
         setState(() => isLoading = false);
         return; // User cancelled
@@ -1560,14 +1565,14 @@ class _AuthScreenState extends State<AuthScreen> {
   Future<void> _handleAppleSignIn() async {
     setState(() => isLoading = true);
     try {
-      log.info('User attempting Apple sign-in');
+      if (kDebugMode) log.info('User attempting Apple sign-in');
       
       // Generate a random nonce for security (matches Firebase docs)
       final nonce = _generateNonce();
-      log.info('Generated nonce: ${nonce.substring(0, 10)}...');
+      if (kDebugMode) log.info('Generated nonce: ${nonce.substring(0, 10)}...');
       
       // Request Apple Sign In with SHA256 hash of nonce (matches Firebase docs)
-      log.info('Requesting Apple ID credential with hashed nonce...');
+      if (kDebugMode) log.info('Requesting Apple ID credential with hashed nonce...');
       final credential = await SignInWithApple.getAppleIDCredential(
         scopes: [
           AppleIDAuthorizationScopes.email,
@@ -1575,38 +1580,61 @@ class _AuthScreenState extends State<AuthScreen> {
         ],
         nonce: _sha256ofString(nonce), // Send SHA256 hash to Apple
       );
-      log.info('Apple ID credential received successfully');
+      if (kDebugMode) log.info('Apple ID credential received successfully');
       
       // Validate the response (matches Firebase docs approach)
       if (credential.identityToken == null) {
         throw Exception('Apple Sign-In failed: No identity token received');
       }
       
-      log.info('Creating Firebase OAuth credential with raw nonce...');
-      log.info('Identity token length: ${credential.identityToken?.length ?? 0}');
-      log.info('Raw nonce: $nonce');
-      log.info('Hashed nonce sent to Apple: ${_sha256ofString(nonce)}');
+      if (kDebugMode) {
+        log.info('Creating Firebase OAuth credential with raw nonce...');
+        log.info('Identity token length: ${credential.identityToken?.length ?? 0}');
+        log.info('Raw nonce: $nonce');
+        log.info('Hashed nonce sent to Apple: ${_sha256ofString(nonce)}');
+      }
       
       // Create OAuth credential with raw nonce (matches Firebase docs)
-      final oauthCredential = OAuthProvider("apple").credential(
+      final oauthCredential = OAuthProvider('apple.com').credential(
         idToken: credential.identityToken,
+        accessToken: credential.authorizationCode,
         rawNonce: nonce, // Use raw nonce for Firebase validation
       );
       
       // Sign in to Firebase
-      log.info('Signing in to Firebase with Apple credential...');
-      log.info('Firebase Auth instance: ${FirebaseAuth.instance.app.name}');
-      log.info('Firebase Auth app options: ${FirebaseAuth.instance.app.options}');
-      log.info('Firebase Auth current user: ${FirebaseAuth.instance.currentUser?.uid}');
-      log.info('Firebase project ID: ${FirebaseAuth.instance.app.options.projectId}');
-      log.info('Firebase auth domain: ${FirebaseAuth.instance.app.options.authDomain}');
-      
-      // Additional debugging info
-      log.info('OAuth provider: apple');
-      log.info('ID token present: ${credential.identityToken != null}');
-      log.info('Raw nonce length: ${nonce.length}');
-      log.info('Full name: ${credential.givenName} ${credential.familyName}');
-      log.info('Email: ${credential.email}');
+      if (kDebugMode) {
+        log.info('Signing in to Firebase with Apple credential...');
+        log.info('Firebase Auth instance: ${FirebaseAuth.instance.app.name}');
+        log.info('Firebase Auth app options: ${FirebaseAuth.instance.app.options}');
+        log.info('Firebase Auth current user: ${FirebaseAuth.instance.currentUser?.uid}');
+        log.info('Firebase project ID: ${FirebaseAuth.instance.app.options.projectId}');
+        log.info('Firebase auth domain: ${FirebaseAuth.instance.app.options.authDomain}');
+
+        // Additional debugging info
+        log.info('OAuth provider: apple');
+        log.info('ID token present: ${credential.identityToken != null}');
+        log.info('Raw nonce length: ${nonce.length}');
+        log.info('Full name: ${credential.givenName} ${credential.familyName}');
+        log.info('Email: ${credential.email}');
+        try {
+          final pkg = await PackageInfo.fromPlatform();
+          log.info('Runtime bundle/package: ${pkg.packageName}');
+        } catch (_) {}
+        try {
+          final token = credential.identityToken;
+          if (token != null) {
+            final parts = token.split('.');
+            if (parts.length == 3) {
+              final normalized = base64Url.normalize(parts[1]);
+              final decoded = utf8.decode(base64Url.decode(normalized));
+              // This payload includes aud, iss, nonce, sub, etc.
+              log.info('Apple ID token decoded payload (truncated): ' + decoded.substring(0, decoded.length.clamp(0, 400)) + '...');
+            }
+          }
+        } catch (e) {
+          log.info('Token decode skipped: $e');
+        }
+      }
       
       final userCredential = await FirebaseAuth.instance.signInWithCredential(oauthCredential);
       final user = userCredential.user;
@@ -1644,15 +1672,21 @@ class _AuthScreenState extends State<AuthScreen> {
     } catch (e) {
       if (mounted) {
         setState(() => isLoading = false);
-        log.error('Apple sign-in failed with error: $e');
-        log.error('Error type: ${e.runtimeType}');
+        if (kDebugMode) {
+          log.error('Apple sign-in failed with error: $e');
+          log.error('Error type: ${e.runtimeType}');
+          if (e is FirebaseAuthException) {
+            log.error('FirebaseAuthException code: ${e.code}');
+            log.error('FirebaseAuthException message: ${e.message}');
+          }
+        }
         
         // Enhanced error logging based on Firebase documentation
-        if (e.toString().contains('Invalid OAuth response')) {
+        if (kDebugMode && e.toString().contains('Invalid OAuth response')) {
           log.error('OAuth response error - check Firebase Console Apple Sign-In configuration');
           log.error('Verify Services ID, Team ID, Key ID, and Private Key are correct');
         }
-        if (e.toString().contains('internal-error')) {
+        if (kDebugMode && e.toString().contains('internal-error')) {
           log.error('Firebase internal error - check configuration:');
           log.error('1. Apple Sign-In enabled in Firebase Console');
           log.error('2. Services ID: com.yumie.healthai.signin');
@@ -1660,11 +1694,11 @@ class _AuthScreenState extends State<AuthScreen> {
           log.error('4. Key ID: CLV527A2J9');
           log.error('5. Private key properly configured');
         }
-        if (e.toString().contains('localhost')) {
+        if (kDebugMode && e.toString().contains('localhost')) {
           log.error('Firebase redirecting to localhost - auth domain configuration issue');
           log.error('Check Firebase Console auth domain settings');
         }
-        if (e.toString().contains('MissingOrInvalidNonce')) {
+        if (kDebugMode && e.toString().contains('MissingOrInvalidNonce')) {
           log.error('Nonce validation failed - check SHA256 hashing implementation');
           log.error('Make sure nonce is properly hashed before sending to Apple');
         }
@@ -2348,7 +2382,14 @@ class _AuthScreenState extends State<AuthScreen> {
                         isDisabled: showSignUp && !acceptTerms,
                       ),
                       SizedBox(height: 12),
-                      _AppleSignInButton(onTap: _handleAppleSignIn),
+                      FutureBuilder<bool>(
+                        future: SignInWithApple.isAvailable(),
+                        builder: (context, snapshot) {
+                          final available = snapshot.data ?? false;
+                          if (!available) return const SizedBox.shrink();
+                          return _AppleSignInButton(onTap: _handleAppleSignIn);
+                        },
+                      ),
                     ] else if (isAndroid) ...[
                       _GoogleSignInButton(
                         onTap: _handleGoogleSignIn, 
@@ -2903,6 +2944,7 @@ class _MainNavScreenState extends State<MainNavScreen> with TickerProviderStateM
       }
     });
     _connectivitySubscription = Connectivity().onConnectivityChanged.listen((result) {
+      final bool wasOnline = _isOnline;
       bool online = true;
       if (result is List<ConnectivityResult>) {
         online = result.any((r) => r != ConnectivityResult.none);
@@ -2916,7 +2958,8 @@ class _MainNavScreenState extends State<MainNavScreen> with TickerProviderStateM
       }
       if (!online) {
         _showOfflineSnackBar();
-      } else {
+      } else if (!wasOnline && online) {
+        // Only show the Connected snackbar if we actually transitioned
         _hideSnackBarAndShowConnected();
       }
     });
@@ -5234,12 +5277,15 @@ Track your calories, scan food with AI, and get personalized nutrition insights 
                           Divider(height: 1, color: Colors.grey[200]),
                           _ProfileMenuTile(
                             icon: Icons.star,
-                            label: AppLocalizations.of(context)!.rateUsOn + ' Play Store',
+                            label: Platform.isIOS
+                                ? (AppLocalizations.of(context)!.rateUsOn + ' App Store')
+                                : (AppLocalizations.of(context)!.rateUsOn + ' Play Store'),
                             iconColor: Colors.amber[600],
                             onTap: () async {
                               try {
-                                // Use the correct package name for the app
-                                final uri = Uri.parse('https://play.google.com/store/apps/details?id=com.yumie.healthai');
+                                final uri = Platform.isIOS
+                                    ? Uri.parse('https://apps.apple.com/us/app/yumie-ai/id6748360245')
+                                    : Uri.parse('https://play.google.com/store/apps/details?id=com.yumie.healthai');
                                 if (await canLaunchUrl(uri)) {
                                   await launchUrl(uri, mode: LaunchMode.externalApplication);
                                 } else {

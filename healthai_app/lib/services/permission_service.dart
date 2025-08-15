@@ -2,6 +2,7 @@ import 'package:permission_handler/permission_handler.dart' as ph;
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'dart:io' show Platform;
 import '../l10n/app_localizations.dart';
 
@@ -59,6 +60,15 @@ class PermissionService {
     
     // 3. Notifications (for reminders)
     print('🔔 Requesting notification permission...');
+    if (Platform.isIOS) {
+      // Ask via Firebase Messaging; iOS will present system prompt when undetermined
+      await FirebaseMessaging.instance.requestPermission(
+        alert: true,
+        badge: true,
+        sound: true,
+        provisional: false,
+      );
+    }
     results[ph.Permission.notification] = await ph.Permission.notification.request();
     
     // Mark as requested
@@ -174,6 +184,9 @@ class PermissionService {
       );
       
       if (shouldRequest) {
+        if (Platform.isIOS) {
+          await FirebaseMessaging.instance.requestPermission(alert: true, badge: true, sound: true);
+        }
         results[ph.Permission.notification] = await requestPermission(ph.Permission.notification);
       } else {
         results[ph.Permission.notification] = ph.PermissionStatus.denied;
