@@ -33,6 +33,8 @@
 	<string>This app needs camera access to scan food items and take photos of meals.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>This app may use location to provide personalized recommendations.</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>This app may access your location to provide localized food databases, nearby options, and personalized recommendations.</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>
 	<string>This app needs permission to save photos to your photo library.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
