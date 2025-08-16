@@ -66,6 +66,54 @@ class AppLocalizationsEn extends AppLocalizations {
   String get trackNutritionToday => 'Let\'s track your nutrition today';
 
   @override
+  String get subtitleAfternoon => 'Perfect time to log your lunch and keep it balanced.';
+
+  @override
+  String get subtitleEvening => 'Stay on track this evening—log your meals.';
+
+  @override
+  String get subtitleNight => 'Wrap up your day—don\'t forget to log today\'s meals.';
+
+  @override
+  String get streakNearEndingTitle => 'Keep Your Streak 🔥';
+
+  @override
+  String get streakNearEndingBody => 'Your streak is about to end. Log a meal today to keep it alive!';
+
+  @override
+  String get streakNearEndingTitle2 => 'Almost There! 🔥';
+
+  @override
+  String get streakNearEndingBody2 => 'Only a couple hours left. Log a meal to save your streak!';
+
+  @override
+  String get streakEndedTitle => 'Streak Ended';
+
+  @override
+  String get streakEndedBody => 'Your streak ended. Log a meal to restart and build it back up!';
+
+  @override
+  String get streakActive => 'Streak Active';
+
+  @override
+  String get streakInactive => 'Streak Inactive';
+
+  @override
+  String get currentStreak => 'Current Streak';
+
+  @override
+  String get entriesInStreak => 'Entries in Streak';
+
+  @override
+  String get days => 'days';
+
+  @override
+  String get startedOn => 'Started on';
+
+  @override
+  String get logMealToStartStreak => 'Log a meal today to start your streak';
+
+  @override
   String get nutritionSummary => 'Nutrition Summary';
 
   @override
@@ -96,6 +144,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get scan => 'Scan';
 
   @override
+  String get barcode => 'Barcode';
+
+  @override
   String get analyzeYourFood => 'Analyze your food';
 
   @override
@@ -109,6 +160,56 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get nutritionalPlan => 'Nutritional Plan';
+
+  @override
+  String get weightAnalytics => 'Weight Analytics';
+
+  @override
+  String get toGoal => 'TO GOAL';
+
+  @override
+  String get remaining => 'remaining';
+
+  @override
+  String get weeklyRate => 'WEEKLY RATE';
+
+  @override
+  String get weeklyLoss => 'weekly loss';
+
+  @override
+  String get starting => 'STARTING';
+
+  @override
+  String get current => 'CURRENT';
+
+  @override
+  String get today => 'today';
+
+  @override
+  String get targetLabel => 'TARGET';
+
+  @override
+  String get goalWeight => 'goal weight';
+
+  @override
+  String get eta => 'ETA';
+
+  @override
+  String get sinceStart => 'since start';
+
+  @override
+  String get expectationsDisclaimer => 'These expectations are based on your recent trend and can change as you log new weights.';
+
+  @override
+  String get loseVerb => 'lose';
+
+  @override
+  String get gainVerb => 'gain';
+
+  @override
+  String expectationBlurb(Object direction, Object eta, Object rate, Object remaining, Object unit) {
+    return 'Based on your recent trend, you are on track to $direction about $rate $unit per week. At this pace, it will take roughly $eta to reach your target. You have $remaining $unit remaining.';
+  }
 
   @override
   String get healthAwareness => 'Health Awareness';
@@ -456,13 +557,82 @@ class AppLocalizationsEn extends AppLocalizations {
   String get recent => 'Recent';
 
   @override
-  String get meal => 'MEAL';
+  String get meal => 'Meal';
 
   @override
   String get fridge => 'Fridge';
 
   @override
   String get placeFoodInFrame => 'Place the food inside of the frame';
+
+  @override
+  String get placeBarcodeInFrame => 'Align the barcode inside the frame';
+
+  @override
+  String get placeFridgeInFrame => 'Align the fridge inside the frame';
+
+  @override
+  String get productNotFound => 'Product not found';
+
+  @override
+  String get safetyUnsafe => 'Not safe';
+
+  @override
+  String get safetyGood => 'Good to go';
+
+  @override
+  String get badgeNutriScore => 'Nutri-Score';
+
+  @override
+  String get badgeNova => 'NOVA';
+
+  @override
+  String get allergensTitle => 'Allergens';
+
+  @override
+  String get contains => 'Contains';
+
+  @override
+  String get allergensNone => 'No allergens listed';
+
+  @override
+  String get serving => 'Serving';
+
+  @override
+  String get kcalPer100g => 'kcal/100g';
+
+  @override
+  String get sugar => 'Sugar';
+
+  @override
+  String get satFat => 'Sat Fat';
+
+  @override
+  String get salt => 'Salt';
+
+  @override
+  String get ingredientsTitle => 'Ingredients';
+
+  @override
+  String get riskAllergen => 'Allergen risk';
+
+  @override
+  String get riskUltraProcessed => 'Ultra‑processed (NOVA 4)';
+
+  @override
+  String get riskHighAdditives => 'High additives';
+
+  @override
+  String get riskLowNutri => 'Low Nutri‑Score';
+
+  @override
+  String get riskVegan => 'Vegan friendly';
+
+  @override
+  String get riskVegetarian => 'Vegetarian';
+
+  @override
+  String get riskLooksGood => 'Looks good';
 
   @override
   String get retakeScan => 'Retake Scan';
@@ -516,7 +686,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get servings => 'servings';
 
   @override
-  String get fluidOunces => 'Fluid Ounces';
+  String get fluidOunces => 'fl oz';
 
   @override
   String get quantity => 'Quantity';
@@ -525,10 +695,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get confirm => 'Confirm';
 
   @override
-  String get ingredient => 'INGREDIENT';
+  String get ingredient => 'Ingredient';
 
   @override
-  String get drink => 'DRINK';
+  String get drink => 'Drink';
 
   @override
   String get kg => 'kg';
@@ -809,7 +979,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get goodNight => 'Good night';
 
   @override
-  String get ounces => 'ounces';
+  String get ounces => 'oz';
 
   @override
   String get january => 'January';
@@ -920,7 +1090,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get errorDeletingAccount => 'Error deleting account';
 
   @override
-  String get totalNutrition => 'Total Nutrition';
+  String get totalNutrition => 'Total nutrition';
 
   @override
   String get unlockUnlimitedScans => 'Unlock unlimited scans, AI coaching, and\npersonalized meal plans';
@@ -1809,4 +1979,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get errorRequestingPermissions => 'Error requesting permissions';
+
+  @override
+  String get showMore => 'Show more';
+
+  @override
+  String get showLess => 'Show less';
 }

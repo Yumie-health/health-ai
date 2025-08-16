@@ -4,7 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'models/meal.dart';
 import 'services/meal_service.dart';
 import 'package:firebase_storage/firebase_storage.dart';
-import 'scan_result_page.dart';
+// import 'scan_result_page.dart';
 import 'package:lottie/lottie.dart';
 import 'services/ai_service.dart';
 import './generated_meal_fridge_page.dart';

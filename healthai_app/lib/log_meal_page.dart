@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'models/meal.dart';
 import 'services/meal_service.dart';
+import 'services/streak_notification_service.dart';
 import 'models/custom_meal.dart';
 import 'l10n/app_localizations.dart';
 
@@ -861,6 +862,8 @@ class _LogMealPageState extends State<LogMealPage> with TickerProviderStateMixin
         queued = true;
       }
       if (!queued) throw Exception('Failed to queue meal');
+      // Cancel streak nudges for today since a meal was logged
+      try { await StreakNotificationService.onMealLoggedToday(); } catch (_) {}
       final isOnline = ConnectivityService.instance.online.value;
       if (!mounted) return;
       setState(() { 
@@ -2060,7 +2063,16 @@ class _ExpandableMealTileState extends State<_ExpandableMealTile> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(AppLocalizations.of(context)!.ingredientsColon, style: TextStyle(fontWeight: FontWeight.w600, color: kPrimaryGreen)),
-                          ...ingredients.map((ing) => Text('• $ing', style: TextStyle(color: Colors.black87))).toList(),
+                          ...ingredients.map((ing) => Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 2),
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Container(width: 6, height: 6, margin: const EdgeInsets.only(top: 6, right: 8), decoration: const BoxDecoration(color: Colors.black54, shape: BoxShape.circle)),
+                                Expanded(child: Text(ing, style: const TextStyle(color: Colors.black87))),
+                              ],
+                            ),
+                          )).toList(),
                         ],
                       );
                     } else {

@@ -231,6 +231,102 @@ abstract class AppLocalizations {
   /// **'Let\'s track your nutrition today'**
   String get trackNutritionToday;
 
+  /// No description provided for @subtitleAfternoon.
+  ///
+  /// In en, this message translates to:
+  /// **'Perfect time to log your lunch and keep it balanced.'**
+  String get subtitleAfternoon;
+
+  /// No description provided for @subtitleEvening.
+  ///
+  /// In en, this message translates to:
+  /// **'Stay on track this evening—log your meals.'**
+  String get subtitleEvening;
+
+  /// No description provided for @subtitleNight.
+  ///
+  /// In en, this message translates to:
+  /// **'Wrap up your day—don\'t forget to log today\'s meals.'**
+  String get subtitleNight;
+
+  /// No description provided for @streakNearEndingTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep Your Streak 🔥'**
+  String get streakNearEndingTitle;
+
+  /// No description provided for @streakNearEndingBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Your streak is about to end. Log a meal today to keep it alive!'**
+  String get streakNearEndingBody;
+
+  /// No description provided for @streakNearEndingTitle2.
+  ///
+  /// In en, this message translates to:
+  /// **'Almost There! 🔥'**
+  String get streakNearEndingTitle2;
+
+  /// No description provided for @streakNearEndingBody2.
+  ///
+  /// In en, this message translates to:
+  /// **'Only a couple hours left. Log a meal to save your streak!'**
+  String get streakNearEndingBody2;
+
+  /// No description provided for @streakEndedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Streak Ended'**
+  String get streakEndedTitle;
+
+  /// No description provided for @streakEndedBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Your streak ended. Log a meal to restart and build it back up!'**
+  String get streakEndedBody;
+
+  /// No description provided for @streakActive.
+  ///
+  /// In en, this message translates to:
+  /// **'Streak Active'**
+  String get streakActive;
+
+  /// No description provided for @streakInactive.
+  ///
+  /// In en, this message translates to:
+  /// **'Streak Inactive'**
+  String get streakInactive;
+
+  /// No description provided for @currentStreak.
+  ///
+  /// In en, this message translates to:
+  /// **'Current Streak'**
+  String get currentStreak;
+
+  /// No description provided for @entriesInStreak.
+  ///
+  /// In en, this message translates to:
+  /// **'Entries in Streak'**
+  String get entriesInStreak;
+
+  /// No description provided for @days.
+  ///
+  /// In en, this message translates to:
+  /// **'days'**
+  String get days;
+
+  /// No description provided for @startedOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Started on'**
+  String get startedOn;
+
+  /// No description provided for @logMealToStartStreak.
+  ///
+  /// In en, this message translates to:
+  /// **'Log a meal today to start your streak'**
+  String get logMealToStartStreak;
+
   /// No description provided for @nutritionSummary.
   ///
   /// In en, this message translates to:
@@ -291,6 +387,12 @@ abstract class AppLocalizations {
   /// **'Scan'**
   String get scan;
 
+  /// No description provided for @barcode.
+  ///
+  /// In en, this message translates to:
+  /// **'Barcode'**
+  String get barcode;
+
   /// No description provided for @analyzeYourFood.
   ///
   /// In en, this message translates to:
@@ -320,6 +422,102 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Nutritional Plan'**
   String get nutritionalPlan;
+
+  /// No description provided for @weightAnalytics.
+  ///
+  /// In en, this message translates to:
+  /// **'Weight Analytics'**
+  String get weightAnalytics;
+
+  /// No description provided for @toGoal.
+  ///
+  /// In en, this message translates to:
+  /// **'TO GOAL'**
+  String get toGoal;
+
+  /// No description provided for @remaining.
+  ///
+  /// In en, this message translates to:
+  /// **'remaining'**
+  String get remaining;
+
+  /// No description provided for @weeklyRate.
+  ///
+  /// In en, this message translates to:
+  /// **'WEEKLY RATE'**
+  String get weeklyRate;
+
+  /// No description provided for @weeklyLoss.
+  ///
+  /// In en, this message translates to:
+  /// **'weekly loss'**
+  String get weeklyLoss;
+
+  /// No description provided for @starting.
+  ///
+  /// In en, this message translates to:
+  /// **'STARTING'**
+  String get starting;
+
+  /// No description provided for @current.
+  ///
+  /// In en, this message translates to:
+  /// **'CURRENT'**
+  String get current;
+
+  /// No description provided for @today.
+  ///
+  /// In en, this message translates to:
+  /// **'today'**
+  String get today;
+
+  /// No description provided for @targetLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'TARGET'**
+  String get targetLabel;
+
+  /// No description provided for @goalWeight.
+  ///
+  /// In en, this message translates to:
+  /// **'goal weight'**
+  String get goalWeight;
+
+  /// No description provided for @eta.
+  ///
+  /// In en, this message translates to:
+  /// **'ETA'**
+  String get eta;
+
+  /// No description provided for @sinceStart.
+  ///
+  /// In en, this message translates to:
+  /// **'since start'**
+  String get sinceStart;
+
+  /// No description provided for @expectationsDisclaimer.
+  ///
+  /// In en, this message translates to:
+  /// **'These expectations are based on your recent trend and can change as you log new weights.'**
+  String get expectationsDisclaimer;
+
+  /// No description provided for @loseVerb.
+  ///
+  /// In en, this message translates to:
+  /// **'lose'**
+  String get loseVerb;
+
+  /// No description provided for @gainVerb.
+  ///
+  /// In en, this message translates to:
+  /// **'gain'**
+  String get gainVerb;
+
+  /// No description provided for @expectationBlurb.
+  ///
+  /// In en, this message translates to:
+  /// **'Based on your recent trend, you are on track to {direction} about {rate} {unit} per week. At this pace, it will take roughly {eta} to reach your target. You have {remaining} {unit} remaining.'**
+  String expectationBlurb(Object direction, Object eta, Object rate, Object remaining, Object unit);
 
   /// No description provided for @healthAwareness.
   ///
@@ -1014,7 +1212,7 @@ abstract class AppLocalizations {
   /// No description provided for @meal.
   ///
   /// In en, this message translates to:
-  /// **'MEAL'**
+  /// **'Meal'**
   String get meal;
 
   /// No description provided for @fridge.
@@ -1028,6 +1226,144 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Place the food inside of the frame'**
   String get placeFoodInFrame;
+
+  /// No description provided for @placeBarcodeInFrame.
+  ///
+  /// In en, this message translates to:
+  /// **'Align the barcode inside the frame'**
+  String get placeBarcodeInFrame;
+
+  /// No description provided for @placeFridgeInFrame.
+  ///
+  /// In en, this message translates to:
+  /// **'Align the fridge inside the frame'**
+  String get placeFridgeInFrame;
+
+  /// No description provided for @productNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'Product not found'**
+  String get productNotFound;
+
+  /// No description provided for @safetyUnsafe.
+  ///
+  /// In en, this message translates to:
+  /// **'Not safe'**
+  String get safetyUnsafe;
+
+  /// No description provided for @safetyGood.
+  ///
+  /// In en, this message translates to:
+  /// **'Good to go'**
+  String get safetyGood;
+
+  /// No description provided for @badgeNutriScore.
+  ///
+  /// In en, this message translates to:
+  /// **'Nutri-Score'**
+  String get badgeNutriScore;
+
+  /// No description provided for @badgeNova.
+  ///
+  /// In en, this message translates to:
+  /// **'NOVA'**
+  String get badgeNova;
+
+  /// No description provided for @allergensTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Allergens'**
+  String get allergensTitle;
+
+  /// No description provided for @contains.
+  ///
+  /// In en, this message translates to:
+  /// **'Contains'**
+  String get contains;
+
+  /// No description provided for @allergensNone.
+  ///
+  /// In en, this message translates to:
+  /// **'No allergens listed'**
+  String get allergensNone;
+
+  /// No description provided for @serving.
+  ///
+  /// In en, this message translates to:
+  /// **'Serving'**
+  String get serving;
+
+  /// No description provided for @kcalPer100g.
+  ///
+  /// In en, this message translates to:
+  /// **'kcal/100g'**
+  String get kcalPer100g;
+
+  /// No description provided for @sugar.
+  ///
+  /// In en, this message translates to:
+  /// **'Sugar'**
+  String get sugar;
+
+  /// No description provided for @satFat.
+  ///
+  /// In en, this message translates to:
+  /// **'Sat Fat'**
+  String get satFat;
+
+  /// No description provided for @salt.
+  ///
+  /// In en, this message translates to:
+  /// **'Salt'**
+  String get salt;
+
+  /// No description provided for @ingredientsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Ingredients'**
+  String get ingredientsTitle;
+
+  /// No description provided for @riskAllergen.
+  ///
+  /// In en, this message translates to:
+  /// **'Allergen risk'**
+  String get riskAllergen;
+
+  /// No description provided for @riskUltraProcessed.
+  ///
+  /// In en, this message translates to:
+  /// **'Ultra‑processed (NOVA 4)'**
+  String get riskUltraProcessed;
+
+  /// No description provided for @riskHighAdditives.
+  ///
+  /// In en, this message translates to:
+  /// **'High additives'**
+  String get riskHighAdditives;
+
+  /// No description provided for @riskLowNutri.
+  ///
+  /// In en, this message translates to:
+  /// **'Low Nutri‑Score'**
+  String get riskLowNutri;
+
+  /// No description provided for @riskVegan.
+  ///
+  /// In en, this message translates to:
+  /// **'Vegan friendly'**
+  String get riskVegan;
+
+  /// No description provided for @riskVegetarian.
+  ///
+  /// In en, this message translates to:
+  /// **'Vegetarian'**
+  String get riskVegetarian;
+
+  /// No description provided for @riskLooksGood.
+  ///
+  /// In en, this message translates to:
+  /// **'Looks good'**
+  String get riskLooksGood;
 
   /// No description provided for @retakeScan.
   ///
@@ -1134,7 +1470,7 @@ abstract class AppLocalizations {
   /// No description provided for @fluidOunces.
   ///
   /// In en, this message translates to:
-  /// **'Fluid Ounces'**
+  /// **'fl oz'**
   String get fluidOunces;
 
   /// No description provided for @quantity.
@@ -1152,13 +1488,13 @@ abstract class AppLocalizations {
   /// No description provided for @ingredient.
   ///
   /// In en, this message translates to:
-  /// **'INGREDIENT'**
+  /// **'Ingredient'**
   String get ingredient;
 
   /// No description provided for @drink.
   ///
   /// In en, this message translates to:
-  /// **'DRINK'**
+  /// **'Drink'**
   String get drink;
 
   /// No description provided for @kg.
@@ -1716,7 +2052,7 @@ abstract class AppLocalizations {
   /// No description provided for @ounces.
   ///
   /// In en, this message translates to:
-  /// **'ounces'**
+  /// **'oz'**
   String get ounces;
 
   /// No description provided for @january.
@@ -1938,7 +2274,7 @@ abstract class AppLocalizations {
   /// No description provided for @totalNutrition.
   ///
   /// In en, this message translates to:
-  /// **'Total Nutrition'**
+  /// **'Total nutrition'**
   String get totalNutrition;
 
   /// No description provided for @unlockUnlimitedScans.
@@ -3716,6 +4052,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Error requesting permissions'**
   String get errorRequestingPermissions;
+
+  /// No description provided for @showMore.
+  ///
+  /// In en, this message translates to:
+  /// **'Show more'**
+  String get showMore;
+
+  /// No description provided for @showLess.
+  ///
+  /// In en, this message translates to:
+  /// **'Show less'**
+  String get showLess;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

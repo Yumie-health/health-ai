@@ -152,7 +152,7 @@ class _NutritionalPlanPageState extends State<NutritionalPlanPage> {
                   children: [
                     _SummaryItem(label: localizations.bmi, value: bmi.toStringAsFixed(1)),
                     _SummaryItem(label: localizations.age, value: '$age'),
-                    _SummaryItem(label: localizations.weight, value: '${displayWeight.toStringAsFixed(1)} $weightUnit'),
+                    // Remove current weight from summary per request
                     _SummaryItem(label: localizations.target, value: '${useMetric ? targetWeight.toStringAsFixed(1) : (targetWeight * 2.20462).toStringAsFixed(1)} $weightUnit'),
                   ],
                 ),
@@ -180,27 +180,7 @@ class _NutritionalPlanPageState extends State<NutritionalPlanPage> {
               onSave: _saveChanges,
               localizations: localizations,
             ),
-            _EditableCard(
-              label: localizations.weight,
-              value: '${displayWeight.toStringAsFixed(1)} $weightUnit',
-              isEditing: editingField == 'weight',
-              onTap: () => _startEdit('weight'),
-              editor: editingField == 'weight'
-                  ? _SliderEditor(
-                      initial: displayWeight,
-                      min: useMetric ? 30 : 66,
-                      max: useMetric ? 200 : 440,
-                      unit: weightUnit,
-                      onChanged: (v) => _updateField('weight', useMetric ? v : v / 2.20462),
-                    )
-                  : null,
-              hasChanges: hasChanges,
-              isSaving: isSaving,
-              onUndo: _undoChanges,
-              onCancel: _cancelEdit,
-              onSave: _saveChanges,
-              localizations: localizations,
-            ),
+            // Removed current weight editor per request (keep target weight)
             _EditableCard(
               label: localizations.height,
               value: heightDisplay,

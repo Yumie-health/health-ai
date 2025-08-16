@@ -70,7 +70,11 @@ import 'services/security_monitoring_service.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'config/payment_config.dart';
 import 'services/subscription_service.dart';
+import 'services/streak_service.dart';
+import 'services/streak_notification_service.dart';
+import 'widgets/streak_badge.dart';
 import 'subscription_page.dart';
+import 'widgets/weight_analytics_page.dart';
 
 // Global helper function to translate meal types
 String getMealTypeLocalized(BuildContext context, String mealType) {
@@ -126,6 +130,16 @@ class _NumericTextFieldState extends State<_NumericTextField> {
   void initState() {
     super.initState();
     _focusNode.addListener(_onFocusChange);
+    // Schedule streak nudges for today with localized strings
+    final l = AppLocalizations.of(context)!;
+    StreakNotificationService.scheduleForTodayLocalized(
+      near6hTitle: l.streakNearEndingTitle,
+      near6hBody: l.streakNearEndingBody,
+      near2hTitle: l.streakNearEndingTitle2,
+      near2hBody: l.streakNearEndingBody2,
+      endedTitle: l.streakEndedTitle,
+      endedBody: l.streakEndedBody,
+    );
   }
 
   void _onFocusChange() {
@@ -244,6 +258,15 @@ void main() async {
     enableVibration: true,
   );
 
+  const AndroidNotificationChannel streakChannel = AndroidNotificationChannel(
+    'streak_channel',
+    'Streak Alerts',
+    description: 'Notifications to help you maintain your logging streak',
+    importance: Importance.max,
+    playSound: true,
+    enableVibration: true,
+  );
+
 
 
 
@@ -260,6 +283,9 @@ void main() async {
   await flutterLocalNotificationsPlugin
       .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
       ?.createNotificationChannel(walkChannel);
+  await flutterLocalNotificationsPlugin
+      .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
+      ?.createNotificationChannel(streakChannel);
 
 
   // Request notification permissions
@@ -3452,6 +3478,7 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
   List<Meal>? _lastMeals;
   UserProfile? _lastProfile;
   final UserService _userService = UserService();
+  final StreakService _streakService = StreakService();
   
   // Helper function to get food type icon
   IconData _getFoodTypeIcon(String? foodType) {
@@ -3482,6 +3509,94 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
     _mealsController = AnimationController(vsync: this, duration: const Duration(milliseconds: 700));
     _playEntranceAnimationsIfNeeded();
     _checkAndResetWaterIntake();
+  }
+
+  void _showStreakBottomSheet(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: false,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (ctx) {
+        final l = AppLocalizations.of(context)!;
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+          child: StreamBuilder<StreakInfo>(
+            stream: _streakService.watchStreak(),
+            builder: (context, snapshot) {
+              final info = snapshot.data ?? StreakInfo.zero;
+              final active = info.streakDays > 0;
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(Icons.local_fire_department, color: active ? Colors.orange : Colors.grey[500], size: 24),
+                      const SizedBox(width: 8),
+                      Text(
+                        active ? l.streakActive : l.streakInactive,
+                        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                      ),
+                      const Spacer(),
+                      TextButton(
+                        onPressed: () => Navigator.pop(context),
+                        child: Text(l.close),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Container(
+                    decoration: BoxDecoration(
+                      color: Colors.grey[50],
+                      border: Border.all(color: const Color(0xFFE5E7EB)),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    padding: const EdgeInsets.all(16),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(l.currentStreak, style: const TextStyle(color: Colors.grey, fontSize: 13)),
+                              const SizedBox(height: 4),
+                              Text('${info.streakDays} ${l.days}', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(l.entriesInStreak, style: const TextStyle(color: Colors.grey, fontSize: 13)),
+                              const SizedBox(height: 4),
+                              Text('${info.entriesInStreak}', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    active
+                        ? (info.streakStart != null
+                            ? '${l.startedOn} ${info.streakStart!.toLocal().toString().split(' ')[0]}'
+                            : l.streakActive)
+                        : l.logMealToStartStreak,
+                    style: TextStyle(color: Colors.grey[700]),
+                  ),
+                ],
+              );
+            },
+          ),
+        );
+      },
+    );
   }
   Widget _buildNutritionSummarySkeleton() {
     return Container(
@@ -3586,18 +3701,28 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
                           children: [
                             Text(_getCurrentGreeting(context), style: TextStyle(fontWeight: FontWeight.bold, fontSize: 26, color: Colors.black)),
                             const SizedBox(height: 4),
-                            Text(AppLocalizations.of(context)!.trackNutritionToday, style: TextStyle(color: Colors.grey[500], fontSize: 16)),
+                            Text(_getGreetingSubtitle(context), style: TextStyle(color: Colors.grey[500], fontSize: 16)),
                           ],
                         ),
                       ),
                       AnimatedScale(
                         scale: _headerController.value,
                         duration: const Duration(milliseconds: 600),
-                        child: GestureDetector(
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            StreakBadge(
+                              streakStream: _streakService.watchStreak(),
+                              onTap: () => _showStreakBottomSheet(context),
+                            ),
+                            const SizedBox(width: 12),
+                            GestureDetector(
                           onTap: widget.onProfileTap,
                         child: user != null && user.photoURL != null
                           ? CircleAvatar(radius: 24, backgroundImage: NetworkImage(user.photoURL!))
                           : CircleAvatar(radius: 24, backgroundColor: kPrimaryGreen.withOpacity(0.15), child: Icon(Icons.person, color: kPrimaryGreen)),
+                            ),
+                          ],
                         ),
                       ),
                     ],
@@ -5178,6 +5303,7 @@ Track your calories, scan food with AI, and get personalized nutrition insights 
                                           ],
                                         ),
                                       ),
+                                      // Analytics button moved below; this area stays only for the three weight tiles
                                     ],
                                   ),
                                 );
@@ -5185,6 +5311,26 @@ Track your calories, scan food with AI, and get personalized nutrition insights 
                             ),
                           ],
                         ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 18),
+                  // Long analytics button below the weight tiles
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    child: SizedBox(
+                      width: double.infinity,
+                      height: 46,
+                      child: ElevatedButton.icon(
+                        icon: const Icon(Icons.insights, color: Colors.white),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: kPrimaryGreen,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        ),
+                        onPressed: () {
+                          Navigator.of(context).push(MaterialPageRoute(builder: (_) => const WeightAnalyticsPage()));
+                        },
+                        label: Text(AppLocalizations.of(context)!.weightAnalytics, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
                       ),
                     ),
                   ),
@@ -5207,7 +5353,7 @@ Track your calories, scan food with AI, and get personalized nutrition insights 
                       child: Column(
                         children: [
                           _ProfileMenuTile(
-                            icon: Icons.show_chart,
+                            icon: Icons.restaurant_menu,
                             label: AppLocalizations.of(context)!.nutritionalPlan,
                             onTap: () {
                               Navigator.of(context).push(MaterialPageRoute(builder: (context) => NutritionalPlanPage()));
@@ -8808,6 +8954,21 @@ String _getCurrentGreeting(BuildContext context) {
   if (hour >= 11 && hour < 16) return '${localizations.goodAfternoon} 🌤️';
   if (hour >= 16 && hour < 21) return '${localizations.goodEvening} 🌇';
   return '${localizations.goodNight} 🌙';
+}
+
+// Helper to get a contextual subtitle under the greeting
+String _getGreetingSubtitle(BuildContext context) {
+  final hour = DateTime.now().hour;
+  final l = AppLocalizations.of(context)!;
+  if (hour >= 5 && hour < 11) {
+    return l.trackNutritionToday;
+  } else if (hour >= 11 && hour < 16) {
+    return l.subtitleAfternoon;
+  } else if (hour >= 16 && hour < 21) {
+    return l.subtitleEvening;
+  } else {
+    return l.subtitleNight;
+  }
 }
 
 class _LegalLinkTile extends StatelessWidget {

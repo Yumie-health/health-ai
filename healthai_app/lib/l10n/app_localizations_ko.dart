@@ -66,6 +66,54 @@ class AppLocalizationsKo extends AppLocalizations {
   String get trackNutritionToday => '오늘 영양을 추적해 봅시다';
 
   @override
+  String get subtitleAfternoon => '점심을 기록하고 균형을 유지하기에 딱 좋은 시간이에요.';
+
+  @override
+  String get subtitleEvening => '오늘 저녁도 꾸준히—식사를 기록해 보세요.';
+
+  @override
+  String get subtitleNight => '하루를 마무리해요—오늘의 식사를 기록하는 것을 잊지 마세요.';
+
+  @override
+  String get streakNearEndingTitle => '연속 기록을 지켜요 🔥';
+
+  @override
+  String get streakNearEndingBody => '연속 기록이 곧 끝나요. 오늘 식사를 기록해 유지하세요!';
+
+  @override
+  String get streakNearEndingTitle2 => '거의 다 왔어요! 🔥';
+
+  @override
+  String get streakNearEndingBody2 => '몇 시간만 남았어요. 식사를 기록해 연속 기록을 지키세요!';
+
+  @override
+  String get streakEndedTitle => '연속 기록 종료';
+
+  @override
+  String get streakEndedBody => '연속 기록이 종료되었어요. 식사를 기록해 다시 시작해 보세요!';
+
+  @override
+  String get streakActive => '연속 기록 활성';
+
+  @override
+  String get streakInactive => '연속 기록 비활성';
+
+  @override
+  String get currentStreak => '현재 연속 일수';
+
+  @override
+  String get entriesInStreak => '연속 기간의 기록 수';
+
+  @override
+  String get days => '일';
+
+  @override
+  String get startedOn => '시작일';
+
+  @override
+  String get logMealToStartStreak => '연속 기록을 시작하려면 오늘 식사를 기록하세요';
+
+  @override
   String get nutritionSummary => '영양 요약';
 
   @override
@@ -96,6 +144,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get scan => '스캔';
 
   @override
+  String get barcode => '바코드';
+
+  @override
   String get analyzeYourFood => '음식 분석';
 
   @override
@@ -109,6 +160,56 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get nutritionalPlan => '영양 계획';
+
+  @override
+  String get weightAnalytics => '체중 분석';
+
+  @override
+  String get toGoal => '목표까지';
+
+  @override
+  String get remaining => '남음';
+
+  @override
+  String get weeklyRate => '주간 속도';
+
+  @override
+  String get weeklyLoss => '주간 감소';
+
+  @override
+  String get starting => '시작';
+
+  @override
+  String get current => '현재';
+
+  @override
+  String get today => '오늘';
+
+  @override
+  String get targetLabel => '목표';
+
+  @override
+  String get goalWeight => '목표 체중';
+
+  @override
+  String get eta => 'ETA';
+
+  @override
+  String get sinceStart => '시작 이후';
+
+  @override
+  String get expectationsDisclaimer => '이 예상은 최근 추세를 기반으로 하며, 새로운 몸무게를 기록할 때 변경될 수 있습니다.';
+
+  @override
+  String get loseVerb => '감량';
+
+  @override
+  String get gainVerb => '증가';
+
+  @override
+  String expectationBlurb(Object direction, Object eta, Object rate, Object remaining, Object unit) {
+    return '최근 추세에 따르면 주당 약 $rate $unit를 $direction할 것으로 예상됩니다. 이 속도라면 목표에 도달하기까지 대략 $eta가 걸립니다. 남은 값은 $remaining $unit 입니다.';
+  }
 
   @override
   String get healthAwareness => '건강 인식';
@@ -396,7 +497,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get continueButton => '계속';
 
   @override
-  String get mealSaved => '🎉 식사가 저장되었습니다!';
+  String get mealSaved => '식사가 저장되었습니다!';
 
   @override
   String get noRecentFoods => '최근 음식이 없습니다.';
@@ -463,6 +564,75 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get placeFoodInFrame => '음식을 프레임 안에 놓으세요';
+
+  @override
+  String get placeBarcodeInFrame => '바코드를 프레임 안에 맞춰주세요';
+
+  @override
+  String get placeFridgeInFrame => '냉장고를 프레임 안에 맞춰주세요';
+
+  @override
+  String get productNotFound => '제품을 찾을 수 없습니다';
+
+  @override
+  String get safetyUnsafe => '안전하지 않음';
+
+  @override
+  String get safetyGood => '사용해도 됨';
+
+  @override
+  String get badgeNutriScore => 'Nutri-Score';
+
+  @override
+  String get badgeNova => 'NOVA';
+
+  @override
+  String get allergensTitle => '알레르겐';
+
+  @override
+  String get contains => '함유';
+
+  @override
+  String get allergensNone => '알레르겐 없음';
+
+  @override
+  String get serving => '서빙';
+
+  @override
+  String get kcalPer100g => 'kcal/100g';
+
+  @override
+  String get sugar => 'Sugar';
+
+  @override
+  String get satFat => '포화지방';
+
+  @override
+  String get salt => 'Salt';
+
+  @override
+  String get ingredientsTitle => '재료';
+
+  @override
+  String get riskAllergen => '알레르겐 위험';
+
+  @override
+  String get riskUltraProcessed => '초가공식품 (NOVA 4)';
+
+  @override
+  String get riskHighAdditives => '첨가물 많음';
+
+  @override
+  String get riskLowNutri => '낮은 Nutri‑Score';
+
+  @override
+  String get riskVegan => '비건 가능';
+
+  @override
+  String get riskVegetarian => '베지테리언';
+
+  @override
+  String get riskLooksGood => '좋아 보임';
 
   @override
   String get retakeScan => '다시 스캔';
@@ -1799,14 +1969,20 @@ class AppLocalizationsKo extends AppLocalizations {
   String get consentFlowCompleted => '동의 절차가 완료되었습니다!';
 
   @override
-  String get appleSignInFailed => 'Apple sign-in failed';
+  String get appleSignInFailed => 'Apple 로그인 실패';
 
   @override
-  String get adFailedToShow => 'Ad failed to show. Please try again.';
+  String get adFailedToShow => '광고 표시에 실패했습니다. 다시 시도해 주세요.';
 
   @override
-  String get adNotLoadedYet => 'Ad not loaded yet. Please try again.';
+  String get adNotLoadedYet => '광고가 아직 로드되지 않았습니다. 다시 시도해 주세요.';
 
   @override
-  String get errorRequestingPermissions => 'Error requesting permissions';
+  String get errorRequestingPermissions => '권한 요청 오류';
+
+  @override
+  String get showMore => 'Show more';
+
+  @override
+  String get showLess => 'Show less';
 }

@@ -66,6 +66,54 @@ class AppLocalizationsHi extends AppLocalizations {
   String get trackNutritionToday => 'आज आपके पोषण को ट्रैक करते हैं';
 
   @override
+  String get subtitleAfternoon => 'दोपहर का खाना लॉग करने और संतुलित रहने का बढ़िया समय है।';
+
+  @override
+  String get subtitleEvening => 'शाम को भी ट्रैक पर रहें — अपनी मील्स लॉग करें।';
+
+  @override
+  String get subtitleNight => 'दिन का समापन करें — आज की मील्स लॉग करना न भूलें।';
+
+  @override
+  String get streakNearEndingTitle => 'अपनी स्ट्रीक बनाए रखें 🔥';
+
+  @override
+  String get streakNearEndingBody => 'आपकी स्ट्रीक खत्म होने वाली है। आज एक मील लॉग करें और इसे जारी रखें!';
+
+  @override
+  String get streakNearEndingTitle2 => 'बस थोड़ी देर और! 🔥';
+
+  @override
+  String get streakNearEndingBody2 => 'सिर्फ कुछ घंटे बचे हैं। अपनी स्ट्रीक बचाने के लिए एक मील लॉग करें!';
+
+  @override
+  String get streakEndedTitle => 'स्ट्रीक समाप्त';
+
+  @override
+  String get streakEndedBody => 'आपकी स्ट्रीक समाप्त हो गई। फिर से शुरू करने और बनाने के लिए एक मील लॉग करें!';
+
+  @override
+  String get streakActive => 'स्ट्रीक सक्रिय';
+
+  @override
+  String get streakInactive => 'स्ट्रीक निष्क्रिय';
+
+  @override
+  String get currentStreak => 'वर्तमान स्ट्रीक';
+
+  @override
+  String get entriesInStreak => 'स्ट्रीक में प्रविष्टियाँ';
+
+  @override
+  String get days => 'दिन';
+
+  @override
+  String get startedOn => 'आरंभ हुआ';
+
+  @override
+  String get logMealToStartStreak => 'अपनी स्ट्रीक शुरू करने के लिए आज एक मील लॉग करें';
+
+  @override
   String get nutritionSummary => 'पोषण सारांश';
 
   @override
@@ -96,6 +144,9 @@ class AppLocalizationsHi extends AppLocalizations {
   String get scan => 'स्कैन';
 
   @override
+  String get barcode => 'बारकोड';
+
+  @override
   String get analyzeYourFood => 'अपने भोजन का विश्लेषण करें';
 
   @override
@@ -109,6 +160,56 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get nutritionalPlan => 'पोषण योजना';
+
+  @override
+  String get weightAnalytics => 'वज़न विश्लेषण';
+
+  @override
+  String get toGoal => 'लक्ष्य तक';
+
+  @override
+  String get remaining => 'शेष';
+
+  @override
+  String get weeklyRate => 'साप्ताहिक दर';
+
+  @override
+  String get weeklyLoss => 'साप्ताहिक कमी';
+
+  @override
+  String get starting => 'शुरुआत';
+
+  @override
+  String get current => 'वर्तमान';
+
+  @override
+  String get today => 'आज';
+
+  @override
+  String get targetLabel => 'लक्ष्य';
+
+  @override
+  String get goalWeight => 'लक्ष्य वज़न';
+
+  @override
+  String get eta => 'ETA';
+
+  @override
+  String get sinceStart => 'शुरुआत से';
+
+  @override
+  String get expectationsDisclaimer => 'These expectations are based on your recent trend and can change as you log new weights.';
+
+  @override
+  String get loseVerb => 'lose';
+
+  @override
+  String get gainVerb => 'gain';
+
+  @override
+  String expectationBlurb(Object direction, Object eta, Object rate, Object remaining, Object unit) {
+    return 'Based on your recent trend, you are on track to $direction about $rate $unit per week. At this pace, it will take roughly $eta to reach your target. You have $remaining $unit remaining.';
+  }
 
   @override
   String get healthAwareness => 'स्वास्थ्य जागरूकता';
@@ -396,7 +497,7 @@ class AppLocalizationsHi extends AppLocalizations {
   String get continueButton => 'जारी रखें';
 
   @override
-  String get mealSaved => '🎉 भोजन सहेजा गया!';
+  String get mealSaved => 'भोजन सहेजा गया!';
 
   @override
   String get noRecentFoods => 'कोई हाल का भोजन नहीं।';
@@ -463,6 +564,75 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get placeFoodInFrame => 'भोजन को फ्रेम के अंदर रखें';
+
+  @override
+  String get placeBarcodeInFrame => 'बारकोड को फ्रेम के अंदर संरेखित करें';
+
+  @override
+  String get placeFridgeInFrame => 'फ्रिज को फ्रेम के अंदर संरेखित करें';
+
+  @override
+  String get productNotFound => 'उत्पाद नहीं मिला';
+
+  @override
+  String get safetyUnsafe => 'असुरक्षित';
+
+  @override
+  String get safetyGood => 'उपयुक्त';
+
+  @override
+  String get badgeNutriScore => 'न्यूट्री‑स्कोर';
+
+  @override
+  String get badgeNova => 'NOVA';
+
+  @override
+  String get allergensTitle => 'एलर्जेंस';
+
+  @override
+  String get contains => 'शामिल है';
+
+  @override
+  String get allergensNone => 'कोई एलर्जेंस सूचीबद्ध नहीं';
+
+  @override
+  String get serving => 'सर्विंग';
+
+  @override
+  String get kcalPer100g => 'किलो कैलोरी/100ग्राम';
+
+  @override
+  String get sugar => 'Sugar';
+
+  @override
+  String get satFat => 'सैचुरेटेड फैट';
+
+  @override
+  String get salt => 'Salt';
+
+  @override
+  String get ingredientsTitle => 'सामग्री';
+
+  @override
+  String get riskAllergen => 'एलर्जन जोखिम';
+
+  @override
+  String get riskUltraProcessed => 'अत्यधिक प्रसंस्कृत (NOVA 4)';
+
+  @override
+  String get riskHighAdditives => 'बहुत अधिक योजक';
+
+  @override
+  String get riskLowNutri => 'कम न्यूट्री‑स्कोर';
+
+  @override
+  String get riskVegan => 'शाकाहारी (वीगन) के लिए उपयुक्त';
+
+  @override
+  String get riskVegetarian => 'शाकाहारी';
+
+  @override
+  String get riskLooksGood => 'ठीक लगता है';
 
   @override
   String get retakeScan => 'स्कैन फिर से करें';
@@ -716,7 +886,7 @@ class AppLocalizationsHi extends AppLocalizations {
   String get unableToShareAtThisTime => 'इस समय साझा नहीं कर सकते। कृपया पुनः प्रयास करें।';
 
   @override
-  String get failedToUpdatePhoto => 'फोटो अपडेट करने में विफल';
+  String get failedToUpdatePhoto => 'फ़ोटो अपडेट करने में विफल';
 
   @override
   String get changeProfileName => 'प्रोफ़ाइल नाम बदलें';
@@ -1799,14 +1969,20 @@ class AppLocalizationsHi extends AppLocalizations {
   String get consentFlowCompleted => 'सहमति प्रक्रिया पूरी हुई!';
 
   @override
-  String get appleSignInFailed => 'Apple sign-in failed';
+  String get appleSignInFailed => 'Apple साइन-इन विफल';
 
   @override
-  String get adFailedToShow => 'Ad failed to show. Please try again.';
+  String get adFailedToShow => 'विज्ञापन दिखाने में विफल। कृपया पुनः प्रयास करें।';
 
   @override
-  String get adNotLoadedYet => 'Ad not loaded yet. Please try again.';
+  String get adNotLoadedYet => 'विज्ञापन अभी तक लोड नहीं हुआ। कृपया पुनः प्रयास करें।';
 
   @override
-  String get errorRequestingPermissions => 'Error requesting permissions';
+  String get errorRequestingPermissions => 'अनुमतियां मांगने में त्रुटि';
+
+  @override
+  String get showMore => 'Show more';
+
+  @override
+  String get showLess => 'Show less';
 }

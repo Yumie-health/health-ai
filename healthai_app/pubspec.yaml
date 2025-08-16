@@ -16,7 +16,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 # https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
 # In Windows, build-name is used as the major, minor, and patch parts
 # of the product and file versions while build-number is used as the build suffix.
-version: 1.0.3
+version: 1.0.3+30
 
 environment:
   sdk: '>=3.7.0 <4.0.0'
@@ -71,16 +71,19 @@ dependencies:
   firebase_storage: ^12.4.9
   image_picker: ^1.1.1
   camera: ^0.10.5+9
+  google_mlkit_barcode_scanning: ^0.11.0
   share_plus: ^11.0.0
   permission_handler: ^11.3.1
   logging: ^1.2.0
   googleapis_auth: ^1.4.1
+  fl_chart: ^0.68.0
   flutter_localizations:
     sdk: flutter
   firebase_remote_config: ^5.4.7
   in_app_purchase: ^3.1.13
   in_app_review: ^2.0.9
   confetti: ^0.7.0
+  google_mlkit_commons: ^0.7.1
   # Simple, reliable notifications - no complex background packages
   # Using flutter_local_notifications only (already included)
 

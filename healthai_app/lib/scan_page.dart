@@ -1,9 +1,7 @@
-import 'dart:io';
+// ignore_for_file: use_build_context_synchronously
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:image/image.dart' as img;
 import 'scan_result_page.dart';
 import 'scanner_overlay.dart';
 import 'scan_result_fridge_page.dart';
@@ -16,6 +14,10 @@ import 'services/subscription_service.dart';
 import 'config/ad_config.dart';
 import 'services/connectivity_service.dart';
 import 'log_meal_page.dart';
+import 'services/barcode_scanner_service.dart';
+import 'services/product_lookup_service.dart';
+import 'package:google_mlkit_barcode_scanning/google_mlkit_barcode_scanning.dart';
+import 'scan_result_product_page.dart';
 
 class ScanPage extends StatefulWidget {
   const ScanPage({Key? key}) : super(key: key);
@@ -30,9 +32,13 @@ class _ScanPageState extends State<ScanPage> {
   bool _isCameraInitialized = false;
   bool _isFlashOn = false;
   final ImagePicker _picker = ImagePicker();
-  Rect? _frameRect;
+  // Frame rect kept for future use if we reintroduce cropping
+  // Removed persistent frameRect; computing per-frame in build
   double _frameBorderRadius = 32;
-  bool _isFridgeMode = false;
+  bool _isFridgeMode = false; // legacy flag kept for compatibility
+  bool _isBarcodeMode = false;
+  BarcodeScannerService? _barcodeService;
+  bool _isDecoding = false;
   RewardedAd? _rewardedAd;
   bool _isRewardedAdLoaded = false;
 
@@ -73,9 +79,61 @@ class _ScanPageState extends State<ScanPage> {
     }
   }
 
+  void _onBarcodeModeChanged(bool enabled) {
+    setState(() { _isBarcodeMode = enabled; });
+    // Disable live auto-detection; use manual snapshot flow instead
+    _stopBarcodeStream();
+  }
+
+  void _stopBarcodeStream() {
+    _barcodeService?.dispose();
+    _barcodeService = null;
+    _isDecoding = false;
+    if (_controller.value.isStreamingImages) {
+      _controller.stopImageStream();
+    }
+  }
+
+  Future<void> _startBarcodeStream() async {
+    if (!_isCameraInitialized || !_controller.value.isInitialized) return;
+    _barcodeService ??= BarcodeScannerService();
+    if (_controller.value.isStreamingImages) return;
+    await _controller.startImageStream((image) async {
+      if (_isDecoding) return;
+      _isDecoding = true;
+      try {
+        const rotation = InputImageRotation.rotation0deg;
+        final code = await _barcodeService!.processCameraImage(image, rotation: rotation);
+        if (code != null && mounted) {
+          await _onBarcodeDetected(code);
+        }
+      } finally {
+        _isDecoding = false;
+      }
+    });
+  }
+
+  Future<void> _onBarcodeDetected(String code) async {
+    _stopBarcodeStream();
+    final lookup = ProductLookupService(userAgent: 'Yumie/1.0 (contact@yumie.app)');
+    final res = await lookup.fetchByBarcode(code);
+    if (!mounted) return;
+    if (!res.found) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(AppLocalizations.of(context)!.productNotFound)),
+      );
+      return;
+    }
+    final p = res.product!;
+    await Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => ScanResultProductPage(product: p)),
+    );
+  }
+
 
   @override
   void dispose() {
+    _stopBarcodeStream();
     _controller.dispose();
     super.dispose();
   }
@@ -127,38 +185,33 @@ class _ScanPageState extends State<ScanPage> {
   Future<void> _captureImage() async {
     if (!_controller.value.isInitialized) return;
     final file = await _controller.takePicture();
-    final imgBytes = await File(file.path).readAsBytes();
-    final original = img.decodeImage(imgBytes);
-    if (original == null) return;
+    // Removed cropping to eliminate image package; use original file directly
 
-    // Map frameRect (in logical pixels) to image coordinates
-    final previewSize = _controller.value.previewSize!;
-    final screen = MediaQuery.of(context).size;
-    final scaleX = original.width / screen.width;
-    final scaleY = original.height / screen.height;
-    double frameWidth, frameHeight;
-    if (_isFridgeMode) {
-      frameWidth = screen.width * 0.92;
-      frameHeight = screen.height * 0.6;
-    } else {
-      frameWidth = screen.width * 0.7;
-      frameHeight = frameWidth;
+    // In barcode mode, decode from snapshot and navigate directly (no paywall)
+    if (_isBarcodeMode) {
+      _barcodeService ??= BarcodeScannerService();
+      final code = await _barcodeService!.processFilePath(file.path);
+      if (!mounted) return;
+      if (code == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(AppLocalizations.of(context)!.productNotFound)),
+        );
+        return;
+      }
+      final lookup = ProductLookupService(userAgent: 'Yumie/1.0 (contact@yumie.app)');
+      final res = await lookup.fetchByBarcode(code);
+      if (!mounted) return;
+      if (!res.found) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(AppLocalizations.of(context)!.productNotFound)),
+        );
+        return;
+      }
+      await Navigator.of(context).push(
+        MaterialPageRoute(builder: (_) => ScanResultProductPage(product: res.product!)),
+      );
+      return;
     }
-    final frameLeft = (screen.width - frameWidth) / 2;
-    final frameTop = (screen.height - frameHeight) / 2;
-    final cropX = (frameLeft * scaleX).round();
-    final cropY = (frameTop * scaleY).round();
-    final cropW = (frameWidth * scaleX).round();
-    final cropH = (frameHeight * scaleY).round();
-    final cropped = img.copyCrop(
-      original,
-      x: cropX,
-      y: cropY,
-      width: cropW,
-      height: cropH,
-    );
-    final tempPath = file.path;
-    final croppedFile = await File(tempPath).writeAsBytes(img.encodeJpg(cropped));
 
     final bool showPaywall = await _shouldShowPaywall();
     if (showPaywall) {
@@ -181,13 +234,13 @@ class _ScanPageState extends State<ScanPage> {
                 if (_isFridgeMode) {
                   Navigator.of(paywallContext).pushReplacement(
                     MaterialPageRoute(
-                      builder: (_) => ScanResultFridgePage(imagePath: croppedFile.path),
+                      builder: (_) => ScanResultFridgePage(imagePath: file.path),
                     ),
                   );
                 } else {
                   Navigator.of(paywallContext).pushReplacement(
                     MaterialPageRoute(
-                      builder: (_) => ScanResultPage(imagePath: croppedFile.path),
+                      builder: (_) => ScanResultPage(imagePath: file.path),
                     ),
                   );
                 }
@@ -206,13 +259,13 @@ class _ScanPageState extends State<ScanPage> {
     if (_isFridgeMode) {
       Navigator.of(context).push(
         MaterialPageRoute(
-          builder: (_) => ScanResultFridgePage(imagePath: croppedFile.path),
+          builder: (_) => ScanResultFridgePage(imagePath: file.path),
         ),
       );
     } else {
       Navigator.of(context).push(
         MaterialPageRoute(
-          builder: (_) => ScanResultPage(imagePath: croppedFile.path),
+          builder: (_) => ScanResultPage(imagePath: file.path),
         ),
       );
     }
@@ -226,20 +279,32 @@ class _ScanPageState extends State<ScanPage> {
 
   Future<void> _uploadFromGallery() async {
     final picked = await _picker.pickImage(source: ImageSource.gallery);
-    if (picked != null && mounted) {
-      if (_isFridgeMode) {
-        Navigator.of(context).push(
-          MaterialPageRoute(
-            builder: (_) => ScanResultFridgePage(imagePath: picked.path),
-          ),
+    if (picked == null || !mounted) return;
+    if (_isBarcodeMode) {
+      _barcodeService ??= BarcodeScannerService();
+      final code = await _barcodeService!.processFilePath(picked.path);
+      if (!mounted) return;
+      if (code == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(AppLocalizations.of(context)!.productNotFound)),
         );
-      } else {
+        return;
+      }
+      await _onBarcodeDetected(code);
+      return;
+    }
+    if (_isFridgeMode) {
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) => ScanResultFridgePage(imagePath: picked.path),
+        ),
+      );
+    } else {
       Navigator.of(context).push(
         MaterialPageRoute(
           builder: (_) => ScanResultPage(imagePath: picked.path),
         ),
       );
-      }
     }
   }
 
@@ -364,7 +429,10 @@ class _ScanPageState extends State<ScanPage> {
               ? LayoutBuilder(
                   builder: (context, constraints) {
                     double frameWidth, frameHeight;
-                    if (_isFridgeMode) {
+                    if (_isBarcodeMode) {
+                      frameWidth = constraints.maxWidth * 0.90;
+                      frameHeight = frameWidth * 0.25;
+                    } else if (_isFridgeMode) {
                       frameWidth = constraints.maxWidth * 0.92;
                       frameHeight = constraints.maxHeight * 0.60;
                     } else {
@@ -372,7 +440,24 @@ class _ScanPageState extends State<ScanPage> {
                       frameHeight = frameWidth;
                     }
                     final double frameLeft = (constraints.maxWidth - frameWidth) / 2;
-                    final double frameTop = (constraints.maxHeight - frameHeight) / 2;
+                    double frameTop = (constraints.maxHeight - frameHeight) / 2;
+                    // Compute adaptive position for mode toggles above bottom controls
+                    const double shutterSize = 72;
+                    const double bottomButtonsBottom = 40; // matches _buildBottomButtons
+                    const double gapAboveShutter = 24;
+                    final double safeBottom = MediaQuery.of(context).padding.bottom;
+                    final double togglesBottom = bottomButtonsBottom + shutterSize + gapAboveShutter + safeBottom;
+                    // Keep the frame well above the toggles row
+                    const double togglesHeight = 44;
+                    final double maxFrameBottom = constraints.maxHeight - togglesBottom - togglesHeight - 12;
+                    final double overlap = (frameTop + frameHeight) - maxFrameBottom;
+                    if (overlap > 0) {
+                      frameTop = (frameTop - overlap).clamp(0.0, frameTop);
+                    }
+                    // Add additional upward bias for tall fridge mode so it sits much higher
+                    if (_isFridgeMode) {
+                      frameTop = (frameTop - constraints.maxHeight * 0.06).clamp(0.0, frameTop);
+                    }
                     final frameRect = Rect.fromLTWH(frameLeft, frameTop, frameWidth, frameHeight);
                     return Stack(
                       children: [
@@ -396,21 +481,28 @@ class _ScanPageState extends State<ScanPage> {
                             ),
                           ),
                         ),
-                        // Meal/Fridge toggle buttons
+                        // Scan/Fridge/Barcode toggle buttons
                         Positioned(
-                          top: 0,
+                          bottom: togglesBottom,
                           left: 0,
                           right: 0,
                           child: SafeArea(
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                _buildModeButton(AppLocalizations.of(context)!.scan, !_isFridgeMode, () {
+                                _buildModeButton(AppLocalizations.of(context)!.scan, (!_isFridgeMode && !_isBarcodeMode), () {
                                   setState(() { _isFridgeMode = false; });
+                                  _onBarcodeModeChanged(false);
                                 }),
                                 const SizedBox(width: 12),
                                 _buildModeButton(AppLocalizations.of(context)!.fridge, _isFridgeMode, () {
                                   setState(() { _isFridgeMode = true; });
+                                  _onBarcodeModeChanged(false);
+                                }),
+                                const SizedBox(width: 12),
+                                _buildModeButton(AppLocalizations.of(context)!.barcode, _isBarcodeMode, () {
+                                  setState(() { _isFridgeMode = false; });
+                                  _onBarcodeModeChanged(true);
                                 }),
                               ],
                             ),
@@ -429,7 +521,11 @@ class _ScanPageState extends State<ScanPage> {
                                 borderRadius: BorderRadius.circular(22),
                               ),
                               child: Text(
-                                AppLocalizations.of(context)!.placeFoodInFrame,
+                                _isBarcodeMode
+                                  ? AppLocalizations.of(context)!.placeBarcodeInFrame
+                                  : (_isFridgeMode
+                                      ? AppLocalizations.of(context)!.placeFridgeInFrame
+                                      : AppLocalizations.of(context)!.placeFoodInFrame),
                                 style: const TextStyle(
                                   color: Colors.white,
                                   fontSize: 18,
@@ -521,7 +617,11 @@ class _ScanPageState extends State<ScanPage> {
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
           IconButton(
-            icon: Icon(_isFlashOn ? Icons.flash_on : Icons.flash_off, color: Colors.white, size: 32),
+            icon: Icon(
+              _isFlashOn ? Icons.flash_on : Icons.flash_off,
+              color: Colors.white,
+              size: 32,
+            ),
             onPressed: _toggleFlash,
           ),
           GestureDetector(
@@ -534,7 +634,11 @@ class _ScanPageState extends State<ScanPage> {
                 color: Colors.white,
                 border: Border.all(color: Colors.white, width: 4),
               ),
-              child: const Icon(Icons.camera_alt, color: Colors.black, size: 36),
+              child: Icon(
+                Icons.camera_alt,
+                color: Colors.black,
+                size: 36,
+              ),
             ),
           ),
           IconButton(

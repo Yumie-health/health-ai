@@ -1,0 +1,145 @@
+{
+  "ar": [
+    "sugar",
+    "salt",
+    "appleSignInFailed",
+    "adFailedToShow",
+    "adNotLoadedYet",
+    "errorRequestingPermissions",
+    "showMore",
+    "showLess"
+  ],
+
+  "de": [
+    "sugar",
+    "salt",
+    "showMore",
+    "showLess"
+  ],
+
+  "es": [
+    "sugar",
+    "salt",
+    "showMore",
+    "showLess"
+  ],
+
+  "fr": [
+    "sugar",
+    "salt",
+    "showMore",
+    "showLess"
+  ],
+
+  "hi": [
+    "expectationsDisclaimer",
+    "loseVerb",
+    "gainVerb",
+    "expectationBlurb",
+    "sugar",
+    "salt",
+    "showMore",
+    "showLess"
+  ],
+
+  "it": [
+    "sugar",
+    "salt",
+    "appleSignInFailed",
+    "adFailedToShow",
+    "adNotLoadedYet",
+    "errorRequestingPermissions",
+    "showMore",
+    "showLess"
+  ],
+
+  "ja": [
+    "sugar",
+    "salt",
+    "showMore",
+    "showLess"
+  ],
+
+  "ko": [
+    "sugar",
+    "salt",
+    "showMore",
+    "showLess"
+  ],
+
+  "nl": [
+    "subtitleAfternoon",
+    "subtitleEvening",
+    "subtitleNight",
+    "streakNearEndingTitle",
+    "streakNearEndingBody",
+    "streakNearEndingTitle2",
+    "streakNearEndingBody2",
+    "streakEndedTitle",
+    "streakEndedBody",
+    "streakActive",
+    "streakInactive",
+    "currentStreak",
+    "entriesInStreak",
+    "days",
+    "startedOn",
+    "logMealToStartStreak",
+    "weightAnalytics",
+    "toGoal",
+    "remaining",
+    "weeklyRate",
+    "weeklyLoss",
+    "starting",
+    "current",
+    "today",
+    "targetLabel",
+    "goalWeight",
+    "eta",
+    "sinceStart",
+    "expectationsDisclaimer",
+    "loseVerb",
+    "gainVerb",
+    "expectationBlurb",
+    "sugar",
+    "salt",
+    "appleSignInFailed",
+    "adFailedToShow",
+    "adNotLoadedYet",
+    "errorRequestingPermissions",
+    "showMore",
+    "showLess"
+  ],
+
+  "pt": [
+    "sugar",
+    "salt",
+    "appleSignInFailed",
+    "adFailedToShow",
+    "adNotLoadedYet",
+    "errorRequestingPermissions",
+    "showMore",
+    "showLess"
+  ],
+
+  "ru": [
+    "sugar",
+    "salt",
+    "appleSignInFailed",
+    "adFailedToShow",
+    "adNotLoadedYet",
+    "errorRequestingPermissions",
+    "showMore",
+    "showLess"
+  ],
+
+  "tr": [
+    "sugar",
+    "salt",
+    "appleSignInFailed",
+    "adFailedToShow",
+    "adNotLoadedYet",
+    "errorRequestingPermissions",
+    "showMore",
+    "showLess"
+  ]
+}

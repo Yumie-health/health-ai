@@ -66,6 +66,54 @@ class AppLocalizationsTr extends AppLocalizations {
   String get trackNutritionToday => 'Bugün beslenmenizi takip edelim';
 
   @override
+  String get subtitleAfternoon => 'Öğle yemeğini kaydetmek ve dengede kalmak için harika zaman.';
+
+  @override
+  String get subtitleEvening => 'Bu akşam yolda kal — öğünlerini kaydet.';
+
+  @override
+  String get subtitleNight => 'Günü kapat — bugünkü öğünleri kaydetmeyi unutma.';
+
+  @override
+  String get streakNearEndingTitle => 'Serini koru 🔥';
+
+  @override
+  String get streakNearEndingBody => 'Serin bitmek üzere. Bugün bir öğün kaydederek sürdür!';
+
+  @override
+  String get streakNearEndingTitle2 => 'Neredeyse bitti! 🔥';
+
+  @override
+  String get streakNearEndingBody2 => 'Sadece birkaç saat kaldı. Serini kurtarmak için bir öğün kaydet!';
+
+  @override
+  String get streakEndedTitle => 'Seri bitti';
+
+  @override
+  String get streakEndedBody => 'Serin sona erdi. Yeniden başlatmak ve güçlendirmek için bir öğün kaydet!';
+
+  @override
+  String get streakActive => 'Seri aktif';
+
+  @override
+  String get streakInactive => 'Seri pasif';
+
+  @override
+  String get currentStreak => 'Mevcut seri';
+
+  @override
+  String get entriesInStreak => 'Serideki girişler';
+
+  @override
+  String get days => 'gün';
+
+  @override
+  String get startedOn => 'Başlangıç tarihi';
+
+  @override
+  String get logMealToStartStreak => 'Serini başlatmak için bugün bir öğün kaydet';
+
+  @override
   String get nutritionSummary => 'Beslenme Özeti';
 
   @override
@@ -96,6 +144,9 @@ class AppLocalizationsTr extends AppLocalizations {
   String get scan => 'Tara';
 
   @override
+  String get barcode => 'Barkod';
+
+  @override
   String get analyzeYourFood => 'Yemeğinizi analiz edin';
 
   @override
@@ -109,6 +160,56 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get nutritionalPlan => 'Beslenme Planı';
+
+  @override
+  String get weightAnalytics => 'Kilo Analitiği';
+
+  @override
+  String get toGoal => 'HEDEFE';
+
+  @override
+  String get remaining => 'kalan';
+
+  @override
+  String get weeklyRate => 'HAFTALIK HIZ';
+
+  @override
+  String get weeklyLoss => 'haftalık kayıp';
+
+  @override
+  String get starting => 'BAŞLANGIÇ';
+
+  @override
+  String get current => 'MEVCUT';
+
+  @override
+  String get today => 'bugün';
+
+  @override
+  String get targetLabel => 'HEDEF';
+
+  @override
+  String get goalWeight => 'hedef kilo';
+
+  @override
+  String get eta => 'ETA';
+
+  @override
+  String get sinceStart => 'başlangıçtan beri';
+
+  @override
+  String get expectationsDisclaimer => 'Bu beklentiler son eğiliminize dayalıdır ve yeni kilolar kaydettikçe değişebilir.';
+
+  @override
+  String get loseVerb => 'kaybetmek';
+
+  @override
+  String get gainVerb => 'almak';
+
+  @override
+  String expectationBlurb(Object direction, Object eta, Object rate, Object remaining, Object unit) {
+    return 'Son eğiliminize göre haftada yaklaşık $rate $unit $direction yolundasınız. Bu hızla hedefinize ulaşmanız yaklaşık $eta sürecek. Kalan $remaining $unit var.';
+  }
 
   @override
   String get healthAwareness => 'Sağlık Farkındalığı';
@@ -463,6 +564,75 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get placeFoodInFrame => 'Yemeği çerçevenin içine yerleştirin';
+
+  @override
+  String get placeBarcodeInFrame => 'Barkodu çerçevenin içine hizalayın';
+
+  @override
+  String get placeFridgeInFrame => 'Buzdolabını çerçevenin içine hizalayın';
+
+  @override
+  String get productNotFound => 'Ürün bulunamadı';
+
+  @override
+  String get safetyUnsafe => 'Güvenli değil';
+
+  @override
+  String get safetyGood => 'Uygun';
+
+  @override
+  String get badgeNutriScore => 'Nutri-Score';
+
+  @override
+  String get badgeNova => 'NOVA';
+
+  @override
+  String get allergensTitle => 'Alerjenler';
+
+  @override
+  String get contains => 'İçerir';
+
+  @override
+  String get allergensNone => 'Alerjen listelenmedi';
+
+  @override
+  String get serving => 'Porsiyon';
+
+  @override
+  String get kcalPer100g => 'kcal/100g';
+
+  @override
+  String get sugar => 'Sugar';
+
+  @override
+  String get satFat => 'Doymuş yağ';
+
+  @override
+  String get salt => 'Salt';
+
+  @override
+  String get ingredientsTitle => 'İçindekiler';
+
+  @override
+  String get riskAllergen => 'Alerjen riski';
+
+  @override
+  String get riskUltraProcessed => 'Aşırı işlenmiş (NOVA 4)';
+
+  @override
+  String get riskHighAdditives => 'Çok fazla katkı';
+
+  @override
+  String get riskLowNutri => 'Düşük Nutri‑Score';
+
+  @override
+  String get riskVegan => 'Vegan uygun';
+
+  @override
+  String get riskVegetarian => 'Vejetaryen';
+
+  @override
+  String get riskLooksGood => 'İyi görünüyor';
 
   @override
   String get retakeScan => 'Taramayı Tekrarla';
@@ -1809,4 +1979,10 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get errorRequestingPermissions => 'Error requesting permissions';
+
+  @override
+  String get showMore => 'Show more';
+
+  @override
+  String get showLess => 'Show less';
 }

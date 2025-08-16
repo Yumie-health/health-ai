@@ -66,6 +66,54 @@ class AppLocalizationsRu extends AppLocalizations {
   String get trackNutritionToday => 'Давайте отслеживать ваше питание сегодня';
 
   @override
+  String get subtitleAfternoon => 'Идеальное время записать обед и сохранить баланс.';
+
+  @override
+  String get subtitleEvening => 'Держитесь плана этим вечером — запишите свои приёмы пищи.';
+
+  @override
+  String get subtitleNight => 'Подведите итоги дня — не забудьте записать сегодняшние приёмы пищи.';
+
+  @override
+  String get streakNearEndingTitle => 'Сохрани свою серию 🔥';
+
+  @override
+  String get streakNearEndingBody => 'Ваша серия скоро закончится. Запишите приём пищи сегодня, чтобы сохранить её!';
+
+  @override
+  String get streakNearEndingTitle2 => 'Почти у цели! 🔥';
+
+  @override
+  String get streakNearEndingBody2 => 'Осталось всего пару часов. Запишите приём пищи, чтобы спасти серию!';
+
+  @override
+  String get streakEndedTitle => 'Серия закончилась';
+
+  @override
+  String get streakEndedBody => 'Ваша серия закончилась. Запишите приём пищи, чтобы начать заново и восстановить её!';
+
+  @override
+  String get streakActive => 'Серия активна';
+
+  @override
+  String get streakInactive => 'Серия неактивна';
+
+  @override
+  String get currentStreak => 'Текущая серия';
+
+  @override
+  String get entriesInStreak => 'Записей в серии';
+
+  @override
+  String get days => 'дней';
+
+  @override
+  String get startedOn => 'Началась';
+
+  @override
+  String get logMealToStartStreak => 'Запишите приём пищи сегодня, чтобы начать серию';
+
+  @override
   String get nutritionSummary => 'Сводка по питанию';
 
   @override
@@ -96,6 +144,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get scan => 'Сканировать';
 
   @override
+  String get barcode => 'Штрих‑код';
+
+  @override
   String get analyzeYourFood => 'Анализировать вашу еду';
 
   @override
@@ -109,6 +160,56 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get nutritionalPlan => 'План питания';
+
+  @override
+  String get weightAnalytics => 'Аналитика веса';
+
+  @override
+  String get toGoal => 'ДО ЦЕЛИ';
+
+  @override
+  String get remaining => 'осталось';
+
+  @override
+  String get weeklyRate => 'НЕДЕЛЬНЫЙ ТЕМП';
+
+  @override
+  String get weeklyLoss => 'недельная потеря';
+
+  @override
+  String get starting => 'СТАРТ';
+
+  @override
+  String get current => 'ТЕКУЩИЙ';
+
+  @override
+  String get today => 'сегодня';
+
+  @override
+  String get targetLabel => 'ЦЕЛЬ';
+
+  @override
+  String get goalWeight => 'целевой вес';
+
+  @override
+  String get eta => 'ETA';
+
+  @override
+  String get sinceStart => 'с начала';
+
+  @override
+  String get expectationsDisclaimer => 'Эти ожидания основаны на вашей недавней тенденции и могут измениться по мере записи новых весов.';
+
+  @override
+  String get loseVerb => 'снижать';
+
+  @override
+  String get gainVerb => 'набирать';
+
+  @override
+  String expectationBlurb(Object direction, Object eta, Object rate, Object remaining, Object unit) {
+    return 'Согласно вашей недавней тенденции, вы на пути $direction примерно $rate $unit в неделю. В таком темпе потребуется примерно $eta, чтобы достичь цели. Осталось $remaining $unit.';
+  }
 
   @override
   String get healthAwareness => 'Осведомленность о здоровье';
@@ -463,6 +564,75 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get placeFoodInFrame => 'Поместите еду внутрь рамки';
+
+  @override
+  String get placeBarcodeInFrame => 'Совместите штрих‑код с рамкой';
+
+  @override
+  String get placeFridgeInFrame => 'Совместите холодильник с рамкой';
+
+  @override
+  String get productNotFound => 'Товар не найден';
+
+  @override
+  String get safetyUnsafe => 'Опасно';
+
+  @override
+  String get safetyGood => 'Можно';
+
+  @override
+  String get badgeNutriScore => 'Nutri-Score';
+
+  @override
+  String get badgeNova => 'NOVA';
+
+  @override
+  String get allergensTitle => 'Аллергены';
+
+  @override
+  String get contains => 'Содержит';
+
+  @override
+  String get allergensNone => 'Аллергены не указаны';
+
+  @override
+  String get serving => 'Порция';
+
+  @override
+  String get kcalPer100g => 'ккал/100г';
+
+  @override
+  String get sugar => 'Sugar';
+
+  @override
+  String get satFat => 'Насыщ. жир';
+
+  @override
+  String get salt => 'Salt';
+
+  @override
+  String get ingredientsTitle => 'Ингредиенты';
+
+  @override
+  String get riskAllergen => 'Риск аллергенов';
+
+  @override
+  String get riskUltraProcessed => 'Сильно обработан (NOVA 4)';
+
+  @override
+  String get riskHighAdditives => 'Много добавок';
+
+  @override
+  String get riskLowNutri => 'Низкий Nutri‑Score';
+
+  @override
+  String get riskVegan => 'Подходит для веганов';
+
+  @override
+  String get riskVegetarian => 'Вегетарианский';
+
+  @override
+  String get riskLooksGood => 'Выглядит хорошо';
 
   @override
   String get retakeScan => 'Повторить сканирование';
@@ -1809,4 +1979,10 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get errorRequestingPermissions => 'Error requesting permissions';
+
+  @override
+  String get showMore => 'Show more';
+
+  @override
+  String get showLess => 'Show less';
 }

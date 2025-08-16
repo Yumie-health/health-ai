@@ -66,6 +66,54 @@ class AppLocalizationsAr extends AppLocalizations {
   String get trackNutritionToday => 'لنقم بتتبع تغذيتك اليوم';
 
   @override
+  String get subtitleAfternoon => 'وقت مثالي لتسجيل الغداء والحفاظ على التوازن.';
+
+  @override
+  String get subtitleEvening => 'استمر على المسار هذا المساء — سجّل وجباتك.';
+
+  @override
+  String get subtitleNight => 'اختم يومك — لا تنسَ تسجيل وجبات اليوم.';
+
+  @override
+  String get streakNearEndingTitle => 'حافظ على سلسلتك 🔥';
+
+  @override
+  String get streakNearEndingBody => 'سلسلتك على وشك الانتهاء. سجّل وجبة اليوم للحفاظ عليها!';
+
+  @override
+  String get streakNearEndingTitle2 => 'أوشكت على الوصول! 🔥';
+
+  @override
+  String get streakNearEndingBody2 => 'بقيت بضع ساعات فقط. سجّل وجبة لإنقاذ سلسلتك!';
+
+  @override
+  String get streakEndedTitle => 'انتهت السلسلة';
+
+  @override
+  String get streakEndedBody => 'انتهت سلسلتك. سجّل وجبة لتبدأ من جديد وتبنيها!';
+
+  @override
+  String get streakActive => 'سلسلة نشطة';
+
+  @override
+  String get streakInactive => 'سلسلة غير نشطة';
+
+  @override
+  String get currentStreak => 'السلسلة الحالية';
+
+  @override
+  String get entriesInStreak => 'المدخلات في السلسلة';
+
+  @override
+  String get days => 'أيام';
+
+  @override
+  String get startedOn => 'بدأت في';
+
+  @override
+  String get logMealToStartStreak => 'سجّل وجبة اليوم لبدء سلسلتك';
+
+  @override
   String get nutritionSummary => 'ملخص التغذية';
 
   @override
@@ -96,6 +144,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get scan => 'مسح';
 
   @override
+  String get barcode => 'باركود';
+
+  @override
   String get analyzeYourFood => 'حلل طعامك';
 
   @override
@@ -109,6 +160,56 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get nutritionalPlan => 'خطة التغذية';
+
+  @override
+  String get weightAnalytics => 'تحليلات الوزن';
+
+  @override
+  String get toGoal => 'للهدف';
+
+  @override
+  String get remaining => 'المتبقي';
+
+  @override
+  String get weeklyRate => 'المعدل الأسبوعي';
+
+  @override
+  String get weeklyLoss => 'خسارة أسبوعية';
+
+  @override
+  String get starting => 'البداية';
+
+  @override
+  String get current => 'الحالي';
+
+  @override
+  String get today => 'اليوم';
+
+  @override
+  String get targetLabel => 'الهدف';
+
+  @override
+  String get goalWeight => 'وزن الهدف';
+
+  @override
+  String get eta => 'المدة';
+
+  @override
+  String get sinceStart => 'منذ البداية';
+
+  @override
+  String get expectationsDisclaimer => 'هذه التوقعات تعتمد على الاتجاه الأخير وقد تتغير مع تسجيل أوزان جديدة.';
+
+  @override
+  String get loseVerb => 'تخسر';
+
+  @override
+  String get gainVerb => 'تزيد';
+
+  @override
+  String expectationBlurb(Object direction, Object eta, Object rate, Object remaining, Object unit) {
+    return 'استنادًا إلى اتجاهك الأخير، أنت على المسار لـ $direction حوالي $rate $unit في الأسبوع. بهذه الوتيرة، سيستغرق الأمر تقريبًا $eta للوصول إلى هدفك. تبقى لديك $remaining $unit.';
+  }
 
   @override
   String get healthAwareness => 'الوعي الصحي';
@@ -463,6 +564,75 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get placeFoodInFrame => 'ضع الطعام داخل الإطار';
+
+  @override
+  String get placeBarcodeInFrame => 'قم بمحاذاة الباركود داخل الإطار';
+
+  @override
+  String get placeFridgeInFrame => 'قم بمحاذاة الثلاجة داخل الإطار';
+
+  @override
+  String get productNotFound => 'لم يتم العثور على المنتج';
+
+  @override
+  String get safetyUnsafe => 'غير آمن';
+
+  @override
+  String get safetyGood => 'مناسب للاستهلاك';
+
+  @override
+  String get badgeNutriScore => 'نوتري‑سكور';
+
+  @override
+  String get badgeNova => 'NOVA';
+
+  @override
+  String get allergensTitle => 'المواد المسببة للحساسية';
+
+  @override
+  String get contains => 'يحتوي على';
+
+  @override
+  String get allergensNone => 'لا توجد مواد مُسجلة';
+
+  @override
+  String get serving => 'الحصة';
+
+  @override
+  String get kcalPer100g => 'كيلو كالوري/100غ';
+
+  @override
+  String get sugar => 'Sugar';
+
+  @override
+  String get satFat => 'دهون مشبعة';
+
+  @override
+  String get salt => 'Salt';
+
+  @override
+  String get ingredientsTitle => 'المكونات';
+
+  @override
+  String get riskAllergen => 'خطر الحساسية';
+
+  @override
+  String get riskUltraProcessed => 'فائق المعالجة (NOVA 4)';
+
+  @override
+  String get riskHighAdditives => 'مضافات عالية';
+
+  @override
+  String get riskLowNutri => 'نوتري‑سكور منخفض';
+
+  @override
+  String get riskVegan => 'مناسب للنباتيين الصِرف';
+
+  @override
+  String get riskVegetarian => 'نباتي';
+
+  @override
+  String get riskLooksGood => 'يبدو جيدًا';
 
   @override
   String get retakeScan => 'إعادة المسح';
@@ -1809,4 +1979,10 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get errorRequestingPermissions => 'Error requesting permissions';
+
+  @override
+  String get showMore => 'Show more';
+
+  @override
+  String get showLess => 'Show less';
 }

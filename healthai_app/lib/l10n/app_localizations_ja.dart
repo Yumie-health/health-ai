@@ -66,6 +66,54 @@ class AppLocalizationsJa extends AppLocalizations {
   String get trackNutritionToday => '今日の栄養を追跡しましょう';
 
   @override
+  String get subtitleAfternoon => '昼食を記録してバランスを保つのに最適な時間です。';
+
+  @override
+  String get subtitleEvening => '今夜も継続しましょう—食事を記録してください。';
+
+  @override
+  String get subtitleNight => '一日を締めくくりましょう—今日の食事の記録をお忘れなく。';
+
+  @override
+  String get streakNearEndingTitle => '連続記録を守ろう 🔥';
+
+  @override
+  String get streakNearEndingBody => '連続記録が途切れそうです。今日は食事を記録して続けましょう！';
+
+  @override
+  String get streakNearEndingTitle2 => 'あと少し！ 🔥';
+
+  @override
+  String get streakNearEndingBody2 => '残り数時間です。食事を記録して記録を守りましょう！';
+
+  @override
+  String get streakEndedTitle => '連続記録が終了しました';
+
+  @override
+  String get streakEndedBody => '連続記録が途切れました。食事を記録して再スタートしましょう！';
+
+  @override
+  String get streakActive => '連続記録: アクティブ';
+
+  @override
+  String get streakInactive => '連続記録: 非アクティブ';
+
+  @override
+  String get currentStreak => '現在の連続日数';
+
+  @override
+  String get entriesInStreak => '連続期間のエントリー数';
+
+  @override
+  String get days => '日';
+
+  @override
+  String get startedOn => '開始日';
+
+  @override
+  String get logMealToStartStreak => '連続記録を始めるには、今日の食事を記録しましょう';
+
+  @override
   String get nutritionSummary => '栄養サマリー';
 
   @override
@@ -96,6 +144,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get scan => 'スキャン';
 
   @override
+  String get barcode => 'バーコード';
+
+  @override
   String get analyzeYourFood => '食べ物を分析';
 
   @override
@@ -109,6 +160,56 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get nutritionalPlan => '栄養計画';
+
+  @override
+  String get weightAnalytics => '体重分析';
+
+  @override
+  String get toGoal => '目標まで';
+
+  @override
+  String get remaining => '残り';
+
+  @override
+  String get weeklyRate => '週間ペース';
+
+  @override
+  String get weeklyLoss => '週あたりの減少';
+
+  @override
+  String get starting => '開始';
+
+  @override
+  String get current => '現在';
+
+  @override
+  String get today => '今日';
+
+  @override
+  String get targetLabel => '目標';
+
+  @override
+  String get goalWeight => '目標体重';
+
+  @override
+  String get eta => 'ETA';
+
+  @override
+  String get sinceStart => '開始以来';
+
+  @override
+  String get expectationsDisclaimer => 'これらの予測は最近の傾向に基づいており、新しい体重を記録すると変化する可能性があります。';
+
+  @override
+  String get loseVerb => '減らす';
+
+  @override
+  String get gainVerb => '増やす';
+
+  @override
+  String expectationBlurb(Object direction, Object eta, Object rate, Object remaining, Object unit) {
+    return '最近の傾向に基づくと、1週間あたり約 $rate $unit を$direction見込みです。このペースでは、目標に到達するまでおよそ $eta かかります。残りは $remaining $unit です。';
+  }
 
   @override
   String get healthAwareness => '健康意識';
@@ -396,7 +497,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get continueButton => '続行';
 
   @override
-  String get mealSaved => '🎉 食事が保存されました！';
+  String get mealSaved => '食事が保存されました！';
 
   @override
   String get noRecentFoods => '最近の食べ物はありません。';
@@ -463,6 +564,75 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get placeFoodInFrame => '食べ物をフレーム内に配置してください';
+
+  @override
+  String get placeBarcodeInFrame => '枠内にバーコードを合わせてください';
+
+  @override
+  String get placeFridgeInFrame => '枠内に冷蔵庫を合わせてください';
+
+  @override
+  String get productNotFound => '商品が見つかりません';
+
+  @override
+  String get safetyUnsafe => '安全ではありません';
+
+  @override
+  String get safetyGood => '問題ありません';
+
+  @override
+  String get badgeNutriScore => 'Nutri-Score';
+
+  @override
+  String get badgeNova => 'NOVA';
+
+  @override
+  String get allergensTitle => 'アレルゲン';
+
+  @override
+  String get contains => '含有';
+
+  @override
+  String get allergensNone => 'アレルゲンの記載なし';
+
+  @override
+  String get serving => 'サービング';
+
+  @override
+  String get kcalPer100g => 'kcal/100g';
+
+  @override
+  String get sugar => 'Sugar';
+
+  @override
+  String get satFat => '飽和脂肪';
+
+  @override
+  String get salt => 'Salt';
+
+  @override
+  String get ingredientsTitle => '材料';
+
+  @override
+  String get riskAllergen => 'アレルゲンリスク';
+
+  @override
+  String get riskUltraProcessed => '超加工食品 (NOVA 4)';
+
+  @override
+  String get riskHighAdditives => '添加物が多い';
+
+  @override
+  String get riskLowNutri => '低いNutri‑Score';
+
+  @override
+  String get riskVegan => 'ヴィーガン対応';
+
+  @override
+  String get riskVegetarian => 'ベジタリアン';
+
+  @override
+  String get riskLooksGood => '良さそう';
 
   @override
   String get retakeScan => 'スキャンを再実行';
@@ -692,7 +862,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get couldNotOpenPrivacyPolicy => 'プライバシーポリシーを開けませんでした';
 
   @override
-  String get errorSavingProfile => 'プロフィール保存エラー';
+  String get errorSavingProfile => 'プロフィールの保存エラー';
 
   @override
   String get completeYourProfile => 'プロフィールを完成させる';
@@ -728,7 +898,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get profileUpdatedSuccessfully => 'プロフィールが正常に更新されました';
 
   @override
-  String get errorUpdatingProfile => 'プロフィール更新エラー';
+  String get errorUpdatingProfile => 'プロフィールの更新エラー';
 
   @override
   String get editGoals => '目標を編集';
@@ -737,7 +907,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get goalsUpdatedSuccessfully => '目標が正常に更新されました';
 
   @override
-  String get errorUpdatingGoals => '目標更新エラー';
+  String get errorUpdatingGoals => '目標の更新エラー';
 
   @override
   String get couldNotOpenWebsite => 'ウェブサイトを開けませんでした';
@@ -1799,14 +1969,20 @@ class AppLocalizationsJa extends AppLocalizations {
   String get consentFlowCompleted => '同意フローが完了しました！';
 
   @override
-  String get appleSignInFailed => 'Apple sign-in failed';
+  String get appleSignInFailed => 'Appleサインインに失敗しました';
 
   @override
-  String get adFailedToShow => 'Ad failed to show. Please try again.';
+  String get adFailedToShow => '広告の表示に失敗しました。もう一度お試しください。';
 
   @override
-  String get adNotLoadedYet => 'Ad not loaded yet. Please try again.';
+  String get adNotLoadedYet => '広告がまだ読み込まれていません。もう一度お試しください。';
 
   @override
-  String get errorRequestingPermissions => 'Error requesting permissions';
+  String get errorRequestingPermissions => '権限の要求エラー';
+
+  @override
+  String get showMore => 'Show more';
+
+  @override
+  String get showLess => 'Show less';
 }

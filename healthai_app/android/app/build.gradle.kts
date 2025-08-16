@@ -32,12 +32,7 @@ android {
         versionCode = flutter.versionCode
         versionName = flutter.versionName
         multiDexEnabled = true
-        
-        // Support common ABIs to avoid device coverage drop warnings
-        ndk {
-            abiFilters.clear()
-            abiFilters += listOf("arm64-v8a", "armeabi-v7a", "x86_64")
-        }
+        // Note: Do not set ndk.abiFilters when building with --split-per-abi
     }
 
     signingConfigs {
