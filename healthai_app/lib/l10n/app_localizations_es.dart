@@ -359,10 +359,10 @@ class AppLocalizationsEs extends AppLocalizations {
   String get weekly => 'Semanal';
 
   @override
-  String get breakfast => 'Desayuno';
+  String get breakfast => 'Desay';
 
   @override
-  String get lunch => 'Almuerzo';
+  String get lunch => 'Almuer';
 
   @override
   String get dinner => 'Cena';
@@ -566,7 +566,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get placeFoodInFrame => 'Coloca la comida dentro del marco';
 
   @override
-  String get placeBarcodeInFrame => 'Alinea el código de barras dentro del marco';
+  String get placeBarcodeInFrame => 'Coloca el código en el marco';
 
   @override
   String get placeFridgeInFrame => 'Alinea el refrigerador dentro del marco';
@@ -602,13 +602,13 @@ class AppLocalizationsEs extends AppLocalizations {
   String get kcalPer100g => 'kcal/100g';
 
   @override
-  String get sugar => 'Sugar';
+  String get sugar => 'Azúcar';
 
   @override
   String get satFat => 'Grasa sat.';
 
   @override
-  String get salt => 'Salt';
+  String get salt => 'Sal';
 
   @override
   String get ingredientsTitle => 'Ingredientes';
@@ -725,7 +725,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get lb => 'libra';
 
   @override
-  String get oz => 'onza';
+  String get oz => 'oz';
 
   @override
   String get ft => 'pies';
@@ -743,7 +743,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get tsp => 'cucharadita';
 
   @override
-  String get ml => 'mililitro';
+  String get ml => 'ml';
 
   @override
   String get l => 'litro';
@@ -844,7 +844,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get recentFoods => 'Alimentos Recientes';
 
   @override
-  String get logWeightChange => 'Registrar Cambio de Peso';
+  String get logWeightChange => 'Peso';
 
   @override
   String get lost => 'Perdido';
@@ -1045,7 +1045,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get dailyHealthInsights => 'Información de Salud Diaria';
 
   @override
-  String get logWaterIntake => 'Registrar Consumo de Agua';
+  String get logWaterIntake => 'Agua';
 
   @override
   String get add => 'Agregar';
@@ -1414,10 +1414,44 @@ class AppLocalizationsEs extends AppLocalizations {
   String get redirectingToSignIn => 'Redirigiendo al inicio de sesión...';
 
   @override
+  String weightTrendNoData(Object remaining, Object unit) {
+    return 'Tienes $remaining $unit restantes para alcanzar tu meta. Registra entradas de peso para ver tu tendencia personalizada.';
+  }
+
+  @override
+  String weightTrendHealthyRate(Object eta, Object rate, Object remaining, Object unit) {
+    return 'A una tasa saludable de 0.5 $unit por semana, podrías alcanzar tu meta en aproximadamente $eta. Tienes $remaining $unit restantes. Registra entradas de peso para ver tu tendencia personalizada.';
+  }
+
+  @override
   String get accountSuccessfullyDeleted => 'Cuenta Eliminada Exitosamente';
 
   @override
   String get pleaseCloseAndRestartApp => 'Por favor cierra y reinicia la aplicación para continuar.';
+
+  @override
+  String get exportData => 'Exportar Datos';
+
+  @override
+  String get exportDataDescription => 'Exportar todos tus datos como archivo PDF';
+
+  @override
+  String get exportComplete => 'Exportación Completada';
+
+  @override
+  String get exportCompleteMessage => '¡Tus datos han sido exportados exitosamente!';
+
+  @override
+  String get exportCompleteDescription => 'El archivo PDF ha sido guardado en tu dispositivo y puede ser compartido o visualizado.';
+
+  @override
+  String get exportFailed => 'Exportación Fallida';
+
+  @override
+  String get exportingData => 'Exportando tus datos...';
+
+  @override
+  String get exportingDataDescription => 'Esto puede tomar unos momentos';
 
   @override
   String get restartApp => 'Reiniciar App';
@@ -1723,7 +1757,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get startFreeTrial => 'Iniciar Prueba Gratuita';
 
   @override
-  String get month => 'mes';
+  String get month => 'Mes';
 
   @override
   String get year => 'año';
@@ -1999,8 +2033,194 @@ class AppLocalizationsEs extends AppLocalizations {
   String get errorRequestingPermissions => 'Error al solicitar permisos';
 
   @override
-  String get showMore => 'Show more';
+  String get showMore => 'Ver más';
 
   @override
-  String get showLess => 'Show less';
+  String get showLess => 'Ver menos';
+
+  @override
+  String get noSavedCustomMeals => 'No tienes comidas personalizadas guardadas.';
+
+  @override
+  String get savedCustomMealsPlus => 'Comidas personalizadas guardadas +';
+
+  @override
+  String get customBuilding => 'Crear Comida Personalizada';
+
+  @override
+  String get enterName => 'Ingresa nombre';
+
+  @override
+  String get enterFoodName => 'Ingresa nombre del alimento';
+
+  @override
+  String get congratulationsGoalReached => '🎉 ¡Felicidades!';
+
+  @override
+  String get youReachedGoalWeight => '¡Has alcanzado tu peso objetivo!';
+
+  @override
+  String get switchToMaintenancePlan => 'Ahora que has alcanzado tu peso objetivo, ¡cambiemos tu plan nutricional para mantener tu peso!';
+
+  @override
+  String get letsDoIt => '¡HAGÁMOSLO!';
+
+  @override
+  String get keepUpGreatWork => '¡Sigue con el gran trabajo!';
+
+  @override
+  String get generatingMaintenancePlan => 'Generando tu plan de mantenimiento...';
+
+  @override
+  String get maintenancePlanUpdated => '🎉 ¡Tu plan nutricional ha sido actualizado para el mantenimiento del peso!';
+
+  @override
+  String get failedToGenerateMaintenancePlan => 'No se pudo generar el plan de mantenimiento. Por favor, inténtalo de nuevo.';
+
+  @override
+  String get heresYourMaintenancePlan => '¡Aquí está tu nuevo plan de mantenimiento!';
+
+  @override
+  String get keepThisPlan => 'Mantener Este Plan';
+
+  @override
+  String get chooseDifferentGoal => 'Elegir Objetivo Diferente';
+
+  @override
+  String get whatsYourNewGoal => '¿Cuál es tu nuevo objetivo?';
+
+  @override
+  String get whatsYourNewTargetWeight => '¿Cuál es tu nuevo peso objetivo?';
+
+  @override
+  String get yumieGeneratingNewPlan => 'Yumie está generando tu nuevo plan personalizado...';
+
+  @override
+  String get yourNewPlanReady => '¡Tu nuevo plan está listo!';
+
+  @override
+  String get startWithNewPlan => 'Comenzar Con Nuevo Plan';
+
+  @override
+  String get generateNewPlan => 'Generar Nuevo Plan';
+
+  @override
+  String get planGenerationLimitReached => 'Has usado tus 2 generaciones de plan para este período.';
+
+  @override
+  String get waterGoal => 'Meta de Agua';
+
+  @override
+  String get glasses => 'vasos';
+
+  @override
+  String planGenerationInfo(int remaining) {
+    return 'Puedes generar $remaining planes personalizados más en los próximos 14 días.';
+  }
+
+  @override
+  String nextPlanAvailable(int days) {
+    return 'Inténtalo de nuevo en $days días';
+  }
+
+  @override
+  String get decline => 'Rechazar';
+
+  @override
+  String get planDeclined => 'Plan rechazado';
+
+  @override
+  String get accountDeletionWarning => 'Su cuenta será eliminada en 48 horas. Si vuelve a iniciar sesión en esta cuenta dentro de 48 horas, reactivará su cuenta y cancelará la eliminación.';
+
+  @override
+  String get accountScheduledForDeletion => 'Cuenta programada para eliminación';
+
+  @override
+  String get reactivateAccount => 'Reactivar Cuenta';
+
+  @override
+  String get accountReactivated => '¡Bienvenido de vuelta! Su cuenta ha sido reactivada.';
+
+  @override
+  String get accountDeletionCancelled => 'La eliminación de la cuenta ha sido cancelada.';
+
+  @override
+  String get emailVerificationRequired => 'Verificación de Email Requerida';
+
+  @override
+  String get pleaseVerifyEmail => 'Por favor verifica tu dirección de email para continuar';
+
+  @override
+  String get verificationEmailSent => 'Hemos enviado un enlace de verificación a tu email. Por favor revisa tu bandeja de entrada y haz clic en el enlace para verificar tu cuenta.';
+
+  @override
+  String get waitingForVerification => 'Esperando verificación de email...';
+
+  @override
+  String get checkYourEmail => 'Revisa tu email y haz clic en el enlace de verificación';
+
+  @override
+  String get resendVerificationEmail => 'Reenviar Email de Verificación';
+
+  @override
+  String get verificationLinkAlreadySent => 'Ya se ha enviado un enlace de verificación a esta dirección de email. Por favor revisa tu bandeja de entrada o espera unos minutos antes de solicitar uno nuevo.';
+
+  @override
+  String get emailVerified => '¡Email verificado exitosamente!';
+
+  @override
+  String get emailNotVerified => 'Email aún no verificado. Por favor revisa tu bandeja de entrada.';
+
+  @override
+  String get changeEmail => 'Cambiar Email';
+
+  @override
+  String get continueToApp => 'Continuar a la App';
+
+  @override
+  String get failedToSendVerificationEmail => 'Error al enviar email de verificación';
+
+  @override
+  String get failedToResendVerificationEmail => 'Error al reenviar email de verificación';
+
+  @override
+  String get errorCheckingVerification => 'Error al verificar estado';
+
+  @override
+  String get helloIAmYumie => '¡Hola, soy Yumie! ¡Registra una comida para comenzar tu racha hoy!';
+
+  @override
+  String get happyBirthday => '🎉 ¡Feliz Cumpleaños!';
+
+  @override
+  String birthdayMessage(int age) {
+    return '¡Espero que tengas un día maravilloso! Ahora tienes $age años.';
+  }
+
+  @override
+  String get selectBirthday => 'Selecciona tu cumpleaños';
+
+  @override
+  String get day => 'Día';
+
+  @override
+  String get accountAlreadyExists => 'La cuenta ya existe';
+
+  @override
+  String get accountExistsMessage => 'Ya existe una cuenta con esta dirección de correo electrónico. ¿Te gustaría iniciar sesión en su lugar?';
+
+  @override
+  String get accountUsesDifferentSignIn => 'La cuenta usa un método de inicio de sesión diferente';
+
+  @override
+  String get emailSignedUpWithGoogle => 'Este correo electrónico ya está registrado con Google. Por favor usa \"Iniciar sesión con Google\" en su lugar.';
+
+  @override
+  String get emailSignedUpWithPassword => 'Este correo electrónico ya está registrado con correo y contraseña. Por favor inicia sesión usando tu contraseña.';
+
+  @override
+  String get useGoogleSignIn => 'Usar inicio de sesión con Google';
+
+  @override
+  String get signInWithEmail => 'Iniciar sesión con correo';
 }

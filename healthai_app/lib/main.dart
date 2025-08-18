@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -17,6 +18,9 @@ import 'models/custom_meal.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:quick_actions/quick_actions.dart';
+import 'widgets/goal_weight_celebration_popup.dart';
+import 'widgets/goal_change_flow.dart';
+import 'widgets/new_plan_display.dart';
 
 import 'dart:io';
 import 'scan_page.dart';
@@ -68,6 +72,8 @@ import 'services/device_session_service.dart';
 import 'services/account_deletion_service.dart';
 import 'services/rate_limiting_service.dart';
 import 'services/security_monitoring_service.dart';
+import 'services/email_verification_service.dart';
+import 'services/birthday_service.dart';
 
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'config/payment_config.dart';
@@ -204,6 +210,63 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
 // Quick Actions: hold pending action from launcher
 String? pendingQuickAction;
 
+// Configure device orientation based on device type
+Future<void> _configureDeviceOrientation() async {
+  if (Platform.isIOS) {
+    try {
+      final deviceInfo = DeviceInfoPlugin();
+      final iosInfo = await deviceInfo.iosInfo;
+      
+      // Check if device is iPad
+      final isIpad = iosInfo.model.toLowerCase().contains('ipad');
+      
+      if (isIpad) {
+        // Allow all orientations on iPad
+        await SystemChrome.setPreferredOrientations([
+          DeviceOrientation.portraitUp,
+          DeviceOrientation.portraitDown,
+          DeviceOrientation.landscapeLeft,
+          DeviceOrientation.landscapeRight,
+        ]);
+      } else {
+        // Lock to portrait on iPhone
+        await SystemChrome.setPreferredOrientations([
+          DeviceOrientation.portraitUp,
+          DeviceOrientation.portraitDown,
+        ]);
+      }
+    } catch (e) {
+      print('Error configuring device orientation: $e');
+      // Fallback: allow all orientations if detection fails
+      await SystemChrome.setPreferredOrientations([
+        DeviceOrientation.portraitUp,
+        DeviceOrientation.portraitDown,
+        DeviceOrientation.landscapeLeft,
+        DeviceOrientation.landscapeRight,
+      ]);
+    }
+  } else if (Platform.isAndroid) {
+    try {
+      // For Android, use a simpler approach based on screen dimensions
+      // Get the screen size from MediaQuery (requires context, so we'll use a fallback)
+      // For now, default to landscape for all Android devices
+      // This can be refined later with proper screen size detection
+      
+      // Lock to portrait on Android phones (can be refined later)
+      await SystemChrome.setPreferredOrientations([
+        DeviceOrientation.portraitUp,
+        DeviceOrientation.portraitDown,
+      ]);
+    } catch (e) {
+      print('Error configuring Android device orientation: $e');
+      // Fallback: lock to portrait
+      await SystemChrome.setPreferredOrientations([
+        DeviceOrientation.portraitUp,
+        DeviceOrientation.portraitDown,
+      ]);
+    }
+  }
+}
 
 
 
@@ -307,6 +370,9 @@ void main() async {
   // Initialize Firebase - Android will use google-services.json, iOS will use the options
   await Firebase.initializeApp();
   
+  // Configure device orientation based on device type
+  await _configureDeviceOrientation();
+  
   // Verify Firebase configuration
       // Firebase initialization complete
   // Enable Firestore offline persistence and set cache size
@@ -350,10 +416,8 @@ void main() async {
       pendingQuickAction = shortcutType;
     });
 
-    await quickActions.setShortcutItems(const <ShortcutItem>[
-      ShortcutItem(type: 'scan', localizedTitle: 'Scan', icon: 'ic_camera_simple'),
-      ShortcutItem(type: 'log', localizedTitle: 'Log Meal', icon: 'ic_pencil_simple'),
-    ]);
+    // Quick actions are now configured in Info.plist with proper icons
+    // No need to set them programmatically to avoid duplicates
 
 
 
@@ -776,7 +840,23 @@ class MyApp extends StatelessWidget {
         }
         
         if (snapshot.hasData) {
-          // User is logged in, check if onboarding is completed
+          // User is logged in, first validate the account still exists
+          return FutureBuilder<bool>(
+            future: _validateUserAccount(snapshot.data!),
+            builder: (context, accountValidation) {
+              if (accountValidation.connectionState == ConnectionState.waiting) {
+                return Center(child: CircularProgressIndicator());
+              }
+              
+              // If account doesn't exist, sign out and redirect to auth
+              if (accountValidation.data == false) {
+                return FutureBuilder(
+                  future: _signOutAndRedirect(),
+                  builder: (context, _) => AuthScreen(),
+                );
+              }
+              
+              // Account exists, check if onboarding is completed
           return FutureBuilder<DocumentSnapshot>(
             future: FirebaseFirestore.instance
                 .collection('users')
@@ -820,6 +900,8 @@ class MyApp extends StatelessWidget {
                   return MainNavScreen();
                 },
               );
+                },
+              );
             },
           );
         }
@@ -827,6 +909,36 @@ class MyApp extends StatelessWidget {
         return AuthScreen();
       },
     );
+  }
+
+  // Validate if user account still exists in Firestore
+  Future<bool> _validateUserAccount(User user) async {
+    try {
+      final doc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .get();
+      
+      return doc.exists;
+    } catch (e) {
+      print('Error validating user account: $e');
+      return false; // If error, assume account doesn't exist for safety
+    }
+  }
+
+  // Sign out user and clear any local data
+  Future<void> _signOutAndRedirect() async {
+    try {
+      await FirebaseAuth.instance.signOut();
+      
+      // Clear any local preferences related to the deleted account
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.clear();
+      
+      print('User signed out due to deleted account');
+    } catch (e) {
+      print('Error signing out deleted account: $e');
+    }
   }
 }
 
@@ -1025,7 +1137,7 @@ class _AuthScreenState extends State<AuthScreen> {
                 ),
                 const SizedBox(height: 20),
                 Text(
-                  'Account Already Exists',
+                  AppLocalizations.of(context)!.accountAlreadyExists,
                   style: TextStyle(
                     fontSize: 22,
                     fontWeight: FontWeight.bold,
@@ -1035,7 +1147,7 @@ class _AuthScreenState extends State<AuthScreen> {
                 ),
                 const SizedBox(height: 12),
                 Text(
-                  'An account with this email address already exists. Would you like to sign in instead?',
+                  AppLocalizations.of(context)!.accountExistsMessage,
                   style: TextStyle(
                     fontSize: 16,
                     color: Colors.grey[600],
@@ -1057,7 +1169,7 @@ class _AuthScreenState extends State<AuthScreen> {
                           ),
                         ),
                         child: Text(
-                          'Cancel',
+                          AppLocalizations.of(context)!.cancel,
                           style: TextStyle(
                             color: Colors.grey[600],
                             fontWeight: FontWeight.w500,
@@ -1081,8 +1193,8 @@ class _AuthScreenState extends State<AuthScreen> {
                           ),
                           elevation: 2,
                         ),
-                        child: const Text(
-                          'Sign In',
+                        child: Text(
+                          AppLocalizations.of(context)!.signIn,
                           style: TextStyle(
                             fontWeight: FontWeight.w600,
                           ),
@@ -1103,23 +1215,23 @@ class _AuthScreenState extends State<AuthScreen> {
     final isGoogleExisting = existingProvider.contains('google');
     final isGoogleAttempted = attemptedProvider.contains('google');
     
-    String title = 'Account Uses Different Sign-In Method';
+    String title = AppLocalizations.of(context)!.accountUsesDifferentSignIn;
     String message;
     String actionText;
     VoidCallback? actionCallback;
     
     if (isGoogleExisting && !isGoogleAttempted) {
       // Existing: Google, Attempted: Email
-      message = 'This email is already signed up with Google. Please use "Sign in with Google" instead.';
-      actionText = 'Use Google Sign-In';
+      message = AppLocalizations.of(context)!.emailSignedUpWithGoogle;
+      actionText = AppLocalizations.of(context)!.useGoogleSignIn;
       actionCallback = () {
         Navigator.of(context).pop();
         _handleGoogleSignIn();
       };
     } else if (!isGoogleExisting && isGoogleAttempted) {
       // Existing: Email, Attempted: Google  
-      message = 'This email is already signed up with email and password. Please sign in using your password instead.';
-      actionText = 'Sign In with Email';
+      message = AppLocalizations.of(context)!.emailSignedUpWithPassword;
+      actionText = AppLocalizations.of(context)!.signInWithEmail;
       actionCallback = () {
         Navigator.of(context).pop();
         setState(() => showSignUp = false);
@@ -1555,16 +1667,24 @@ class _AuthScreenState extends State<AuthScreen> {
           }
           return;
         }
-        // Check if onboarding is complete
-        final data = doc.data() as Map<String, dynamic>?;
-        final onboardingCompleted = hasCompletedOnboarding(data);
-        setState(() => isLoading = false);
-        if (mounted) {
-          if (!onboardingCompleted) {
-            Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => OnboardingFlowPage()));
-          } else {
-            Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => MainNavScreen()));
+                // Check for scheduled account deletion and offer reactivation
+        final accountDeletionService = AccountDeletionService();
+        final isScheduledForDeletion = await accountDeletionService.checkAndOfferReactivation(context);
+        
+        if (!isScheduledForDeletion) {
+          // Check if onboarding is complete
+          final data = doc.data() as Map<String, dynamic>?;
+          final onboardingCompleted = hasCompletedOnboarding(data);
+          setState(() => isLoading = false);
+          if (mounted) {
+            if (!onboardingCompleted) {
+              Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => OnboardingFlowPage()));
+            } else {
+              Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => MainNavScreen()));
+            }
           }
+        } else {
+          setState(() => isLoading = false);
         }
       }
     } catch (e) {
@@ -1904,16 +2024,24 @@ class _AuthScreenState extends State<AuthScreen> {
         if (!doc.exists) {
           await userService.createInitialUserProfile(user.email ?? '', '');
         }
-        // Check if onboarding is complete (mimic Google sign-in logic)
-        final data = doc.data() as Map<String, dynamic>?;
-        final onboardingCompleted = hasCompletedOnboarding(data);
-        setState(() => message = 'Sign in successful!');
-        if (mounted) {
-          if (!onboardingCompleted) {
-            Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => OnboardingFlowPage()));
-          } else {
-            Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => MainNavScreen()));
+                // Check for scheduled account deletion and offer reactivation
+        final accountDeletionService = AccountDeletionService();
+        final isScheduledForDeletion = await accountDeletionService.checkAndOfferReactivation(context);
+        
+        if (!isScheduledForDeletion) {
+          // Check if onboarding is complete (mimic Google sign-in logic)
+          final data = doc.data() as Map<String, dynamic>?;
+          final onboardingCompleted = hasCompletedOnboarding(data);
+          setState(() => message = 'Sign in successful!');
+          if (mounted) {
+            if (!onboardingCompleted) {
+              Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => OnboardingFlowPage()));
+            } else {
+              Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => MainNavScreen()));
+            }
           }
+        } else {
+          setState(() => isLoading = false);
         }
         return;
       }
@@ -2072,14 +2200,22 @@ class _AuthScreenState extends State<AuthScreen> {
       final userService = UserService();
       await userService.createInitialUserProfile(email, name);
       
-      if (mounted) {
-        setState(() => message = 'Sign up successful!');
-      }
-      
-      // Show onboarding after sign up
+      // Require email verification for new email accounts
       final user = FirebaseAuth.instance.currentUser;
-      if (user != null && mounted) {
+      if (user != null) {
+        final emailVerificationService = EmailVerificationService();
+        final verified = await emailVerificationService.showEmailVerificationDialog(context, user);
+        if (!verified) {
+          // User closed verification dialog, sign them out
+          await FirebaseAuth.instance.signOut();
+          setState(() => isLoading = false);
+          return;
+        }
+        
+        if (mounted) {
+          setState(() => message = 'Sign up successful!');
         Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => OnboardingFlowPage()));
+        }
       }
     } catch (e) {
       final errorMessage = errorHandler.handleAuthError(e);
@@ -2446,7 +2582,11 @@ class _AuthScreenState extends State<AuthScreen> {
                         builder: (context, snapshot) {
                           final available = snapshot.data ?? false;
                           if (!available) return const SizedBox.shrink();
-                          return _AppleSignInButton(onTap: _handleAppleSignIn);
+                          return _AppleSignInButton(
+                            onTap: _handleAppleSignIn,
+                            isSignUp: showSignUp,
+                            isDisabled: showSignUp && !acceptTerms,
+                          );
                         },
                       ),
                     ] else if (isAndroid) ...[
@@ -2570,19 +2710,27 @@ class _GoogleSignInButton extends StatelessWidget {
 }
 class _AppleSignInButton extends StatelessWidget {
   final VoidCallback onTap;
-  const _AppleSignInButton({required this.onTap});
+  final bool isSignUp;
+  final bool isDisabled;
+  const _AppleSignInButton({required this.onTap, this.isSignUp = false, this.isDisabled = false});
   @override
   Widget build(BuildContext context) {
     return ElevatedButton.icon(
       style: ElevatedButton.styleFrom(
-        backgroundColor: Colors.black,
-        foregroundColor: Colors.white,
+        backgroundColor: isDisabled ? Colors.grey[300] : Colors.black,
+        foregroundColor: isDisabled ? Colors.grey[600] : Colors.white,
         minimumSize: Size(double.infinity, 48),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
-      icon: Icon(Icons.apple, size: 26),
-      label: Text(AppLocalizations.of(context)!.signInWithApple, style: TextStyle(fontWeight: FontWeight.w600)),
-      onPressed: onTap,
+      icon: Icon(Icons.apple, size: 26, color: isDisabled ? Colors.grey[600] : Colors.white),
+      label: Text(
+        isSignUp ? AppLocalizations.of(context)!.signUpWithApple : AppLocalizations.of(context)!.signInWithApple, 
+        style: TextStyle(
+          fontWeight: FontWeight.w600,
+          color: isDisabled ? Colors.grey[600] : Colors.white,
+        )
+      ),
+      onPressed: isDisabled ? null : onTap,
     );
   }
 }
@@ -2968,6 +3116,7 @@ class _MainNavScreenState extends State<MainNavScreen> with TickerProviderStateM
   bool _isOnline = true;
   StreamSubscription? _connectivitySubscription;
 
+
   late final List<Widget> _screens;
 
   @override
@@ -3037,17 +3186,16 @@ class _MainNavScreenState extends State<MainNavScreen> with TickerProviderStateM
         final shouldShow = await SubscriptionPopupPage.shouldShowPopup(isPostOnboarding: true);
 
         if (shouldShow && mounted) {
-          await Future.delayed(Duration(milliseconds: 1000)); // Longer delay for stable navigation
+          await Future.delayed(Duration(seconds: 5)); // 5 second delay after reaching home screen
 
           if (mounted) {
-
-            Navigator.of(context).push(
-              MaterialPageRoute(builder: (_) => SubscriptionPopupPage(
+            showDialog(
+              context: context,
+              barrierDismissible: false,
+              builder: (context) => SubscriptionPopupPage(
                 isOnboardingComplete: true,
-              )),
+              ),
             );
-          } else {
-
           }
         } else {
 
@@ -3056,6 +3204,12 @@ class _MainNavScreenState extends State<MainNavScreen> with TickerProviderStateM
       
       // Check subscription status and show expiration warnings
       await _checkSubscriptionStatus();
+      
+      // Check for pending goal celebration
+      await _checkForPendingCelebration();
+      
+      // Check for birthday
+      await _checkBirthday();
     });
     _screens = [
       DashboardScreen(
@@ -3178,9 +3332,269 @@ class _MainNavScreenState extends State<MainNavScreen> with TickerProviderStateM
           'lastWeightUpdate': FieldValue.serverTimestamp(),
           'totalWeightChange': newTotalChange,
         });
+        
+        // Check if user has reached their goal weight
+        final double targetWeight = (data['targetWeight'] ?? 0.0).toDouble();
+        final bool hadReachedGoal = (data['hasReachedGoal'] ?? false) as bool;
+        final String userGoal = (data['goal'] ?? 'Maintain body weight').toString();
+        
+        if (targetWeight > 0 && !hadReachedGoal) {
+          // Check if user has reached their goal based on their goal type
+          bool hasReachedGoal = false;
+          
+          if (userGoal.toLowerCase() == 'lose body weight') {
+            // For lose weight: trigger when at or below target
+            hasReachedGoal = newWeight <= targetWeight;
+          } else if (userGoal.toLowerCase() == 'gain weight') {
+            // For gain weight: trigger when at or above target
+            hasReachedGoal = newWeight >= targetWeight;
+          } else {
+            // For other goals (maintain, build muscle, eat healthier): use lose weight logic as default
+            hasReachedGoal = newWeight <= targetWeight;
+          }
+          
+          if (hasReachedGoal) {
+            // Mark that user has reached their goal and needs to choose new plan
+            await FirebaseFirestore.instance.collection('users').doc(user.uid).update({
+              'hasReachedGoal': true,
+              'goalReachedDate': FieldValue.serverTimestamp(),
+              'needsCelebrationFlow': true, // Flag to persist celebration state
+            });
+            
+            // Also store in SharedPreferences for app launch detection
+            final prefs = await SharedPreferences.getInstance();
+            await prefs.setBool('needs_goal_celebration', true);
+            
+            // Show celebration popup
+            _showGoalWeightCelebration();
+          }
+        }
       }
     }
   }
+
+  void _showGoalWeightCelebration() async {
+    try {
+      // First calculate the maintenance plan
+      final maintenancePlan = await _calculateMaintenancePlan();
+      
+      if (maintenancePlan != null) {
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (context) => GoalWeightCelebrationPopup(
+            maintenancePlan: maintenancePlan,
+            onKeepPlan: () async {
+              Navigator.of(context).pop(); // Close celebration popup
+              await _applyMaintenancePlan(maintenancePlan);
+            },
+            onChooseDifferentGoal: () {
+              Navigator.of(context).pop(); // Close celebration popup
+              _showGoalChangeFlow(maintenancePlan: maintenancePlan);
+            },
+          ),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(AppLocalizations.of(context)!.failedToGenerateMaintenancePlan),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  Future<Map<String, dynamic>?> _calculateMaintenancePlan() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      final doc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
+      final data = doc.data() ?? {};
+      
+      // Get user data for nutrition calculation
+      final int age = data['age'] ?? 25;
+      final double height = (data['height'] ?? 170.0).toDouble();
+      final double weight = (data['weight'] ?? 70.0).toDouble();
+      final String activityLevel = data['activityLevel'] ?? 'Moderately Active';
+      final String sex = data['sex'] ?? 'Other';
+      
+      // Calculate BMR using Mifflin-St Jeor equation
+      double bmr;
+      if (sex.toLowerCase() == 'male') {
+        bmr = 10 * weight + 6.25 * height - 5 * age + 5;
+      } else {
+        bmr = 10 * weight + 6.25 * height - 5 * age - 161;
+      }
+      
+      // Apply activity multiplier
+      double tdee = bmr;
+      switch (activityLevel.toLowerCase()) {
+        case 'sedentary':
+          tdee = bmr * 1.2;
+          break;
+        case 'lightly active':
+          tdee = bmr * 1.375;
+          break;
+        case 'moderately active':
+          tdee = bmr * 1.55;
+          break;
+        case 'very active':
+          tdee = bmr * 1.725;
+          break;
+        case 'extremely active':
+          tdee = bmr * 1.9;
+          break;
+      }
+      
+      // For maintenance, use TDEE as calorie goal
+      int calorieGoal = tdee.round();
+      
+      // Calculate macro goals for maintenance
+      int proteinGoal = (weight * 1.6).round(); // 1.6g per kg for maintenance
+      int fatGoal = (calorieGoal * 0.25 / 9).round(); // 25% of calories from fat
+      int carbsGoal = ((calorieGoal - (proteinGoal * 4) - (fatGoal * 9)) / 4).round(); // Remaining calories from carbs
+      
+      return {
+        'calories': calorieGoal,
+        'protein': proteinGoal,
+        'carbs': carbsGoal,
+        'fat': fatGoal,
+      };
+    }
+    return null;
+  }
+
+  Future<void> _applyMaintenancePlan(Map<String, dynamic> plan) async {
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user != null) {
+        await FirebaseFirestore.instance.collection('users').doc(user.uid).update({
+          'dailyCalorieGoal': plan['calories'],
+          'proteinGoal': plan['protein'],
+          'carbsGoal': plan['carbs'],
+          'fatGoal': plan['fat'],
+          'lastUpdated': FieldValue.serverTimestamp(),
+          'nutritionalPlanType': 'maintenance',
+          'needsCelebrationFlow': false, // Clear celebration flag
+        });
+        
+        // Clear SharedPreferences flag
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setBool('needs_goal_celebration', false);
+        
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(AppLocalizations.of(context)!.maintenancePlanUpdated),
+            backgroundColor: kPrimaryGreen,
+            duration: Duration(seconds: 3),
+          ),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(AppLocalizations.of(context)!.failedToGenerateMaintenancePlan),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  void _showGoalChangeFlow({Map<String, dynamic>? maintenancePlan}) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => GoalChangeFlow(
+          onPlanGenerated: (planData) {
+            Navigator.of(context).pop(); // Close goal change flow
+            _showNewPlanDisplay(planData);
+          },
+          onCancel: () {
+            Navigator.of(context).pop();
+          },
+          onBackToMaintenancePlan: maintenancePlan != null ? () {
+            Navigator.of(context).pop(); // Close goal change flow
+            // Show the maintenance plan choice again
+            showDialog(
+              context: context,
+              barrierDismissible: false,
+              builder: (context) => GoalWeightCelebrationPopup(
+                maintenancePlan: maintenancePlan,
+                onKeepPlan: () async {
+                  Navigator.of(context).pop(); // Close celebration popup
+                  await _applyMaintenancePlan(maintenancePlan);
+                },
+                onChooseDifferentGoal: () {
+                  Navigator.of(context).pop(); // Close celebration popup
+                  _showGoalChangeFlow(maintenancePlan: maintenancePlan);
+                },
+              ),
+            );
+          } : null,
+        ),
+      ),
+    );
+  }
+
+  void _showNewPlanDisplay(Map<String, dynamic> planData) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => NewPlanDisplay(
+          planData: planData,
+          onComplete: () {
+            Navigator.of(context).pop(); // Close plan display
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(AppLocalizations.of(context)!.maintenancePlanUpdated),
+                backgroundColor: kPrimaryGreen,
+                duration: Duration(seconds: 3),
+              ),
+            );
+          },
+        ),
+      ),
+    );
+  }
+
+  Future<void> _checkForPendingCelebration() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final needsCelebration = prefs.getBool('needs_goal_celebration') ?? false;
+      
+      if (needsCelebration && mounted) {
+        // Double-check with Firestore
+        final user = FirebaseAuth.instance.currentUser;
+        if (user != null) {
+          final doc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
+          final data = doc.data() ?? {};
+          final needsCelebrationFlow = data['needsCelebrationFlow'] ?? false;
+          
+          if (needsCelebrationFlow) {
+            // Show celebration popup after a brief delay
+            await Future.delayed(Duration(milliseconds: 1000));
+            if (mounted) {
+              _showGoalWeightCelebration();
+            }
+          } else {
+            // Clear the SharedPreferences flag if Firestore doesn't have it
+            await prefs.setBool('needs_goal_celebration', false);
+          }
+        }
+      }
+    } catch (e) {
+      print('Error checking for pending celebration: $e');
+    }
+  }
+
+  Future<void> _checkBirthday() async {
+    try {
+      final birthdayService = BirthdayService();
+      await birthdayService.checkAndCelebrateBirthday(context);
+    } catch (e) {
+      print('Error checking birthday: $e');
+    }
+  }
+
+
 
   void _navigateToWaterLog() async {
     setState(() {
@@ -3355,6 +3769,7 @@ class _MainNavScreenState extends State<MainNavScreen> with TickerProviderStateM
               ),
             ),
           ),
+
       ],
     );
   }
@@ -3738,6 +4153,9 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
                           ],
                         ),
                       ),
+                      Stack(
+                        clipBehavior: Clip.none,
+                        children: [
                       AnimatedScale(
                         scale: _headerController.value,
                         duration: const Duration(milliseconds: 600),
@@ -3757,6 +4175,9 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
                             ),
                           ],
                         ),
+                      ),
+
+                        ],
                       ),
                     ],
                   ),
@@ -3898,15 +4319,30 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
                                         ),
                                       ),
                                       // Water Intake Tracker
-                                      StreamBuilder<UserProfile?> (
-                                        stream: _userService.getCurrentUserProfile(),
-                                        initialData: userProfile,
-                                        builder: (context, userSnap) {
-                                          final userProfile2 = userSnap.data ?? userProfile;
-                                          final String waterGoalStr = userProfile2.waterIntake ?? '2L';
+                                      FutureBuilder<DocumentSnapshot>(
+                                        future: FirebaseFirestore.instance.collection('users').doc(FirebaseAuth.instance.currentUser!.uid).get(),
+                                        builder: (context, firestoreSnap) {
+                                          if (!firestoreSnap.hasData) {
+                                            return Container(height: 56, child: Center(child: CircularProgressIndicator(strokeWidth: 2)));
+                                          }
+                                          
+                                          final userData = firestoreSnap.data!.data() as Map<String, dynamic>? ?? {};
+                                          final bool useMetric = Provider.of<PreferencesProvider>(context, listen: false).useMetric;
+                                          int waterGoalMl;
+                                          
+                                          // Try to get from new waterGoal field first (from nutritional plan page)
+                                          final rawWaterGoal = userData['waterGoal'];
+                                          
+                                          if (rawWaterGoal != null && rawWaterGoal is int) {
+                                            // New format: stored in ml
+                                            waterGoalMl = rawWaterGoal <= 30 ? (rawWaterGoal * 240) : rawWaterGoal;
+                                          } else {
+                                            // Fallback to old waterIntake string format
+                                            final String waterGoalStr = userData['waterIntake'] ?? '2L';
                                           final double waterGoal = double.tryParse(waterGoalStr.replaceAll('L', '').replaceAll('+', '')) ?? 2.0;
-                                          final int waterGoalMl = (waterGoal * 1000).round();
-                                          final int waterLoggedMl = userProfile2?.waterLoggedMl ?? 0;
+                                            waterGoalMl = (waterGoal * 1000).round();
+                                          }
+                                          final int waterLoggedMl = userData['waterLoggedMl'] ?? 0;
                                           final double percent = (waterLoggedMl / waterGoalMl).clamp(0.0, 1.0);
                                           return Container(
                                             padding: const EdgeInsets.only(top: 12.0),
@@ -3928,7 +4364,19 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
                                                       ),
                                                     ),
                                                     SizedBox(width: 12),
-                                                                      Text('${(waterLoggedMl / 1000).toStringAsFixed(1)} / $waterGoalStr', style: TextStyle(fontWeight: FontWeight.bold)),
+                                                    Builder(builder: (_) {
+                                                      if (!useMetric) {
+                                                        // US: show in Liters
+                                                        final String loggedL = (waterLoggedMl / 1000.0).toStringAsFixed(1);
+                                                        final String goalL = (waterGoalMl / 1000.0).toStringAsFixed(1) + 'L';
+                                                        return Text('$loggedL / $goalL', style: TextStyle(fontWeight: FontWeight.bold));
+                                                      } else {
+                                                        // Others: show in fl oz
+                                                        final int loggedOz = (waterLoggedMl / 29.5735).round();
+                                                        final int goalOz = (waterGoalMl / 29.5735).round();
+                                                        return Text('$loggedOz / $goalOz ${AppLocalizations.of(context)!.fluidOunces}', style: TextStyle(fontWeight: FontWeight.bold));
+                                                      }
+                                                    }),
                                                   ],
                                                 ),
                                                 
@@ -4493,7 +4941,7 @@ class _MealCardModernState extends State<_MealCardModern> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text('Ingredients:', style: TextStyle(fontWeight: FontWeight.w600, color: kPrimaryGreen)),
-                          ...ingredients.map((ing) => Text('� $ing', style: TextStyle(color: Colors.black87))).toList(),
+                          ...ingredients.map((ing) => Text('- $ing', style: TextStyle(color: Colors.black87))).toList(),
                         ],
                       );
                     } else {
@@ -8060,7 +8508,7 @@ class _FoodMealCardState extends State<_FoodMealCard> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text('Ingredients:', style: TextStyle(fontWeight: FontWeight.w600, color: kPrimaryGreen)),
-                          ...ingredients.map((ing) => Text('� $ing', style: TextStyle(color: Colors.black87))).toList(),
+                          ...ingredients.map((ing) => Text('- $ing', style: TextStyle(color: Colors.black87))).toList(),
                         ],
                       );
                     } else {
@@ -8407,12 +8855,13 @@ class SettingsPage extends StatelessWidget {
     final prefs = Provider.of<PreferencesProvider>(context);
     return Scaffold(
       appBar: AppBar(title: Text(AppLocalizations.of(context)!.settings)),
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 24),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
+      body: SafeArea(
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 24),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
               Text(AppLocalizations.of(context)!.preferences, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 22)),
               SizedBox(height: 18),
               Card(
@@ -8494,8 +8943,10 @@ class SettingsPage extends StatelessWidget {
                   ],
                 ),
               ),
+              SizedBox(height: 20), // Extra bottom padding
 
             ],
+            ),
           ),
         ),
       ),
@@ -8678,11 +9129,20 @@ class _HealthAwarenessPageState extends State<HealthAwarenessPage> {
                     },
                   ),
                   SizedBox(height: 32),
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: (_bloodType != null && _isDiabetic != null && _activityLevel != null && !_saving) ? _save : null,
-                      child: Text(AppLocalizations.of(context)!.save),
+                  SafeArea(
+                    minimum: EdgeInsets.only(bottom: 16),
+                    child: SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: (_bloodType != null && _isDiabetic != null && _activityLevel != null && !_saving) ? _save : null,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: theme.primaryColor,
+                          foregroundColor: Colors.white,
+                          padding: EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        ),
+                        child: Text(AppLocalizations.of(context)!.save),
+                      ),
                     ),
                   ),
                 ],
@@ -9029,6 +9489,16 @@ class _WaterLogSliderDialogState extends State<_WaterLogSliderDialog> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final prefs = Provider.of<PreferencesProvider>(context);
+    final useMetric = prefs.useMetric;
+    final bool isUS = !useMetric; // US uses L, others use fl oz
+    final String waterUnit = isUS ? 'L' : AppLocalizations.of(context)!.fluidOunces;
+    
+    // Convert display values based on unit system
+    final double displayValue = isUS ? _value : (_value * 1000 / 29.5735); // L or fl oz
+    final double displayMin = isUS ? _min : (_min * 1000 / 29.5735);
+    final double displayMax = isUS ? _max : (_max * 1000 / 29.5735);
+    final double displayCurrent = isUS ? (_currentWaterLogged / 1000.0) : (_currentWaterLogged / 29.5735);
     
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
@@ -9175,7 +9645,7 @@ class _WaterLogSliderDialogState extends State<_WaterLogSliderDialog> {
               child: Column(
                 children: [
                   Text(
-                    '${_value.toStringAsFixed(2)}',
+                    isUS ? '${_value.toStringAsFixed(2)}' : '${displayValue.round()}',
                     style: TextStyle(
                       fontSize: 48,
                       fontWeight: FontWeight.w800,
@@ -9184,7 +9654,7 @@ class _WaterLogSliderDialogState extends State<_WaterLogSliderDialog> {
                     ),
                   ),
                   Text(
-                    'L',
+                    waterUnit,
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.w600,
@@ -9211,13 +9681,11 @@ class _WaterLogSliderDialogState extends State<_WaterLogSliderDialog> {
                     trackHeight: 6,
                   ),
                   child: Slider(
-            value: _value,
-            min: _isAdd ? _min : 0.1,
-            max: _isAdd ? _max : (_currentWaterLogged / 1000.0).clamp(0.1, _max),
-            divisions: _isAdd 
-                ? ((_max - _min) / _step).round()
-                : (((_currentWaterLogged / 1000.0).clamp(0.1, _max) - 0.1) / _step).round(),
-            onChanged: (v) => setState(() => _value = double.parse(v.toStringAsFixed(2))),
+            value: isUS ? _value : displayValue,
+            min: isUS ? (_isAdd ? _min : 0.1) : (_isAdd ? displayMin : 3.0),
+            max: isUS ? (_isAdd ? _max : (_currentWaterLogged / 1000.0).clamp(0.1, _max)) : (_isAdd ? displayMax : displayCurrent.clamp(3.0, displayMax)),
+            divisions: isUS ? (_isAdd ? ((_max - _min) / _step).round() : (((_currentWaterLogged / 1000.0).clamp(0.1, _max) - 0.1) / _step).round()) : 50,
+            onChanged: (v) => setState(() => _value = isUS ? double.parse(v.toStringAsFixed(2)) : double.parse((v * 29.5735 / 1000).toStringAsFixed(2))),
           ),
                 ),
                 Padding(
@@ -9226,14 +9694,14 @@ class _WaterLogSliderDialogState extends State<_WaterLogSliderDialog> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
                       Text(
-                        _isAdd ? '${_min.toStringAsFixed(1)}L' : '0.1L',
+                        isUS ? (_isAdd ? '${_min.toStringAsFixed(1)}L' : '0.1L') : (_isAdd ? '${displayMin.round()} $waterUnit' : '3 $waterUnit'),
                         style: TextStyle(
                           color: Colors.grey[600],
                           fontWeight: FontWeight.w500,
                         ),
                       ),
                       Text(
-                        _isAdd ? '${_max.toStringAsFixed(1)}L' : '${(_currentWaterLogged / 1000.0).clamp(0.1, _max).toStringAsFixed(1)}L',
+                        isUS ? (_isAdd ? '${_max.toStringAsFixed(1)}L' : '${(_currentWaterLogged / 1000.0).clamp(0.1, _max).toStringAsFixed(1)}L') : (_isAdd ? '${displayMax.round()} $waterUnit' : '${displayCurrent.round()} $waterUnit'),
                         style: TextStyle(
                           color: Colors.grey[600],
                           fontWeight: FontWeight.w500,

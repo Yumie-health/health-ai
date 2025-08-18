@@ -41,6 +41,9 @@ class PreferencesProvider extends ChangeNotifier {
     _mindfulWalksReminders = prefs.getBool('mindfulWalksReminders') ?? false;
     _momentOfCalmReminders = prefs.getBool('momentOfCalmReminders') ?? false;
     
+    // Notify listeners after loading SharedPreferences
+    notifyListeners();
+    
     // Try to sync with Firestore (onboarding may have saved there)
     try {
       final user = FirebaseAuth.instance.currentUser;
@@ -50,8 +53,12 @@ class PreferencesProvider extends ChangeNotifier {
         if (data != null) {
           // Sync unit preference from Firestore if available
           if (data.containsKey('useMetric')) {
-            _useMetric = data['useMetric'] ?? _useMetric;
-            await prefs.setBool('useMetric', _useMetric);
+            final firestoreUseMetric = data['useMetric'] ?? _useMetric;
+            if (firestoreUseMetric != _useMetric) {
+              _useMetric = firestoreUseMetric;
+              await prefs.setBool('useMetric', _useMetric);
+              notifyListeners(); // Notify again if Firestore value differs
+            }
           }
           
           // Sync reminders if available
@@ -92,11 +99,17 @@ class PreferencesProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  // Force refresh from storage (useful after onboarding)
+  Future<void> refreshFromStorage() async {
+    await loadPreferences();
+  }
+
   // Setters
   Future<void> setUseMetric(bool value) async {
     final prefs = await SharedPreferences.getInstance();
     _useMetric = value;
     await prefs.setBool('useMetric', value);
+    // Also persist water unit mapping implicitly via useMetric rule (US => !useMetric)
     
     // Also save to Firestore
     try {
@@ -240,7 +253,7 @@ class PreferencesProvider extends ChangeNotifier {
     
     if (Platform.isAndroid) {
       // Android: Use NATIVE notifications (like the test that worked!)
-      print('🤖 Using NATIVE Android meal reminders...');
+
       final success = await NativeNotificationService.scheduleMealReminders();
       if (success) {
         print('✅ Native Android meal reminders scheduled for: 8AM, 1PM, 7PM, 10PM');
@@ -249,7 +262,6 @@ class PreferencesProvider extends ChangeNotifier {
       }
     } else {
       // iOS: Keep existing Flutter system (works perfectly!)
-      print('🍎 Using Flutter notifications for iOS (unchanged)...');
       
       final times = [
         [8, 0],   // Breakfast
@@ -289,11 +301,10 @@ class PreferencesProvider extends ChangeNotifier {
   Future<void> _cancelMealLoggingPrompts() async {
     if (Platform.isAndroid) {
       // Android: Cancel native notifications
-      print('🤖 Canceling native Android meal reminders...');
+
       await NativeNotificationService.cancelAllNotifications();
     } else {
       // iOS: Cancel Flutter notifications (unchanged)
-      print('🍎 Canceling iOS meal reminders...');
       for (int i = 0; i < 4; i++) {
         await flutterLocalNotificationsPlugin.cancel(2000 + i);
       }
@@ -305,7 +316,7 @@ class PreferencesProvider extends ChangeNotifier {
     
     if (Platform.isAndroid) {
       // Android: Use NATIVE notifications (same as meal reminders)
-      print('🤖 Using NATIVE Android water reminders...');
+
       final success = await NativeNotificationService.scheduleWaterReminders();
       if (success) {
         print('✅ Native Android water reminders scheduled for: 9AM, 12PM, 3PM, 6PM, 9PM');
@@ -314,7 +325,6 @@ class PreferencesProvider extends ChangeNotifier {
       }
     } else {
       // iOS: Keep existing Flutter system (works perfectly!)
-      print('🍎 Using Flutter notifications for iOS (unchanged)...');
       
       final times = [9, 12, 15, 18, 21];
       for (int i = 0; i < times.length; i++) {
@@ -342,11 +352,10 @@ class PreferencesProvider extends ChangeNotifier {
   Future<void> _cancelWaterIntakeReminders() async {
     if (Platform.isAndroid) {
       // Android: Cancel native notifications
-      print('🤖 Canceling native Android water reminders...');
+
       await NativeNotificationService.cancelWaterReminders();
     } else {
       // iOS: Cancel Flutter notifications (unchanged)
-      print('🍎 Canceling iOS water reminders...');
       for (int i = 0; i < 5; i++) {
         await flutterLocalNotificationsPlugin.cancel(3000 + i);
       }
@@ -358,7 +367,7 @@ class PreferencesProvider extends ChangeNotifier {
     
     if (Platform.isAndroid) {
       // Android: Use NATIVE notifications (same as meal reminders)
-      print('🤖 Using NATIVE Android walk reminders...');
+
       final success = await NativeNotificationService.scheduleWalkReminders();
       if (success) {
         print('✅ Native Android walk reminders scheduled for: 10AM, 2PM, 5PM');
@@ -367,7 +376,6 @@ class PreferencesProvider extends ChangeNotifier {
       }
     } else {
       // iOS: Keep existing Flutter system (works perfectly!)
-      print('🍎 Using Flutter notifications for iOS (unchanged)...');
       
       await flutterLocalNotificationsPlugin.zonedSchedule(
         4001,
@@ -392,11 +400,10 @@ class PreferencesProvider extends ChangeNotifier {
   Future<void> _cancelMindfulWalksReminders() async {
     if (Platform.isAndroid) {
       // Android: Cancel native notifications
-      print('🤖 Canceling native Android walk reminders...');
+
       await NativeNotificationService.cancelWalkReminders();
     } else {
       // iOS: Cancel Flutter notifications (unchanged)
-      print('🍎 Canceling iOS walk reminders...');
       await flutterLocalNotificationsPlugin.cancel(4001);
     }
   }

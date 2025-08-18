@@ -15,6 +15,69 @@ class AccountDeletionService {
 
   final LoggingService _log = LoggingService();
 
+  // Check if account is scheduled for deletion and offer reactivation
+  Future<bool> checkAndOfferReactivation(BuildContext context) async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return false;
+
+    try {
+      final doc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
+      final data = doc.data();
+      
+      if (data != null && data['scheduledForDeletion'] == true) {
+        final deletionExecuteAt = data['deletionExecuteAt'] as Timestamp?;
+        
+        if (deletionExecuteAt != null && DateTime.now().isBefore(deletionExecuteAt.toDate())) {
+          // Account is scheduled for deletion but grace period hasn't expired
+          bool? shouldReactivate = await showDialog<bool>(
+            context: context,
+            barrierDismissible: false,
+            builder: (context) => _AccountReactivationDialog(),
+          );
+          
+          if (shouldReactivate == true) {
+            await _reactivateAccount(user.uid);
+            if (context.mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(AppLocalizations.of(context)!.accountReactivated),
+                  backgroundColor: Colors.green,
+                  duration: Duration(seconds: 3),
+                ),
+              );
+            }
+          }
+          return true;
+        }
+      }
+    } catch (e) {
+      _log.error('Error checking account deletion status', e);
+    }
+    
+    return false;
+  }
+
+  // Reactivate account by removing deletion flags
+  Future<void> _reactivateAccount(String userId) async {
+    try {
+      // Remove deletion flags from user document
+      await FirebaseFirestore.instance.collection('users').doc(userId).update({
+        'scheduledForDeletion': FieldValue.delete(),
+        'deletionScheduledAt': FieldValue.delete(),
+        'deletionExecuteAt': FieldValue.delete(),
+        'lastUpdated': FieldValue.serverTimestamp(),
+      });
+      
+      // Remove from deletion queue
+      await FirebaseFirestore.instance.collection('deletion_queue').doc(userId).delete();
+      
+      _log.info('Account reactivated successfully', {'userId': userId});
+    } catch (e) {
+      _log.error('Error reactivating account', e);
+      rethrow;
+    }
+  }
+
   // Show account deletion confirmation dialog
   Future<void> showAccountDeletionDialog(BuildContext context) async {
     bool? shouldDelete = await showDialog<bool>(
@@ -28,7 +91,7 @@ class AccountDeletionService {
     }
   }
 
-  // Perform the actual account deletion
+  // Schedule account for deletion (48-hour grace period)
   Future<void> _performAccountDeletion(BuildContext context) async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
@@ -41,13 +104,27 @@ class AccountDeletionService {
     );
 
     try {
-      _log.info('Starting account deletion process', {'userId': user.uid});
+      _log.info('Scheduling account for deletion', {'userId': user.uid});
 
-      // Step 1: Delete user's Firestore data
-      await _deleteFirestoreData(user.uid);
-
-      // Step 2: Delete user's Storage files
-      await _deleteStorageFiles(user.uid);
+      // Schedule deletion for 48 hours from now
+      final deletionTime = DateTime.now().add(Duration(hours: 48));
+      
+      // Mark account as scheduled for deletion instead of deleting immediately
+      await FirebaseFirestore.instance.collection('users').doc(user.uid).update({
+        'scheduledForDeletion': true,
+        'deletionScheduledAt': FieldValue.serverTimestamp(),
+        'deletionExecuteAt': Timestamp.fromDate(deletionTime),
+        'lastUpdated': FieldValue.serverTimestamp(),
+      });
+      
+      // Also add to a deletion queue collection for background processing
+      await FirebaseFirestore.instance.collection('deletion_queue').doc(user.uid).set({
+        'userId': user.uid,
+        'email': user.email,
+        'scheduledAt': FieldValue.serverTimestamp(),
+        'executeAt': Timestamp.fromDate(deletionTime),
+        'status': 'scheduled',
+      });
 
       // Step 3: Delete device sessions
       await _deleteDeviceSessions(user.uid);
@@ -58,58 +135,19 @@ class AccountDeletionService {
       // Step 5: Delete Firebase Auth account (with automatic re-authentication if needed)
       await _deleteUserAccount(user);
 
+      // Step 6: Sign out the user to ensure they're properly logged out
+      await FirebaseAuth.instance.signOut();
+
       _log.info('Account deletion completed successfully');
 
       // Close loading dialog
       if (context.mounted) {
         Navigator.of(context).pop(); // Close loading dialog
         
-        // Show a success message first
-        showDialog(
-          context: context,
-          barrierDismissible: false,
-          builder: (context) => AlertDialog(
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(Icons.check_circle, color: Colors.green, size: 64),
-                SizedBox(height: 16),
-                Text(
-                  'Account Deleted Successfully',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.green[700],
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-                SizedBox(height: 8),
-                Text(
-                  'All your data has been permanently removed. You will be redirected to the sign-in page.',
-                  style: TextStyle(color: Colors.grey[600]),
-                  textAlign: TextAlign.center,
-                ),
-                SizedBox(height: 24),
-                ElevatedButton(
-                  onPressed: () {
-                    Navigator.of(context).pop(); // Close this dialog
-                    
-                    // Navigate to a redirect screen with a timer
-                    Navigator.of(context).pushAndRemoveUntil(
-                      MaterialPageRoute(builder: (context) => _RedirectScreen()),
-                      (route) => false,
-                    );
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.green,
-                    foregroundColor: Colors.white,
-                  ),
-                  child: Text(AppLocalizations.of(context)!.continueButton),
-                ),
-              ],
-            ),
-          ),
+        // Navigate directly to redirect screen
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (context) => _RedirectScreen()),
+          (route) => false,
         );
       }
 
@@ -310,11 +348,12 @@ class AccountDeletionService {
       // Clear all data
       await prefs.clear();
       
-      // Restore app state flags so user doesn't go through onboarding again
-      await prefs.setBool('first_launch_completed', true); // Always set to true after account deletion
+      // Restore only permissions flag - do NOT set first_launch_completed to true
+      // This ensures that after account deletion, the app will properly route to sign-in
+      // and won't incorrectly show onboarding when the app is reopened
       await prefs.setBool('permissions_requested', permissionsRequested);
       
-      _log.info('Local data cleared successfully, app state flags preserved');
+      _log.info('Local data cleared successfully, permissions flag preserved');
     } catch (e) {
       _log.error('Error clearing local data', e);
     }
@@ -425,21 +464,43 @@ class _AccountDeletionDialogState extends State<_AccountDeletionDialog> {
             _buildDeletionItem(AppLocalizations.of(context)!.allAppPreferences),
             _buildDeletionItem(AppLocalizations.of(context)!.activeSessionsAllDevices),
             SizedBox(height: 16),
+            
+            // 48-hour grace period warning
             Container(
               padding: EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Colors.orange.withOpacity(0.1),
+                color: Colors.orange[50],
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.orange.withOpacity(0.3)),
+                border: Border.all(color: Colors.orange[300]!),
               ),
-              child: Row(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Icon(Icons.info, color: Colors.orange[700], size: 20),
-                  SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      AppLocalizations.of(context)!.exportDataWarning,
-                      style: TextStyle(fontSize: 12, color: Colors.orange[700]),
+                  Row(
+                    children: [
+                      Icon(Icons.schedule, color: Colors.orange[700], size: 20),
+                      SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          AppLocalizations.of(context)!.accountScheduledForDeletion,
+                          style: TextStyle(
+                            fontWeight: FontWeight.w600,
+                            color: Colors.orange[700],
+                            fontSize: 12,
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 8),
+                  Text(
+                    AppLocalizations.of(context)!.accountDeletionWarning,
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.orange[700],
+                      height: 1.3,
                     ),
                   ),
                 ],
@@ -564,8 +625,11 @@ class _RedirectScreenState extends State<_RedirectScreen> {
   void initState() {
     super.initState();
     // Redirect after 2 seconds
-    Timer(Duration(seconds: 2), () {
+    Timer(Duration(seconds: 2), () async {
       if (mounted) {
+        // Ensure user is signed out
+        await FirebaseAuth.instance.signOut();
+        
         // After deletion, always return to AuthScreen (sign in / sign up)
         Navigator.of(context).pushAndRemoveUntil(
           MaterialPageRoute(builder: (context) => AuthScreen()),
@@ -650,6 +714,65 @@ class _ExitScreen extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+// Account reactivation dialog
+class _AccountReactivationDialog extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      title: Row(
+        children: [
+          Icon(Icons.schedule, color: Colors.orange, size: 24),
+          SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              AppLocalizations.of(context)!.accountScheduledForDeletion,
+              style: TextStyle(fontSize: 16),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ],
+      ),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            AppLocalizations.of(context)!.accountDeletionWarning,
+            style: TextStyle(fontSize: 16, height: 1.4),
+          ),
+          SizedBox(height: 16),
+          Text(
+            AppLocalizations.of(context)!.accountDeletionCancelled,
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: Colors.green[700],
+            ),
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(false),
+          child: Text(
+            AppLocalizations.of(context)!.cancel,
+            style: TextStyle(color: Colors.grey[600]),
+          ),
+        ),
+        ElevatedButton(
+          onPressed: () => Navigator.of(context).pop(true),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.green,
+            foregroundColor: Colors.white,
+          ),
+          child: Text(AppLocalizations.of(context)!.reactivateAccount),
+        ),
+      ],
     );
   }
 }

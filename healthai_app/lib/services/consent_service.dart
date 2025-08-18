@@ -16,14 +16,11 @@ class ConsentService {
   Future<void> initializeAndObtainConsent() async {
     // Request/update consent status using UMP via Google Mobile Ads SDK
 
-    debugPrint('Looking for Google Mobile Ads test device ID in logs...');
-    
     // Force reset consent info to ensure clean state
     try {
       await ConsentInformation.instance.reset();
-      debugPrint('UMP: Consent information reset successfully');
     } catch (e) {
-      debugPrint('UMP: Failed to reset consent information: $e');
+      // Handle reset error silently
     }
     
     ConsentRequestParameters params;
@@ -57,28 +54,18 @@ class ConsentService {
           final available = await ConsentInformation.instance.isConsentFormAvailable();
           _isConsentFormAvailable = available;
           
-          // Debug logging
-          debugPrint('UMP: canRequestAds = $_lastCanRequestAds');
-          debugPrint('UMP: isConsentFormAvailable = $available');
           if (available) {
-            debugPrint('UMP Consent form is available - loading and showing...');
             ConsentForm.loadConsentForm((form) async {
-              debugPrint('UMP Consent form loaded - showing to user...');
               form.show((_) async {
                 _lastCanRequestAds = await ConsentInformation.instance.canRequestAds();
                 _consentFlowCompleted = true;
-                debugPrint('UMP Consent form completed - canRequestAds: $_lastCanRequestAds');
                 if (!completer.isCompleted) completer.complete();
               });
             }, (error) {
-              debugPrint('UMP Consent form failed to load: $error');
               _consentFlowCompleted = true;
               if (!completer.isCompleted) completer.complete();
             });
           } else {
-            debugPrint('UMP Consent form NOT available - no form to show');
-            debugPrint('UMP: This might be expected for emulator/debug builds');
-            debugPrint('UMP: For production, ensure AdMob console has EEA message published');
             
             // For debugging: assume consent is obtained (non-personalized ads)
             // In production, this should be handled properly through UMP
@@ -113,18 +100,8 @@ class ConsentService {
       ),
     );
     
-    // Print debug info
-    debugPrint('=== GOOGLE MOBILE ADS INITIALIZED & CONFIGURED ===');
-    debugPrint('🔍 LOOKING FOR TEST DEVICE ID IN LOGS...');
-    debugPrint('📱 Your actual device test ID should appear in a message like:');
-    debugPrint('   "Use RequestConfiguration.Builder().setTestDeviceIds(Arrays.asList(\\"YOUR_DEVICE_ID\\"))"');
-    debugPrint('📋 Copy YOUR_DEVICE_ID and replace the placeholder in ConsentService');
-    
-    // Force load a test ad immediately to trigger test device ID logs
-    debugPrint('🎯 Forcing test ad load to trigger device ID logs...');
+    // Initialize mobile ads
     await _forceTestAdLoad();
-    
-    debugPrint('=====================================');
   }
 
   Future<void> _forceTestAdLoad() async {
@@ -132,24 +109,20 @@ class ConsentService {
       // Use the test rewarded ad unit ID to force the device ID log
       const testAdUnitId = 'ca-app-pub-6978915708810799/8277465670';
       
-      debugPrint('Loading test ad with unit ID: $testAdUnitId');
-      
       RewardedAd.load(
         adUnitId: testAdUnitId,
         request: const AdRequest(),
         rewardedAdLoadCallback: RewardedAdLoadCallback(
           onAdLoaded: (ad) {
-            debugPrint('✅ Test ad loaded successfully! Check logs above for device ID.');
             ad.dispose();
           },
           onAdFailedToLoad: (error) {
-            debugPrint('❌ Test ad failed to load: $error');
-            debugPrint('   This is expected - check logs above for your device test ID!');
+            // Expected failure for test device ID logging
           },
         ),
       );
     } catch (e) {
-      debugPrint('Exception during test ad load: $e');
+      // Handle exception silently
     }
   }
 

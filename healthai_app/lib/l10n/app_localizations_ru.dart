@@ -141,10 +141,10 @@ class AppLocalizationsRu extends AppLocalizations {
   String get trackYourFood => 'Отслеживать вашу еду';
 
   @override
-  String get scan => 'Сканировать';
+  String get scan => 'Скан';
 
   @override
-  String get barcode => 'Штрих‑код';
+  String get barcode => 'Код';
 
   @override
   String get analyzeYourFood => 'Анализировать вашу еду';
@@ -153,7 +153,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get todaysMeals => 'Сегодняшние приемы пищи';
 
   @override
-  String get viewAll => 'Посмотреть все';
+  String get viewAll => 'Все';
 
   @override
   String get noMealsLoggedForThisDay => 'Нет записей о приемах пищи за этот день.';
@@ -560,7 +560,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get meal => 'ПРИЕМ ПИЩИ';
 
   @override
-  String get fridge => 'Холодильник';
+  String get fridge => 'Холод';
 
   @override
   String get placeFoodInFrame => 'Поместите еду внутрь рамки';
@@ -602,13 +602,13 @@ class AppLocalizationsRu extends AppLocalizations {
   String get kcalPer100g => 'ккал/100г';
 
   @override
-  String get sugar => 'Sugar';
+  String get sugar => 'Сахар';
 
   @override
   String get satFat => 'Насыщ. жир';
 
   @override
-  String get salt => 'Salt';
+  String get salt => 'Соль';
 
   @override
   String get ingredientsTitle => 'Ингредиенты';
@@ -844,7 +844,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get recentFoods => 'Недавние продукты';
 
   @override
-  String get logWeightChange => 'Записать изменение веса';
+  String get logWeightChange => 'Вес';
 
   @override
   String get lost => 'Потеряно';
@@ -1045,7 +1045,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get dailyHealthInsights => 'Ежедневные инсайты о здоровье';
 
   @override
-  String get logWaterIntake => 'Записать потребление воды';
+  String get logWaterIntake => 'Вода';
 
   @override
   String get add => 'Добавить';
@@ -1312,7 +1312,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get signInWithGoogle => 'Войти через Google';
 
   @override
-  String get signUpWithApple => 'Зарегистрироваться через Apple';
+  String get signUpWithApple => 'Зарегистрироваться с Apple';
 
   @override
   String get signInWithApple => 'Войти через Apple';
@@ -1414,10 +1414,44 @@ class AppLocalizationsRu extends AppLocalizations {
   String get redirectingToSignIn => 'Перенаправление на вход...';
 
   @override
+  String weightTrendNoData(Object remaining, Object unit) {
+    return 'Недостаточно данных веса.';
+  }
+
+  @override
+  String weightTrendHealthyRate(Object eta, Object rate, Object remaining, Object unit) {
+    return 'Здоровый темп: $rate$unit/нед.';
+  }
+
+  @override
   String get accountSuccessfullyDeleted => 'Аккаунт успешно удален';
 
   @override
   String get pleaseCloseAndRestartApp => 'Пожалуйста, закройте и перезапустите приложение для продолжения.';
+
+  @override
+  String get exportData => 'Экспорт Данных';
+
+  @override
+  String get exportDataDescription => 'Экспортировать все ваши данные в файл PDF';
+
+  @override
+  String get exportComplete => 'Экспорт Завершен';
+
+  @override
+  String get exportCompleteMessage => 'Ваши данные были успешно экспортированы!';
+
+  @override
+  String get exportCompleteDescription => 'PDF файл был сохранен на вашем устройстве и может быть поделен или просмотрен.';
+
+  @override
+  String get exportFailed => 'Экспорт Не Удался';
+
+  @override
+  String get exportingData => 'Экспорт ваших данных...';
+
+  @override
+  String get exportingDataDescription => 'Это может занять несколько моментов';
 
   @override
   String get restartApp => 'Перезапустить приложение';
@@ -1723,7 +1757,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get startFreeTrial => 'Начать бесплатную пробную версию';
 
   @override
-  String get month => 'месяц';
+  String get month => 'Месяц';
 
   @override
   String get year => 'год';
@@ -1987,20 +2021,206 @@ class AppLocalizationsRu extends AppLocalizations {
   String get consentFlowCompleted => 'Процесс согласия завершен!';
 
   @override
-  String get appleSignInFailed => 'Apple sign-in failed';
+  String get appleSignInFailed => 'Ошибка входа через Apple';
 
   @override
-  String get adFailedToShow => 'Ad failed to show. Please try again.';
+  String get adFailedToShow => 'Не удалось показать рекламу';
 
   @override
-  String get adNotLoadedYet => 'Ad not loaded yet. Please try again.';
+  String get adNotLoadedYet => 'Реклама ещё не загружена';
 
   @override
-  String get errorRequestingPermissions => 'Error requesting permissions';
+  String get errorRequestingPermissions => 'Ошибка при запросе разрешений';
 
   @override
-  String get showMore => 'Show more';
+  String get showMore => 'Показать больше';
 
   @override
-  String get showLess => 'Show less';
+  String get showLess => 'Показать меньше';
+
+  @override
+  String get noSavedCustomMeals => 'У вас нет сохраненных пользовательских блюд.';
+
+  @override
+  String get savedCustomMealsPlus => 'Сохраненные пользовательские блюда +';
+
+  @override
+  String get customBuilding => 'Создать Пользовательское Блюдо';
+
+  @override
+  String get enterName => 'Введите название';
+
+  @override
+  String get enterFoodName => 'Введите название продукта';
+
+  @override
+  String get congratulationsGoalReached => '🎉 Поздравляем!';
+
+  @override
+  String get youReachedGoalWeight => 'Вы достигли целевого веса!';
+
+  @override
+  String get switchToMaintenancePlan => 'Пора перейти на план поддержания веса!';
+
+  @override
+  String get letsDoIt => 'ПОЕХАЛИ!';
+
+  @override
+  String get keepUpGreatWork => 'Так держать!';
+
+  @override
+  String get generatingMaintenancePlan => 'Генерируем план поддержания...';
+
+  @override
+  String get maintenancePlanUpdated => '🎉 Ваш план питания обновлён для поддержания веса!';
+
+  @override
+  String get failedToGenerateMaintenancePlan => 'Не удалось создать план поддержания. Повторите попытку.';
+
+  @override
+  String get heresYourMaintenancePlan => 'Вот ваш новый план поддержания!';
+
+  @override
+  String get keepThisPlan => 'Оставить этот план';
+
+  @override
+  String get chooseDifferentGoal => 'Выбрать другую цель';
+
+  @override
+  String get whatsYourNewGoal => 'Какая у вас новая цель?';
+
+  @override
+  String get whatsYourNewTargetWeight => 'Какой новый целевой вес?';
+
+  @override
+  String get yumieGeneratingNewPlan => 'Yumie генерирует ваш новый персональный план...';
+
+  @override
+  String get yourNewPlanReady => 'Ваш новый план готов!';
+
+  @override
+  String get startWithNewPlan => 'Начать с новым планом';
+
+  @override
+  String get generateNewPlan => 'Сгенерировать новый план';
+
+  @override
+  String get planGenerationLimitReached => 'Вы использовали 2 генерации планов за этот период.';
+
+  @override
+  String get waterGoal => 'Цель по воде';
+
+  @override
+  String get glasses => 'стаканов';
+
+  @override
+  String planGenerationInfo(int remaining) {
+    return 'Вы можете создать ещё $remaining персонализированных планов в следующие 14 дней.';
+  }
+
+  @override
+  String nextPlanAvailable(int days) {
+    return 'Попробуйте снова через $days дней';
+  }
+
+  @override
+  String get decline => 'Отклонить';
+
+  @override
+  String get planDeclined => 'План отклонён';
+
+  @override
+  String get accountDeletionWarning => 'Ваш аккаунт будет удалён через 48 часов. Если вы войдёте в этот аккаунт в течение 48 часов, он будет реактивирован и удаление отменено.';
+
+  @override
+  String get accountScheduledForDeletion => 'Аккаунт запланирован к удалению';
+
+  @override
+  String get reactivateAccount => 'Реактивировать Аккаунт';
+
+  @override
+  String get accountReactivated => 'Добро пожаловать обратно! Ваш аккаунт был реактивирован.';
+
+  @override
+  String get accountDeletionCancelled => 'Удаление аккаунта отменено.';
+
+  @override
+  String get emailVerificationRequired => 'Требуется Подтверждение Email';
+
+  @override
+  String get pleaseVerifyEmail => 'Пожалуйста, подтвердите ваш email адрес для продолжения';
+
+  @override
+  String get verificationEmailSent => 'Мы отправили ссылку подтверждения на ваш email. Пожалуйста, проверьте вашу почту и нажмите на ссылку для подтверждения.';
+
+  @override
+  String get waitingForVerification => 'Ожидание подтверждения email...';
+
+  @override
+  String get checkYourEmail => 'Проверьте ваш email и нажмите на ссылку подтверждения';
+
+  @override
+  String get resendVerificationEmail => 'Переотправить Email Подтверждения';
+
+  @override
+  String get verificationLinkAlreadySent => 'Ссылка подтверждения уже отправлена на этот email. Проверьте почту или подождите несколько минут.';
+
+  @override
+  String get emailVerified => 'Email успешно подтверждён!';
+
+  @override
+  String get emailNotVerified => 'Email ещё не подтверждён. Проверьте почту.';
+
+  @override
+  String get changeEmail => 'Изменить Email';
+
+  @override
+  String get continueToApp => 'Продолжить в Приложении';
+
+  @override
+  String get failedToSendVerificationEmail => 'Ошибка отправки email подтверждения';
+
+  @override
+  String get failedToResendVerificationEmail => 'Ошибка повторной отправки email';
+
+  @override
+  String get errorCheckingVerification => 'Ошибка проверки подтверждения';
+
+  @override
+  String get helloIAmYumie => 'Привет, я Yumie! Запишите приём пищи, чтобы начать свою серию сегодня!';
+
+  @override
+  String get happyBirthday => '🎉 С Днём Рождения!';
+
+  @override
+  String birthdayMessage(int age) {
+    return 'Надеюсь, у вас замечательный день! Теперь вам $age лет.';
+  }
+
+  @override
+  String get selectBirthday => 'Выберите свой день рождения';
+
+  @override
+  String get day => 'День';
+
+  @override
+  String get accountAlreadyExists => 'Аккаунт уже существует';
+
+  @override
+  String get accountExistsMessage => 'Аккаунт с этим email адресом уже существует. Хотите войти вместо этого?';
+
+  @override
+  String get accountUsesDifferentSignIn => 'Аккаунт использует другой способ входа';
+
+  @override
+  String get emailSignedUpWithGoogle => 'Этот email уже зарегистрирован с Google. Пожалуйста, используйте \"Войти через Google\" вместо этого.';
+
+  @override
+  String get emailSignedUpWithPassword => 'Этот email уже зарегистрирован с email и паролем. Пожалуйста, войдите, используя ваш пароль.';
+
+  @override
+  String get useGoogleSignIn => 'Использовать вход через Google';
+
+  @override
+  String get signInWithEmail => 'Войти с email';
 }

@@ -87,9 +87,27 @@ class PermissionService {
   static Future<bool> shouldRequestPermissions() async {
     final prefs = await SharedPreferences.getInstance();
     
-    // Always proceed to permission request on first launch; no skip toggle
+    // Check if this is the first time launch
+    final isFirstLaunch = await _isFirstTimeLaunch();
     
-    return await _isFirstTimeLaunch();
+    // If not first launch, don't show permissions page
+    if (!isFirstLaunch) {
+      return false;
+    }
+    
+    // Check if permissions have already been granted
+    final cameraGranted = await isPermissionGranted(ph.Permission.camera);
+    final photosGranted = await isPermissionGranted(ph.Permission.photos);
+    final notificationsGranted = await isPermissionGranted(ph.Permission.notification);
+    
+    // If all permissions are already granted, don't show permissions page
+    if (cameraGranted && photosGranted && notificationsGranted) {
+      // Mark first launch as completed since permissions are already granted
+      await _markFirstLaunchCompleted();
+      return false;
+    }
+    
+    return true;
   }
 
   // Request specific permission

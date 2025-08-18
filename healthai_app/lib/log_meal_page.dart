@@ -106,19 +106,16 @@ class _SearchableMealInputState extends State<SearchableMealInput> {
   }
 
   void _loadRewardedAd(VoidCallback onAdLoaded) {
-    debugPrint('Loading rewarded ad for search with unit ID: ${AdConfig.rewardedAdUnitId}');
     RewardedAd.load(
       adUnitId: AdConfig.rewardedAdUnitId,
       request: ConsentService.instance.buildAdRequest(),
       rewardedAdLoadCallback: RewardedAdLoadCallback(
         onAdLoaded: (ad) {
-          debugPrint('✅ Search rewarded ad loaded successfully!');
           _rewardedAd = ad;
           _isRewardedAdLoaded = true;
           onAdLoaded();
         },
         onAdFailedToLoad: (error) {
-          debugPrint('❌ Search rewarded ad failed to load: $error');
           _isRewardedAdLoaded = false;
           _rewardedAd = null;
         },
@@ -130,14 +127,12 @@ class _SearchableMealInputState extends State<SearchableMealInput> {
     if (_isRewardedAdLoaded && _rewardedAd != null) {
       _rewardedAd!.fullScreenContentCallback = FullScreenContentCallback(
         onAdDismissedFullScreenContent: (ad) {
-          debugPrint('Search ad dismissed');
           ad.dispose();
           _isRewardedAdLoaded = false;
           _rewardedAd = null;
           _loadRewardedAd(() {}); // Preload next ad
         },
         onAdFailedToShowFullScreenContent: (ad, error) {
-          debugPrint('Search ad failed to show: $error');
           ad.dispose();
           _isRewardedAdLoaded = false;
           _rewardedAd = null;
@@ -151,19 +146,16 @@ class _SearchableMealInputState extends State<SearchableMealInput> {
       try {
         await _rewardedAd!.show(
           onUserEarnedReward: (ad, reward) {
-            debugPrint('User earned reward from search ad');
             onRewardEarned();
           },
         );
       } catch (e) {
-        debugPrint('Error showing search ad: $e');
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(AppLocalizations.of(context)!.adFailedToShow)),
         );
         onRewardEarned(); // Continue anyway
       }
     } else {
-      debugPrint('Search ad not loaded, continuing without ad');
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(AppLocalizations.of(context)!.adNotLoadedYet)),
       );
@@ -1156,7 +1148,7 @@ class _LogMealPageState extends State<LogMealPage> with TickerProviderStateMixin
               builder: (context, setDialogState) => AlertDialog(
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
               insetPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 24),
-              title: Text('Custom Building', style: TextStyle(fontWeight: FontWeight.bold, color: kPrimaryGreen)),
+                              title: Text(AppLocalizations.of(context)!.customBuilding, style: TextStyle(fontWeight: FontWeight.bold, color: kPrimaryGreen)),
               content: SingleChildScrollView(
                 child: ConstrainedBox(
                   constraints: BoxConstraints(
@@ -1166,12 +1158,12 @@ class _LogMealPageState extends State<LogMealPage> with TickerProviderStateMixin
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Name', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 18, color: kPrimaryGreen)),
+                    Text(AppLocalizations.of(context)!.name, style: TextStyle(fontWeight: FontWeight.w600, fontSize: 18, color: kPrimaryGreen)),
                     const SizedBox(height: 8),
                     TextField(
                       controller: nameController,
                       decoration: InputDecoration(
-                        hintText: 'Enter name',
+                        hintText: AppLocalizations.of(context)!.enterName,
                         filled: true,
                         fillColor: const Color(0xFFF5F5F5),
                         border: OutlineInputBorder(
@@ -1477,7 +1469,7 @@ class _LogMealPageState extends State<LogMealPage> with TickerProviderStateMixin
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 const SizedBox(height: 32),
-                 Text('You don\'t have any saved customs.', style: TextStyle(color: Colors.grey[500], fontSize: 18)),
+                 Text(AppLocalizations.of(context)!.noSavedCustomMeals, style: TextStyle(color: Colors.grey[500], fontSize: 18)),
                 const SizedBox(height: 24),
                 OutlinedButton(
                   onPressed: _showCustomMealDialog,
@@ -1487,7 +1479,7 @@ class _LogMealPageState extends State<LogMealPage> with TickerProviderStateMixin
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                     padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
                   ),
-                   child: Text('Saved customs  +', style: TextStyle(fontSize: 18)),
+                                       child: Text(AppLocalizations.of(context)!.savedCustomMealsPlus, style: TextStyle(fontSize: 18)),
                 ),
               ],
             ),
@@ -1508,7 +1500,7 @@ class _LogMealPageState extends State<LogMealPage> with TickerProviderStateMixin
                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                      padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
                    ),
-                   child: Text('Custom building', style: TextStyle(fontSize: 18)),
+                                       child: Text(AppLocalizations.of(context)!.customBuilding, style: TextStyle(fontSize: 18)),
                  ),
                ],
              ),
@@ -1566,7 +1558,7 @@ class _LogMealPageState extends State<LogMealPage> with TickerProviderStateMixin
                 opacity: anim1.value,
                 child: AlertDialog(
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                   title: Text('Custom Building', style: TextStyle(fontWeight: FontWeight.bold, color: kPrimaryGreen)),
+                   title: Text(AppLocalizations.of(context)!.customBuilding, style: TextStyle(fontWeight: FontWeight.bold, color: kPrimaryGreen)),
                    insetPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 24),
                    content: SingleChildScrollView(
                      child: ConstrainedBox(
@@ -1575,12 +1567,12 @@ class _LogMealPageState extends State<LogMealPage> with TickerProviderStateMixin
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                        Text('Name', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 18, color: kPrimaryGreen)),
+                        Text(AppLocalizations.of(context)!.name, style: TextStyle(fontWeight: FontWeight.w600, fontSize: 18, color: kPrimaryGreen)),
                         const SizedBox(height: 8),
                         TextField(
                           controller: nameController,
                           decoration: InputDecoration(
-                            hintText: 'Enter food name',
+                            hintText: AppLocalizations.of(context)!.enterFoodName,
                             filled: true,
                             fillColor: const Color(0xFFF5F5F5),
                             border: OutlineInputBorder(

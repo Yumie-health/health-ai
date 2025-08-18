@@ -6,7 +6,7 @@ class ImprovedWeightSelector extends StatefulWidget {
   final bool useMetric;
   final double? weightKg;
   final double weightLb;
-  final void Function(bool) onUnitToggle;
+  final void Function(bool)? onUnitToggle;
   final void Function(double) onSelectKg;
   final void Function(double) onSelectLb;
 
@@ -15,7 +15,7 @@ class ImprovedWeightSelector extends StatefulWidget {
     required this.useMetric,
     required this.weightKg,
     required this.weightLb,
-    required this.onUnitToggle,
+    this.onUnitToggle,
     required this.onSelectKg,
     required this.onSelectLb,
   }) : super(key: key);
@@ -131,12 +131,12 @@ class _ImprovedWeightSelectorState extends State<ImprovedWeightSelector>
     
     return Column(
       children: [
-        // Unit toggle buttons (lb first, then kg)
-        Row(
+        // Unit toggle buttons (lb first, then kg) - completely hidden when locked by height
+        if (false) Row( // Always hide since units are locked by height selection
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             GestureDetector(
-              onTap: () => widget.onUnitToggle(false),
+              onTap: () => widget.onUnitToggle?.call(false),
               child: AnimatedContainer(
                 duration: Duration(milliseconds: 200),
                 decoration: BoxDecoration(
@@ -167,7 +167,7 @@ class _ImprovedWeightSelectorState extends State<ImprovedWeightSelector>
             ),
             SizedBox(width: isSmallScreen ? 12 : 16),
             GestureDetector(
-              onTap: () => widget.onUnitToggle(true),
+              onTap: () => widget.onUnitToggle?.call(true),
               child: AnimatedContainer(
                 duration: Duration(milliseconds: 200),
                 decoration: BoxDecoration(

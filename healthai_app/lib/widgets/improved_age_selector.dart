@@ -279,28 +279,7 @@ class _ImprovedAgeSelectorState extends State<ImprovedAgeSelector>
           ),
         ),
         
-        SizedBox(height: 30),
-        
-        // Selected age confirmation
-        Container(
-          padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-          decoration: BoxDecoration(
-            color: Theme.of(context).primaryColor.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(25),
-            border: Border.all(
-              color: Theme.of(context).primaryColor.withOpacity(0.3),
-              width: 1,
-            ),
-          ),
-          child: Text(
-            '${AppLocalizations.of(context)!.selected}: $currentAge ${AppLocalizations.of(context)!.yearsOld}',
-            style: TextStyle(
-              fontSize: 18,
-              color: Theme.of(context).primaryColor,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ),
+
       ],
     );
   }

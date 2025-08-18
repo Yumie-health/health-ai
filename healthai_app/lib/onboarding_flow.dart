@@ -28,6 +28,8 @@ class _OnboardingFlowPageState extends State<OnboardingFlowPage> with SingleTick
   String? selectedGoal;
   String? selectedMotivation;
   int? selectedAge;
+  int? selectedBirthMonth;
+  int? selectedBirthDay;
   double? selectedHeightCm;
   bool useMetricHeight = false;
   int selectedHeightFeet = 5;
@@ -51,6 +53,133 @@ class _OnboardingFlowPageState extends State<OnboardingFlowPage> with SingleTick
   String? aiError;
   List<String> selectedReminders = [];
 
+
+
+  // Persist/recover onboarding progress to avoid resets on rebuilds (e.g., locale or Firestore updates)
+  String _onboardingStepKeyForUser(String? uid) => 'onboarding_resume_step_${uid ?? 'anon'}';
+  static const String _onboardingStepKeyGlobal = 'onboarding_resume_step_global';
+
+  String _draftKeyForUser(String? uid) => 'onboarding_draft_${uid ?? 'anon'}';
+  static const String _draftKeyGlobal = 'onboarding_draft_global';
+
+  Future<void> _saveDraftToPrefs() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final uid = FirebaseAuth.instance.currentUser?.uid;
+      final draft = {
+        'selectedGoal': selectedGoal,
+        'selectedMotivation': selectedMotivation,
+        'selectedAge': selectedAge,
+        'selectedBirthMonth': selectedBirthMonth,
+        'selectedBirthDay': selectedBirthDay,
+        'selectedHeightCm': selectedHeightCm,
+        'useMetricHeight': useMetricHeight,
+        'selectedHeightFeet': selectedHeightFeet,
+        'selectedHeightInches': selectedHeightInches,
+        'selectedWeightKg': selectedWeightKg,
+        'useMetricWeight': useMetricWeight,
+        'selectedWeightLb': selectedWeightLb,
+        'targetWeightKg': targetWeightKg,
+        'activityLevel': activityLevel,
+        'selectedSex': selectedSex,
+        'bloodType': bloodType,
+        'isDiabetic': isDiabetic,
+        'waterIntake': waterIntake,
+        'selectedReminders': selectedReminders,
+      };
+      final json = draft.toString();
+      await prefs.setString(_draftKeyForUser(uid), json);
+    } catch (_) {}
+  }
+
+  Future<void> _clearDraftPrefs() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final uid = FirebaseAuth.instance.currentUser?.uid;
+      await prefs.remove(_draftKeyForUser(uid));
+    } catch (_) {}
+  }
+
+  Future<void> _restoreDraftFromPrefs() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final uid = FirebaseAuth.instance.currentUser?.uid;
+      String? json = prefs.getString(_draftKeyForUser(uid));
+      if (json == null) return;
+      // Very lightweight parser since we saved via Map.toString()
+      // Format: {key: value, key2: value2}
+      Map<String, String> kv = {};
+      final body = json.trim();
+      if (body.startsWith('{') && body.endsWith('}')) {
+        final inner = body.substring(1, body.length - 1);
+        for (final part in inner.split(',')) {
+          final idx = part.indexOf(':');
+          if (idx > 0) {
+            final k = part.substring(0, idx).trim();
+            final v = part.substring(idx + 1).trim();
+            kv[k] = v;
+          }
+        }
+      }
+      T? _parse<T>(String key, T? Function(String) conv) {
+        if (!kv.containsKey(key)) return null;
+        return conv(kv[key]!);
+      }
+      setState(() {
+        selectedGoal = _parse<String>('selectedGoal', (s) => s == 'null' ? null : s);
+        selectedMotivation = _parse<String>('selectedMotivation', (s) => s == 'null' ? null : s);
+        selectedAge = _parse<int>('selectedAge', (s) => s == 'null' ? null : int.tryParse(s));
+        selectedBirthMonth = _parse<int>('selectedBirthMonth', (s) => s == 'null' ? null : int.tryParse(s));
+        selectedBirthDay = _parse<int>('selectedBirthDay', (s) => s == 'null' ? null : int.tryParse(s));
+        selectedHeightCm = _parse<double>('selectedHeightCm', (s) => s == 'null' ? null : double.tryParse(s));
+        useMetricHeight = _parse<bool>('useMetricHeight', (s) => s == 'true') ?? useMetricHeight;
+        selectedHeightFeet = _parse<int>('selectedHeightFeet', (s) => int.tryParse(s)) ?? selectedHeightFeet;
+        selectedHeightInches = _parse<int>('selectedHeightInches', (s) => int.tryParse(s)) ?? selectedHeightInches;
+        selectedWeightKg = _parse<double>('selectedWeightKg', (s) => s == 'null' ? null : double.tryParse(s));
+        useMetricWeight = _parse<bool>('useMetricWeight', (s) => s == 'true') ?? useMetricWeight;
+        selectedWeightLb = _parse<double>('selectedWeightLb', (s) => double.tryParse(s)) ?? selectedWeightLb;
+        targetWeightKg = _parse<double>('targetWeightKg', (s) => s == 'null' ? null : double.tryParse(s));
+        activityLevel = _parse<String>('activityLevel', (s) => s == 'null' ? null : s);
+        selectedSex = _parse<String>('selectedSex', (s) => s == 'null' ? null : s);
+        bloodType = _parse<String>('bloodType', (s) => s == 'null' ? null : s);
+        isDiabetic = _parse<bool>('isDiabetic', (s) => s == 'true' ? true : s == 'false' ? false : null);
+        waterIntake = _parse<String>('waterIntake', (s) => s == 'null' ? null : s);
+      });
+    } catch (_) {}
+  }
+
+  Future<void> _persistOnboardingStep() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final uid = FirebaseAuth.instance.currentUser?.uid;
+      // Save under both user-specific and global keys to survive auth timing races
+      await prefs.setInt(_onboardingStepKeyForUser(uid), step);
+    } catch (_) {}
+  }
+
+  Future<void> _clearPersistedOnboardingStep() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final uid = FirebaseAuth.instance.currentUser?.uid;
+      await prefs.remove(_onboardingStepKeyForUser(uid));
+    } catch (_) {}
+  }
+
+  Future<void> _restoreOnboardingStepIfAny() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final uid = FirebaseAuth.instance.currentUser?.uid;
+      int? saved = prefs.getInt(_onboardingStepKeyForUser(uid));
+      if (saved != null && saved >= 0 && saved <= 15 && mounted) {
+        setState(() {
+          step = saved!;
+          _controller.reset();
+          _controller.forward();
+        });
+      }
+    } catch (_) {}
+  }
+
   @override
   void initState() {
     super.initState();
@@ -70,6 +199,10 @@ class _OnboardingFlowPageState extends State<OnboardingFlowPage> with SingleTick
     selectedHeightCm = selectedHeightCm ?? 170;
     selectedWeightKg = selectedWeightKg ?? 70;
     selectedWeightLb = selectedWeightKg! * 2.20462;
+    // Old behavior: do not restore mid-onboarding state after app relaunch
+    // Ensure any previously persisted progress/draft is cleared
+    _clearPersistedOnboardingStep();
+    _clearDraftPrefs();
   }
 
   @override
@@ -79,6 +212,7 @@ class _OnboardingFlowPageState extends State<OnboardingFlowPage> with SingleTick
   }
 
   void nextStep() {
+    if (!mounted) return; // Prevent setState after dispose
     setState(() {
       step++;
       // Set defaults for each step if not set
@@ -93,18 +227,19 @@ class _OnboardingFlowPageState extends State<OnboardingFlowPage> with SingleTick
         targetWeightKg = selectedWeightKg;
         step++; // Skip the target weight step
       }
-      // Skip step 14 (it doesn't exist - jump from 13 to 15)
-      if (step == 14) {
-        step = 15;
-      }
       _controller.reset();
       _controller.forward();
     });
   }
 
   void prevStep() {
+    if (!mounted) return; // Prevent setState after dispose
     setState(() {
       if (step == 15) {
+        step = 13;
+        _controller.reset();
+        _controller.forward();
+      } else if (step == 14) {
         step = 13;
         _controller.reset();
         _controller.forward();
@@ -189,8 +324,14 @@ class _OnboardingFlowPageState extends State<OnboardingFlowPage> with SingleTick
                   fadeAnimation: _fadeAnimation,
                   slideAnimation: _slideAnimation,
                   selectedAge: selectedAge,
-                  onSelect: (age) => setState(() => selectedAge = age),
-                  onContinue: selectedAge == null ? null : nextStep,
+                  selectedBirthMonth: selectedBirthMonth,
+                  selectedBirthDay: selectedBirthDay,
+                  onSelectAge: (age) => setState(() => selectedAge = age),
+                  onSelectBirthday: (month, day) => setState(() {
+                    selectedBirthMonth = month;
+                    selectedBirthDay = day;
+                  }),
+                  onContinue: (selectedAge != null && selectedBirthMonth != null && selectedBirthDay != null) ? nextStep : null,
                   onBack: prevStep,
                   isSmallScreen: isSmallScreen,
                 );
@@ -205,6 +346,10 @@ class _OnboardingFlowPageState extends State<OnboardingFlowPage> with SingleTick
                   isSmallScreen: isSmallScreen,
                   onUnitToggle: (metric) => setState(() {
                     useMetricHeight = metric;
+                    // Lock weight unit and water mapping immediately based on height unit
+                    // Rule: ft (imperial) => US units (lbs, Liters for water)
+                    // cm (metric) => kg and fl oz.
+                    useMetricWeight = metric ? true : false; // if cm => kg, if ft => lbs
                     if (selectedHeightCm != null) {
                       if (metric) {
                         selectedHeightCm = ((selectedHeightFeet * 12 + selectedHeightInches) * 2.54).toDouble();
@@ -225,7 +370,7 @@ class _OnboardingFlowPageState extends State<OnboardingFlowPage> with SingleTick
                   onBack: prevStep,
                 );
               } else if (step == 6) {
-                // Automatically set weight unit based on height unit
+                // Lock weight unit based on height unit selection earlier
                 useMetricWeight = useMetricHeight;
                 return ImprovedWeightStep(
                   fadeAnimation: _fadeAnimation,
@@ -293,6 +438,7 @@ class _OnboardingFlowPageState extends State<OnboardingFlowPage> with SingleTick
                   fadeAnimation: _fadeAnimation,
                   slideAnimation: _slideAnimation,
                   selectedWaterIntake: waterIntake,
+                  useMetricHeight: useMetricHeight,
                   onSelect: (value) => setState(() => waterIntake = value),
                   onContinue: waterIntake == null ? null : nextStep,
                   onBack: prevStep,
@@ -311,39 +457,7 @@ class _OnboardingFlowPageState extends State<OnboardingFlowPage> with SingleTick
                   onActivityLevelChanged: (v) => setState(() => activityLevel = v),
                   onContinue: (activityLevel != null && targetWeightKg != null)
                       ? () async {
-                          final user = await getCurrentUser();
-                          if (user != null) {
-                            final now = DateTime.now();
-                            String name = user.email != null ? user.email!.split('@').first : user.uid;
-                            // Save reminders locally
-                            final prefs = await SharedPreferences.getInstance();
-                            await prefs.setBool('mealLoggingPrompts', selectedReminders.contains('Meal Logging Prompts'));
-                            await prefs.setBool('waterIntakeReminders', selectedReminders.contains('Water Intake Reminders'));
-                            await prefs.setBool('mindfulWalksReminders', selectedReminders.contains('Mindful Walks Reminders'));
-                            await prefs.setBool('momentOfCalmReminders', selectedReminders.contains('Moment of Calm After Meals'));
-                            
-                            // Save unit preference to SharedPreferences for immediate use
-                            await prefs.setBool('useMetric', useMetricHeight);
-                            
-                            // Save other user info to Firestore as before, but exclude reminders
-                            await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
-                              'name': name,
-                              'email': user.email ?? '',
-                              'age': selectedAge,
-                              'height': selectedHeightCm,
-                              'weight': selectedWeightKg,
-                              'startingWeight': selectedWeightKg, // Set starting weight to initial weight during onboarding
-                              'targetWeight': targetWeightKg ?? selectedWeightKg,
-                              'activityLevel': activityLevel ?? '',
-                              'bloodType': bloodType,
-                              'isDiabetic': isDiabetic,
-                              'waterIntake': waterIntake,
-                              'useMetric': useMetricHeight, // Save unit preference to profile
-                              'createdAt': now,
-                              'lastUpdated': now,
-                            }, SetOptions(merge: true));
-                          }
-                          nextStep();
+                          if (mounted) nextStep();
                         }
                       : null,
                   onBack: prevStep,
@@ -365,18 +479,18 @@ class _OnboardingFlowPageState extends State<OnboardingFlowPage> with SingleTick
                   }),
                   onContinue: selectedReminders.isNotEmpty
                       ? () async {
-                          // Ensure we start fetching the AI plan before allowing proceed
-                          setState(() { step = 15; });
                           // Kick off the nutrition plan fetch immediately
                           try { _fetchNutritionPlan(); } catch (_) {}
+                          // Use normal step progression
+                          if (mounted) nextStep();
                         }
                       : null,
                   onBack: prevStep,
                 );
+              } else if (step == 14) {
+                // Loading step - show loading animation while nutrition plan is being generated
+                return NutritionLoadingAnimation(message: AppLocalizations.of(context)!.yumieIsCookingUp);
               } else if (step == 15) {
-                if (isLoadingNutritionPlan) {
-                  return NutritionLoadingAnimation(message: AppLocalizations.of(context)!.yumieIsCookingUp);
-                }
                 if (aiNutritionPlan != null) {
                 return _NutritionPlanSummaryStep(
                   fadeAnimation: _fadeAnimation,
@@ -416,6 +530,8 @@ class _OnboardingFlowPageState extends State<OnboardingFlowPage> with SingleTick
                     // Mark that onboarding just completed
                     final prefs = await SharedPreferences.getInstance();
                     await prefs.setBool('just_completed_onboarding', true);
+                    await _clearPersistedOnboardingStep();
+                    await _clearDraftPrefs();
                     
                     // Navigate to main app immediately
                     Navigator.of(context).pushAndRemoveUntil(
@@ -462,13 +578,18 @@ class _OnboardingFlowPageState extends State<OnboardingFlowPage> with SingleTick
                       Text(AppLocalizations.of(context)!.somethingWentWrongRestart, style: TextStyle(fontSize: 18)),
                       SizedBox(height: 24),
                       // References for BMI and guidance
-                      Align(
-                        alignment: Alignment.centerLeft,
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('References:', style: TextStyle(color: Colors.grey[700], fontWeight: FontWeight.w600)),
+                          const SizedBox(width: 8),
+                          Expanded(
                         child: Wrap(
+                              alignment: WrapAlignment.start,
+                              crossAxisAlignment: WrapCrossAlignment.center,
                           spacing: 8,
                           runSpacing: 4,
                           children: [
-                            Text('References:', style: TextStyle(color: Colors.grey[700], fontWeight: FontWeight.w600)),
                             TextButton(
                               onPressed: () => launchUrl(Uri.parse('https://www.cdc.gov/healthyweight/assessing/bmi/index.html'), mode: LaunchMode.externalApplication),
                               child: const Text('CDC: About BMI'),
@@ -479,12 +600,15 @@ class _OnboardingFlowPageState extends State<OnboardingFlowPage> with SingleTick
                             ),
                           ],
                         ),
+                          ),
+                        ],
                       ),
                       ElevatedButton(
                         onPressed: () {
                           setState(() {
                             step = 0;
                           });
+                          _clearPersistedOnboardingStep();
                         },
                         child: Text(AppLocalizations.of(context)!.restartOnboarding),
                       ),
@@ -600,11 +724,23 @@ class _OnboardingFlowPageState extends State<OnboardingFlowPage> with SingleTick
         aiNutritionPlan = plan;
         isLoadingNutritionPlan = false;
       });
+      // Automatically advance to step 15 when nutrition plan is ready
+      if (mounted) {
+        setState(() {
+          step = 15;
+        });
+      }
     } catch (e) {
       setState(() {
         aiError = e.toString();
         isLoadingNutritionPlan = false;
       });
+      // Automatically advance to step 15 even on error
+      if (mounted) {
+        setState(() {
+          step = 15;
+        });
+      }
     }
   }
 }
@@ -1318,11 +1454,14 @@ class _AgeStep extends StatelessWidget {
   final Animation<double> fadeAnimation;
   final Animation<Offset> slideAnimation;
   final int? selectedAge;
-  final void Function(int) onSelect;
+  final int? selectedBirthMonth;
+  final int? selectedBirthDay;
+  final void Function(int) onSelectAge;
+  final void Function(int, int) onSelectBirthday;
   final VoidCallback? onContinue;
   final VoidCallback onBack;
   final bool isSmallScreen;
-  _AgeStep({required this.fadeAnimation, required this.slideAnimation, required this.selectedAge, required this.onSelect, required this.onContinue, required this.onBack, required this.isSmallScreen});
+  _AgeStep({required this.fadeAnimation, required this.slideAnimation, required this.selectedAge, required this.selectedBirthMonth, required this.selectedBirthDay, required this.onSelectAge, required this.onSelectBirthday, required this.onContinue, required this.onBack, required this.isSmallScreen});
 
   @override
   Widget build(BuildContext context) {
@@ -1361,7 +1500,7 @@ class _AgeStep extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  SizedBox(height: isSmallScreen ? 16 : 32),
+                  SizedBox(height: isSmallScreen ? 12 : 20),
                   FadeTransition(
                     opacity: fadeAnimation,
                     child: SlideTransition(
@@ -1372,17 +1511,17 @@ class _AgeStep extends StatelessWidget {
                             AppLocalizations.of(context)!.howOldAreYou,
                             style: TextStyle(
                               fontWeight: FontWeight.bold,
-                              fontSize: isSmallScreen ? 28 : 32,
+                              fontSize: isSmallScreen ? 24 : 28,
                               letterSpacing: -0.5,
                             ),
                             textAlign: TextAlign.center,
                           ),
-                          SizedBox(height: isSmallScreen ? 8 : 12),
+                          SizedBox(height: isSmallScreen ? 6 : 8),
                           Text(
                             AppLocalizations.of(context)!.thisHelpsUsPersonalizeExperience,
                             style: TextStyle(
                               color: Colors.grey[600],
-                              fontSize: isSmallScreen ? 14 : 16,
+                              fontSize: isSmallScreen ? 12 : 14,
                             ),
                             textAlign: TextAlign.center,
                           ),
@@ -1390,18 +1529,119 @@ class _AgeStep extends StatelessWidget {
                       ),
                     ),
                   ),
-                  SizedBox(height: isSmallScreen ? 32 : 48),
+                  SizedBox(height: isSmallScreen ? 20 : 32),
                   FadeTransition(
                     opacity: fadeAnimation,
                     child: SlideTransition(
                       position: slideAnimation,
-                      child: ImprovedAgeSelector(
+                      child: Column(
+                        children: [
+                          ImprovedAgeSelector(
                         selectedAge: selectedAge,
-                        onSelect: onSelect,
+                            onSelect: onSelectAge,
+                          ),
+                          SizedBox(height: isSmallScreen ? 20 : 24),
+                          // Birthday selection
+                          Text(
+                            AppLocalizations.of(context)!.selectBirthday,
+                            style: TextStyle(
+                              fontSize: isSmallScreen ? 16 : 18,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.black87,
+                            ),
+                          ),
+                          SizedBox(height: isSmallScreen ? 12 : 16),
+                          Row(
+                            children: [
+                              // Month picker
+                              Expanded(
+                                child: Column(
+                                  children: [
+                                    Text(
+                                      AppLocalizations.of(context)!.month,
+                                      style: TextStyle(
+                                        fontSize: isSmallScreen ? 12 : 14,
+                                        color: Colors.grey[600],
+                                      ),
+                                    ),
+                                    SizedBox(height: isSmallScreen ? 6 : 8),
+                                    Container(
+                                      padding: EdgeInsets.symmetric(horizontal: 12, vertical: isSmallScreen ? 8 : 12),
+                                      decoration: BoxDecoration(
+                                        border: Border.all(color: Colors.grey[300]!),
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                      child: DropdownButton<int>(
+                                        value: selectedBirthMonth,
+                                        hint: Text('Month'),
+                                        isExpanded: true,
+                                        underline: SizedBox(),
+                                        items: List.generate(12, (index) {
+                                          final month = index + 1;
+                                          final monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                                          return DropdownMenuItem(
+                                            value: month,
+                                            child: Text(monthNames[index]),
+                                          );
+                                        }),
+                                        onChanged: (month) {
+                                          if (month != null) {
+                                            onSelectBirthday(month, selectedBirthDay ?? 1);
+                                          }
+                                        },
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              SizedBox(width: 16),
+                              // Day picker
+                              Expanded(
+                                child: Column(
+                                  children: [
+                                    Text(
+                                      AppLocalizations.of(context)!.day,
+                                      style: TextStyle(
+                                        fontSize: isSmallScreen ? 12 : 14,
+                                        color: Colors.grey[600],
+                                      ),
+                                    ),
+                                    SizedBox(height: isSmallScreen ? 6 : 8),
+                                    Container(
+                                      padding: EdgeInsets.symmetric(horizontal: 12, vertical: isSmallScreen ? 8 : 12),
+                                      decoration: BoxDecoration(
+                                        border: Border.all(color: Colors.grey[300]!),
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                      child: DropdownButton<int>(
+                                        value: selectedBirthDay,
+                                        hint: Text('Day'),
+                                        isExpanded: true,
+                                        underline: SizedBox(),
+                                        items: List.generate(31, (index) {
+                                          final day = index + 1;
+                                          return DropdownMenuItem(
+                                            value: day,
+                                            child: Text(day.toString()),
+                                          );
+                                        }),
+                                        onChanged: (day) {
+                                          if (day != null) {
+                                            onSelectBirthday(selectedBirthMonth ?? 1, day);
+                                          }
+                                        },
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
                       ),
                     ),
                   ),
-                  SizedBox(height: 20), // Bottom padding for scroll
+                  SizedBox(height: isSmallScreen ? 12 : 20), // Bottom padding for scroll
                 ],
               ),
             ),
@@ -2465,14 +2705,19 @@ class _ProfileSummaryStep extends StatelessWidget {
                       ),
                     ),
                     SizedBox(height: 24),
-                    // References for BMI and guidance
-                    Align(
-                      alignment: Alignment.centerLeft,
+                    // References for BMI and guidance (aligned)
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(AppLocalizations.of(context)!.references, style: TextStyle(color: Colors.grey[700], fontWeight: FontWeight.w600)),
+                        const SizedBox(width: 8),
+                        Expanded(
                       child: Wrap(
+                            alignment: WrapAlignment.start,
+                            crossAxisAlignment: WrapCrossAlignment.center,
                         spacing: 8,
                         runSpacing: 4,
                         children: [
-                          Text(AppLocalizations.of(context)!.references, style: TextStyle(color: Colors.grey[700], fontWeight: FontWeight.w600)),
                           TextButton(
                             onPressed: () => launchUrl(Uri.parse('https://www.cdc.gov/healthyweight/assessing/bmi/index.html'), mode: LaunchMode.externalApplication),
                             child: Text(AppLocalizations.of(context)!.cdcAboutBmi),
@@ -2483,6 +2728,8 @@ class _ProfileSummaryStep extends StatelessWidget {
                           ),
                         ],
                       ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
@@ -2992,14 +3239,19 @@ class _WaterIntakeStep extends StatelessWidget {
   final Animation<double> fadeAnimation;
   final Animation<Offset> slideAnimation;
   final String? selectedWaterIntake;
+  final bool useMetricHeight;
   final void Function(String) onSelect;
   final VoidCallback? onContinue;
   final VoidCallback onBack;
-  _WaterIntakeStep({required this.fadeAnimation, required this.slideAnimation, required this.selectedWaterIntake, required this.onSelect, required this.onContinue, required this.onBack});
+  _WaterIntakeStep({required this.fadeAnimation, required this.slideAnimation, required this.selectedWaterIntake, required this.useMetricHeight, required this.onSelect, required this.onContinue, required this.onBack});
 
-  final List<String> options = const [
-    '0.5L', '1L', '1.5L', '2L', '2.5L', '3L+',
-  ];
+  List<String> get options {
+    // US (ft) uses L, others (cm) use fl oz
+    final bool isUS = !useMetricHeight;
+    return isUS 
+      ? ['0.5L', '1L', '1.5L', '2L', '2.5L', '3L+']
+      : ['17 fl oz', '34 fl oz', '51 fl oz', '68 fl oz', '85 fl oz', '102+ fl oz'];
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -3069,7 +3321,10 @@ class _WaterIntakeStep extends StatelessWidget {
                   children: [
                     Icon(Icons.water_drop, color: isSelected ? theme.primaryColor : Colors.blue[200], size: 36),
                     SizedBox(height: 8),
-                    Text(opt, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 22, color: isSelected ? theme.primaryColor : Colors.black)),
+                    Text(
+                      opt,
+                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 22, color: isSelected ? theme.primaryColor : Colors.black),
+                    ),
                   ],
                 ),
               ),

@@ -198,17 +198,17 @@ class AppLocalizationsHi extends AppLocalizations {
   String get sinceStart => 'शुरुआत से';
 
   @override
-  String get expectationsDisclaimer => 'These expectations are based on your recent trend and can change as you log new weights.';
+  String get expectationsDisclaimer => 'ये अपेक्षाएं आपके हाल के रुझान पर आधारित हैं और नए वजन दर्ज करने पर बदल सकती हैं।';
 
   @override
-  String get loseVerb => 'lose';
+  String get loseVerb => 'कम';
 
   @override
-  String get gainVerb => 'gain';
+  String get gainVerb => 'बढ़';
 
   @override
   String expectationBlurb(Object direction, Object eta, Object rate, Object remaining, Object unit) {
-    return 'Based on your recent trend, you are on track to $direction about $rate $unit per week. At this pace, it will take roughly $eta to reach your target. You have $remaining $unit remaining.';
+    return 'हाल की प्रवृत्ति के आधार पर, आप प्रति सप्ताह लगभग $rate $unit $direction करने की राह पर हैं। इस गति से लक्ष्य तक पहुँचने में लगभग $eta लगेंगे। आपके पास $remaining $unit शेष है।';
   }
 
   @override
@@ -566,7 +566,7 @@ class AppLocalizationsHi extends AppLocalizations {
   String get placeFoodInFrame => 'भोजन को फ्रेम के अंदर रखें';
 
   @override
-  String get placeBarcodeInFrame => 'बारकोड को फ्रेम के अंदर संरेखित करें';
+  String get placeBarcodeInFrame => 'बारकोड को फ्रेम में रखें और कैमरा पर टैप करें';
 
   @override
   String get placeFridgeInFrame => 'फ्रिज को फ्रेम के अंदर संरेखित करें';
@@ -602,13 +602,13 @@ class AppLocalizationsHi extends AppLocalizations {
   String get kcalPer100g => 'किलो कैलोरी/100ग्राम';
 
   @override
-  String get sugar => 'Sugar';
+  String get sugar => 'चीनी';
 
   @override
   String get satFat => 'सैचुरेटेड फैट';
 
   @override
-  String get salt => 'Salt';
+  String get salt => 'नमक';
 
   @override
   String get ingredientsTitle => 'सामग्री';
@@ -725,7 +725,7 @@ class AppLocalizationsHi extends AppLocalizations {
   String get lb => 'पाउंड';
 
   @override
-  String get oz => 'औंस';
+  String get oz => 'आउंस';
 
   @override
   String get ft => 'फुट';
@@ -743,7 +743,7 @@ class AppLocalizationsHi extends AppLocalizations {
   String get tsp => 'छोटा चम्मच';
 
   @override
-  String get ml => 'मिलीलीटर';
+  String get ml => 'मिली';
 
   @override
   String get l => 'लीटर';
@@ -844,7 +844,7 @@ class AppLocalizationsHi extends AppLocalizations {
   String get recentFoods => 'हाल के भोजन';
 
   @override
-  String get logWeightChange => 'वजन परिवर्तन लॉग करें';
+  String get logWeightChange => 'वजन';
 
   @override
   String get lost => 'खोया';
@@ -1045,7 +1045,7 @@ class AppLocalizationsHi extends AppLocalizations {
   String get dailyHealthInsights => 'दैनिक स्वास्थ्य अंतर्दृष्टि';
 
   @override
-  String get logWaterIntake => 'पानी का सेवन लॉग करें';
+  String get logWaterIntake => 'पानी';
 
   @override
   String get add => 'जोड़ें';
@@ -1141,25 +1141,25 @@ class AppLocalizationsHi extends AppLocalizations {
   String get permissionsComplete => 'अनुमतियां पूरी!';
 
   @override
-  String get whyWeAskForPermissions => 'Why we ask for permissions';
+  String get whyWeAskForPermissions => 'हम अनुमतियाँ क्यों माँगते हैं';
 
   @override
-  String get permissionsWhyBody => 'We use your camera to scan foods and barcodes, access photos when you upload images, and notifications to remind you to log meals and hydrate.';
+  String get permissionsWhyBody => 'हम अनुभव बेहतर करने के लिए कैमरा, सूचनाएँ और वैकल्पिक स्थान का उपयोग करते हैं।';
 
   @override
-  String get permissionsNextScreen => 'On the next screen, you\'ll see the system prompts to grant access. You can change this anytime in Settings.';
+  String get permissionsNextScreen => 'अगली स्क्रीन पर आप अनुमतियाँ सक्षम कर सकते हैं।';
 
   @override
-  String get references => 'References:';
+  String get references => 'संदर्भ';
 
   @override
-  String get cdcAboutBmi => 'CDC: About BMI';
+  String get cdcAboutBmi => 'सीडीसी: बीएमआई के बारे में';
 
   @override
-  String get usdaDietaryGuidelines => 'USDA Dietary Guidelines';
+  String get usdaDietaryGuidelines => 'यूएसडीए आहार दिशानिर्देश';
 
   @override
-  String get termsOfUseEula => 'Terms of Use (EULA)';
+  String get termsOfUseEula => 'EULA';
 
   @override
   String get enterYourPassword => 'अपना पासवर्ड दर्ज करें';
@@ -1414,10 +1414,44 @@ class AppLocalizationsHi extends AppLocalizations {
   String get redirectingToSignIn => 'साइन-इन पर पुनर्निर्देशित कर रहे हैं...';
 
   @override
+  String weightTrendNoData(Object remaining, Object unit) {
+    return 'आपके लक्ष्य तक पहुंचने के लिए $remaining $unit शेष है। अपना व्यक्तिगत रुझान देखने के लिए वजन प्रविष्टियां लॉग करें।';
+  }
+
+  @override
+  String weightTrendHealthyRate(Object eta, Object rate, Object remaining, Object unit) {
+    return 'सप्ताह में 0.5 $unit की स्वस्थ दर पर, आप लगभग $eta में अपने लक्ष्य तक पहुंच सकते हैं। आपके पास $remaining $unit शेष है। अपना व्यक्तिगत रुझान देखने के लिए वजन प्रविष्टियां लॉग करें।';
+  }
+
+  @override
   String get accountSuccessfullyDeleted => 'खाता सफलतापूर्वक हटा दिया गया';
 
   @override
   String get pleaseCloseAndRestartApp => 'जारी रखने के लिए कृपया ऐप बंद करें और पुनः प्रारंभ करें।';
+
+  @override
+  String get exportData => 'डेटा निर्यात करें';
+
+  @override
+  String get exportDataDescription => 'सभी डेटा को PDF फ़ाइल के रूप में निर्यात करें';
+
+  @override
+  String get exportComplete => 'निर्यात पूर्ण';
+
+  @override
+  String get exportCompleteMessage => 'आपका डेटा सफलतापूर्वक निर्यात किया गया है!';
+
+  @override
+  String get exportCompleteDescription => 'PDF फ़ाइल आपके डिवाइस पर सहेजी गई है और इसे साझा या देखा जा सकता है।';
+
+  @override
+  String get exportFailed => 'निर्यात विफल';
+
+  @override
+  String get exportingData => 'आपका डेटा निर्यात किया जा रहा है...';
+
+  @override
+  String get exportingDataDescription => 'इसमें कुछ क्षण लग सकते हैं';
 
   @override
   String get restartApp => 'ऐप पुनः प्रारंभ करें';
@@ -1999,8 +2033,194 @@ class AppLocalizationsHi extends AppLocalizations {
   String get errorRequestingPermissions => 'अनुमतियां मांगने में त्रुटि';
 
   @override
-  String get showMore => 'Show more';
+  String get showMore => 'और दिखाएँ';
 
   @override
-  String get showLess => 'Show less';
+  String get showLess => 'कम दिखाएँ';
+
+  @override
+  String get noSavedCustomMeals => 'आपके पास कोई सहेजे गए कस्टम भोजन नहीं हैं।';
+
+  @override
+  String get savedCustomMealsPlus => 'सहेजे गए कस्टम भोजन +';
+
+  @override
+  String get customBuilding => 'कस्टम भोजन बनाएं';
+
+  @override
+  String get enterName => 'नाम दर्ज करें';
+
+  @override
+  String get enterFoodName => 'भोजन का नाम दर्ज करें';
+
+  @override
+  String get congratulationsGoalReached => '🎉 बधाई हो!';
+
+  @override
+  String get youReachedGoalWeight => 'आपने अपना लक्ष्य वजन हासिल कर लिया है!';
+
+  @override
+  String get switchToMaintenancePlan => 'अब जब आपने अपना लक्ष्य वजन हासिल कर लिया है, आइए अपने पोषण योजना को वजन बनाए रखने के लिए बदलते हैं!';
+
+  @override
+  String get letsDoIt => 'चलिए करते हैं!';
+
+  @override
+  String get keepUpGreatWork => 'बेहतरीन काम जारी रखें!';
+
+  @override
+  String get generatingMaintenancePlan => 'आपकी रखरखाव योजना बनाई जा रही है...';
+
+  @override
+  String get maintenancePlanUpdated => '🎉 आपकी पोषण योजना वजन रखरखाव के लिए अपडेट कर दी गई है!';
+
+  @override
+  String get failedToGenerateMaintenancePlan => 'रखरखाव योजना बनाने में विफल। कृपया पुनः प्रयास करें।';
+
+  @override
+  String get heresYourMaintenancePlan => 'यहाँ आपकी नई रखरखाव योजना है!';
+
+  @override
+  String get keepThisPlan => 'इस योजना को रखें';
+
+  @override
+  String get chooseDifferentGoal => 'अलग लक्ष्य चुनें';
+
+  @override
+  String get whatsYourNewGoal => 'आपका नया लक्ष्य क्या है?';
+
+  @override
+  String get whatsYourNewTargetWeight => 'आपका नया लक्ष्य वजन क्या है?';
+
+  @override
+  String get yumieGeneratingNewPlan => 'Yumie आपकी नई व्यक्तिगत योजना बना रहा है...';
+
+  @override
+  String get yourNewPlanReady => 'आपकी नई योजना तैयार है!';
+
+  @override
+  String get startWithNewPlan => 'नई योजना के साथ शुरू करें';
+
+  @override
+  String get generateNewPlan => 'नया प्लान बनाएं';
+
+  @override
+  String get planGenerationLimitReached => 'आपने इस अवधि के लिए अपने 2 प्लान जेनरेशन का उपयोग किया है।';
+
+  @override
+  String get waterGoal => 'पानी का लक्ष्य';
+
+  @override
+  String get glasses => 'गिलास';
+
+  @override
+  String planGenerationInfo(int remaining) {
+    return 'आप अगले 14 दिनों में $remaining और व्यक्तिगत योजनाएं बना सकते हैं।';
+  }
+
+  @override
+  String nextPlanAvailable(int days) {
+    return '$days दिनों में फिर कोशिश करें';
+  }
+
+  @override
+  String get decline => 'अस्वीकार';
+
+  @override
+  String get planDeclined => 'योजना अस्वीकार की गई';
+
+  @override
+  String get accountDeletionWarning => 'आपका खाता 48 घंटों में हटा दिया जाएगा। यदि आप 48 घंटों के भीतर वापस लॉग इन करते हैं, तो आपका खाता पुन: सक्रिय हो जाएगा।';
+
+  @override
+  String get accountScheduledForDeletion => 'खाता हटाने के लिए निर्धारित';
+
+  @override
+  String get reactivateAccount => 'खाता पुन: सक्रिय करें';
+
+  @override
+  String get accountReactivated => 'वापस आपका स्वागत है! आपका खाता पुन: सक्रिय हो गया है।';
+
+  @override
+  String get accountDeletionCancelled => 'खाता हटाना रद्द कर दिया गया है।';
+
+  @override
+  String get emailVerificationRequired => 'ईमेल सत्यापन आवश्यक';
+
+  @override
+  String get pleaseVerifyEmail => 'जारी रखने के लिए कृपया अपने ईमेल पते को सत्यापित करें';
+
+  @override
+  String get verificationEmailSent => 'हमने आपके ईमेल पर एक सत्यापन लिंक भेजा है। कृपया अपने इनबॉक्स को जाँचें और अपने खाते को सत्यापित करने के लिए लिंक पर क्लिक करें।';
+
+  @override
+  String get waitingForVerification => 'ईमेल सत्यापन का इंतजार कर रहे हैं...';
+
+  @override
+  String get checkYourEmail => 'अपना ईमेल जाँचें और सत्यापन लिंक पर क्लिक करें';
+
+  @override
+  String get resendVerificationEmail => 'सत्यापन ईमेल पुन: भेजें';
+
+  @override
+  String get verificationLinkAlreadySent => 'इस ईमेल पते पर पहले से ही एक सत्यापन लिंक भेजा जा चुका है। कृपया अपने इनबॉक्स को जाँचें या नया लिंक मांगने से पहले कुछ मिनट प्रतीक्षा करें।';
+
+  @override
+  String get emailVerified => 'ईमेल सफलतापूर्वक सत्यापित हुआ!';
+
+  @override
+  String get emailNotVerified => 'ईमेल अभी तक सत्यापित नहीं हुआ। कृपया अपने इनबॉक्स को जाँचें।';
+
+  @override
+  String get changeEmail => 'ईमेल बदलें';
+
+  @override
+  String get continueToApp => 'ऐप में जारी रखें';
+
+  @override
+  String get failedToSendVerificationEmail => 'सत्यापन ईमेल भेजने में विफल';
+
+  @override
+  String get failedToResendVerificationEmail => 'सत्यापन ईमेल पुन: भेजने में विफल';
+
+  @override
+  String get errorCheckingVerification => 'सत्यापन जाँचने में त्रुटि';
+
+  @override
+  String get helloIAmYumie => 'नमस्ते, मैं यूमी हूँ! आज अपनी लकीर शुरू करने के लिए एक भोजन लॉग करें!';
+
+  @override
+  String get happyBirthday => '🎉 जन्मदिन मुबारक!';
+
+  @override
+  String birthdayMessage(int age) {
+    return 'आपका दिन शानदार हो! आप अब $age साल के हो गए हैं।';
+  }
+
+  @override
+  String get selectBirthday => 'अपना जन्मदिन चुनें';
+
+  @override
+  String get day => 'दिन';
+
+  @override
+  String get accountAlreadyExists => 'खाता पहले से मौजूद है';
+
+  @override
+  String get accountExistsMessage => 'इस ईमेल पते के साथ एक खाता पहले से मौजूद है। क्या आप इसके बजाय साइन इन करना चाहते हैं?';
+
+  @override
+  String get accountUsesDifferentSignIn => 'खाता अलग साइन-इन विधि का उपयोग करता है';
+
+  @override
+  String get emailSignedUpWithGoogle => 'यह ईमेल पहले से ही Google के साथ पंजीकृत है। कृपया इसके बजाय \"Google के साथ साइन इन करें\" का उपयोग करें।';
+
+  @override
+  String get emailSignedUpWithPassword => 'यह ईमेल पहले से ही ईमेल और पासवर्ड के साथ पंजीकृत है। कृपया अपने पासवर्ड का उपयोग करके साइन इन करें।';
+
+  @override
+  String get useGoogleSignIn => 'Google साइन-इन का उपयोग करें';
+
+  @override
+  String get signInWithEmail => 'ईमेल के साथ साइन इन करें';
 }

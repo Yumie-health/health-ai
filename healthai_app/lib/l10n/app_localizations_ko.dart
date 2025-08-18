@@ -602,13 +602,13 @@ class AppLocalizationsKo extends AppLocalizations {
   String get kcalPer100g => 'kcal/100g';
 
   @override
-  String get sugar => 'Sugar';
+  String get sugar => '설탕';
 
   @override
   String get satFat => '포화지방';
 
   @override
-  String get salt => 'Salt';
+  String get salt => '소금';
 
   @override
   String get ingredientsTitle => '재료';
@@ -844,7 +844,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get recentFoods => '최근 음식';
 
   @override
-  String get logWeightChange => '체중 변화 기록';
+  String get logWeightChange => '체중';
 
   @override
   String get lost => '감량';
@@ -1045,7 +1045,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get dailyHealthInsights => '일일 건강 인사이트';
 
   @override
-  String get logWaterIntake => '수분 섭취 기록';
+  String get logWaterIntake => '수분';
 
   @override
   String get add => '추가';
@@ -1312,7 +1312,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get signInWithGoogle => 'Google로 로그인';
 
   @override
-  String get signUpWithApple => 'Apple로 가입';
+  String get signUpWithApple => 'Apple로 가입하기';
 
   @override
   String get signInWithApple => 'Apple로 로그인';
@@ -1414,10 +1414,44 @@ class AppLocalizationsKo extends AppLocalizations {
   String get redirectingToSignIn => '로그인으로 리디렉션 중...';
 
   @override
+  String weightTrendNoData(Object remaining, Object unit) {
+    return '체중 데이터가 충분하지 않습니다.';
+  }
+
+  @override
+  String weightTrendHealthyRate(Object eta, Object rate, Object remaining, Object unit) {
+    return '건강한 속도: $rate$unit/주';
+  }
+
+  @override
   String get accountSuccessfullyDeleted => '계정이 성공적으로 삭제되었습니다';
 
   @override
   String get pleaseCloseAndRestartApp => '계속하려면 앱을 닫고 다시 시작하세요.';
+
+  @override
+  String get exportData => '데이터 내보내기';
+
+  @override
+  String get exportDataDescription => '모든 데이터를 PDF 파일로 내보내기';
+
+  @override
+  String get exportComplete => '내보내기 완료';
+
+  @override
+  String get exportCompleteMessage => '데이터가 성공적으로 내보내졌습니다!';
+
+  @override
+  String get exportCompleteDescription => 'PDF 파일이 기기에 저장되었으며 공유하거나 볼 수 있습니다.';
+
+  @override
+  String get exportFailed => '내보내기 실패';
+
+  @override
+  String get exportingData => '데이터를 내보내는 중...';
+
+  @override
+  String get exportingDataDescription => '잠시 기다려 주세요';
 
   @override
   String get restartApp => '앱 다시 시작';
@@ -1999,8 +2033,194 @@ class AppLocalizationsKo extends AppLocalizations {
   String get errorRequestingPermissions => '권한 요청 오류';
 
   @override
-  String get showMore => 'Show more';
+  String get showMore => '더 보기';
 
   @override
-  String get showLess => 'Show less';
+  String get showLess => '간단히 보기';
+
+  @override
+  String get noSavedCustomMeals => '저장된 맞춤 식사가 없습니다.';
+
+  @override
+  String get savedCustomMealsPlus => '저장된 맞춤 식사 +';
+
+  @override
+  String get customBuilding => '맞춤 식사 만들기';
+
+  @override
+  String get enterName => '이름 입력';
+
+  @override
+  String get enterFoodName => '음식 이름 입력';
+
+  @override
+  String get congratulationsGoalReached => '🎉 축하합니다!';
+
+  @override
+  String get youReachedGoalWeight => '목표 체중에 도달했습니다!';
+
+  @override
+  String get switchToMaintenancePlan => '이제 유지 계획으로 전환합시다!';
+
+  @override
+  String get letsDoIt => '시작합시다!';
+
+  @override
+  String get keepUpGreatWork => '아주 잘하고 있어요!';
+
+  @override
+  String get generatingMaintenancePlan => '유지 계획을 생성하는 중...';
+
+  @override
+  String get maintenancePlanUpdated => '🎉 영양 계획이 유지 모드로 업데이트되었습니다!';
+
+  @override
+  String get failedToGenerateMaintenancePlan => '유지 계획 생성에 실패했습니다. 다시 시도하세요.';
+
+  @override
+  String get heresYourMaintenancePlan => '새로운 유지 계획입니다!';
+
+  @override
+  String get keepThisPlan => '이 플랜 유지';
+
+  @override
+  String get chooseDifferentGoal => '다른 목표 선택';
+
+  @override
+  String get whatsYourNewGoal => '새로운 목표는 무엇인가요?';
+
+  @override
+  String get whatsYourNewTargetWeight => '새로운 목표 체중은?';
+
+  @override
+  String get yumieGeneratingNewPlan => 'Yumie가 새 맞춤 계획을 생성 중...';
+
+  @override
+  String get yourNewPlanReady => '새로운 계획이 준비되었습니다!';
+
+  @override
+  String get startWithNewPlan => '새 계획으로 시작';
+
+  @override
+  String get generateNewPlan => '새 계획 생성';
+
+  @override
+  String get planGenerationLimitReached => '이 기간의 계획 생성 2회를 모두 사용했습니다.';
+
+  @override
+  String get waterGoal => '물 섭취 목표';
+
+  @override
+  String get glasses => '잔';
+
+  @override
+  String planGenerationInfo(int remaining) {
+    return '앞으로 14일 동안 $remaining개의 개인화된 계획을 더 생성할 수 있습니다.';
+  }
+
+  @override
+  String nextPlanAvailable(int days) {
+    return '$days일 후에 다시 시도하세요';
+  }
+
+  @override
+  String get decline => '거절';
+
+  @override
+  String get planDeclined => '계획이 거절되었습니다';
+
+  @override
+  String get accountDeletionWarning => '계정이 48시간 후에 삭제됩니다. 48시간 내에 다시 로그인하면 계정이 재활성화되고 삭제가 취소됩니다.';
+
+  @override
+  String get accountScheduledForDeletion => '계정 삭제 예약됨';
+
+  @override
+  String get reactivateAccount => '계정 재활성화';
+
+  @override
+  String get accountReactivated => '다시 오신 것을 환영합니다! 계정이 재활성화되었습니다.';
+
+  @override
+  String get accountDeletionCancelled => '계정 삭제가 취소되었습니다.';
+
+  @override
+  String get emailVerificationRequired => '이메일 인증 필요';
+
+  @override
+  String get pleaseVerifyEmail => '계속하려면 이메일 주소를 인증해 주세요';
+
+  @override
+  String get verificationEmailSent => '이메일로 인증 링크를 보냈습니다. 받은 편지함을 확인하고 링크를 클릭하여 계정을 인증해 주세요.';
+
+  @override
+  String get waitingForVerification => '이메일 인증을 기다리는 중...';
+
+  @override
+  String get checkYourEmail => '이메일을 확인하고 인증 링크를 클릭하세요';
+
+  @override
+  String get resendVerificationEmail => '인증 이메일 재전송';
+
+  @override
+  String get verificationLinkAlreadySent => '이 이메일 주소로 이미 인증 링크가 전송되었습니다. 받은 편지함을 확인하거나 몇 분 기다린 후 새 링크를 요청해 주세요.';
+
+  @override
+  String get emailVerified => '이메일이 성공적으로 인증되었습니다!';
+
+  @override
+  String get emailNotVerified => '이메일이 아직 인증되지 않았습니다. 받은 편지함을 확인해 주세요.';
+
+  @override
+  String get changeEmail => '이메일 변경';
+
+  @override
+  String get continueToApp => '앱 계속하기';
+
+  @override
+  String get failedToSendVerificationEmail => '인증 이메일 전송 실패';
+
+  @override
+  String get failedToResendVerificationEmail => '인증 이메일 재전송 실패';
+
+  @override
+  String get errorCheckingVerification => '인증 상태 확인 오류';
+
+  @override
+  String get helloIAmYumie => '안녕하세요, 저는 Yumie입니다! 오늘 스트릭을 시작하기 위해 식사를 기록해주세요!';
+
+  @override
+  String get happyBirthday => '🎉 생일 축하해요!';
+
+  @override
+  String birthdayMessage(int age) {
+    return '멋진 하루 보내세요! 이제 $age살이 되셨습니다.';
+  }
+
+  @override
+  String get selectBirthday => '생일을 선택하세요';
+
+  @override
+  String get day => '일';
+
+  @override
+  String get accountAlreadyExists => '계정이 이미 존재합니다';
+
+  @override
+  String get accountExistsMessage => '이 이메일 주소로 계정이 이미 존재합니다. 대신 로그인하시겠습니까?';
+
+  @override
+  String get accountUsesDifferentSignIn => '계정이 다른 로그인 방법을 사용합니다';
+
+  @override
+  String get emailSignedUpWithGoogle => '이 이메일은 이미 Google로 등록되어 있습니다. 대신 \"Google로 로그인\"을 사용하세요.';
+
+  @override
+  String get emailSignedUpWithPassword => '이 이메일은 이미 이메일과 비밀번호로 등록되어 있습니다. 비밀번호를 사용하여 로그인하세요.';
+
+  @override
+  String get useGoogleSignIn => 'Google 로그인 사용';
+
+  @override
+  String get signInWithEmail => '이메일로 로그인';
 }

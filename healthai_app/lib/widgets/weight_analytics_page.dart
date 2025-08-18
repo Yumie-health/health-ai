@@ -231,10 +231,10 @@ Future<double> _calculateWeeklyRate(List<_Point> points, bool useMetric, double 
     final hi = scale == 1.0 ?  1.5 :  3.3;
     final result = weekly.clamp(lo, hi);
 
-    print('🍎 expected: ${expected.toStringAsFixed(3)}, 📈 measured: ${measured.toStringAsFixed(3)}, 🧮 weekly: ${result.toStringAsFixed(3)}');
+
     return result;
   } catch (e) {
-    print('❌ Error calculating weekly rate: $e');
+    // Error calculating weekly rate
     return _weeklyFromWeights(points, scale);
   }
 }
@@ -296,26 +296,7 @@ Future<double> _calculateWeeklyRate(List<_Point> points, bool useMetric, double 
             ? '—'
             : (weeksToGoal <= 0.05 ? 'Reached' : _formatWeeks(weeksToGoal));
 
-        // (Optional debug logs)
-        print('📊 Weekly (signed): ${signedWeekly.toStringAsFixed(2)} $unit/wk');
-        print('  Remaining: ${remainingScaled.toStringAsFixed(2)} $unit');
-        print('  WeeksToGoal: ${weeksToGoal?.toStringAsFixed(2) ?? 'null'}');
-        print('  ETA text: ${weeksToGoal == null ? '—' : _etaDateText(weeksToGoal)}');
-        
-        // Debug: Log the weekly rate calculation
-        print('📊 Weight Analytics Weekly Rate:');
-        print('  - Weekly rate: ${weekly.toStringAsFixed(1)} ${unit}/week');
-        print('  - Data points: ${_points.length}');
-        print('  - Remaining to goal: ${remainingScaled.toStringAsFixed(1)} $unit');
-        
-        // Debug: Log expectation text values
-        if (_points.length >= 2) {
-          print('📊 Expectation Text Values:');
-          print('  - Weekly rate: ${weekly.toStringAsFixed(1)} $unit/week');
-          print('  - Remaining to goal: ${remainingScaled.toStringAsFixed(1)} $unit');
-          print('  - Weeks to goal: ${weeksToGoal?.toStringAsFixed(1) ?? 'null'}');
-          print('  - ETA text: ${weeksToGoal==null? '—' : _etaDateText(weeksToGoal)}');
-        }
+
 
         // Build series from logged weights (solid) and projection (dashed)
         final List<DateTime> xDates = [];
@@ -354,136 +335,139 @@ Future<double> _calculateWeeklyRate(List<_Point> points, bool useMetric, double 
         final signedChangeStr = '${totalChangeScaled>=0? '+':'-'}$totalChangeAbsStr $unit';
 
         return Scaffold(
-      backgroundColor: bg,
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Header with back button
-              Row(
-                children: [
-                  IconButton(
-                    icon: const Icon(Icons.arrow_back),
-                    onPressed: () => Navigator.pop(context),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      AppLocalizations.of(context)!.weightAnalytics,
-                      style: theme.textTheme.headlineSmall?.copyWith(
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: -0.2,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 18),
-
-              // Key stats (no graph)
-              Row(children:[
-                Expanded(child: _InfoCard(
-                  title: AppLocalizations.of(context)!.toGoal,
-                  value: '${remainingScaled.abs().toStringAsFixed(1)} $unit',
-                  subtitle: atGoal? 'goal reached' : AppLocalizations.of(context)!.remaining,
-                  highlight: true,
-                )),
-                const SizedBox(width: 12),
-                Expanded(child: _InfoCard(
-                  title: AppLocalizations.of(context)!.weeklyRate,
-                  value: '${signedWeekly.abs().toStringAsFixed(1)} $unit',
-                  subtitle: signedWeekly == 0.0 ? 'log weight to see trend' : (signedWeekly <= 0 ? AppLocalizations.of(context)!.weeklyLoss : 'weekly gain'),
-                )),
-              ]),
-              const SizedBox(height: 12),
-              Row(children:[
-                Expanded(child: _InfoCard(
-                  title: AppLocalizations.of(context)!.starting,
-                  value: '${(_starting*scale).toStringAsFixed(1)} $unit',
-                  subtitle: AppLocalizations.of(context)!.startingWeight,
-                )),
-                const SizedBox(width: 12),
-                Expanded(child: _InfoCard(
-                  title: AppLocalizations.of(context)!.current,
-                  value: '${(_current*scale).toStringAsFixed(1)} $unit',
-                  subtitle: AppLocalizations.of(context)!.today,
-                )),
-              ]),
-              const SizedBox(height: 12),
-              Row(children:[
-                Expanded(child: _InfoCard(
-                  title: AppLocalizations.of(context)!.targetLabel,
-                  value: '${(_target*scale).toStringAsFixed(1)} $unit',
-                  subtitle: AppLocalizations.of(context)!.goalWeight,
-                )),
-                const SizedBox(width: 12),
-                Expanded(child: _InfoCard(
-                  title: AppLocalizations.of(context)!.eta,
-                  value: weeksToGoal==null? '—' : (weeksToGoal<=0.05? 'Reached' : _formatWeeks(weeksToGoal)),
-                  subtitle: weeksToGoal==null? 'insufficient data' : _etaDateText(weeksToGoal),
-                )),
-              ]),
-              const SizedBox(height: 18),
-
-              // Expectation text
-              signedWeekly == 0.0 
-                ? Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFF7FAFF),
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: const Color(0xFFE5EEF9)),
-                    ),
-                    child: Text(
-                      'Log your weight entries to see personalized trends and projections.',
-                      style: theme.textTheme.bodyMedium?.copyWith(height: 1.35),
-                    ),
-                  )
-                : _ExpectationBlock(
-                    weekly: signedWeekly,
-                    unit: unit,
-                    etaText: weeksToGoal==null? '—' : _etaDateText(weeksToGoal),
-                    remaining: remainingScaled,
-                  ),
-              const SizedBox(height: 12),
-              Text(AppLocalizations.of(context)!.expectationsDisclaimer, style: theme.textTheme.bodySmall?.copyWith(color: Colors.grey[600])),
-
-              const SizedBox(height: 18),
-              _BigDeltaCard(
-                isLoss: totalChangeScaled <= 0,
-                valueText: '${totalChangeScaled.abs().toStringAsFixed(1)} $unit',
-              ),
-              const SizedBox(height: 12),
-              // References for medical guidance
-              Align(
-                alignment: Alignment.centerLeft,
-                child: Wrap(
-                  spacing: 8,
-                  runSpacing: 4,
+          backgroundColor: bg,
+          body: SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
+              child: SingleChildScrollView(
+                physics: const BouncingScrollPhysics(),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('References:', style: theme.textTheme.bodySmall?.copyWith(color: Colors.grey[700], fontWeight: FontWeight.w600)),
-                    TextButton(
-                      onPressed: () {
-                        launchUrl(Uri.parse('https://www.cdc.gov/healthyweight/assessing/bmi/index.html'), mode: LaunchMode.externalApplication);
-                      },
-                      child: const Text('CDC: About BMI'),
+                    // Header with back button
+                    Row(
+                      children: [
+                        IconButton(
+                          icon: const Icon(Icons.arrow_back),
+                          onPressed: () => Navigator.pop(context),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            AppLocalizations.of(context)!.weightAnalytics,
+                            style: theme.textTheme.headlineSmall?.copyWith(
+                              fontWeight: FontWeight.w700,
+                              letterSpacing: -0.2,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
-                    TextButton(
-                      onPressed: () {
-                        launchUrl(Uri.parse('https://www.dietaryguidelines.gov/'), mode: LaunchMode.externalApplication);
-                      },
-                      child: const Text('USDA Dietary Guidelines'),
+                    const SizedBox(height: 18),
+
+                    // Key stats (no graph)
+                    Row(children:[
+                      Expanded(child: _InfoCard(
+                        title: AppLocalizations.of(context)!.toGoal,
+                        value: '${remainingScaled.abs().toStringAsFixed(1)} $unit',
+                        subtitle: atGoal? 'goal reached' : AppLocalizations.of(context)!.remaining,
+                        highlight: true,
+                      )),
+                      const SizedBox(width: 12),
+                      Expanded(child: _InfoCard(
+                        title: AppLocalizations.of(context)!.weeklyRate,
+                        value: '${signedWeekly.abs().toStringAsFixed(1)} $unit',
+                        subtitle: signedWeekly == 0.0 ? 'log weight to see trend' : (signedWeekly <= 0 ? AppLocalizations.of(context)!.weeklyLoss : 'weekly gain'),
+                      )),
+                    ]),
+                    const SizedBox(height: 12),
+                    Row(children:[
+                      Expanded(child: _InfoCard(
+                        title: AppLocalizations.of(context)!.starting,
+                        value: '${(_starting*scale).toStringAsFixed(1)} $unit',
+                        subtitle: AppLocalizations.of(context)!.startingWeight,
+                      )),
+                      const SizedBox(width: 12),
+                      Expanded(child: _InfoCard(
+                        title: AppLocalizations.of(context)!.current,
+                        value: '${(_current*scale).toStringAsFixed(1)} $unit',
+                        subtitle: AppLocalizations.of(context)!.today,
+                      )),
+                    ]),
+                    const SizedBox(height: 12),
+                    Row(children:[
+                      Expanded(child: _InfoCard(
+                        title: AppLocalizations.of(context)!.targetLabel,
+                        value: '${(_target*scale).toStringAsFixed(1)} $unit',
+                        subtitle: AppLocalizations.of(context)!.goalWeight,
+                      )),
+                      const SizedBox(width: 12),
+                      Expanded(child: _InfoCard(
+                        title: AppLocalizations.of(context)!.eta,
+                        value: weeksToGoal==null? '—' : (weeksToGoal<=0.05? 'Reached' : _formatWeeks(weeksToGoal)),
+                        subtitle: weeksToGoal==null? 'insufficient data' : _etaDateText(weeksToGoal),
+                      )),
+                    ]),
+                    const SizedBox(height: 18),
+
+                    // Expectation text
+                    signedWeekly == 0.0 
+                      ? Container(
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFF7FAFF),
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(color: const Color(0xFFE5EEF9)),
+                          ),
+                          child: Text(
+                            'Log your weight entries to see personalized trends and projections.',
+                            style: theme.textTheme.bodyMedium?.copyWith(height: 1.35),
+                          ),
+                        )
+                      : _ExpectationBlock(
+                          weekly: signedWeekly,
+                          unit: unit,
+                          etaText: weeksToGoal==null? '—' : _etaDateText(weeksToGoal),
+                          remaining: remainingScaled,
+                        ),
+                    const SizedBox(height: 12),
+                    Text(AppLocalizations.of(context)!.expectationsDisclaimer, style: theme.textTheme.bodySmall?.copyWith(color: Colors.grey[600])),
+
+                    const SizedBox(height: 18),
+                    _BigDeltaCard(
+                      isLoss: totalChangeScaled <= 0,
+                      valueText: '${totalChangeScaled.abs().toStringAsFixed(1)} $unit',
+                    ),
+                    const SizedBox(height: 12),
+                    // References for medical guidance
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: Wrap(
+                        spacing: 8,
+                        runSpacing: 4,
+                        children: [
+                          Text(AppLocalizations.of(context)!.references, style: theme.textTheme.bodySmall?.copyWith(color: Colors.grey[700], fontWeight: FontWeight.w600)),
+                          TextButton(
+                            onPressed: () {
+                              launchUrl(Uri.parse('https://www.cdc.gov/healthyweight/assessing/bmi/index.html'), mode: LaunchMode.externalApplication);
+                            },
+                            child: Text(AppLocalizations.of(context)!.cdcAboutBmi),
+                          ),
+                          TextButton(
+                            onPressed: () {
+                              launchUrl(Uri.parse('https://www.dietaryguidelines.gov/'), mode: LaunchMode.externalApplication);
+                            },
+                            child: Text(AppLocalizations.of(context)!.usdaDietaryGuidelines),
+                          ),
+                        ],
+                      ),
                     ),
                   ],
                 ),
               ),
-            ],
+            ),
           ),
-        ),
-      ),
-    );
+        );
       },
     );
   }
@@ -676,24 +660,26 @@ class _ExpectationBlock extends StatelessWidget{
     final rate = weekly.abs().toStringAsFixed(1);
     final remainingFormatted = remaining.toStringAsFixed(1);
     
-    // Create properly formatted expectation text
+    // Create properly formatted expectation text using localization
     String expectationText;
+    final l = AppLocalizations.of(context)!;
+    
     if (weekly < 0) {
       // Losing weight with actual trend data
       if (etaText == '—' || etaText == 'Reached') {
-        expectationText = 'Based on your recent trend, you are losing about $rate $unit per week. You have $remainingFormatted $unit remaining to reach your goal.';
+        expectationText = l.expectationBlurb(l.loseVerb, '', rate, remainingFormatted, unit);
       } else {
-        expectationText = 'Based on your recent trend, you are losing about $rate $unit per week. At this pace, you will reach your goal in approximately $etaText. You have $remainingFormatted $unit remaining.';
+        expectationText = l.expectationBlurb(l.loseVerb, etaText, rate, remainingFormatted, unit);
       }
     } else if (weekly > 0) {
       // Gaining weight
-      expectationText = 'Based on your recent trend, you are gaining about $rate $unit per week. Consider adjusting your nutrition plan to reach your goal.';
+      expectationText = l.expectationBlurb(l.gainVerb, etaText, rate, remainingFormatted, unit);
     } else {
       // No trend data available, provide estimate
       if (etaText == '—' || etaText == 'Reached') {
-        expectationText = 'You have $remainingFormatted $unit remaining to reach your goal. Log weight entries to see your personalized trend.';
+        expectationText = l.weightTrendNoData(remainingFormatted, unit);
       } else {
-        expectationText = 'At a healthy rate of 0.5 $unit per week, you could reach your goal in approximately $etaText. You have $remainingFormatted $unit remaining. Log weight entries to see your personalized trend.';
+        expectationText = l.weightTrendHealthyRate(rate, etaText, remainingFormatted, unit);
       }
     }
     

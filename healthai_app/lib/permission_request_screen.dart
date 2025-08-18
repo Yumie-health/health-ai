@@ -126,224 +126,185 @@ class _PermissionRequestScreenState extends State<PermissionRequestScreen>
           opacity: _fadeAnimation,
           child: SlideTransition(
             position: _slideAnimation,
-            child: Padding(
-              padding: const EdgeInsets.all(24.0),
-              child: Column(
-                children: [
-                  // Intro banner with image background explaining why we ask
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(18),
-                    child: Stack(
-                      children: [
-                        Positioned.fill(
-                          child: Image.asset(
-                            'assets/food_app_image.png',
-                            fit: BoxFit.cover,
-                          ),
-                        ),
-                        Positioned.fill(
-                          child: Container(
-                            decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                begin: Alignment.topCenter,
-                                end: Alignment.bottomCenter,
-                                colors: [
-                                  Colors.black.withOpacity(0.60),
-                                  Colors.black.withOpacity(0.35),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.all(18.0),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Why we ask for permissions',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 22,
-                                  fontWeight: FontWeight.w900,
-                                  shadows: [Shadow(color: Colors.black54, blurRadius: 6, offset: Offset(0,1))],
-                                ),
-                              ),
-                              const SizedBox(height: 10),
-                              Text(
-                                'We use your camera to scan foods and barcodes, access photos when you upload images, and notifications to remind you to log meals and hydrate.',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 15,
-                                  height: 1.4,
-                                  shadows: [Shadow(color: Colors.black45, blurRadius: 4, offset: Offset(0,1))],
-                                ),
-                              ),
-                              const SizedBox(height: 12),
-                              Text(
-                                'On the next screen, you\'ll see the system prompts to grant access. You can change this anytime in Settings.',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 14,
-                                  shadows: [Shadow(color: Colors.black45, blurRadius: 4, offset: Offset(0,1))],
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  // Header
-                  Expanded(
-                    flex: 2,
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Container(
-                          width: 120,
-                          height: 120,
-                          decoration: BoxDecoration(
-                            color: kPrimaryGreen.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(60),
-                          ),
-                          child: Icon(
-                            Icons.security,
-                            size: 60,
-                            color: kPrimaryGreen,
-                          ),
-                        ),
-                        const SizedBox(height: 24),
-                        Text(
-                          AppLocalizations.of(context)!.welcomeToYumiePermissions,
-                          style: TextStyle(
-                            fontSize: 28,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.grey[800],
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
-                        const SizedBox(height: 12),
-                        Flexible(
-                          child: Text(
-                            AppLocalizations.of(context)!.provideBestExperience,
-                            style: TextStyle(
-                              fontSize: 16,
-                              color: Colors.grey[600],
-                              height: 1.4,
-                            ),
-                            textAlign: TextAlign.center,
-                            maxLines: 3,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  // Permission List
-                  Expanded(
-                    flex: 3,
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: Colors.grey[50],
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      child: ListView.builder(
-                        padding: const EdgeInsets.all(16),
-                        itemCount: _permissions.length,
-                        itemBuilder: (context, index) {
-                          final permission = _permissions[index];
-                          final status = _permissionStatuses[permission] ?? ph.PermissionStatus.denied;
-                          final isGranted = status.isGranted;
-                          
-                          return Container(
-                            margin: const EdgeInsets.only(bottom: 12),
-                            padding: const EdgeInsets.all(16),
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(
-                                color: isGranted ? kPrimaryGreen.withOpacity(0.3) : Colors.grey[300]!,
-                                width: 1,
-                              ),
-                            ),
-                            child: Row(
+            child: Column(
+              children: [
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.all(24.0),
+                    child: SingleChildScrollView(
+                      physics: const BouncingScrollPhysics(),
+                      child: Column(
+                        children: [
+                          // Intro banner with image background explaining why we ask
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(18),
+                            child: Stack(
                               children: [
-                                Container(
-                                  width: 40,
-                                  height: 40,
-                                  decoration: BoxDecoration(
-                                    color: isGranted 
-                                        ? kPrimaryGreen.withOpacity(0.1)
-                                        : Colors.grey[200],
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                  child: Icon(
-                                    PermissionService.getPermissionIcon(permission),
-                                    color: isGranted ? kPrimaryGreen : Colors.grey[600],
-                                    size: 20,
+                                Positioned.fill(
+                                  child: Image.asset(
+                                    'assets/food_app_image.png',
+                                    fit: BoxFit.cover,
                                   ),
                                 ),
-                                const SizedBox(width: 16),
-                                Expanded(
+                                Positioned.fill(
+                                  child: Container(
+                                    decoration: BoxDecoration(
+                                      gradient: LinearGradient(
+                                        begin: Alignment.topCenter,
+                                        end: Alignment.bottomCenter,
+                                        colors: [
+                                          Colors.black.withOpacity(0.60),
+                                          Colors.black.withOpacity(0.35),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                Padding(
+                                  padding: const EdgeInsets.all(18.0),
                                   child: Column(
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
                                       Text(
-                                        PermissionService.getPermissionName(permission, context),
+                                        'Why we ask for permissions',
                                         style: TextStyle(
-                                          fontWeight: FontWeight.w600,
-                                          color: Colors.grey[800],
-                                          fontSize: 16,
+                                          color: Colors.white,
+                                          fontSize: 22,
+                                          fontWeight: FontWeight.w900,
+                                          shadows: [Shadow(color: Colors.black54, blurRadius: 6, offset: Offset(0,1))],
                                         ),
                                       ),
-                                      const SizedBox(height: 4),
+                                      const SizedBox(height: 10),
                                       Text(
-                                        _getPermissionDescription(permission),
+                                        'We use your camera to scan foods and barcodes, access photos when you upload images, and notifications to remind you to log meals and hydrate.',
                                         style: TextStyle(
-                                          color: Colors.grey[600],
-                                          fontSize: 14,
+                                          color: Colors.white,
+                                          fontSize: 15,
+                                          height: 1.4,
+                                          shadows: [Shadow(color: Colors.black45, blurRadius: 4, offset: Offset(0,1))],
                                         ),
-                                        maxLines: 2,
-                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                      const SizedBox(height: 12),
+                                      Text(
+                                        'On the next screen, you\'ll see the system prompts to grant access. You can change this anytime in Settings.',
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 14,
+                                          shadows: [Shadow(color: Colors.black45, blurRadius: 4, offset: Offset(0,1))],
+                                        ),
                                       ),
                                     ],
                                   ),
                                 ),
-                                const SizedBox(width: 12),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 8,
-                                    vertical: 4,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: isGranted 
-                                        ? kPrimaryGreen.withOpacity(0.1)
-                                        : Colors.grey[200],
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  child: Text(
-                                    PermissionService.getPermissionStatusText(status, context),
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w500,
-                                      color: isGranted ? kPrimaryGreen : Colors.grey[600],
-                                    ),
-                                  ),
-                                ),
                               ],
                             ),
-                          );
-                        },
+                          ),
+                          const SizedBox(height: 16),
+                          // Header
+                          Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Container(
+                                width: 60,
+                                height: 60,
+                                decoration: BoxDecoration(
+                                  color: kPrimaryGreen.withOpacity(0.1),
+                                  borderRadius: BorderRadius.circular(30),
+                                ),
+                                child: Icon(
+                                  Icons.settings_applications,
+                                  size: 30,
+                                  color: kPrimaryGreen,
+                                ),
+                              ),
+                              const SizedBox(height: 24),
+                              Text(
+                                AppLocalizations.of(context)!.welcomeToYumiePermissions,
+                                style: TextStyle(
+                                  fontSize: 28,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.grey[800],
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                              const SizedBox(height: 12),
+                              Text(
+                                AppLocalizations.of(context)!.provideBestExperience,
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  color: Colors.grey[600],
+                                  height: 1.4,
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                            ],
+                          ),
+
+                          // Permission List (unboxed, scrollable page)
+                          Column(
+                            children: List.generate(_permissions.length, (index) {
+                              final permission = _permissions[index];
+                              final status = _permissionStatuses[permission] ?? ph.PermissionStatus.denied;
+                              final isGranted = status.isGranted;
+                              return Padding(
+                                padding: const EdgeInsets.symmetric(vertical: 8.0),
+                                child: Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Icon(
+                                      PermissionService.getPermissionIcon(permission),
+                                      color: isGranted ? kPrimaryGreen : Colors.grey[600],
+                                    ),
+                                    const SizedBox(width: 12),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            PermissionService.getPermissionName(permission, context),
+                                            style: TextStyle(
+                                              fontWeight: FontWeight.w600,
+                                              color: Colors.grey[800],
+                                              fontSize: 16,
+                                            ),
+                                          ),
+                                          const SizedBox(height: 4),
+                                          Text(
+                                            _getPermissionDescription(permission),
+                                            style: TextStyle(color: Colors.grey[600], fontSize: 14, height: 1.4),
+                                          ),
+                                          const SizedBox(height: 4),
+                                          Text(
+                                            PermissionService.getPermissionStatusText(status, context),
+                                            style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: isGranted ? kPrimaryGreen : Colors.grey[600]),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            }),
+                          ),
+                        ],
                       ),
                     ),
                   ),
-
-                  // Action Buttons
-                  const SizedBox(height: 24),
-                  SizedBox(
+                ),
+                // Footer with continue button
+                Container(
+                  padding: const EdgeInsets.all(24.0),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.05),
+                        blurRadius: 10,
+                        offset: const Offset(0, -2),
+                      ),
+                    ],
+                  ),
+                  child: SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(
                       onPressed: _isRequesting ? null : _requestAllPermissions,
@@ -381,9 +342,8 @@ class _PermissionRequestScreenState extends State<PermissionRequestScreen>
                             ),
                     ),
                   ),
-                  // Removed skip/exit per App Store guideline 5.1.1
-                ],
-              ),
+                ),
+              ],
             ),
           ),
         ),

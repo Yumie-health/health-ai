@@ -71,7 +71,7 @@ dependencies:
   firebase_storage: ^12.4.9
   image_picker: ^1.1.1
   camera: ^0.10.5+9
-  google_mlkit_barcode_scanning: ^0.11.0
+  google_mlkit_barcode_scanning: ^0.14.1
   share_plus: ^11.0.0
   permission_handler: ^11.3.1
   logging: ^1.2.0
@@ -83,8 +83,9 @@ dependencies:
   in_app_purchase: ^3.1.13
   in_app_review: ^2.0.9
   confetti: ^0.7.0
-  google_mlkit_commons: ^0.7.1
+  google_mlkit_commons: ^0.11.0
   quick_actions: ^1.0.7
+  pdf: ^3.10.7
   # Simple, reliable notifications - no complex background packages
   # Using flutter_local_notifications only (already included)
 

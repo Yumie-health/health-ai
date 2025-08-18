@@ -1,0 +1,188 @@
+{
+  "ar": [
+    "emailVerificationRequired",
+    "pleaseVerifyEmail",
+    "verificationEmailSent",
+    "waitingForVerification",
+    "checkYourEmail",
+    "resendVerificationEmail",
+    "verificationLinkAlreadySent",
+    "emailVerified",
+    "emailNotVerified",
+    "changeEmail",
+    "continueToApp"
+  ],
+
+  "de": [
+    "emailVerificationRequired",
+    "pleaseVerifyEmail",
+    "verificationEmailSent",
+    "waitingForVerification",
+    "checkYourEmail",
+    "resendVerificationEmail",
+    "verificationLinkAlreadySent",
+    "emailVerified",
+    "emailNotVerified",
+    "changeEmail",
+    "continueToApp"
+  ],
+
+  "es": [
+    "emailVerificationRequired",
+    "pleaseVerifyEmail",
+    "verificationEmailSent",
+    "waitingForVerification",
+    "checkYourEmail",
+    "resendVerificationEmail",
+    "verificationLinkAlreadySent",
+    "emailVerified",
+    "emailNotVerified",
+    "changeEmail",
+    "continueToApp"
+  ],
+
+  "fr": [
+    "emailVerificationRequired",
+    "pleaseVerifyEmail",
+    "verificationEmailSent",
+    "waitingForVerification",
+    "checkYourEmail",
+    "resendVerificationEmail",
+    "verificationLinkAlreadySent",
+    "emailVerified",
+    "emailNotVerified",
+    "changeEmail",
+    "continueToApp"
+  ],
+
+  "hi": [
+    "emailVerificationRequired",
+    "pleaseVerifyEmail",
+    "verificationEmailSent",
+    "waitingForVerification",
+    "checkYourEmail",
+    "resendVerificationEmail",
+    "verificationLinkAlreadySent",
+    "emailVerified",
+    "emailNotVerified",
+    "changeEmail",
+    "continueToApp"
+  ],
+
+  "it": [
+    "emailVerificationRequired",
+    "pleaseVerifyEmail",
+    "verificationEmailSent",
+    "waitingForVerification",
+    "checkYourEmail",
+    "resendVerificationEmail",
+    "verificationLinkAlreadySent",
+    "emailVerified",
+    "emailNotVerified",
+    "changeEmail",
+    "continueToApp"
+  ],
+
+  "ja": [
+    "accountDeletionWarning",
+    "accountScheduledForDeletion",
+    "reactivateAccount",
+    "accountReactivated",
+    "accountDeletionCancelled"
+  ],
+
+  "ko": [
+    "accountDeletionWarning",
+    "accountScheduledForDeletion",
+    "reactivateAccount",
+    "accountReactivated",
+    "accountDeletionCancelled",
+    "emailVerificationRequired",
+    "pleaseVerifyEmail",
+    "verificationEmailSent",
+    "waitingForVerification",
+    "checkYourEmail",
+    "resendVerificationEmail",
+    "verificationLinkAlreadySent",
+    "emailVerified",
+    "emailNotVerified",
+    "changeEmail",
+    "continueToApp"
+  ],
+
+  "nl": [
+    "accountDeletionWarning",
+    "accountScheduledForDeletion",
+    "reactivateAccount",
+    "accountReactivated",
+    "accountDeletionCancelled",
+    "emailVerificationRequired",
+    "pleaseVerifyEmail",
+    "verificationEmailSent",
+    "waitingForVerification",
+    "checkYourEmail",
+    "resendVerificationEmail",
+    "verificationLinkAlreadySent",
+    "emailVerified",
+    "emailNotVerified",
+    "changeEmail",
+    "continueToApp"
+  ],
+
+  "pt": [
+    "accountDeletionWarning",
+    "accountScheduledForDeletion",
+    "reactivateAccount",
+    "accountReactivated",
+    "accountDeletionCancelled",
+    "emailVerificationRequired",
+    "pleaseVerifyEmail",
+    "verificationEmailSent",
+    "waitingForVerification",
+    "checkYourEmail",
+    "resendVerificationEmail",
+    "verificationLinkAlreadySent",
+    "emailVerified",
+    "emailNotVerified",
+    "changeEmail",
+    "continueToApp"
+  ],
+
+  "ru": [
+    "accountDeletionWarning",
+    "accountScheduledForDeletion",
+    "reactivateAccount",
+    "accountReactivated",
+    "accountDeletionCancelled",
+    "emailVerificationRequired",
+    "pleaseVerifyEmail",
+    "verificationEmailSent",
+    "waitingForVerification",
+    "checkYourEmail",
+    "resendVerificationEmail",
+    "verificationLinkAlreadySent",
+    "emailVerified",
+    "emailNotVerified",
+    "changeEmail",
+    "continueToApp"
+  ],
+
+  "tr": [
+    "accountDeletionWarning",
+    "accountScheduledForDeletion",
+    "reactivateAccount",
+    "accountReactivated",
+    "accountDeletionCancelled",
+    "emailVerificationRequired",
+    "pleaseVerifyEmail",
+    "verificationEmailSent",
+    "waitingForVerification",
+    "checkYourEmail",
+    "resendVerificationEmail",
+    "verificationLinkAlreadySent",
+    "emailVerified",
+    "emailNotVerified",
+    "changeEmail",
+    "continueToApp"
+  ]
+}

@@ -534,7 +534,7 @@ Include common variations and similar foods. Only return the JSON array, no addi
   Future<List<Map<String, dynamic>>> searchFoodItemsFast(String query, {String? foodType, String language = 'en'}) async {
     final stopwatch = Stopwatch()..start();
     try {
-      print('🤖 AI: Starting fast search for: $query (food type: $foodType)'); // Debug log
+
       log.info('Fast searching for food items', {'query': query, 'food_type': foodType, 'language': language});
 
       String languageInstruction = '';
@@ -609,9 +609,7 @@ Example format (use realistic values for each specific food):
   {"name": "Similar Item 4", "calories": [realistic_value], "protein": [realistic_value], "carbs": [realistic_value], "fat": [realistic_value]}
 ]$languageInstruction
 ''';
-      print('🤖 AI: Sending prompt to AI...'); // Debug log
       String? response = await sendMessage(prompt, model: 'gpt-4o-mini');
-      print('🤖 AI: Got response: '+(response?.substring(0, 100) ?? "null")+'...'); // Debug log
       stopwatch.stop();
       log.logPerformance('Fast food search', stopwatch.elapsed);
       List<Map<String, dynamic>>? parsedResults;
@@ -619,30 +617,24 @@ Example format (use realistic values for each specific food):
         parsedResults = _tryParseFoodJson(response);
         if (parsedResults == null) {
           // Retry with even stricter prompt
-          print('🤖 AI: First response not valid JSON, retrying with stricter prompt...');
           String retryPrompt = '''
 List 5 foods similar to "$query".$foodTypeInstruction For each, give name, calories, protein, carbs, fat per 100g. Use REALISTIC and ACCURATE nutritional values for each specific food item. Respond ONLY with a valid JSON array, no explanation, no text, no code block, just the array. DO NOT SAY ANYTHING ELSE. DO NOT USE MARKDOWN. JUST THE ARRAY.''';
           response = await sendMessage(retryPrompt, model: 'gpt-4o-mini', language: language);
-          print('🤖 AI: Retry response: '+(response?.substring(0, 100) ?? "null")+'...'); // Debug log
           parsedResults = response != null ? _tryParseFoodJson(response) : null;
         }
         if (parsedResults != null) {
-          print('🤖 AI: Parsed '+parsedResults.length.toString()+' results'); // Debug log
           log.info('Fast food search successful', {'query': query, 'results_count': parsedResults.length});
           return parsedResults;
         } else {
-          print('🤖 AI: JSON parse error after retry'); // Debug log
           log.error('Failed to parse fast food search JSON after retry', response);
           return [];
         }
       } else {
-        print('🤖 AI: No response from AI'); // Debug log
         log.error('Fast food search failed', 'No response from AI');
         return [];
       }
     } catch (e) {
       stopwatch.stop();
-      print('🤖 AI: Search error: $e'); // Debug log
       log.error('Fast food search error', e);
       return [];
     }

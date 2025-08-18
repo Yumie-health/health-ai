@@ -53,12 +53,12 @@ class _NutritionalPlanPageState extends State<NutritionalPlanPage> {
       if (daysSince >= 14) {
         // Reset counter after 14 days
         await prefs.setInt('plans_generated_count', 0);
-    setState(() {
+        setState(() {
           plansGenerated = 0;
           canGenerateNewPlan = true;
-    });
+        });
       } else {
-    setState(() {
+        setState(() {
           plansGenerated = plansCount;
           canGenerateNewPlan = plansCount < 2;
           lastPlanGeneration = lastGen;
@@ -71,7 +71,7 @@ class _NutritionalPlanPageState extends State<NutritionalPlanPage> {
     setState(() => isLoading = true);
     
     try {
-    final user = FirebaseAuth.instance.currentUser;
+      final user = FirebaseAuth.instance.currentUser;
       if (user != null) {
         await FirebaseFirestore.instance.collection('users').doc(user.uid).update({
           field: value,
@@ -105,7 +105,13 @@ class _NutritionalPlanPageState extends State<NutritionalPlanPage> {
         builder: (context) => GoalChangeFlow(
           onPlanGenerated: (planData) async {
             Navigator.of(context).pop(); // Close goal change flow
-            _showNewPlanDisplay(planData, fromNutritionalPlan: true);
+            
+            // Update plan generation tracking
+            final prefs = await SharedPreferences.getInstance();
+            await prefs.setString('last_plan_generation', DateTime.now().toIso8601String());
+            await prefs.setInt('plans_generated_count', plansGenerated + 1);
+            
+            _showNewPlanDisplay(planData);
           },
           onCancel: () {
             Navigator.of(context).pop();
@@ -115,22 +121,13 @@ class _NutritionalPlanPageState extends State<NutritionalPlanPage> {
     );
   }
 
-  void _showNewPlanDisplay(Map<String, dynamic> planData, {bool fromNutritionalPlan = false}) {
+  void _showNewPlanDisplay(Map<String, dynamic> planData) {
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (context) => NewPlanDisplay(
           planData: planData,
-          fromNutritionalPlan: fromNutritionalPlan,
-          onComplete: () async {
+          onComplete: () {
             Navigator.of(context).pop(); // Close plan display
-            
-            // Only increment generation count if user accepts the plan from nutritional plan page
-            if (fromNutritionalPlan) {
-              final prefs = await SharedPreferences.getInstance();
-              await prefs.setString('last_plan_generation', DateTime.now().toIso8601String());
-              await prefs.setInt('plans_generated_count', plansGenerated + 1);
-            }
-            
             _loadUserData(); // Refresh the page
             _checkPlanGenerationLimit(); // Update generation limits
             ScaffoldMessenger.of(context).showSnackBar(
@@ -141,23 +138,6 @@ class _NutritionalPlanPageState extends State<NutritionalPlanPage> {
               ),
             );
           },
-          onDecline: fromNutritionalPlan ? () async {
-            Navigator.of(context).pop(); // Close plan display
-            
-            // Still increment generation count even if declined (uses up a generation)
-            final prefs = await SharedPreferences.getInstance();
-            await prefs.setString('last_plan_generation', DateTime.now().toIso8601String());
-            await prefs.setInt('plans_generated_count', plansGenerated + 1);
-            
-            _checkPlanGenerationLimit(); // Update generation limits
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(AppLocalizations.of(context)!.planDeclined),
-                backgroundColor: Colors.orange,
-                duration: Duration(seconds: 2),
-              ),
-            );
-          } : null,
         ),
       ),
     );
@@ -190,9 +170,6 @@ class _NutritionalPlanPageState extends State<NutritionalPlanPage> {
     final int protein = userData!['proteinGoal'] ?? 120;
     final int carbs = userData!['carbsGoal'] ?? 250;
     final int fat = userData!['fatGoal'] ?? 70;
-    // Water goal is stored in ml when available; legacy values may be in number of glasses
-    final int rawWaterGoal = userData!['waterGoal'] ?? 2000; // assume ml default
-    final int waterGoalMl = rawWaterGoal <= 30 ? (rawWaterGoal * 240) : rawWaterGoal; // convert glasses -> ml if needed
     
     // Calculate BMI
     final double heightM = heightCm / 100.0;
@@ -221,7 +198,7 @@ class _NutritionalPlanPageState extends State<NutritionalPlanPage> {
         elevation: 0,
       ),
       body: SingleChildScrollView(
-        padding: EdgeInsets.fromLTRB(20, 20, 20, 100), // Extra bottom padding
+        padding: EdgeInsets.all(20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -246,8 +223,8 @@ class _NutritionalPlanPageState extends State<NutritionalPlanPage> {
                   ),
                   SizedBox(height: 8),
                   Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: [
+                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                    children: [
                       _buildProfileStat(
                         localizations.current,
                         '${displayWeight.toStringAsFixed(1)} $weightUnit',
@@ -293,14 +270,14 @@ class _NutritionalPlanPageState extends State<NutritionalPlanPage> {
             
             SizedBox(height: 16),
             
-            // Nutrition Goals Grid (calories + macros)
+            // Nutrition Goals Grid
             GridView.count(
               shrinkWrap: true,
               physics: NeverScrollableScrollPhysics(),
               crossAxisCount: 2,
               crossAxisSpacing: 12,
               mainAxisSpacing: 12,
-              childAspectRatio: 1.0,
+              childAspectRatio: 1.2,
               children: [
                 _buildNutritionCard(
                   localizations.calories,
@@ -308,7 +285,7 @@ class _NutritionalPlanPageState extends State<NutritionalPlanPage> {
                   'kcal',
                   Icons.local_fire_department,
                   Colors.orange,
-                  () => _showEditDialog(localizations.calorieGoal, 'dailyCalorieGoal', calories.toDouble(), 1000, 5000, 'kcal', localizations),
+                  () => _showEditDialog(localizations.calorieGoal, 'dailyCalorieGoal', calories.toDouble(), 1000, 5000, 'kcal'),
                 ),
                 _buildNutritionCard(
                   localizations.protein,
@@ -316,7 +293,7 @@ class _NutritionalPlanPageState extends State<NutritionalPlanPage> {
                   'g',
                   Icons.fitness_center,
                   Colors.red,
-                  () => _showEditDialog(localizations.proteinGoal, 'proteinGoal', protein.toDouble(), 40, 300, 'g', localizations),
+                  () => _showEditDialog(localizations.proteinGoal, 'proteinGoal', protein.toDouble(), 40, 300, 'g'),
                 ),
                 _buildNutritionCard(
                   localizations.carbs,
@@ -324,7 +301,7 @@ class _NutritionalPlanPageState extends State<NutritionalPlanPage> {
                   'g',
                   Icons.grain,
                   Colors.amber,
-                  () => _showEditDialog(localizations.carbGoal, 'carbsGoal', carbs.toDouble(), 40, 600, 'g', localizations),
+                  () => _showEditDialog(localizations.carbGoal, 'carbsGoal', carbs.toDouble(), 40, 600, 'g'),
                 ),
                 _buildNutritionCard(
                   localizations.fat,
@@ -332,15 +309,10 @@ class _NutritionalPlanPageState extends State<NutritionalPlanPage> {
                   'g',
                   Icons.opacity,
                   Colors.purple,
-                  () => _showEditDialog(localizations.fatGoal, 'fatGoal', fat.toDouble(), 10, 200, 'g', localizations),
+                  () => _showEditDialog(localizations.fatGoal, 'fatGoal', fat.toDouble(), 10, 200, 'g'),
                 ),
               ],
             ),
-
-            SizedBox(height: 12),
-
-            // Water goal (horizontal card with ml / fl oz units like nutrition summary)
-            _buildHorizontalWaterCard(localizations, useMetric, waterGoalMl),
             
             SizedBox(height: 32),
             
@@ -398,15 +370,17 @@ class _NutritionalPlanPageState extends State<NutritionalPlanPage> {
                       ),
                       textAlign: TextAlign.center,
                     ),
-                    SizedBox(height: 4),
-                    Text(
-                      localizations.nextPlanAvailable(_getDaysUntilReset()),
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.orange[600],
+                    if (lastPlanGeneration != null) ...[
+                      SizedBox(height: 4),
+                      Text(
+                        'Next plan available in ${_getDaysUntilReset()} days',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.orange[600],
+                        ),
+                        textAlign: TextAlign.center,
                       ),
-                      textAlign: TextAlign.center,
-                    ),
+                    ],
                   ],
                 ),
               )
@@ -420,21 +394,21 @@ class _NutritionalPlanPageState extends State<NutritionalPlanPage> {
                   border: Border.all(color: kPrimaryGreen.withOpacity(0.3)),
                 ),
                 child: Row(
-                children: [
+                  children: [
                     Icon(Icons.lightbulb, color: kPrimaryGreen, size: 20),
                     SizedBox(width: 8),
                     Expanded(
                       child: Text(
-                        localizations.planGenerationInfo(2 - plansGenerated),
+                        'You can generate ${2 - plansGenerated} more personalized plans in the next 14 days.',
                         style: TextStyle(
                           fontSize: 12,
                           color: kPrimaryGreen,
                         ),
                       ),
-                  ),
-                ],
+                    ),
+                  ],
+                ),
               ),
-            ),
           ],
         ),
       ),
@@ -472,9 +446,9 @@ class _NutritionalPlanPageState extends State<NutritionalPlanPage> {
       onTap: onTap,
       child: Container(
         padding: EdgeInsets.all(16),
-          decoration: BoxDecoration(
+        decoration: BoxDecoration(
           color: Colors.white,
-            borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(16),
           border: Border.all(color: Colors.grey[200]!),
           boxShadow: [
             BoxShadow(
@@ -483,10 +457,10 @@ class _NutritionalPlanPageState extends State<NutritionalPlanPage> {
               offset: Offset(0, 2),
             ),
           ],
-          ),
-          child: Column(
+        ),
+        child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
-            children: [
+          children: [
             Container(
               width: 40,
               height: 40,
@@ -541,74 +515,7 @@ class _NutritionalPlanPageState extends State<NutritionalPlanPage> {
     );
   }
 
-  Widget _buildHorizontalWaterCard(AppLocalizations localizations, bool useMetric, int waterGoalMl) {
-    final bool isUS = !useMetric; // Ft/in users => US
-    final String unit = isUS ? 'L' : localizations.fluidOunces;
-    final String displayAmount = isUS
-        ? (waterGoalMl / 1000.0).toStringAsFixed(1)
-        : (waterGoalMl / 29.5735).round().toString();
-
-    return GestureDetector(
-      onTap: () => _showWaterEditDialog(localizations, useMetric, waterGoalMl),
-      child: Container(
-        width: double.infinity,
-        padding: EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: Colors.grey[200]!),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.05),
-              blurRadius: 8,
-              offset: Offset(0, 2),
-            ),
-          ],
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                color: Colors.blue.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Icon(Icons.water_drop, color: Colors.blue, size: 24),
-            ),
-            SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                  Text(
-                    localizations.waterIntakeLabel,
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.grey[600],
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                  SizedBox(height: 4),
-                  Text(
-                    '$displayAmount $unit',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black87,
-                    ),
-                    ),
-                  ],
-                ),
-            ),
-            Icon(Icons.edit, color: Colors.grey[400], size: 18),
-            ],
-        ),
-      ),
-    );
-  }
-
-  void _showEditDialog(String title, String field, double currentValue, double min, double max, String unit, AppLocalizations localizations) {
+  void _showEditDialog(String title, String field, double currentValue, double min, double max, String unit) {
     double tempValue = currentValue;
     
     showDialog(
@@ -618,7 +525,7 @@ class _NutritionalPlanPageState extends State<NutritionalPlanPage> {
           title: Text(title),
           content: Column(
             mainAxisSize: MainAxisSize.min,
-      children: [
+            children: [
               Text(
                 '${tempValue.toStringAsFixed(0)} $unit',
                 style: TextStyle(
@@ -628,11 +535,11 @@ class _NutritionalPlanPageState extends State<NutritionalPlanPage> {
                 ),
               ),
               SizedBox(height: 16),
-        Slider(
+              Slider(
                 value: tempValue,
-          min: min,
-          max: max,
-          divisions: (max - min).toInt(),
+                min: min,
+                max: max,
+                divisions: (max - min).toInt(),
                 activeColor: kPrimaryGreen,
                 onChanged: (value) {
                   setDialogState(() {
@@ -660,71 +567,6 @@ class _NutritionalPlanPageState extends State<NutritionalPlanPage> {
             ),
           ],
         ),
-      ),
-    );
-  }
-
-  void _showWaterEditDialog(AppLocalizations localizations, bool useMetric, int currentMl) {
-    final bool isUS = !useMetric; // US uses liters display
-    double tempMl = currentMl.toDouble();
-    final double minMl = isUS ? 500 : 20 * 29.5735; // 0.5 L or 20 fl oz
-    final double maxMl = isUS ? 6000 : 200 * 29.5735; // 6 L or 200 fl oz
-
-    showDialog(
-      context: context,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setDialogState) {
-          final String displayAmount = isUS
-              ? (tempMl / 1000.0).toStringAsFixed(1)
-              : (tempMl / 29.5735).round().toString();
-          final String unit = isUS ? 'L' : localizations.fluidOunces;
-          return AlertDialog(
-            title: Text(localizations.waterGoal),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-      children: [
-                Text(
-                  '$displayAmount $unit',
-                  style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                    color: kPrimaryGreen,
-                  ),
-                ),
-                SizedBox(height: 16),
-                Slider(
-                  value: tempMl.clamp(minMl, maxMl),
-                  min: minMl,
-                  max: maxMl,
-                  divisions: ((maxMl - minMl) / (isUS ? 100 : (5 * 29.5735))).round(),
-                  activeColor: kPrimaryGreen,
-                  onChanged: (value) {
-                    setDialogState(() {
-                      tempMl = value;
-                    });
-                  },
-                ),
-              ],
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(),
-                child: Text(localizations.cancel),
-              ),
-              ElevatedButton(
-                onPressed: () async {
-                  Navigator.of(context).pop();
-                  await _updateField('waterGoal', tempMl.round()); // store in ml
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: kPrimaryGreen,
-                  foregroundColor: Colors.white,
-                ),
-                child: Text(localizations.save),
-        ),
-      ],
-    );
-        },
       ),
     );
   }

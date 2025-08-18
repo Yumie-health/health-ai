@@ -192,9 +192,9 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Purchase failed: ${purchase.error?.message ?? 'Unknown error'}'),
+              content: Text('You cancelled purchase'),
               backgroundColor: kWarningRed,
-              duration: Duration(seconds: 5),
+              duration: Duration(seconds: 3),
             ),
           );
         }

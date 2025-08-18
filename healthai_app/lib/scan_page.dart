@@ -1,4 +1,5 @@
 // ignore_for_file: use_build_context_synchronously
+import 'dart:io' show Platform;
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
@@ -41,11 +42,7 @@ class _ScanPageState extends State<ScanPage> {
   bool _isDecoding = false;
   RewardedAd? _rewardedAd;
   bool _isRewardedAdLoaded = false;
-  // Guidance UI state for barcode mode
-  Color _frameBorderColor = Colors.redAccent;
-  String _bottomGuidanceText = 'Not in frame, bring closer';
-  bool _isGuidanceStreaming = false;
-  bool _isGuidanceDecoding = false;
+  bool _showBarcodeError = false; // shows red error under the frame when not recognized
 
   @override
   void initState() {
@@ -58,10 +55,7 @@ class _ScanPageState extends State<ScanPage> {
     // Just load the ad using existing consent status
     if (!mounted) return;
     
-    debugPrint('=== LOADING REWARDED AD (using existing consent) ===');
-    _loadRewardedAd(() {
-      debugPrint('Rewarded ad loaded successfully');
-    });
+    _loadRewardedAd(() {});
     
     // Also preload ad when paywall might be shown
     _preloadAdForPaywall();
@@ -77,16 +71,17 @@ class _ScanPageState extends State<ScanPage> {
     
     // If user has already scanned today, preload ad for next scan
     if (lastScanDate == todayStr && scansToday >= 1) {
-      debugPrint('Preloading ad for paywall (user has scanned today)');
-      _loadRewardedAd(() {
-        debugPrint('Paywall ad preloaded successfully');
-      });
+      _loadRewardedAd(() {});
     }
   }
 
   void _onBarcodeModeChanged(bool enabled) {
     setState(() { _isBarcodeMode = enabled; });
-    // Disable live guidance stream and color/text cues; manual snapshot only
+    // Disable live scanning on iOS to prevent crashes
+    if (Platform.isIOS) {
+      _stopBarcodeStream();
+      return;
+    }
     _stopBarcodeStream();
   }
 
@@ -100,6 +95,9 @@ class _ScanPageState extends State<ScanPage> {
   }
 
   Future<void> _startBarcodeStream() async {
+    // Disable live barcode scanning on iOS to prevent crashes
+    if (Platform.isIOS) return;
+    
     if (!_isCameraInitialized || !_controller.value.isInitialized) return;
     _barcodeService ??= BarcodeScannerService();
     if (_controller.value.isStreamingImages) return;
@@ -111,6 +109,14 @@ class _ScanPageState extends State<ScanPage> {
         final code = await _barcodeService!.processCameraImage(image, rotation: rotation);
         if (code != null && mounted) {
           await _onBarcodeDetected(code);
+        } else {
+          if (mounted) {
+            setState(() { _showBarcodeError = true; });
+            // Hide error after a short delay to avoid persistent red text
+            Future.delayed(const Duration(seconds: 2), () {
+              if (mounted) setState(() { _showBarcodeError = false; });
+            });
+          }
         }
       } finally {
         _isDecoding = false;
@@ -118,50 +124,7 @@ class _ScanPageState extends State<ScanPage> {
     });
   }
 
-  void _resetGuidance() {
-    _frameBorderColor = Colors.redAccent;
-    _bottomGuidanceText = 'Not in frame, bring closer';
-  }
 
-  Future<void> _startGuidanceStream() async {
-    if (!_isCameraInitialized || !_controller.value.isInitialized || _isGuidanceStreaming) return;
-    _barcodeService ??= BarcodeScannerService();
-    _isGuidanceStreaming = true;
-    if (_controller.value.isStreamingImages) return;
-    await _controller.startImageStream((image) async {
-      if (_isGuidanceDecoding || !_isBarcodeMode) return;
-      _isGuidanceDecoding = true;
-      try {
-        const rotation = InputImageRotation.rotation0deg;
-        final guidance = await _barcodeService!.processCameraImageForGuidance(image, rotation: rotation);
-        if (!mounted) return;
-        if (!_isBarcodeMode) return;
-        if (guidance == null || guidance.hasBarcode == false) {
-          setState(() {
-            _frameBorderColor = Colors.redAccent;
-            _bottomGuidanceText = 'Not in frame, bring closer';
-          });
-        } else {
-          final fraction = guidance.widthFraction ?? 0.0;
-          if (fraction < 0.35) {
-            setState(() {
-              _frameBorderColor = Colors.orangeAccent;
-              _bottomGuidanceText = 'Bring closer';
-            });
-          } else {
-            setState(() {
-              _frameBorderColor = Colors.greenAccent;
-              _bottomGuidanceText = 'Snap photo';
-            });
-          }
-        }
-      } catch (_) {
-        // ignore guidance errors
-      } finally {
-        _isGuidanceDecoding = false;
-      }
-    });
-  }
 
   Future<void> _onBarcodeDetected(String code) async {
     _stopBarcodeStream();
@@ -221,33 +184,36 @@ class _ScanPageState extends State<ScanPage> {
     
     // Preload ad for next scan if user might need it
     if (scansToday >= 0) { // After first scan, preload for next one
-      debugPrint('Preloading ad for next scan...');
-      _loadRewardedAd(() {
-        debugPrint('Ad preloaded for next scan');
-      });
+      _loadRewardedAd(() {});
     }
   }
 
   Future<void> _captureImage() async {
     if (!_controller.value.isInitialized) return;
-    // Stop guidance stream before capturing to avoid conflicts
-    if (_isBarcodeMode && _controller.value.isStreamingImages) {
-      try { await _controller.stopImageStream(); } catch (_) {}
-      _isGuidanceStreaming = false;
-    }
     final file = await _controller.takePicture();
-    // Removed cropping to eliminate image package; use original file directly
 
     // In barcode mode, decode from snapshot and navigate directly (no paywall)
     if (_isBarcodeMode) {
       _barcodeService ??= BarcodeScannerService();
       final code = await _barcodeService!.processFilePath(file.path);
       if (!mounted) return;
-      if (code == null) { _startGuidanceStream(); return; }
+      if (code == null) {
+        setState(() { _showBarcodeError = true; });
+        Future.delayed(const Duration(seconds: 2), () {
+          if (mounted) setState(() { _showBarcodeError = false; });
+        });
+        return;
+      }
       final lookup = ProductLookupService(userAgent: 'Yumie/1.0 (contact@yumie.app)');
       final res = await lookup.fetchByBarcode(code);
       if (!mounted) return;
-      if (!res.found) { _startGuidanceStream(); return; }
+      if (!res.found) {
+        setState(() { _showBarcodeError = true; });
+        Future.delayed(const Duration(seconds: 2), () {
+          if (mounted) setState(() { _showBarcodeError = false; });
+        });
+        return;
+      }
       await Navigator.of(context).push(
         MaterialPageRoute(builder: (_) => ScanResultProductPage(product: res.product!)),
       );
@@ -258,7 +224,6 @@ class _ScanPageState extends State<ScanPage> {
     if (showPaywall) {
       // Ensure ad is loaded before showing paywall
       if (!_isRewardedAdLoaded || _rewardedAd == null) {
-        debugPrint('Preloading ad before showing paywall...');
         await Future.delayed(Duration(milliseconds: 500)); // Give ad a moment to load
       }
       
@@ -347,33 +312,26 @@ class _ScanPageState extends State<ScanPage> {
   void _loadRewardedAd(VoidCallback onAdLoaded) {
     // Don't load if already loading or loaded
     if (_isRewardedAdLoaded && _rewardedAd != null) {
-      debugPrint('Ad already loaded, skipping load request');
       onAdLoaded();
       return;
     }
     
-    debugPrint('Loading rewarded ad with unit ID: ${AdConfig.rewardedAdUnitId}');
     RewardedAd.load(
       adUnitId: AdConfig.rewardedAdUnitId,
       request: ConsentService.instance.buildAdRequest(),
       rewardedAdLoadCallback: RewardedAdLoadCallback(
         onAdLoaded: (ad) {
-          debugPrint('✅ Rewarded ad loaded successfully!');
           _rewardedAd = ad;
           _isRewardedAdLoaded = true;
           onAdLoaded();
         },
         onAdFailedToLoad: (error) {
-          debugPrint('❌ Rewarded ad failed to load: $error');
-          debugPrint('Check logcat for test device ID message starting with:');
-          debugPrint('"Use RequestConfiguration.Builder().setTestDeviceIds"');
           _isRewardedAdLoaded = false;
           _rewardedAd = null;
           
           // Retry loading after a delay
           Future.delayed(Duration(seconds: 5), () {
             if (mounted && !_isRewardedAdLoaded) {
-              debugPrint('Retrying ad load after failure...');
               _loadRewardedAd(() {});
             }
           });
@@ -386,14 +344,12 @@ class _ScanPageState extends State<ScanPage> {
     if (_isRewardedAdLoaded && _rewardedAd != null) {
       _rewardedAd!.fullScreenContentCallback = FullScreenContentCallback(
         onAdDismissedFullScreenContent: (ad) {
-          debugPrint('Scan ad dismissed');
           ad.dispose();
           _isRewardedAdLoaded = false;
           _rewardedAd = null;
           _loadRewardedAd(() {}); // Preload next ad
         },
         onAdFailedToShowFullScreenContent: (ad, error) {
-          debugPrint('Scan ad failed to show: $error');
           ad.dispose();
           _isRewardedAdLoaded = false;
           _rewardedAd = null;
@@ -407,20 +363,16 @@ class _ScanPageState extends State<ScanPage> {
       try {
         await _rewardedAd!.show(
           onUserEarnedReward: (ad, reward) {
-            debugPrint('User earned reward from scan ad');
             onRewardEarned();
           },
         );
       } catch (e) {
-        debugPrint('Error showing scan ad: $e');
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(AppLocalizations.of(context)!.adFailedToShow)),
         );
         onRewardEarned(); // Continue anyway
       }
     } else {
-      debugPrint('Scan ad not loaded, attempting to load and show...');
-      
       // Show loading indicator
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -442,10 +394,8 @@ class _ScanPageState extends State<ScanPage> {
       // Try to load ad quickly and show it
       _loadRewardedAd(() {
         if (_isRewardedAdLoaded && _rewardedAd != null) {
-          debugPrint('Ad loaded quickly, showing now...');
           _showRewardedAd(context, onRewardEarned);
         } else {
-          debugPrint('Ad still not loaded after quick load attempt');
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text(AppLocalizations.of(context)!.adNotLoadedYet)),
           );
@@ -479,25 +429,22 @@ class _ScanPageState extends State<ScanPage> {
                     }
                     final double frameLeft = (constraints.maxWidth - frameWidth) / 2;
                     double frameTop = (constraints.maxHeight - frameHeight) / 2;
-                    // Compute adaptive position for mode toggles above bottom controls
-                    const double shutterSize = 72;
-                    const double bottomButtonsBottom = 40; // matches _buildBottomButtons
-                    const double gapAboveShutter = 24;
-                    final double safeBottom = MediaQuery.of(context).padding.bottom;
-                    final double togglesBottom = bottomButtonsBottom + shutterSize + gapAboveShutter + safeBottom;
-                    // Keep the frame well above the toggles row
-                    const double togglesHeight = 44;
-                    final double maxFrameBottom = constraints.maxHeight - togglesBottom - togglesHeight - 12;
+                    // Keep the frame just above the mode buttons/camera cluster
+                    const double modeButtonsBottom = 120; // Y offset of the button row
+                    const double cameraButtonBottom = 40; // Camera button bottom inset
+                    const double totalBottomSpace = modeButtonsBottom + 40; // Extra padding so the frame sits above
+                    final double maxFrameBottom = constraints.maxHeight - totalBottomSpace;
                     final double maxFrameTop = maxFrameBottom - frameHeight;
                     final double overlap = (frameTop + frameHeight) - maxFrameBottom;
                     if (overlap > 0) {
                       frameTop = (frameTop - overlap).clamp(0.0, frameTop);
                     }
-                    // Nudge fridge frame slightly downward (more space above)
+                    // For fridge mode, bias the frame to sit closer to the buttons (relative placement)
                     if (_isFridgeMode) {
-                      final double downwardBias = constraints.maxHeight * 0.06;
-                      final double desiredTop = frameTop + downwardBias;
-                      frameTop = desiredTop.clamp(0.0, maxFrameTop);
+                      // Target the frame bottom to be a fixed margin above the buttons
+                      final double desiredBottom = maxFrameBottom - 48; // 12px gap above buttons
+                      final double desiredTop = (desiredBottom - frameHeight).clamp(0.0, maxFrameTop);
+                      frameTop = desiredTop;
                     }
                     final frameRect = Rect.fromLTWH(frameLeft, frameTop, frameWidth, frameHeight);
                     return Stack(
@@ -523,9 +470,9 @@ class _ScanPageState extends State<ScanPage> {
                             ),
                           ),
                         ),
-                        // Scan/Fridge/Barcode toggle buttons
+                        // Mode buttons positioned just above the camera button
                         Positioned(
-                          bottom: togglesBottom,
+                          bottom: 120, // Position above the camera button
                           left: 0,
                           right: 0,
                           child: SafeArea(
@@ -570,8 +517,8 @@ class _ScanPageState extends State<ScanPage> {
                                       : AppLocalizations.of(context)!.placeFoodInFrame),
                                 style: const TextStyle(
                                   color: Colors.white,
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.w700,
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
                                   letterSpacing: 0.1,
                                 ),
                                 textAlign: TextAlign.center,
@@ -579,6 +526,23 @@ class _ScanPageState extends State<ScanPage> {
                             ),
                           ),
                         ),
+                        // Error message under the frame for barcode not recognized
+                        if (_isBarcodeMode)
+                          Positioned(
+                            top: frameRect.bottom + 8,
+                            left: 0,
+                            right: 0,
+                            child: AnimatedOpacity(
+                              opacity: _showBarcodeError ? 1.0 : 0.0,
+                              duration: const Duration(milliseconds: 200),
+                              child: Center(
+                                child: Text(
+                                  'Barcode not in frame!',
+                                  style: const TextStyle(color: Colors.redAccent, fontSize: 14, fontWeight: FontWeight.w700),
+                                ),
+                              ),
+                            ),
+                          ),
                         _buildBottomButtons(),
                       ],
                     );
@@ -652,43 +616,49 @@ class _ScanPageState extends State<ScanPage> {
 
   Widget _buildBottomButtons() {
     return Positioned(
-      bottom: 40,
+      bottom: 0,
       left: 0,
       right: 0,
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        children: [
-          IconButton(
-            icon: Icon(
-              _isFlashOn ? Icons.flash_on : Icons.flash_off,
-              color: Colors.white,
-              size: 32,
-            ),
-            onPressed: _toggleFlash,
-          ),
-          GestureDetector(
-            behavior: HitTestBehavior.opaque,
-            onTapDown: (_) => _captureImage(),
-            child: Container(
-              width: 72,
-              height: 72,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: Colors.white,
-                border: Border.all(color: Colors.white, width: 4),
+      child: SafeArea(
+        minimum: EdgeInsets.only(bottom: 20),
+        child: Padding(
+          padding: EdgeInsets.only(bottom: 20),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              IconButton(
+                icon: Icon(
+                  _isFlashOn ? Icons.flash_on : Icons.flash_off,
+                  color: Colors.white,
+                  size: 32,
+                ),
+                onPressed: _toggleFlash,
               ),
-              child: Icon(
-                Icons.camera_alt,
-                color: Colors.black,
-                size: 36,
+              GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTapDown: (_) => _captureImage(),
+                child: Container(
+                  width: 72,
+                  height: 72,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Colors.white,
+                    border: Border.all(color: Colors.white, width: 4),
+                  ),
+                  child: Icon(
+                    Icons.camera_alt,
+                    color: Colors.black,
+                    size: 36,
+                  ),
+                ),
               ),
-            ),
+              IconButton(
+                icon: const Icon(Icons.photo_library, color: Colors.white, size: 32),
+                onPressed: _uploadFromGallery,
+              ),
+            ],
           ),
-          IconButton(
-            icon: const Icon(Icons.photo_library, color: Colors.white, size: 32),
-            onPressed: _uploadFromGallery,
-          ),
-        ],
+        ),
       ),
     );
   }

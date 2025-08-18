@@ -362,13 +362,13 @@ class AppLocalizationsTr extends AppLocalizations {
   String get breakfast => 'Kahvaltı';
 
   @override
-  String get lunch => 'Öğle Yemeği';
+  String get lunch => 'Öğle';
 
   @override
-  String get dinner => 'Akşam Yemeği';
+  String get dinner => 'Akşam';
 
   @override
-  String get snack => 'Atıştırmalık';
+  String get snack => 'Ara';
 
   @override
   String get reviewMeal => 'Yemek İncele';
@@ -602,13 +602,13 @@ class AppLocalizationsTr extends AppLocalizations {
   String get kcalPer100g => 'kcal/100g';
 
   @override
-  String get sugar => 'Sugar';
+  String get sugar => 'Şeker';
 
   @override
   String get satFat => 'Doymuş yağ';
 
   @override
-  String get salt => 'Salt';
+  String get salt => 'Tuz';
 
   @override
   String get ingredientsTitle => 'İçindekiler';
@@ -844,7 +844,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get recentFoods => 'Son Yemekler';
 
   @override
-  String get logWeightChange => 'Kilo Değişikliğini Kaydet';
+  String get logWeightChange => 'Kilo';
 
   @override
   String get lost => 'Kaybedilen';
@@ -1045,7 +1045,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get dailyHealthInsights => 'Günlük Sağlık İçgörüleri';
 
   @override
-  String get logWaterIntake => 'Su Alımını Kaydet';
+  String get logWaterIntake => 'Su';
 
   @override
   String get add => 'Ekle';
@@ -1414,10 +1414,44 @@ class AppLocalizationsTr extends AppLocalizations {
   String get redirectingToSignIn => 'Giriş sayfasına yönlendiriliyor...';
 
   @override
+  String weightTrendNoData(Object remaining, Object unit) {
+    return 'Yeterli kilo verisi yok.';
+  }
+
+  @override
+  String weightTrendHealthyRate(Object eta, Object rate, Object remaining, Object unit) {
+    return 'Sağlıklı hız: $rate$unit/hafta';
+  }
+
+  @override
   String get accountSuccessfullyDeleted => 'Hesap Başarıyla Silindi';
 
   @override
   String get pleaseCloseAndRestartApp => 'Devam etmek için lütfen uygulamayı kapatın ve yeniden başlatın.';
+
+  @override
+  String get exportData => 'Veri Dışa Aktar';
+
+  @override
+  String get exportDataDescription => 'Tüm verilerinizi PDF dosyası olarak dışa aktarın';
+
+  @override
+  String get exportComplete => 'Dışa Aktarma Tamamlandı';
+
+  @override
+  String get exportCompleteMessage => 'Verileriniz başarıyla dışa aktarıldı!';
+
+  @override
+  String get exportCompleteDescription => 'PDF dosyası cihazınıza kaydedildi ve paylaşılabilir veya görüntülenebilir.';
+
+  @override
+  String get exportFailed => 'Dışa Aktarma Başarısız';
+
+  @override
+  String get exportingData => 'Verileriniz dışa aktarılıyor...';
+
+  @override
+  String get exportingDataDescription => 'Bu biraz zaman alabilir';
 
   @override
   String get restartApp => 'Uygulamayı Yeniden Başlat';
@@ -1723,7 +1757,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get startFreeTrial => 'Ücretsiz Deneme Başlat';
 
   @override
-  String get month => 'ay';
+  String get month => 'Ay';
 
   @override
   String get year => 'yıl';
@@ -1987,20 +2021,206 @@ class AppLocalizationsTr extends AppLocalizations {
   String get consentFlowCompleted => 'Onay akışı tamamlandı!';
 
   @override
-  String get appleSignInFailed => 'Apple sign-in failed';
+  String get appleSignInFailed => 'Apple ile giriş başarısız';
 
   @override
-  String get adFailedToShow => 'Ad failed to show. Please try again.';
+  String get adFailedToShow => 'Reklam gösterilemedi';
 
   @override
-  String get adNotLoadedYet => 'Ad not loaded yet. Please try again.';
+  String get adNotLoadedYet => 'Reklam henüz yüklenmedi';
 
   @override
-  String get errorRequestingPermissions => 'Error requesting permissions';
+  String get errorRequestingPermissions => 'İzinler istenirken hata oluştu';
 
   @override
-  String get showMore => 'Show more';
+  String get showMore => 'Daha fazla göster';
 
   @override
-  String get showLess => 'Show less';
+  String get showLess => 'Daha az göster';
+
+  @override
+  String get noSavedCustomMeals => 'Kaydedilmiş özel yemekleriniz yok.';
+
+  @override
+  String get savedCustomMealsPlus => 'Kaydedilmiş özel yemekler +';
+
+  @override
+  String get customBuilding => 'Özel Yemek Oluştur';
+
+  @override
+  String get enterName => 'Ad girin';
+
+  @override
+  String get enterFoodName => 'Yemek adını girin';
+
+  @override
+  String get congratulationsGoalReached => '🎉 Tebrikler!';
+
+  @override
+  String get youReachedGoalWeight => 'Hedef kilonuza ulaştınız!';
+
+  @override
+  String get switchToMaintenancePlan => 'Şimdi kilonuzu korumak için bakım planına geçelim!';
+
+  @override
+  String get letsDoIt => 'HADİ YAPALIM!';
+
+  @override
+  String get keepUpGreatWork => 'Harika gidiyorsunuz!';
+
+  @override
+  String get generatingMaintenancePlan => 'Bakım planınız oluşturuluyor...';
+
+  @override
+  String get maintenancePlanUpdated => '🎉 Beslenme planınız bakım için güncellendi!';
+
+  @override
+  String get failedToGenerateMaintenancePlan => 'Bakım planı oluşturulamadı. Lütfen tekrar deneyin.';
+
+  @override
+  String get heresYourMaintenancePlan => 'İşte yeni bakım planınız!';
+
+  @override
+  String get keepThisPlan => 'Bu Planı Koru';
+
+  @override
+  String get chooseDifferentGoal => 'Farklı Hedef Seç';
+
+  @override
+  String get whatsYourNewGoal => 'Yeni hedefiniz nedir?';
+
+  @override
+  String get whatsYourNewTargetWeight => 'Yeni hedef kilonuz nedir?';
+
+  @override
+  String get yumieGeneratingNewPlan => 'Yumie yeni kişisel planınızı oluşturuyor...';
+
+  @override
+  String get yourNewPlanReady => 'Yeni planınız hazır!';
+
+  @override
+  String get startWithNewPlan => 'Yeni Planla Başla';
+
+  @override
+  String get generateNewPlan => 'Yeni Plan Oluştur';
+
+  @override
+  String get planGenerationLimitReached => 'Bu dönem için 2 plan oluşturma hakkınızı kullandınız.';
+
+  @override
+  String get waterGoal => 'Su Hedefi';
+
+  @override
+  String get glasses => 'bardak';
+
+  @override
+  String planGenerationInfo(int remaining) {
+    return 'Önümüzdeki 14 günde $remaining adet daha kişisel plan oluşturabilirsiniz.';
+  }
+
+  @override
+  String nextPlanAvailable(int days) {
+    return '$days gün sonra tekrar deneyin';
+  }
+
+  @override
+  String get decline => 'Reddet';
+
+  @override
+  String get planDeclined => 'Plan reddedildi';
+
+  @override
+  String get accountDeletionWarning => 'Hesabınız 48 saat içinde silinecek. Eğer 48 saat içinde bu hesaba tekrar giriş yaparsanız, hesabınız yeniden etkinleştirilecek ve silme işlemi iptal edilecek.';
+
+  @override
+  String get accountScheduledForDeletion => 'Hesap Silme Planlandı';
+
+  @override
+  String get reactivateAccount => 'Hesabı Yeniden Etkinleştir';
+
+  @override
+  String get accountReactivated => 'Tekrar hoş geldiniz! Hesabınız yeniden etkinleştirildi.';
+
+  @override
+  String get accountDeletionCancelled => 'Hesap silme işlemi iptal edildi.';
+
+  @override
+  String get emailVerificationRequired => 'E-posta Doğrulaması Gerekli';
+
+  @override
+  String get pleaseVerifyEmail => 'Devam etmek için lütfen e-posta adresinizi doğrulayın';
+
+  @override
+  String get verificationEmailSent => 'E-posta adresinize bir doğrulama bağlantısı gönderdik. Lütfen gelen kutunuzu kontrol edin ve hesabınızı doğrulamak için bağlantıya tıklayın.';
+
+  @override
+  String get waitingForVerification => 'E-posta doğrulaması bekleniyor...';
+
+  @override
+  String get checkYourEmail => 'E-postanızı kontrol edin ve doğrulama bağlantısına tıklayın';
+
+  @override
+  String get resendVerificationEmail => 'Doğrulama E-postasını Tekrar Gönder';
+
+  @override
+  String get verificationLinkAlreadySent => 'Bu e-posta adresine zaten bir doğrulama bağlantısı gönderildi. Lütfen gelen kutunuzu kontrol edin veya yeni bir tane istemeden önce birkaç dakika bekleyin.';
+
+  @override
+  String get emailVerified => 'E-posta başarıyla doğrulandı!';
+
+  @override
+  String get emailNotVerified => 'E-posta henüz doğrulanmadı. Lütfen gelen kutunuzu kontrol edin.';
+
+  @override
+  String get changeEmail => 'E-posta Değiştir';
+
+  @override
+  String get continueToApp => 'Uygulamaya Devam Et';
+
+  @override
+  String get failedToSendVerificationEmail => 'Doğrulama e-postası gönderilirken hata';
+
+  @override
+  String get failedToResendVerificationEmail => 'Doğrulama e-postası tekrar gönderilirken hata';
+
+  @override
+  String get errorCheckingVerification => 'Doğrulama kontrolü hatası';
+
+  @override
+  String get helloIAmYumie => 'Merhaba, ben Yumie! Bugün serinizi başlatmak için bir öğün kaydedin!';
+
+  @override
+  String get happyBirthday => '🎉 Doğum Günün Kutlu Olsun!';
+
+  @override
+  String birthdayMessage(int age) {
+    return 'Harika bir gün geçirmenizi umuyorum! Şimdi $age yaşındasınız.';
+  }
+
+  @override
+  String get selectBirthday => 'Doğum gününüzü seçin';
+
+  @override
+  String get day => 'Gün';
+
+  @override
+  String get accountAlreadyExists => 'Hesap zaten mevcut';
+
+  @override
+  String get accountExistsMessage => 'Bu e-posta adresiyle bir hesap zaten mevcut. Bunun yerine giriş yapmak ister misiniz?';
+
+  @override
+  String get accountUsesDifferentSignIn => 'Hesap farklı giriş yöntemi kullanıyor';
+
+  @override
+  String get emailSignedUpWithGoogle => 'Bu e-posta zaten Google ile kayıtlı. Lütfen bunun yerine \"Google ile Giriş Yap\" kullanın.';
+
+  @override
+  String get emailSignedUpWithPassword => 'Bu e-posta zaten e-posta ve şifre ile kayıtlı. Lütfen şifrenizi kullanarak giriş yapın.';
+
+  @override
+  String get useGoogleSignIn => 'Google Girişini Kullan';
+
+  @override
+  String get signInWithEmail => 'E-posta ile Giriş Yap';
 }

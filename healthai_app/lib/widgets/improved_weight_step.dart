@@ -109,7 +109,7 @@ class ImprovedWeightStep extends StatelessWidget {
               useMetric: useMetric,
               weightKg: weightKg,
               weightLb: weightLb,
-              onUnitToggle: onUnitToggle,
+              onUnitToggle: (_) {}, // lock toggle when determined by height
               onSelectKg: onSelectKg,
               onSelectLb: onSelectLb,
             ),

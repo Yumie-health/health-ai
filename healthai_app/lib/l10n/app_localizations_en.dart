@@ -566,7 +566,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get placeFoodInFrame => 'Place the food inside of the frame';
 
   @override
-  String get placeBarcodeInFrame => 'Align the barcode inside the frame';
+  String get placeBarcodeInFrame => 'Place barcode in frame and tap camera';
 
   @override
   String get placeFridgeInFrame => 'Align the fridge inside the frame';
@@ -844,7 +844,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get recentFoods => 'Recent Foods';
 
   @override
-  String get logWeightChange => 'Log Weight Change';
+  String get logWeightChange => 'Weight';
 
   @override
   String get lost => 'Lost';
@@ -1045,7 +1045,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get dailyHealthInsights => 'Daily Health Insights';
 
   @override
-  String get logWaterIntake => 'Log Water Intake';
+  String get logWaterIntake => 'Water';
 
   @override
   String get add => 'Add';
@@ -1414,10 +1414,44 @@ class AppLocalizationsEn extends AppLocalizations {
   String get redirectingToSignIn => 'Redirecting to sign-in...';
 
   @override
+  String weightTrendNoData(Object remaining, Object unit) {
+    return 'You have $remaining $unit remaining to reach your goal. Log weight entries to see your personalized trend.';
+  }
+
+  @override
+  String weightTrendHealthyRate(Object eta, Object rate, Object remaining, Object unit) {
+    return 'At a healthy rate of 0.5 $unit per week, you could reach your goal in approximately $eta. You have $remaining $unit remaining. Log weight entries to see your personalized trend.';
+  }
+
+  @override
   String get accountSuccessfullyDeleted => 'Account Successfully Deleted';
 
   @override
   String get pleaseCloseAndRestartApp => 'Please close and restart the app to continue.';
+
+  @override
+  String get exportData => 'Export Data';
+
+  @override
+  String get exportDataDescription => 'Export all your data as a PDF file';
+
+  @override
+  String get exportComplete => 'Export Complete';
+
+  @override
+  String get exportCompleteMessage => 'Your data has been exported successfully!';
+
+  @override
+  String get exportCompleteDescription => 'The PDF file has been saved to your device and can be shared or viewed.';
+
+  @override
+  String get exportFailed => 'Export Failed';
+
+  @override
+  String get exportingData => 'Exporting your data...';
+
+  @override
+  String get exportingDataDescription => 'This may take a few moments';
 
   @override
   String get restartApp => 'Restart App';
@@ -1723,7 +1757,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get startFreeTrial => 'Start Free Trial';
 
   @override
-  String get month => 'month';
+  String get month => 'Month';
 
   @override
   String get year => 'year';
@@ -2003,4 +2037,190 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get showLess => 'Show less';
+
+  @override
+  String get noSavedCustomMeals => 'You don\'t have any saved custom meals.';
+
+  @override
+  String get savedCustomMealsPlus => 'Saved custom meals +';
+
+  @override
+  String get customBuilding => 'Custom Building';
+
+  @override
+  String get enterName => 'Enter name';
+
+  @override
+  String get enterFoodName => 'Enter food name';
+
+  @override
+  String get congratulationsGoalReached => '🎉 Congratulations!';
+
+  @override
+  String get youReachedGoalWeight => 'You\'ve reached your goal weight!';
+
+  @override
+  String get switchToMaintenancePlan => 'Now that you\'ve reached your goal weight, let\'s switch your nutritional plan to maintain your weight!';
+
+  @override
+  String get letsDoIt => 'LET\'S DO IT!';
+
+  @override
+  String get keepUpGreatWork => 'Keep up the great work!';
+
+  @override
+  String get generatingMaintenancePlan => 'Generating your maintenance plan...';
+
+  @override
+  String get maintenancePlanUpdated => '🎉 Your nutritional plan has been updated for weight maintenance!';
+
+  @override
+  String get failedToGenerateMaintenancePlan => 'Failed to generate maintenance plan. Please try again.';
+
+  @override
+  String get heresYourMaintenancePlan => 'Here\'s your new maintenance plan!';
+
+  @override
+  String get keepThisPlan => 'Keep This Plan';
+
+  @override
+  String get chooseDifferentGoal => 'Choose Different Goal';
+
+  @override
+  String get whatsYourNewGoal => 'What\'s your new goal?';
+
+  @override
+  String get whatsYourNewTargetWeight => 'What\'s your new target weight?';
+
+  @override
+  String get yumieGeneratingNewPlan => 'Yumie is generating your new personalized plan...';
+
+  @override
+  String get yourNewPlanReady => 'Your new plan is ready!';
+
+  @override
+  String get startWithNewPlan => 'Start With New Plan';
+
+  @override
+  String get generateNewPlan => 'Generate New Plan';
+
+  @override
+  String get planGenerationLimitReached => 'You\'ve used your 2 plan generations for this period.';
+
+  @override
+  String get waterGoal => 'Water Goal';
+
+  @override
+  String get glasses => 'glasses';
+
+  @override
+  String planGenerationInfo(int remaining) {
+    return 'You can generate $remaining more personalized plans in the next 14 days.';
+  }
+
+  @override
+  String nextPlanAvailable(int days) {
+    return 'Try again in $days days';
+  }
+
+  @override
+  String get decline => 'Decline';
+
+  @override
+  String get planDeclined => 'Plan declined';
+
+  @override
+  String get accountDeletionWarning => 'Your account will be deleted in 48 hours. If you log back in to this account within 48 hours, it will reactivate your account and cancel the deletion.';
+
+  @override
+  String get accountScheduledForDeletion => 'Account scheduled for deletion';
+
+  @override
+  String get reactivateAccount => 'Reactivate Account';
+
+  @override
+  String get accountReactivated => 'Welcome back! Your account has been reactivated.';
+
+  @override
+  String get accountDeletionCancelled => 'Account deletion has been cancelled.';
+
+  @override
+  String get emailVerificationRequired => 'Email Verification Required';
+
+  @override
+  String get pleaseVerifyEmail => 'Please verify your email address to continue';
+
+  @override
+  String get verificationEmailSent => 'We\'ve sent a verification link to your email address. Please check your inbox and click the link to verify your account.';
+
+  @override
+  String get waitingForVerification => 'Waiting for email verification...';
+
+  @override
+  String get checkYourEmail => 'Check your email and click the verification link';
+
+  @override
+  String get resendVerificationEmail => 'Resend Verification Email';
+
+  @override
+  String get verificationLinkAlreadySent => 'A verification link has already been sent to this email address. Please check your inbox or wait a few minutes before requesting a new one.';
+
+  @override
+  String get emailVerified => 'Email verified successfully!';
+
+  @override
+  String get emailNotVerified => 'Email not verified yet. Please check your inbox.';
+
+  @override
+  String get changeEmail => 'Change Email';
+
+  @override
+  String get continueToApp => 'Continue to App';
+
+  @override
+  String get failedToSendVerificationEmail => 'Failed to send verification email';
+
+  @override
+  String get failedToResendVerificationEmail => 'Failed to resend verification email';
+
+  @override
+  String get errorCheckingVerification => 'Error checking verification';
+
+  @override
+  String get helloIAmYumie => 'Hello, I am Yumie! Log a meal to start your streak today!';
+
+  @override
+  String get happyBirthday => '🎉 Happy Birthday!';
+
+  @override
+  String birthdayMessage(int age) {
+    return 'Hope you have a wonderful day! You\'re now $age years old.';
+  }
+
+  @override
+  String get selectBirthday => 'Select your birthday';
+
+  @override
+  String get day => 'Day';
+
+  @override
+  String get accountAlreadyExists => 'Account Already Exists';
+
+  @override
+  String get accountExistsMessage => 'An account with this email address already exists. Would you like to sign in instead?';
+
+  @override
+  String get accountUsesDifferentSignIn => 'Account Uses Different Sign-In Method';
+
+  @override
+  String get emailSignedUpWithGoogle => 'This email is already signed up with Google. Please use \"Sign in with Google\" instead.';
+
+  @override
+  String get emailSignedUpWithPassword => 'This email is already signed up with email and password. Please sign in using your password instead.';
+
+  @override
+  String get useGoogleSignIn => 'Use Google Sign-In';
+
+  @override
+  String get signInWithEmail => 'Sign In with Email';
 }

@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:provider/provider.dart';
 import '../l10n/app_localizations.dart';
 import '../utils/constants.dart';
+import '../providers/preferences_provider.dart';
 
 class QuantitySelectionDialog extends StatefulWidget {
   final String foodName;
@@ -134,7 +136,10 @@ class _QuantitySelectionDialogState extends State<QuantitySelectionDialog>
       case 'meal':
         return AppLocalizations.of(context)!.servings;
       case 'drink':
-        return AppLocalizations.of(context)!.fluidOunces;
+        // Use unit system: US -> L, others -> fl oz
+        final prefs = Provider.of<PreferencesProvider>(context, listen: false);
+        final bool isUS = !prefs.useMetric;
+        return isUS ? 'L' : AppLocalizations.of(context)!.fluidOunces;
       default:
         return AppLocalizations.of(context)!.quantity;
     }
@@ -147,7 +152,10 @@ class _QuantitySelectionDialogState extends State<QuantitySelectionDialog>
       case 'meal':
         return AppLocalizations.of(context)!.servings;
       case 'drink':
-        return 'fl oz';
+        // Use unit system: US -> L, others -> fl oz
+        final prefs = Provider.of<PreferencesProvider>(context, listen: false);
+        final bool isUS = !prefs.useMetric;
+        return isUS ? 'L' : 'fl oz';
       default:
         return '';
     }

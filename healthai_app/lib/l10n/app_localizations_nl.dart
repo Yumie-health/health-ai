@@ -66,52 +66,52 @@ class AppLocalizationsNl extends AppLocalizations {
   String get trackNutritionToday => 'Let\'s track your nutrition today';
 
   @override
-  String get subtitleAfternoon => 'Perfect time to log your lunch and keep it balanced.';
+  String get subtitleAfternoon => 'Goedemiddag';
 
   @override
-  String get subtitleEvening => 'Stay on track this evening—log your meals.';
+  String get subtitleEvening => 'Goedenavond';
 
   @override
-  String get subtitleNight => 'Wrap up your day—don\'t forget to log today\'s meals.';
+  String get subtitleNight => 'Goedenacht';
 
   @override
-  String get streakNearEndingTitle => 'Keep Your Streak 🔥';
+  String get streakNearEndingTitle => 'Je reeks eindigt bijna';
 
   @override
-  String get streakNearEndingBody => 'Your streak is about to end. Log a meal today to keep it alive!';
+  String get streakNearEndingBody => 'Log vandaag nog een maaltijd om je streak te behouden.';
 
   @override
-  String get streakNearEndingTitle2 => 'Almost There! 🔥';
+  String get streakNearEndingTitle2 => 'Bijna klaar!';
 
   @override
-  String get streakNearEndingBody2 => 'Only a couple hours left. Log a meal to save your streak!';
+  String get streakNearEndingBody2 => 'Nog één logboek om de reeks te behouden.';
 
   @override
-  String get streakEndedTitle => 'Streak Ended';
+  String get streakEndedTitle => 'Reeks beëindigd';
 
   @override
-  String get streakEndedBody => 'Your streak ended. Log a meal to restart and build it back up!';
+  String get streakEndedBody => 'Begin vandaag opnieuw en pak je momentum terug.';
 
   @override
-  String get streakActive => 'Streak Active';
+  String get streakActive => 'Actief';
 
   @override
-  String get streakInactive => 'Streak Inactive';
+  String get streakInactive => 'Inactief';
 
   @override
-  String get currentStreak => 'Current Streak';
+  String get currentStreak => 'Huidige reeks';
 
   @override
-  String get entriesInStreak => 'Entries in Streak';
+  String get entriesInStreak => 'Inzendingen in reeks';
 
   @override
-  String get days => 'days';
+  String get days => 'dagen';
 
   @override
-  String get startedOn => 'Started on';
+  String get startedOn => 'Begonnen op';
 
   @override
-  String get logMealToStartStreak => 'Log a meal today to start your streak';
+  String get logMealToStartStreak => 'Log een maaltijd om een reeks te starten';
 
   @override
   String get nutritionSummary => 'Nutrition Summary';
@@ -162,53 +162,53 @@ class AppLocalizationsNl extends AppLocalizations {
   String get nutritionalPlan => 'Nutritional Plan';
 
   @override
-  String get weightAnalytics => 'Weight Analytics';
+  String get weightAnalytics => 'Gewichtsanalyse';
 
   @override
-  String get toGoal => 'TO GOAL';
+  String get toGoal => 'tot doel';
 
   @override
-  String get remaining => 'remaining';
+  String get remaining => 'resterend';
 
   @override
-  String get weeklyRate => 'WEEKLY RATE';
+  String get weeklyRate => 'wekelijks tempo';
 
   @override
-  String get weeklyLoss => 'weekly loss';
+  String get weeklyLoss => 'wekelijkse afname';
 
   @override
-  String get starting => 'STARTING';
+  String get starting => 'start';
 
   @override
-  String get current => 'CURRENT';
+  String get current => 'huidig';
 
   @override
-  String get today => 'today';
+  String get today => 'vandaag';
 
   @override
-  String get targetLabel => 'TARGET';
+  String get targetLabel => 'DOEL';
 
   @override
-  String get goalWeight => 'goal weight';
+  String get goalWeight => 'streefgewicht';
 
   @override
   String get eta => 'ETA';
 
   @override
-  String get sinceStart => 'since start';
+  String get sinceStart => 'sinds begin';
 
   @override
-  String get expectationsDisclaimer => 'These expectations are based on your recent trend and can change as you log new weights.';
+  String get expectationsDisclaimer => 'Deze verwachtingen zijn gebaseerd op je recente trend en kunnen veranderen naarmate je nieuwe gewichten logt.';
 
   @override
-  String get loseVerb => 'lose';
+  String get loseVerb => 'afvallen';
 
   @override
-  String get gainVerb => 'gain';
+  String get gainVerb => 'aankomen';
 
   @override
   String expectationBlurb(Object direction, Object eta, Object rate, Object remaining, Object unit) {
-    return 'Based on your recent trend, you are on track to $direction about $rate $unit per week. At this pace, it will take roughly $eta to reach your target. You have $remaining $unit remaining.';
+    return 'Op basis van je recente trend ben je op schema om ongeveer $rate $unit per week te $direction. In dit tempo duurt het ongeveer $eta om je doel te bereiken. Je hebt nog $remaining $unit te gaan.';
   }
 
   @override
@@ -602,13 +602,13 @@ class AppLocalizationsNl extends AppLocalizations {
   String get kcalPer100g => 'kcal/100g';
 
   @override
-  String get sugar => 'Sugar';
+  String get sugar => 'Suiker';
 
   @override
   String get satFat => 'Verz. vet';
 
   @override
-  String get salt => 'Salt';
+  String get salt => 'Zout';
 
   @override
   String get ingredientsTitle => 'Ingrediënten';
@@ -844,7 +844,7 @@ class AppLocalizationsNl extends AppLocalizations {
   String get recentFoods => 'Recente Voedingsmiddelen';
 
   @override
-  String get logWeightChange => 'Gewichtsverandering loggen';
+  String get logWeightChange => 'Gewicht';
 
   @override
   String get lost => 'Verloren';
@@ -1045,10 +1045,10 @@ class AppLocalizationsNl extends AppLocalizations {
   String get dailyHealthInsights => 'Dagelijkse Gezondheidsinzichten';
 
   @override
-  String get logWaterIntake => 'Waterinname loggen';
+  String get logWaterIntake => 'Water';
 
   @override
-  String get add => 'Toevoegen';
+  String get add => '+';
 
   @override
   String get freemium => 'Freemium';
@@ -1150,16 +1150,16 @@ class AppLocalizationsNl extends AppLocalizations {
   String get permissionsNextScreen => 'Op het volgende scherm zie je systeemprompts om toegang te verlenen. Je kunt dit later altijd wijzigen in Instellingen.';
 
   @override
-  String get references => 'References:';
+  String get references => 'Referenties';
 
   @override
-  String get cdcAboutBmi => 'CDC: About BMI';
+  String get cdcAboutBmi => 'CDC: Over BMI';
 
   @override
-  String get usdaDietaryGuidelines => 'USDA Dietary Guidelines';
+  String get usdaDietaryGuidelines => 'USDA Voedingsrichtlijnen';
 
   @override
-  String get termsOfUseEula => 'Terms of Use (EULA)';
+  String get termsOfUseEula => 'EULA';
 
   @override
   String get enterYourPassword => 'Voer je wachtwoord in';
@@ -1414,10 +1414,44 @@ class AppLocalizationsNl extends AppLocalizations {
   String get redirectingToSignIn => 'Doorverwijzen naar inloggen...';
 
   @override
+  String weightTrendNoData(Object remaining, Object unit) {
+    return 'Onvoldoende gewichtgegevens.';
+  }
+
+  @override
+  String weightTrendHealthyRate(Object eta, Object rate, Object remaining, Object unit) {
+    return 'Gezond tempo: $rate$unit/week';
+  }
+
+  @override
   String get accountSuccessfullyDeleted => 'Account succesvol verwijderd';
 
   @override
   String get pleaseCloseAndRestartApp => 'Sluit en herstart de app om door te gaan.';
+
+  @override
+  String get exportData => 'Gegevens Exporteren';
+
+  @override
+  String get exportDataDescription => 'Exporteer al je gegevens als PDF-bestand';
+
+  @override
+  String get exportComplete => 'Export Voltooid';
+
+  @override
+  String get exportCompleteMessage => 'Je gegevens zijn succesvol geëxporteerd!';
+
+  @override
+  String get exportCompleteDescription => 'Het PDF-bestand is opgeslagen op je apparaat en kan worden gedeeld of bekeken.';
+
+  @override
+  String get exportFailed => 'Export Mislukt';
+
+  @override
+  String get exportingData => 'Gegevens exporteren...';
+
+  @override
+  String get exportingDataDescription => 'Dit kan even duren';
 
   @override
   String get restartApp => 'App herstarten';
@@ -1723,7 +1757,7 @@ class AppLocalizationsNl extends AppLocalizations {
   String get startFreeTrial => 'Start gratis proefperiode';
 
   @override
-  String get month => 'maand';
+  String get month => 'Maand';
 
   @override
   String get year => 'jaar';
@@ -1792,7 +1826,7 @@ class AppLocalizationsNl extends AppLocalizations {
   String get errorOpeningPlayStore => 'Fout bij openen Play Store';
 
   @override
-  String get remove => 'Verwijderen';
+  String get remove => '-';
 
   @override
   String get couldNotOpenLink => 'Kon link niet openen';
@@ -1987,20 +2021,206 @@ class AppLocalizationsNl extends AppLocalizations {
   String get consentFlowCompleted => 'Toestemmingsproces voltooid!';
 
   @override
-  String get appleSignInFailed => 'Apple sign-in failed';
+  String get appleSignInFailed => 'Apple-aanmelding mislukt';
 
   @override
-  String get adFailedToShow => 'Ad failed to show. Please try again.';
+  String get adFailedToShow => 'Advertentie kon niet worden weergegeven';
 
   @override
-  String get adNotLoadedYet => 'Ad not loaded yet. Please try again.';
+  String get adNotLoadedYet => 'Advertentie nog niet geladen';
 
   @override
-  String get errorRequestingPermissions => 'Error requesting permissions';
+  String get errorRequestingPermissions => 'Fout bij het aanvragen van machtigingen';
 
   @override
-  String get showMore => 'Show more';
+  String get showMore => 'Meer weergeven';
 
   @override
-  String get showLess => 'Show less';
+  String get showLess => 'Minder weergeven';
+
+  @override
+  String get noSavedCustomMeals => 'Je hebt geen opgeslagen aangepaste maaltijden.';
+
+  @override
+  String get savedCustomMealsPlus => 'Opgeslagen aangepaste maaltijden +';
+
+  @override
+  String get customBuilding => 'Aangepaste Maaltijd Maken';
+
+  @override
+  String get enterName => 'Voer naam in';
+
+  @override
+  String get enterFoodName => 'Voer voedingsnaam in';
+
+  @override
+  String get congratulationsGoalReached => '🎉 Gefeliciteerd!';
+
+  @override
+  String get youReachedGoalWeight => 'Je hebt je streefgewicht bereikt!';
+
+  @override
+  String get switchToMaintenancePlan => 'Laten we nu overschakelen naar een onderhoudsplan!';
+
+  @override
+  String get letsDoIt => 'Laten we het doen!';
+
+  @override
+  String get keepUpGreatWork => 'Ga zo door!';
+
+  @override
+  String get generatingMaintenancePlan => 'Onderhoudsplan genereren...';
+
+  @override
+  String get maintenancePlanUpdated => '🎉 Je voedingsplan is bijgewerkt voor onderhoud!';
+
+  @override
+  String get failedToGenerateMaintenancePlan => 'Het genereren van het onderhoudsplan is mislukt. Probeer het opnieuw.';
+
+  @override
+  String get heresYourMaintenancePlan => 'Hier is je nieuwe onderhoudsplan!';
+
+  @override
+  String get keepThisPlan => 'Dit plan behouden';
+
+  @override
+  String get chooseDifferentGoal => 'Ander doel kiezen';
+
+  @override
+  String get whatsYourNewGoal => 'Wat is je nieuwe doel?';
+
+  @override
+  String get whatsYourNewTargetWeight => 'Wat is je nieuwe streefgewicht?';
+
+  @override
+  String get yumieGeneratingNewPlan => 'Yumie genereert je nieuwe persoonlijke plan...';
+
+  @override
+  String get yourNewPlanReady => 'Je nieuwe plan is klaar!';
+
+  @override
+  String get startWithNewPlan => 'Begin met Nieuw Plan';
+
+  @override
+  String get generateNewPlan => 'Nieuw Plan Genereren';
+
+  @override
+  String get planGenerationLimitReached => 'Je hebt je 2 plan-generaties voor deze periode gebruikt.';
+
+  @override
+  String get waterGoal => 'Waterdoel';
+
+  @override
+  String get glasses => 'glazen';
+
+  @override
+  String planGenerationInfo(int remaining) {
+    return 'Je kunt de komende 14 dagen nog $remaining persoonlijke plannen genereren.';
+  }
+
+  @override
+  String nextPlanAvailable(int days) {
+    return 'Probeer het over $days dagen opnieuw';
+  }
+
+  @override
+  String get decline => 'Weigeren';
+
+  @override
+  String get planDeclined => 'Plan geweigerd';
+
+  @override
+  String get accountDeletionWarning => 'Je account wordt over 48 uur verwijderd. Als je binnen 48 uur opnieuw inlogt op dit account, wordt het gereactiveerd en wordt de verwijdering geannuleerd.';
+
+  @override
+  String get accountScheduledForDeletion => 'Account Gepland voor Verwijdering';
+
+  @override
+  String get reactivateAccount => 'Account Reactiveren';
+
+  @override
+  String get accountReactivated => 'Welkom terug! Je account is gereactiveerd.';
+
+  @override
+  String get accountDeletionCancelled => 'Accountverwijdering is geannuleerd.';
+
+  @override
+  String get emailVerificationRequired => 'E-mailverificatie Vereist';
+
+  @override
+  String get pleaseVerifyEmail => 'Verifieer je e-mailadres om door te gaan';
+
+  @override
+  String get verificationEmailSent => 'We hebben een verificatielink naar je e-mail gestuurd. Controleer je inbox en klik op de link om je account te verifiëren.';
+
+  @override
+  String get waitingForVerification => 'Wachten op e-mailverificatie...';
+
+  @override
+  String get checkYourEmail => 'Controleer je e-mail en klik op de verificatielink';
+
+  @override
+  String get resendVerificationEmail => 'Verificatie-e-mail Opnieuw Verzenden';
+
+  @override
+  String get verificationLinkAlreadySent => 'Er is al een verificatielink naar dit e-mailadres verzonden. Controleer je inbox of wacht een paar minuten voordat je een nieuwe aanvraagt.';
+
+  @override
+  String get emailVerified => 'E-mail succesvol geverifieerd!';
+
+  @override
+  String get emailNotVerified => 'E-mail nog niet geverifieerd. Controleer je inbox.';
+
+  @override
+  String get changeEmail => 'E-mail Wijzigen';
+
+  @override
+  String get continueToApp => 'Doorgaan naar App';
+
+  @override
+  String get failedToSendVerificationEmail => 'Fout bij verzenden verificatie-e-mail';
+
+  @override
+  String get failedToResendVerificationEmail => 'Fout bij opnieuw verzenden verificatie-e-mail';
+
+  @override
+  String get errorCheckingVerification => 'Fout bij controleren verificatie';
+
+  @override
+  String get helloIAmYumie => 'Hallo, ik ben Yumie! Log een maaltijd om vandaag je streak te beginnen!';
+
+  @override
+  String get happyBirthday => '🎉 Gelukkige Verjaardag!';
+
+  @override
+  String birthdayMessage(int age) {
+    return 'Ik hoop dat je een geweldige dag hebt! Je bent nu $age jaar oud.';
+  }
+
+  @override
+  String get selectBirthday => 'Selecteer je verjaardag';
+
+  @override
+  String get day => 'Dag';
+
+  @override
+  String get accountAlreadyExists => 'Account bestaat al';
+
+  @override
+  String get accountExistsMessage => 'Een account met dit e-mailadres bestaat al. Wil je in plaats daarvan inloggen?';
+
+  @override
+  String get accountUsesDifferentSignIn => 'Account gebruikt andere aanmeldingsmethode';
+
+  @override
+  String get emailSignedUpWithGoogle => 'Deze e-mail is al geregistreerd met Google. Gebruik in plaats daarvan \"Inloggen met Google\".';
+
+  @override
+  String get emailSignedUpWithPassword => 'Deze e-mail is al geregistreerd met e-mail en wachtwoord. Log in met je wachtwoord.';
+
+  @override
+  String get useGoogleSignIn => 'Google-aanmelding gebruiken';
+
+  @override
+  String get signInWithEmail => 'Inloggen met e-mail';
 }

@@ -1230,7 +1230,7 @@ abstract class AppLocalizations {
   /// No description provided for @placeBarcodeInFrame.
   ///
   /// In en, this message translates to:
-  /// **'Align the barcode inside the frame'**
+  /// **'Place barcode in frame and tap camera'**
   String get placeBarcodeInFrame;
 
   /// No description provided for @placeFridgeInFrame.
@@ -1782,7 +1782,7 @@ abstract class AppLocalizations {
   /// No description provided for @logWeightChange.
   ///
   /// In en, this message translates to:
-  /// **'Log Weight Change'**
+  /// **'Weight'**
   String get logWeightChange;
 
   /// No description provided for @lost.
@@ -2184,7 +2184,7 @@ abstract class AppLocalizations {
   /// No description provided for @logWaterIntake.
   ///
   /// In en, this message translates to:
-  /// **'Log Water Intake'**
+  /// **'Water'**
   String get logWaterIntake;
 
   /// No description provided for @add.
@@ -2919,6 +2919,18 @@ abstract class AppLocalizations {
   /// **'Redirecting to sign-in...'**
   String get redirectingToSignIn;
 
+  /// No description provided for @weightTrendNoData.
+  ///
+  /// In en, this message translates to:
+  /// **'You have {remaining} {unit} remaining to reach your goal. Log weight entries to see your personalized trend.'**
+  String weightTrendNoData(Object remaining, Object unit);
+
+  /// No description provided for @weightTrendHealthyRate.
+  ///
+  /// In en, this message translates to:
+  /// **'At a healthy rate of 0.5 {unit} per week, you could reach your goal in approximately {eta}. You have {remaining} {unit} remaining. Log weight entries to see your personalized trend.'**
+  String weightTrendHealthyRate(Object eta, Object rate, Object remaining, Object unit);
+
   /// No description provided for @accountSuccessfullyDeleted.
   ///
   /// In en, this message translates to:
@@ -2930,6 +2942,54 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Please close and restart the app to continue.'**
   String get pleaseCloseAndRestartApp;
+
+  /// No description provided for @exportData.
+  ///
+  /// In en, this message translates to:
+  /// **'Export Data'**
+  String get exportData;
+
+  /// No description provided for @exportDataDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Export all your data as a PDF file'**
+  String get exportDataDescription;
+
+  /// No description provided for @exportComplete.
+  ///
+  /// In en, this message translates to:
+  /// **'Export Complete'**
+  String get exportComplete;
+
+  /// No description provided for @exportCompleteMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Your data has been exported successfully!'**
+  String get exportCompleteMessage;
+
+  /// No description provided for @exportCompleteDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'The PDF file has been saved to your device and can be shared or viewed.'**
+  String get exportCompleteDescription;
+
+  /// No description provided for @exportFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Export Failed'**
+  String get exportFailed;
+
+  /// No description provided for @exportingData.
+  ///
+  /// In en, this message translates to:
+  /// **'Exporting your data...'**
+  String get exportingData;
+
+  /// No description provided for @exportingDataDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'This may take a few moments'**
+  String get exportingDataDescription;
 
   /// No description provided for @restartApp.
   ///
@@ -3540,7 +3600,7 @@ abstract class AppLocalizations {
   /// No description provided for @month.
   ///
   /// In en, this message translates to:
-  /// **'month'**
+  /// **'Month'**
   String get month;
 
   /// No description provided for @year.
@@ -4100,6 +4160,366 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Show less'**
   String get showLess;
+
+  /// No description provided for @noSavedCustomMeals.
+  ///
+  /// In en, this message translates to:
+  /// **'You don\'t have any saved custom meals.'**
+  String get noSavedCustomMeals;
+
+  /// No description provided for @savedCustomMealsPlus.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved custom meals +'**
+  String get savedCustomMealsPlus;
+
+  /// No description provided for @customBuilding.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom Building'**
+  String get customBuilding;
+
+  /// No description provided for @enterName.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter name'**
+  String get enterName;
+
+  /// No description provided for @enterFoodName.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter food name'**
+  String get enterFoodName;
+
+  /// No description provided for @congratulationsGoalReached.
+  ///
+  /// In en, this message translates to:
+  /// **'🎉 Congratulations!'**
+  String get congratulationsGoalReached;
+
+  /// No description provided for @youReachedGoalWeight.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'ve reached your goal weight!'**
+  String get youReachedGoalWeight;
+
+  /// No description provided for @switchToMaintenancePlan.
+  ///
+  /// In en, this message translates to:
+  /// **'Now that you\'ve reached your goal weight, let\'s switch your nutritional plan to maintain your weight!'**
+  String get switchToMaintenancePlan;
+
+  /// No description provided for @letsDoIt.
+  ///
+  /// In en, this message translates to:
+  /// **'LET\'S DO IT!'**
+  String get letsDoIt;
+
+  /// No description provided for @keepUpGreatWork.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep up the great work!'**
+  String get keepUpGreatWork;
+
+  /// No description provided for @generatingMaintenancePlan.
+  ///
+  /// In en, this message translates to:
+  /// **'Generating your maintenance plan...'**
+  String get generatingMaintenancePlan;
+
+  /// No description provided for @maintenancePlanUpdated.
+  ///
+  /// In en, this message translates to:
+  /// **'🎉 Your nutritional plan has been updated for weight maintenance!'**
+  String get maintenancePlanUpdated;
+
+  /// No description provided for @failedToGenerateMaintenancePlan.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to generate maintenance plan. Please try again.'**
+  String get failedToGenerateMaintenancePlan;
+
+  /// No description provided for @heresYourMaintenancePlan.
+  ///
+  /// In en, this message translates to:
+  /// **'Here\'s your new maintenance plan!'**
+  String get heresYourMaintenancePlan;
+
+  /// No description provided for @keepThisPlan.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep This Plan'**
+  String get keepThisPlan;
+
+  /// No description provided for @chooseDifferentGoal.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose Different Goal'**
+  String get chooseDifferentGoal;
+
+  /// No description provided for @whatsYourNewGoal.
+  ///
+  /// In en, this message translates to:
+  /// **'What\'s your new goal?'**
+  String get whatsYourNewGoal;
+
+  /// No description provided for @whatsYourNewTargetWeight.
+  ///
+  /// In en, this message translates to:
+  /// **'What\'s your new target weight?'**
+  String get whatsYourNewTargetWeight;
+
+  /// No description provided for @yumieGeneratingNewPlan.
+  ///
+  /// In en, this message translates to:
+  /// **'Yumie is generating your new personalized plan...'**
+  String get yumieGeneratingNewPlan;
+
+  /// No description provided for @yourNewPlanReady.
+  ///
+  /// In en, this message translates to:
+  /// **'Your new plan is ready!'**
+  String get yourNewPlanReady;
+
+  /// No description provided for @startWithNewPlan.
+  ///
+  /// In en, this message translates to:
+  /// **'Start With New Plan'**
+  String get startWithNewPlan;
+
+  /// No description provided for @generateNewPlan.
+  ///
+  /// In en, this message translates to:
+  /// **'Generate New Plan'**
+  String get generateNewPlan;
+
+  /// No description provided for @planGenerationLimitReached.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'ve used your 2 plan generations for this period.'**
+  String get planGenerationLimitReached;
+
+  /// No description provided for @waterGoal.
+  ///
+  /// In en, this message translates to:
+  /// **'Water Goal'**
+  String get waterGoal;
+
+  /// No description provided for @glasses.
+  ///
+  /// In en, this message translates to:
+  /// **'glasses'**
+  String get glasses;
+
+  /// No description provided for @planGenerationInfo.
+  ///
+  /// In en, this message translates to:
+  /// **'You can generate {remaining} more personalized plans in the next 14 days.'**
+  String planGenerationInfo(int remaining);
+
+  /// No description provided for @nextPlanAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Try again in {days} days'**
+  String nextPlanAvailable(int days);
+
+  /// No description provided for @decline.
+  ///
+  /// In en, this message translates to:
+  /// **'Decline'**
+  String get decline;
+
+  /// No description provided for @planDeclined.
+  ///
+  /// In en, this message translates to:
+  /// **'Plan declined'**
+  String get planDeclined;
+
+  /// No description provided for @accountDeletionWarning.
+  ///
+  /// In en, this message translates to:
+  /// **'Your account will be deleted in 48 hours. If you log back in to this account within 48 hours, it will reactivate your account and cancel the deletion.'**
+  String get accountDeletionWarning;
+
+  /// No description provided for @accountScheduledForDeletion.
+  ///
+  /// In en, this message translates to:
+  /// **'Account scheduled for deletion'**
+  String get accountScheduledForDeletion;
+
+  /// No description provided for @reactivateAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Reactivate Account'**
+  String get reactivateAccount;
+
+  /// No description provided for @accountReactivated.
+  ///
+  /// In en, this message translates to:
+  /// **'Welcome back! Your account has been reactivated.'**
+  String get accountReactivated;
+
+  /// No description provided for @accountDeletionCancelled.
+  ///
+  /// In en, this message translates to:
+  /// **'Account deletion has been cancelled.'**
+  String get accountDeletionCancelled;
+
+  /// No description provided for @emailVerificationRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Email Verification Required'**
+  String get emailVerificationRequired;
+
+  /// No description provided for @pleaseVerifyEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Please verify your email address to continue'**
+  String get pleaseVerifyEmail;
+
+  /// No description provided for @verificationEmailSent.
+  ///
+  /// In en, this message translates to:
+  /// **'We\'ve sent a verification link to your email address. Please check your inbox and click the link to verify your account.'**
+  String get verificationEmailSent;
+
+  /// No description provided for @waitingForVerification.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for email verification...'**
+  String get waitingForVerification;
+
+  /// No description provided for @checkYourEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Check your email and click the verification link'**
+  String get checkYourEmail;
+
+  /// No description provided for @resendVerificationEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Resend Verification Email'**
+  String get resendVerificationEmail;
+
+  /// No description provided for @verificationLinkAlreadySent.
+  ///
+  /// In en, this message translates to:
+  /// **'A verification link has already been sent to this email address. Please check your inbox or wait a few minutes before requesting a new one.'**
+  String get verificationLinkAlreadySent;
+
+  /// No description provided for @emailVerified.
+  ///
+  /// In en, this message translates to:
+  /// **'Email verified successfully!'**
+  String get emailVerified;
+
+  /// No description provided for @emailNotVerified.
+  ///
+  /// In en, this message translates to:
+  /// **'Email not verified yet. Please check your inbox.'**
+  String get emailNotVerified;
+
+  /// No description provided for @changeEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Change Email'**
+  String get changeEmail;
+
+  /// No description provided for @continueToApp.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue to App'**
+  String get continueToApp;
+
+  /// No description provided for @failedToSendVerificationEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to send verification email'**
+  String get failedToSendVerificationEmail;
+
+  /// No description provided for @failedToResendVerificationEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to resend verification email'**
+  String get failedToResendVerificationEmail;
+
+  /// No description provided for @errorCheckingVerification.
+  ///
+  /// In en, this message translates to:
+  /// **'Error checking verification'**
+  String get errorCheckingVerification;
+
+  /// No description provided for @helloIAmYumie.
+  ///
+  /// In en, this message translates to:
+  /// **'Hello, I am Yumie! Log a meal to start your streak today!'**
+  String get helloIAmYumie;
+
+  /// No description provided for @happyBirthday.
+  ///
+  /// In en, this message translates to:
+  /// **'🎉 Happy Birthday!'**
+  String get happyBirthday;
+
+  /// No description provided for @birthdayMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Hope you have a wonderful day! You\'re now {age} years old.'**
+  String birthdayMessage(int age);
+
+  /// No description provided for @selectBirthday.
+  ///
+  /// In en, this message translates to:
+  /// **'Select your birthday'**
+  String get selectBirthday;
+
+  /// No description provided for @day.
+  ///
+  /// In en, this message translates to:
+  /// **'Day'**
+  String get day;
+
+  /// No description provided for @accountAlreadyExists.
+  ///
+  /// In en, this message translates to:
+  /// **'Account Already Exists'**
+  String get accountAlreadyExists;
+
+  /// No description provided for @accountExistsMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'An account with this email address already exists. Would you like to sign in instead?'**
+  String get accountExistsMessage;
+
+  /// No description provided for @accountUsesDifferentSignIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Account Uses Different Sign-In Method'**
+  String get accountUsesDifferentSignIn;
+
+  /// No description provided for @emailSignedUpWithGoogle.
+  ///
+  /// In en, this message translates to:
+  /// **'This email is already signed up with Google. Please use \"Sign in with Google\" instead.'**
+  String get emailSignedUpWithGoogle;
+
+  /// No description provided for @emailSignedUpWithPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'This email is already signed up with email and password. Please sign in using your password instead.'**
+  String get emailSignedUpWithPassword;
+
+  /// No description provided for @useGoogleSignIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Use Google Sign-In'**
+  String get useGoogleSignIn;
+
+  /// No description provided for @signInWithEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign In with Email'**
+  String get signInWithEmail;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

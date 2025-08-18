@@ -39,24 +39,58 @@ class BarcodeScannerService {
 	Future<String?> processCameraImage(CameraImage image, {required InputImageRotation rotation}) async {
 		if (_isClosed) return null;
 
-		// Simpler: first plane with bytesPerRow; try multiple rotations for reliability
-		final Uint8List bytes = image.planes.first.bytes;
-		final ui.Size imageSize = ui.Size(image.width.toDouble(), image.height.toDouble());
-		for (final r in <InputImageRotation>{rotation, InputImageRotation.rotation90deg, InputImageRotation.rotation180deg, InputImageRotation.rotation270deg}) {
-			final inputImageData = InputImageMetadata(
-				size: imageSize,
-				rotation: r,
-				format: InputImageFormat.nv21,
-				bytesPerRow: image.planes.first.bytesPerRow,
-			);
-			final inputImage = InputImage.fromBytes(bytes: bytes, metadata: inputImageData);
-			final barcodes = await _scanner.processImage(inputImage);
-			for (final b in barcodes) {
-				final raw = b.rawValue?.trim();
-				if (raw != null && raw.isNotEmpty) {
-					return raw;
+		try {
+			// Validate image data
+			if (image.planes.isEmpty) return null;
+			if (image.width <= 0 || image.height <= 0) return null;
+			
+			final plane = image.planes.first;
+			if (plane.bytes.isEmpty) return null;
+			if (plane.bytesPerRow <= 0) return null;
+			
+			final Uint8List bytes = plane.bytes;
+			final ui.Size imageSize = ui.Size(image.width.toDouble(), image.height.toDouble());
+			
+			// Try different image formats for iOS compatibility
+			final formats = [
+				InputImageFormat.nv21,
+				InputImageFormat.bgra8888,
+				InputImageFormat.yuv420,
+			];
+			
+			for (final format in formats) {
+				try {
+					for (final r in <InputImageRotation>{rotation, InputImageRotation.rotation90deg, InputImageRotation.rotation180deg, InputImageRotation.rotation270deg}) {
+						final inputImageData = InputImageMetadata(
+							size: imageSize,
+							rotation: r,
+							format: format,
+							bytesPerRow: plane.bytesPerRow,
+						);
+						
+						// Additional validation before creating InputImage
+						if (bytes.length < (imageSize.width * imageSize.height * 1.5).toInt()) {
+							continue; // Skip if buffer is too small
+						}
+						
+						final inputImage = InputImage.fromBytes(bytes: bytes, metadata: inputImageData);
+						final barcodes = await _scanner.processImage(inputImage);
+						
+						for (final b in barcodes) {
+							final raw = b.rawValue?.trim();
+							if (raw != null && raw.isNotEmpty) {
+								return raw;
+							}
+						}
+					}
+				} catch (e) {
+					// Continue to next format if this one fails
+					continue;
 				}
 			}
+		} catch (e) {
+			// Log error for debugging but don't crash
+			print('BarcodeScannerService: Error processing image: $e');
 		}
 		return null;
 	}
@@ -64,44 +98,94 @@ class BarcodeScannerService {
 	/// Returns lightweight guidance data for UI (presence + relative size), without decoding result handling.
 	Future<BarcodeGuidance?> processCameraImageForGuidance(CameraImage image, {required InputImageRotation rotation}) async {
 		if (_isClosed) return null;
-		final Uint8List bytes = image.planes.first.bytes;
-		final ui.Size imageSize = ui.Size(image.width.toDouble(), image.height.toDouble());
-		final inputImageData = InputImageMetadata(
-			size: imageSize,
-			rotation: rotation,
-			format: InputImageFormat.nv21,
-			bytesPerRow: image.planes.first.bytesPerRow,
-		);
-		final inputImage = InputImage.fromBytes(bytes: bytes, metadata: inputImageData);
-		final barcodes = await _scanner.processImage(inputImage);
-		if (barcodes.isEmpty) return const BarcodeGuidance(hasBarcode: false);
-		// Choose the largest barcode by width as the primary target
-		double maxWidth = 0;
-		ui.Rect? maxBox;
-		for (final b in barcodes) {
-			final box = b.boundingBox;
-			final w = box?.width ?? 0;
-			if (w > maxWidth) {
-				maxWidth = w;
-				maxBox = box;
+		
+		try {
+			// Validate image data
+			if (image.planes.isEmpty) return const BarcodeGuidance(hasBarcode: false);
+			if (image.width <= 0 || image.height <= 0) return const BarcodeGuidance(hasBarcode: false);
+			
+			final plane = image.planes.first;
+			if (plane.bytes.isEmpty) return const BarcodeGuidance(hasBarcode: false);
+			if (plane.bytesPerRow <= 0) return const BarcodeGuidance(hasBarcode: false);
+			
+			final Uint8List bytes = plane.bytes;
+			final ui.Size imageSize = ui.Size(image.width.toDouble(), image.height.toDouble());
+			
+			// Try different image formats for iOS compatibility
+			final formats = [
+				InputImageFormat.nv21,
+				InputImageFormat.bgra8888,
+				InputImageFormat.yuv420,
+			];
+			
+			for (final format in formats) {
+				try {
+					final inputImageData = InputImageMetadata(
+						size: imageSize,
+						rotation: rotation,
+						format: format,
+						bytesPerRow: plane.bytesPerRow,
+					);
+					
+					// Additional validation before creating InputImage
+					if (bytes.length < (imageSize.width * imageSize.height * 1.5).toInt()) {
+						continue; // Skip if buffer is too small
+					}
+					
+					final inputImage = InputImage.fromBytes(bytes: bytes, metadata: inputImageData);
+					final barcodes = await _scanner.processImage(inputImage);
+					
+					if (barcodes.isEmpty) return const BarcodeGuidance(hasBarcode: false);
+					
+					// Choose the largest barcode by width as the primary target
+					double maxWidth = 0;
+					ui.Rect? maxBox;
+					for (final b in barcodes) {
+						final box = b.boundingBox;
+						final w = box?.width ?? 0;
+						if (w > maxWidth) {
+							maxWidth = w;
+							maxBox = box;
+						}
+					}
+					final double widthFraction = imageSize.width == 0
+						? 0.0
+						: ((maxWidth / imageSize.width).clamp(0.0, 1.0) as double);
+					return BarcodeGuidance(hasBarcode: true, widthFraction: widthFraction, boundingBox: maxBox);
+				} catch (e) {
+					// Continue to next format if this one fails
+					continue;
+				}
 			}
+		} catch (e) {
+			// Log error for debugging but don't crash
+			print('BarcodeScannerService: Error processing image for guidance: $e');
 		}
-		final double widthFraction = imageSize.width == 0
-			? 0.0
-			: ((maxWidth / imageSize.width).clamp(0.0, 1.0) as double);
-		return BarcodeGuidance(hasBarcode: true, widthFraction: widthFraction, boundingBox: maxBox);
+		
+		return const BarcodeGuidance(hasBarcode: false);
 	}
 
 	Future<String?> processFilePath(String imagePath) async {
 		if (_isClosed) return null;
-		final inputImage = InputImage.fromFilePath(imagePath);
-		final barcodes = await _scanner.processImage(inputImage);
-		for (final b in barcodes) {
-			final raw = b.rawValue?.trim();
-			if (raw != null && raw.isNotEmpty) {
-				return raw;
+		
+		try {
+			// Validate file path
+			if (imagePath.isEmpty) return null;
+			
+			final inputImage = InputImage.fromFilePath(imagePath);
+			final barcodes = await _scanner.processImage(inputImage);
+			
+			for (final b in barcodes) {
+				final raw = b.rawValue?.trim();
+				if (raw != null && raw.isNotEmpty) {
+					return raw;
+				}
 			}
+		} catch (e) {
+			// Log error for debugging but don't crash
+			print('BarcodeScannerService: Error processing file path $imagePath: $e');
 		}
+		
 		return null;
 	}
 
