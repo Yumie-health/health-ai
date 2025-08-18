@@ -305,6 +305,24 @@ class AppLocalizationsKo extends AppLocalizations {
   String get personalizeExperience => '이것은 경험을 개인화하는 데 도움이 됩니다';
 
   @override
+  String get failedToOpenStore => 'Failed to open app store';
+
+  @override
+  String get updateAvailable => 'Update Available';
+
+  @override
+  String get newVersionAvailable => 'A new version of Yumie is available.';
+
+  @override
+  String get updateNow => 'Update Now';
+
+  @override
+  String get later => 'Later';
+
+  @override
+  String get whatsNew => 'What\'s New:';
+
+  @override
   String get yourHeight => '키';
 
   @override

@@ -305,6 +305,24 @@ class AppLocalizationsPt extends AppLocalizations {
   String get personalizeExperience => 'Isso nos ajuda a personalizar sua experiência';
 
   @override
+  String get failedToOpenStore => 'Failed to open app store';
+
+  @override
+  String get updateAvailable => 'Update Available';
+
+  @override
+  String get newVersionAvailable => 'A new version of Yumie is available.';
+
+  @override
+  String get updateNow => 'Update Now';
+
+  @override
+  String get later => 'Later';
+
+  @override
+  String get whatsNew => 'What\'s New:';
+
+  @override
   String get yourHeight => 'Sua altura';
 
   @override

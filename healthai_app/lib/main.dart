@@ -46,6 +46,8 @@ import 'package:timezone/data/latest.dart' as tz;
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'services/app_update_service.dart';
+import 'widgets/app_update_dialog.dart';
 import 'l10n/app_localizations.dart';
 import 'utils/constants.dart';
 import 'providers/preferences_provider.dart';
@@ -921,6 +923,16 @@ class MyApp extends StatelessWidget {
       final reviewAccounts = ['apple@applereview.com', 'google.develop@gmail.com'];
       if (user.email != null && reviewAccounts.contains(user.email!.toLowerCase())) {
         return true; // Always consider review accounts as valid
+      }
+      
+      // For Apple and Google users, allow them to proceed even if document doesn't exist yet
+      // The sign-in flow will create the document if needed
+      final providerData = user.providerData;
+      final isAppleUser = providerData.any((provider) => provider.providerId == 'apple.com');
+      final isGoogleUser = providerData.any((provider) => provider.providerId == 'google.com');
+      
+      if (isAppleUser || isGoogleUser) {
+        return true; // Allow Apple/Google users to proceed
       }
       
       final doc = await FirebaseFirestore.instance
@@ -3417,6 +3429,9 @@ class _MainNavScreenState extends State<MainNavScreen> with TickerProviderStateM
       
       // Check for birthday
       await _checkBirthday();
+      
+      // Check for app updates
+      await _checkForAppUpdates();
     });
     _screens = [
       DashboardScreen(
@@ -3526,7 +3541,7 @@ class _MainNavScreenState extends State<MainNavScreen> with TickerProviderStateM
       if (user != null) {
         final doc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
         final data = doc.data() ?? {};
-        final double currentWeight = (data['weight'] ?? 0.0).toDouble();
+        final double currentWeight = (data['weightKg'] ?? data['weight'] ?? 0.0).toDouble();
         final double newWeight = currentWeight + weightChange;
         
         // Get the current total weight change
@@ -3799,6 +3814,31 @@ class _MainNavScreenState extends State<MainNavScreen> with TickerProviderStateM
       await birthdayService.checkAndCelebrateBirthday(context);
     } catch (e) {
       print('Error checking birthday: $e');
+    }
+  }
+
+  Future<void> _checkForAppUpdates() async {
+    try {
+      // Check for available updates
+      final updateInfo = await AppUpdateService.checkForUpdate();
+      if (updateInfo == null) return;
+
+      // Show update dialog every time (no skip logic)
+      if (mounted) {
+        await Future.delayed(Duration(seconds: 2)); // Small delay to not interrupt other dialogs
+        
+        if (mounted) {
+          showDialog(
+            context: context,
+            barrierDismissible: !updateInfo.isForceUpdate,
+            builder: (context) => AppUpdateDialog(
+              updateInfo: updateInfo,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      print('Error checking for app updates: $e');
     }
   }
 

@@ -20,6 +20,8 @@
 	<string>healthai-0001</string>
 	<key>STORAGE_BUCKET</key>
 	<string>healthai-0001.firebasestorage.app</string>
+	<key>AUTH_DOMAIN</key>
+	<string>healthai-0001.firebaseapp.com</string>
 	<key>IS_ADS_ENABLED</key>
 	<false></false>
 	<key>IS_ANALYTICS_ENABLED</key>

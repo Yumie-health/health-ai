@@ -305,6 +305,24 @@ class AppLocalizationsFr extends AppLocalizations {
   String get personalizeExperience => 'Cela nous aide à personnaliser votre expérience';
 
   @override
+  String get failedToOpenStore => 'Impossible d\'ouvrir le magasin d\'applications';
+
+  @override
+  String get updateAvailable => 'Mise à jour disponible';
+
+  @override
+  String get newVersionAvailable => 'Une nouvelle version de Yumie est disponible.';
+
+  @override
+  String get updateNow => 'Mettre à jour maintenant';
+
+  @override
+  String get later => 'Plus tard';
+
+  @override
+  String get whatsNew => 'Quoi de neuf :';
+
+  @override
   String get yourHeight => 'Your height';
 
   @override

@@ -305,6 +305,24 @@ class AppLocalizationsEs extends AppLocalizations {
   String get personalizeExperience => 'Esto nos ayuda a personalizar tu experiencia';
 
   @override
+  String get failedToOpenStore => 'No se pudo abrir la tienda de aplicaciones';
+
+  @override
+  String get updateAvailable => 'Actualización Disponible';
+
+  @override
+  String get newVersionAvailable => 'Hay una nueva versión de Yumie disponible.';
+
+  @override
+  String get updateNow => 'Actualizar Ahora';
+
+  @override
+  String get later => 'Más Tarde';
+
+  @override
+  String get whatsNew => 'Qué hay de nuevo:';
+
+  @override
   String get yourHeight => 'Tu altura';
 
   @override

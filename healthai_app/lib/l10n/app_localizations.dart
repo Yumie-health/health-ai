@@ -705,6 +705,42 @@ abstract class AppLocalizations {
   /// **'This helps us personalize your experience'**
   String get personalizeExperience;
 
+  /// No description provided for @failedToOpenStore.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to open app store'**
+  String get failedToOpenStore;
+
+  /// No description provided for @updateAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Update Available'**
+  String get updateAvailable;
+
+  /// No description provided for @newVersionAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'A new version of Yumie is available.'**
+  String get newVersionAvailable;
+
+  /// No description provided for @updateNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Update Now'**
+  String get updateNow;
+
+  /// No description provided for @later.
+  ///
+  /// In en, this message translates to:
+  /// **'Later'**
+  String get later;
+
+  /// No description provided for @whatsNew.
+  ///
+  /// In en, this message translates to:
+  /// **'What\'s New:'**
+  String get whatsNew;
+
   /// No description provided for @yourHeight.
   ///
   /// In en, this message translates to:

@@ -26,6 +26,164 @@ const pexelsKey = defineSecret("PEXELS_KEY");
 //   response.send("Hello from Firebase!");
 // });
 
+// App Update Check Function
+export const checkAppUpdate = functions.https.onRequest(async (req, res) => {
+  try {
+    // Set CORS headers
+    res.set('Access-Control-Allow-Origin', '*');
+    res.set('Access-Control-Allow-Methods', 'GET, POST');
+    res.set('Access-Control-Allow-Headers', 'Content-Type');
+
+    if (req.method === 'OPTIONS') {
+      res.status(204).send('');
+      return;
+    }
+
+    // Get platform from query parameter
+    const platform = req.query.platform || 'both';
+    
+    // Get update information from Firestore
+    const updateDoc = await admin.firestore().collection('app_config').doc('updates').get();
+    
+    if (!updateDoc.exists) {
+      // No update configuration found
+      res.status(404).json({ error: 'No update configuration found' });
+      return;
+    }
+
+    const updateData = updateDoc.data();
+    
+    // Platform-specific update info
+    let updateInfo;
+    
+    if (platform === 'ios') {
+      updateInfo = {
+        latestVersion: updateData?.iosLatestVersion || updateData?.latestVersion || "1.0.4",
+        latestBuildNumber: updateData?.iosLatestBuildNumber || updateData?.latestBuildNumber || 34,
+        title: updateData?.iosTitle || updateData?.title || "Update Available",
+        description: updateData?.iosDescription || updateData?.description || "A new version of Yumie is available with bug fixes and improvements.",
+        isForceUpdate: updateData?.iosIsForceUpdate ?? updateData?.isForceUpdate ?? false,
+        published: updateData?.iosPublished ?? updateData?.published ?? false,
+        platform: 'ios'
+      };
+    } else if (platform === 'android') {
+      updateInfo = {
+        latestVersion: updateData?.androidLatestVersion || updateData?.latestVersion || "1.0.4",
+        latestBuildNumber: updateData?.androidLatestBuildNumber || updateData?.latestBuildNumber || 34,
+        title: updateData?.androidTitle || updateData?.title || "Update Available",
+        description: updateData?.androidDescription || updateData?.description || "A new version of Yumie is available with bug fixes and improvements.",
+        isForceUpdate: updateData?.androidIsForceUpdate ?? updateData?.isForceUpdate ?? false,
+        published: updateData?.androidPublished ?? updateData?.published ?? false,
+        platform: 'android'
+      };
+    } else {
+      // Default/fallback for both platforms
+      updateInfo = {
+        latestVersion: updateData?.latestVersion || "1.0.4",
+        latestBuildNumber: updateData?.latestBuildNumber || 34,
+        title: updateData?.title || "Update Available",
+        description: updateData?.description || "A new version of Yumie is available with bug fixes and improvements.",
+        isForceUpdate: updateData?.isForceUpdate || false,
+        published: updateData?.published || false,
+        platform: 'both'
+      };
+    }
+
+    res.status(200).json(updateInfo);
+  } catch (error) {
+    console.error('Error in checkAppUpdate:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Admin function to set app update information
+export const setAppUpdate = functions.https.onRequest(async (req, res) => {
+  try {
+    // Set CORS headers
+    res.set('Access-Control-Allow-Origin', '*');
+    res.set('Access-Control-Allow-Methods', 'GET, POST');
+    res.set('Access-Control-Allow-Headers', 'Content-Type');
+
+    if (req.method === 'OPTIONS') {
+      res.status(204).send('');
+      return;
+    }
+
+    // Only allow POST requests
+    if (req.method !== 'POST') {
+      res.status(405).send({ error: 'Method not allowed. Use POST.' });
+      return;
+    }
+
+    const { 
+      latestVersion, 
+      latestBuildNumber, 
+      title, 
+      description, 
+      isForceUpdate, 
+      published,
+      platform,
+      // Platform-specific fields
+      iosLatestVersion,
+      iosLatestBuildNumber,
+      iosTitle,
+      iosDescription,
+      iosIsForceUpdate,
+      iosPublished,
+      androidLatestVersion,
+      androidLatestBuildNumber,
+      androidTitle,
+      androidDescription,
+      androidIsForceUpdate,
+      androidPublished
+    } = req.body;
+
+    // Validate required fields
+    if (!latestVersion || !latestBuildNumber) {
+      res.status(400).send({ error: 'latestVersion and latestBuildNumber are required' });
+      return;
+    }
+
+    // Prepare update data
+    const updateData: any = {
+      latestVersion,
+      latestBuildNumber,
+      title: title || "Update Available",
+      description: description || "A new version of Yumie is available with bug fixes and improvements.",
+      isForceUpdate: isForceUpdate || false,
+      published: published || false,
+      updatedAt: admin.firestore.FieldValue.serverTimestamp()
+    };
+
+    // Add platform-specific data if provided
+    if (platform === 'ios' || iosLatestVersion) {
+      updateData.iosLatestVersion = iosLatestVersion || latestVersion;
+      updateData.iosLatestBuildNumber = iosLatestBuildNumber || latestBuildNumber;
+      updateData.iosTitle = iosTitle || title || "Update Available";
+      updateData.iosDescription = iosDescription || description || "A new version of Yumie is available with bug fixes and improvements.";
+      updateData.iosIsForceUpdate = iosIsForceUpdate ?? isForceUpdate ?? false;
+      updateData.iosPublished = iosPublished ?? published ?? false;
+    }
+
+    if (platform === 'android' || androidLatestVersion) {
+      updateData.androidLatestVersion = androidLatestVersion || latestVersion;
+      updateData.androidLatestBuildNumber = androidLatestBuildNumber || latestBuildNumber;
+      updateData.androidTitle = androidTitle || title || "Update Available";
+      updateData.androidDescription = androidDescription || description || "A new version of Yumie is available with bug fixes and improvements.";
+      updateData.androidIsForceUpdate = androidIsForceUpdate ?? isForceUpdate ?? false;
+      updateData.androidPublished = androidPublished ?? published ?? false;
+    }
+
+    // Save to Firestore
+    await admin.firestore().collection('app_config').doc('updates').set(updateData);
+
+    res.status(200).json({ success: true, message: 'Update configuration saved' });
+  } catch (error) {
+    console.error('Error in setAppUpdate:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 // OpenAI API proxy
 export const openaiProxyCallable = functions.https.onRequest(
   {

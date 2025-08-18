@@ -305,6 +305,24 @@ class AppLocalizationsRu extends AppLocalizations {
   String get personalizeExperience => 'Это помогает нам персонализировать ваш опыт';
 
   @override
+  String get failedToOpenStore => 'Failed to open app store';
+
+  @override
+  String get updateAvailable => 'Update Available';
+
+  @override
+  String get newVersionAvailable => 'A new version of Yumie is available.';
+
+  @override
+  String get updateNow => 'Update Now';
+
+  @override
+  String get later => 'Later';
+
+  @override
+  String get whatsNew => 'What\'s New:';
+
+  @override
   String get yourHeight => 'Ваш рост';
 
   @override
