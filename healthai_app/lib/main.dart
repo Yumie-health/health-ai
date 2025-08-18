@@ -917,6 +917,12 @@ class MyApp extends StatelessWidget {
   // Validate if user account still exists in Firestore
   Future<bool> _validateUserAccount(User user) async {
     try {
+      // Skip validation for review team accounts
+      final reviewAccounts = ['apple@applereview.com', 'google.develop@gmail.com'];
+      if (user.email != null && reviewAccounts.contains(user.email!.toLowerCase())) {
+        return true; // Always consider review accounts as valid
+      }
+      
       final doc = await FirebaseFirestore.instance
           .collection('users')
           .doc(user.uid)
@@ -974,51 +980,84 @@ class _EmailVerificationWrapperState extends State<_EmailVerificationWrapper> {
 
   Future<void> _checkEmailVerification() async {
     try {
-      // Skip verification for Apple and Google sign-in (trusted providers)
-      final providerData = widget.user.providerData;
-      final isAppleUser = providerData.any((provider) => provider.providerId == 'apple.com');
-      final isGoogleUser = providerData.any((provider) => provider.providerId == 'google.com');
-      
-      if (isAppleUser || isGoogleUser) {
-        setState(() {
-          _isCheckingVerification = false;
-          _verificationPassed = true;
-        });
-        return;
-      }
-
-      // Force reload user to get latest verification status
-      await widget.user.reload();
+      // First check if user still exists in Auth
       final currentUser = FirebaseAuth.instance.currentUser;
-      
-      if (currentUser != null && !currentUser.emailVerified) {
-        // Show verification dialog
-        final emailVerificationService = EmailVerificationService();
-        final verified = await emailVerificationService.showEmailVerificationDialog(context, currentUser);
-        
-        if (!verified) {
-          // User closed verification dialog, sign them out
-          await FirebaseAuth.instance.signOut();
+      if (currentUser == null || currentUser.uid != widget.user.uid) {
+        // User has been signed out or changed, skip verification
+        if (mounted) {
           setState(() {
             _isCheckingVerification = false;
             _verificationPassed = false;
           });
+        }
+        return;
+      }
+
+      // Skip verification for review team accounts
+      final reviewAccounts = ['apple@applereview.com', 'google.develop@gmail.com'];
+      if (currentUser.email != null && reviewAccounts.contains(currentUser.email!.toLowerCase())) {
+        if (mounted) {
+          setState(() {
+            _isCheckingVerification = false;
+            _verificationPassed = true;
+          });
+        }
+        return;
+      }
+
+      // Skip verification for Apple and Google sign-in (trusted providers)
+      final providerData = currentUser.providerData;
+      final isAppleUser = providerData.any((provider) => provider.providerId == 'apple.com');
+      final isGoogleUser = providerData.any((provider) => provider.providerId == 'google.com');
+      
+      if (isAppleUser || isGoogleUser) {
+        if (mounted) {
+          setState(() {
+            _isCheckingVerification = false;
+            _verificationPassed = true;
+          });
+        }
+        return;
+      }
+
+      // Force reload user to get latest verification status
+      await currentUser.reload();
+      final refreshedUser = FirebaseAuth.instance.currentUser;
+      
+      if (refreshedUser != null && !refreshedUser.emailVerified) {
+        // Show verification dialog
+        final emailVerificationService = EmailVerificationService();
+        final verified = await emailVerificationService.showEmailVerificationDialog(context, refreshedUser);
+        
+        if (!verified) {
+          // User closed verification dialog, sign them out
+          await FirebaseAuth.instance.signOut();
+          if (mounted) {
+            setState(() {
+              _isCheckingVerification = false;
+              _verificationPassed = false;
+            });
+          }
           return;
         }
       }
 
-      setState(() {
-        _isCheckingVerification = false;
-        _verificationPassed = true;
-      });
+      if (mounted) {
+        setState(() {
+          _isCheckingVerification = false;
+          _verificationPassed = true;
+        });
+      }
     } catch (e) {
       print('Error checking email verification: $e');
       // If error, sign out for safety
       await FirebaseAuth.instance.signOut();
-      setState(() {
-        _isCheckingVerification = false;
-        _verificationPassed = false;
-      });
+      if (mounted) {
+        setState(() {
+          _isCheckingVerification = false;
+          _verificationPassed = false;
+        });
+      }
     }
   }
 
@@ -2121,14 +2160,20 @@ class _AuthScreenState extends State<AuthScreen> {
           final currentUser = FirebaseAuth.instance.currentUser;
           
           if (currentUser != null && !currentUser.emailVerified) {
-            // Show email verification dialog
-            final emailVerificationService = EmailVerificationService();
-            final verified = await emailVerificationService.showEmailVerificationDialog(context, currentUser);
-            if (!verified) {
-              // User closed verification dialog, sign them out
-              await FirebaseAuth.instance.signOut();
-              setState(() => isLoading = false);
-              return;
+            // Skip verification for review team accounts
+            final reviewAccounts = ['apple@applereview.com', 'google.develop@gmail.com'];
+            if (currentUser.email != null && reviewAccounts.contains(currentUser.email!.toLowerCase())) {
+              // Skip email verification for review accounts
+            } else {
+              // Show email verification dialog
+              final emailVerificationService = EmailVerificationService();
+              final verified = await emailVerificationService.showEmailVerificationDialog(context, currentUser);
+              if (!verified) {
+                // User closed verification dialog, sign them out
+                await FirebaseAuth.instance.signOut();
+                setState(() => isLoading = false);
+                return;
+              }
             }
           }
         }
@@ -2298,16 +2343,22 @@ class _AuthScreenState extends State<AuthScreen> {
             );
             
             if (userCredential.user != null && !userCredential.user!.emailVerified) {
-              // Account exists but is not verified - show verification dialog
-              await FirebaseAuth.instance.signOut(); // Sign out first
-              final emailVerificationService = EmailVerificationService();
-              final verified = await emailVerificationService.showEmailVerificationDialog(context, userCredential.user!);
-              if (!verified) {
-                // User closed verification dialog
-                if (mounted) {
-                  setState(() => isLoading = false);
+              // Skip verification for review team accounts
+              final reviewAccounts = ['apple@applereview.com', 'google.develop@gmail.com'];
+              if (userCredential.user!.email != null && reviewAccounts.contains(userCredential.user!.email!.toLowerCase())) {
+                // Skip email verification for review accounts - continue with sign in
+              } else {
+                // Account exists but is not verified - show verification dialog
+                await FirebaseAuth.instance.signOut(); // Sign out first
+                final emailVerificationService = EmailVerificationService();
+                final verified = await emailVerificationService.showEmailVerificationDialog(context, userCredential.user!);
+                if (!verified) {
+                  // User closed verification dialog
+                  if (mounted) {
+                    setState(() => isLoading = false);
+                  }
+                  return;
                 }
-                return;
               }
               // If verified, proceed with onboarding
               if (mounted) {
@@ -2353,13 +2404,19 @@ class _AuthScreenState extends State<AuthScreen> {
       // Require email verification for new email accounts
       final user = FirebaseAuth.instance.currentUser;
       if (user != null) {
-        final emailVerificationService = EmailVerificationService();
-        final verified = await emailVerificationService.showEmailVerificationDialog(context, user);
-        if (!verified) {
-          // User closed verification dialog, sign them out
-          await FirebaseAuth.instance.signOut();
-          setState(() => isLoading = false);
-          return;
+        // Skip verification for review team accounts
+        final reviewAccounts = ['apple@applereview.com', 'google.develop@gmail.com'];
+        if (user.email != null && reviewAccounts.contains(user.email!.toLowerCase())) {
+          // Skip email verification for review accounts
+        } else {
+          final emailVerificationService = EmailVerificationService();
+          final verified = await emailVerificationService.showEmailVerificationDialog(context, user);
+          if (!verified) {
+            // User closed verification dialog, sign them out
+            await FirebaseAuth.instance.signOut();
+            setState(() => isLoading = false);
+            return;
+          }
         }
         
         if (mounted) {
@@ -3478,6 +3535,7 @@ class _MainNavScreenState extends State<MainNavScreen> with TickerProviderStateM
         
         await FirebaseFirestore.instance.collection('users').doc(user.uid).update({
           'weight': newWeight,
+          'weightKg': newWeight, // Save with both field names for compatibility
           'lastWeightChange': weightChange,
           'lastWeightUpdate': FieldValue.serverTimestamp(),
           'totalWeightChange': newTotalChange,

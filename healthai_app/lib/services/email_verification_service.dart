@@ -39,12 +39,17 @@ class EmailVerificationService {
       } catch (e) {
         // Handle error
         if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('${AppLocalizations.of(context)!.failedToSendVerificationEmail}: $e'),
-              backgroundColor: Colors.red,
-            ),
-          );
+          // Use a try-catch to handle cases where there's no Scaffold in the widget tree
+          try {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('${AppLocalizations.of(context)!.failedToSendVerificationEmail}: $e'),
+                backgroundColor: Colors.red,
+              ),
+            );
+          } catch (_) {
+            // Ignore if no Scaffold is available
+          }
         }
         return false;
       }
@@ -67,6 +72,12 @@ class EmailVerificationService {
   Future<bool> checkVerificationOnStartup(BuildContext context) async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return false;
+
+    // Skip verification for review team accounts
+    final reviewAccounts = ['apple@applereview.com', 'google.develop@gmail.com'];
+    if (user.email != null && reviewAccounts.contains(user.email!.toLowerCase())) {
+      return false; // Skip verification for review accounts
+    }
 
     // Skip verification for Apple and Google sign-in (trusted providers)
     final providerData = user.providerData;
@@ -139,13 +150,17 @@ class _EmailVerificationDialogState extends State<_EmailVerificationDialog> {
           timer.cancel();
           if (mounted) {
             // Show success message briefly
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(AppLocalizations.of(context)!.emailVerified),
-                backgroundColor: kPrimaryGreen,
-                duration: Duration(seconds: 2),
-              ),
-            );
+            try {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(AppLocalizations.of(context)!.emailVerified),
+                  backgroundColor: kPrimaryGreen,
+                  duration: Duration(seconds: 2),
+                ),
+              );
+            } catch (_) {
+              // Ignore if no Scaffold is available
+            }
             Navigator.of(context).pop(true); // Email verified
           }
         }
@@ -191,21 +206,29 @@ class _EmailVerificationDialogState extends State<_EmailVerificationDialog> {
       _startWaiting();
       
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(AppLocalizations.of(context)!.verificationEmailSent),
-            backgroundColor: kPrimaryGreen,
-          ),
-        );
+        try {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(AppLocalizations.of(context)!.verificationEmailSent),
+              backgroundColor: kPrimaryGreen,
+            ),
+          );
+        } catch (_) {
+          // Ignore if no Scaffold is available
+        }
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(AppLocalizations.of(context)!.failedToResendVerificationEmail),
-            backgroundColor: Colors.red,
-          ),
-        );
+        try {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(AppLocalizations.of(context)!.failedToResendVerificationEmail),
+              backgroundColor: Colors.red,
+            ),
+          );
+        } catch (_) {
+          // Ignore if no Scaffold is available
+        }
       }
     }
   }
@@ -306,31 +329,43 @@ class _EmailVerificationDialogState extends State<_EmailVerificationDialog> {
                   final currentUser = FirebaseAuth.instance.currentUser;
                   
                   if (currentUser != null && currentUser.emailVerified) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(AppLocalizations.of(context)!.emailVerified),
-                        backgroundColor: kPrimaryGreen,
-                        duration: Duration(seconds: 2),
-                      ),
-                    );
+                    try {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(AppLocalizations.of(context)!.emailVerified),
+                          backgroundColor: kPrimaryGreen,
+                          duration: Duration(seconds: 2),
+                        ),
+                      );
+                    } catch (_) {
+                      // Ignore if no Scaffold is available
+                    }
                     Navigator.of(context).pop(true);
                   } else {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(AppLocalizations.of(context)!.emailNotVerified),
-                        backgroundColor: Colors.orange,
-                        duration: Duration(seconds: 2),
-                      ),
-                    );
+                    try {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(AppLocalizations.of(context)!.emailNotVerified),
+                          backgroundColor: Colors.orange,
+                          duration: Duration(seconds: 2),
+                        ),
+                      );
+                    } catch (_) {
+                      // Ignore if no Scaffold is available
+                    }
                     _startWaiting();
                   }
                 } catch (e) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('${AppLocalizations.of(context)!.errorCheckingVerification}: $e'),
-                      backgroundColor: Colors.red,
-                    ),
-                  );
+                  try {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('${AppLocalizations.of(context)!.errorCheckingVerification}: $e'),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                  } catch (_) {
+                    // Ignore if no Scaffold is available
+                  }
                 }
               },
               style: ElevatedButton.styleFrom(

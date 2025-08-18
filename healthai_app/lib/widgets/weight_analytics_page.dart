@@ -36,11 +36,11 @@ class _WeightAnalyticsPageState extends State<WeightAnalyticsPage> {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
     
-    // Load user profile data
+    // Load user profile data - handle both old and new field names
     final u = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
     final data = u.data() as Map<String, dynamic>?;
-    _current = (data?['weight'] as num?)?.toDouble() ?? 0;
-    _target = (data?['targetWeight'] as num?)?.toDouble() ?? 0;
+    _current = ((data?['weightKg'] ?? data?['weight']) as num?)?.toDouble() ?? 0;
+    _target = ((data?['targetWeightKg'] ?? data?['targetWeight']) as num?)?.toDouble() ?? 0;
     _starting = (data?['startingWeight'] as num?)?.toDouble() ?? 0;
     
     // Load weight entries

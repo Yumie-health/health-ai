@@ -519,11 +519,27 @@ class _OnboardingFlowPageState extends State<OnboardingFlowPage> with SingleTick
                         'lastUpdated': now,
                         'hasCompletedOnboarding': true,
                             'reminders': remindersMap, // Save reminders as a map of booleans
+                            'useMetric': useMetricWeight, // Save unit preference
+                            'age': selectedAge,
+                            'heightCm': selectedHeightCm,
+                            'weightKg': selectedWeightKg,
+                            'startingWeight': selectedWeightKg, // Save starting weight
+                            'targetWeightKg': targetWeightKg,
+                            'activityLevel': activityLevel,
+                            'goal': selectedGoal,
+                            'sex': selectedSex,
+                            'bloodType': bloodType,
+                            'isDiabetic': isDiabetic,
+                            'waterIntake': waterIntake,
                       }, SetOptions(merge: true));
 
                         } catch (e) {
                           // Handle error silently
                         }
+                        
+                        // Also save unit preference to SharedPreferences
+                        final prefsProvider = Provider.of<PreferencesProvider>(context, listen: false);
+                        await prefsProvider.setUseMetric(useMetricWeight);
                     }
                     
                     // Navigate to main app with post-onboarding flag
@@ -633,18 +649,16 @@ class _OnboardingFlowPageState extends State<OnboardingFlowPage> with SingleTick
       final aiService = AIService();
       final int age = selectedAge ?? 16;
       final String sex = selectedSex ?? "Other";
-      final int heightFt = selectedHeightFeet;
-      final int heightIn = selectedHeightInches;
-      final int weightLb = selectedWeightKg != null ? (selectedWeightKg! * 2.20462).round() : 154;
       final String goal = selectedGoal ?? "Maintenance";
       final String activity = activityLevel ?? "Sedentary";
       final String blood = bloodType ?? "O+";
       final bool diabetic = isDiabetic ?? false;
       final String? water = waterIntake;
       final start = DateTime.now();
-      // Calculate personalized nutrition goals based on user data
-      final double weightKg = weightLb / 2.20462;
-      final int heightCm = ((heightFt * 12 + heightIn) * 2.54).round();
+      
+      // Use the correct height and weight values
+      final int heightCm = selectedHeightCm?.round() ?? 170;
+      final double weightKg = selectedWeightKg ?? 70;
       
       // Calculate BMR using Mifflin-St Jeor equation
       double bmr;

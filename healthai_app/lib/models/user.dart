@@ -52,12 +52,15 @@ class UserProfile {
       'name': name,
       'age': age,
       'height': height,
+      'heightCm': height, // Save with both field names for compatibility
       'weight': weight,
+      'weightKg': weight, // Save with both field names for compatibility
       'dailyCalorieGoal': dailyCalorieGoal,
       'proteinGoal': proteinGoal,
       'carbsGoal': carbsGoal,
       'fatGoal': fatGoal,
       'targetWeight': targetWeight,
+      'targetWeightKg': targetWeight, // Save with both field names for compatibility
       'startingWeight': startingWeight,
       'createdAt': createdAt,
       'lastUpdated': lastUpdated,
@@ -72,19 +75,24 @@ class UserProfile {
 
   factory UserProfile.fromFirestore(DocumentSnapshot doc) {
     Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
+    // Handle both old field names and new field names from onboarding
+    final heightValue = data['heightCm'] ?? data['height'] ?? 0;
+    final weightValue = data['weightKg'] ?? data['weight'] ?? 0;
+    final targetWeightValue = data['targetWeightKg'] ?? data['targetWeight'] ?? 0;
+    
     return UserProfile(
       id: doc.id,
       email: data['email'] ?? '',
       name: data['name'] ?? '',
       age: data['age'] ?? 0,
-      height: (data['height'] ?? 0).toDouble(),
-      weight: (data['weight'] ?? 0).toDouble(),
+      height: heightValue.toDouble(),
+      weight: weightValue.toDouble(),
       dailyCalorieGoal: data['dailyCalorieGoal'] ?? 2000,
       proteinGoal: data['proteinGoal'] ?? 120,
       carbsGoal: data['carbsGoal'] ?? 250,
       fatGoal: data['fatGoal'] ?? 70,
-      targetWeight: (data['targetWeight'] ?? 0).toDouble(),
-      startingWeight: (data['startingWeight'] ?? data['weight'] ?? 0).toDouble(), // Default to current weight if not set
+      targetWeight: targetWeightValue.toDouble(),
+      startingWeight: (data['startingWeight'] ?? weightValue ?? 0).toDouble(), // Default to current weight if not set
       createdAt: (data['createdAt'] as Timestamp).toDate(),
       lastUpdated: (data['lastUpdated'] as Timestamp).toDate(),
       photoUrl: data['photoUrl'] ?? '',

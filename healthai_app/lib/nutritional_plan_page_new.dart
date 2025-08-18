@@ -161,10 +161,10 @@ class _NutritionalPlanPageState extends State<NutritionalPlanPage> {
       );
     }
 
-    // Get user data
-    final double weight = (userData!['weight'] ?? 70).toDouble();
-    final double heightCm = (userData!['height'] ?? 170).toDouble();
-    final double targetWeight = (userData!['targetWeight'] ?? weight).toDouble();
+    // Get user data - handle both old and new field names
+    final double weight = (userData!['weightKg'] ?? userData!['weight'] ?? 70).toDouble();
+    final double heightCm = (userData!['heightCm'] ?? userData!['height'] ?? 170).toDouble();
+    final double targetWeight = (userData!['targetWeightKg'] ?? userData!['targetWeight'] ?? weight).toDouble();
     final int age = (userData!['age'] ?? 18).toInt();
     final int calories = userData!['dailyCalorieGoal'] ?? 2000;
     final int protein = userData!['proteinGoal'] ?? 120;
