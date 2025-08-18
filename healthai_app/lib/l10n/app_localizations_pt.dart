@@ -1141,10 +1141,28 @@ class AppLocalizationsPt extends AppLocalizations {
   String get permissionsComplete => 'Permissões Concluídas!';
 
   @override
-  String get enterYourPassword => 'Digite sua senha';
+  String get whyWeAskForPermissions => 'Por que pedimos permissões';
 
   @override
-  String get securityAlerts => 'Alertas de Segurança';
+  String get permissionsWhyBody => 'Usamos a câmera para escanear alimentos e códigos de barras, acessar fotos quando você envia imagens e enviar notificações para lembrar você de registrar as refeições e se hidratar.';
+
+  @override
+  String get permissionsNextScreen => 'Na próxima tela você verá as solicitações do sistema para conceder acesso. Você pode alterar isso a qualquer momento em Configurações.';
+
+  @override
+  String get references => 'Referências:';
+
+  @override
+  String get cdcAboutBmi => 'CDC: Sobre o IMC';
+
+  @override
+  String get usdaDietaryGuidelines => 'Diretrizes Alimentares da USDA';
+
+  @override
+  String get termsOfUseEula => 'Termos de Uso (EULA)';
+
+  @override
+  String get enterYourPassword => 'Digite sua senha';
 
   @override
   String get manageSessions => 'Gerenciar Sessões';

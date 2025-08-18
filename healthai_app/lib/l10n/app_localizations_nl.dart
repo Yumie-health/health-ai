@@ -1141,10 +1141,28 @@ class AppLocalizationsNl extends AppLocalizations {
   String get permissionsComplete => 'Toestemmingen voltooid!';
 
   @override
-  String get enterYourPassword => 'Voer je wachtwoord in';
+  String get whyWeAskForPermissions => 'Waarom we om toestemming vragen';
 
   @override
-  String get securityAlerts => 'Beveiligingswaarschuwingen';
+  String get permissionsWhyBody => 'We gebruiken je camera om voedsel en barcodes te scannen, hebben toegang tot foto\'s wanneer je afbeeldingen uploadt en sturen meldingen om je te herinneren maaltijden te loggen en te hydrateren.';
+
+  @override
+  String get permissionsNextScreen => 'Op het volgende scherm zie je systeemprompts om toegang te verlenen. Je kunt dit later altijd wijzigen in Instellingen.';
+
+  @override
+  String get references => 'References:';
+
+  @override
+  String get cdcAboutBmi => 'CDC: About BMI';
+
+  @override
+  String get usdaDietaryGuidelines => 'USDA Dietary Guidelines';
+
+  @override
+  String get termsOfUseEula => 'Terms of Use (EULA)';
+
+  @override
+  String get enterYourPassword => 'Voer je wachtwoord in';
 
   @override
   String get manageSessions => 'Sessies beheren';

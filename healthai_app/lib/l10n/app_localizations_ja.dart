@@ -1141,10 +1141,28 @@ class AppLocalizationsJa extends AppLocalizations {
   String get permissionsComplete => '権限完了！';
 
   @override
-  String get enterYourPassword => 'パスワードを入力';
+  String get whyWeAskForPermissions => '権限をお願いする理由';
 
   @override
-  String get securityAlerts => 'セキュリティアラート';
+  String get permissionsWhyBody => '食べ物やバーコードをスキャンするためにカメラを使用し、画像をアップロードする際に写真へアクセスし、食事の記録や水分補給を促す通知を送るために使用します。';
+
+  @override
+  String get permissionsNextScreen => '次の画面でアクセス許可のシステムダイアログが表示されます。設定からいつでも変更できます。';
+
+  @override
+  String get references => '参考文献:';
+
+  @override
+  String get cdcAboutBmi => 'CDC: BMIについて';
+
+  @override
+  String get usdaDietaryGuidelines => 'USDA 食事ガイドライン';
+
+  @override
+  String get termsOfUseEula => '利用規約 (EULA)';
+
+  @override
+  String get enterYourPassword => 'パスワードを入力';
 
   @override
   String get manageSessions => 'セッションを管理';

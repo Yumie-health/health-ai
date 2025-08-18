@@ -2472,14 +2472,14 @@ class _ProfileSummaryStep extends StatelessWidget {
                         spacing: 8,
                         runSpacing: 4,
                         children: [
-                          Text('References:', style: TextStyle(color: Colors.grey[700], fontWeight: FontWeight.w600)),
+                          Text(AppLocalizations.of(context)!.references, style: TextStyle(color: Colors.grey[700], fontWeight: FontWeight.w600)),
                           TextButton(
                             onPressed: () => launchUrl(Uri.parse('https://www.cdc.gov/healthyweight/assessing/bmi/index.html'), mode: LaunchMode.externalApplication),
-                            child: const Text('CDC: About BMI'),
+                            child: Text(AppLocalizations.of(context)!.cdcAboutBmi),
                           ),
                           TextButton(
                             onPressed: () => launchUrl(Uri.parse('https://www.dietaryguidelines.gov/'), mode: LaunchMode.externalApplication),
-                            child: const Text('USDA Dietary Guidelines'),
+                            child: Text(AppLocalizations.of(context)!.usdaDietaryGuidelines),
                           ),
                         ],
                       ),

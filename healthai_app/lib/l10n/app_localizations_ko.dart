@@ -1141,10 +1141,28 @@ class AppLocalizationsKo extends AppLocalizations {
   String get permissionsComplete => '권한 완료!';
 
   @override
-  String get enterYourPassword => '비밀번호를 입력하세요';
+  String get whyWeAskForPermissions => '권한을 요청하는 이유';
 
   @override
-  String get securityAlerts => '보안 경고';
+  String get permissionsWhyBody => '카메라로 음식과 바코드를 스캔하고, 이미지를 업로드할 때 사진에 접근하며, 식사 기록 및 수분 섭취를 알리기 위해 알림을 사용합니다.';
+
+  @override
+  String get permissionsNextScreen => '다음 화면에서 시스템 권한 요청이 표시됩니다. 설정에서 언제든지 변경할 수 있습니다.';
+
+  @override
+  String get references => '참고 자료:';
+
+  @override
+  String get cdcAboutBmi => 'CDC: BMI 소개';
+
+  @override
+  String get usdaDietaryGuidelines => 'USDA 식이 가이드라인';
+
+  @override
+  String get termsOfUseEula => '이용 약관 (EULA)';
+
+  @override
+  String get enterYourPassword => '비밀번호를 입력하세요';
 
   @override
   String get manageSessions => '세션 관리';

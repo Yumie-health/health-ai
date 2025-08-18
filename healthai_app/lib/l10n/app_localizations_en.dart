@@ -1141,10 +1141,28 @@ class AppLocalizationsEn extends AppLocalizations {
   String get permissionsComplete => 'Permissions Complete!';
 
   @override
-  String get enterYourPassword => 'Enter your password';
+  String get whyWeAskForPermissions => 'Why we ask for permissions';
 
   @override
-  // String get securityAlerts => 'Security Alerts';
+  String get permissionsWhyBody => 'We use your camera to scan foods and barcodes, access photos when you upload images, and notifications to remind you to log meals and hydrate.';
+
+  @override
+  String get permissionsNextScreen => 'On the next screen, you\'ll see the system prompts to grant access. You can change this anytime in Settings.';
+
+  @override
+  String get references => 'References:';
+
+  @override
+  String get cdcAboutBmi => 'CDC: About BMI';
+
+  @override
+  String get usdaDietaryGuidelines => 'USDA Dietary Guidelines';
+
+  @override
+  String get termsOfUseEula => 'Terms of Use (EULA)';
+
+  @override
+  String get enterYourPassword => 'Enter your password';
 
   @override
   String get manageSessions => 'Manage Sessions';

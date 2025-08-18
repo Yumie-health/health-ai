@@ -2373,16 +2373,53 @@ abstract class AppLocalizations {
   /// **'Permissions Complete!'**
   String get permissionsComplete;
 
+  /// No description provided for @whyWeAskForPermissions.
+  ///
+  /// In en, this message translates to:
+  /// **'Why we ask for permissions'**
+  String get whyWeAskForPermissions;
+
+  /// No description provided for @permissionsWhyBody.
+  ///
+  /// In en, this message translates to:
+  /// **'We use your camera to scan foods and barcodes, access photos when you upload images, and notifications to remind you to log meals and hydrate.'**
+  String get permissionsWhyBody;
+
+  /// No description provided for @permissionsNextScreen.
+  ///
+  /// In en, this message translates to:
+  /// **'On the next screen, you\'ll see the system prompts to grant access. You can change this anytime in Settings.'**
+  String get permissionsNextScreen;
+
+  /// No description provided for @references.
+  ///
+  /// In en, this message translates to:
+  /// **'References:'**
+  String get references;
+
+  /// No description provided for @cdcAboutBmi.
+  ///
+  /// In en, this message translates to:
+  /// **'CDC: About BMI'**
+  String get cdcAboutBmi;
+
+  /// No description provided for @usdaDietaryGuidelines.
+  ///
+  /// In en, this message translates to:
+  /// **'USDA Dietary Guidelines'**
+  String get usdaDietaryGuidelines;
+
+  /// No description provided for @termsOfUseEula.
+  ///
+  /// In en, this message translates to:
+  /// **'Terms of Use (EULA)'**
+  String get termsOfUseEula;
+
   /// No description provided for @enterYourPassword.
   ///
   /// In en, this message translates to:
   /// **'Enter your password'**
   String get enterYourPassword;
-
-  /// No description provided for @securityAlerts.
-  ///
-  /// In en, this message translates to:
-  // String get securityAlerts;
 
   /// No description provided for @manageSessions.
   ///

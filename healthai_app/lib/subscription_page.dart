@@ -532,7 +532,7 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
                                 : 'https://yumie.me/terms',
                             fallbackError: AppLocalizations.of(context)!.couldNotOpenTermsOfService,
                           ),
-                          child: Text('Terms of Use (EULA)'),
+                          child: Text(AppLocalizations.of(context)!.termsOfUseEula),
                         ),
                         TextButton(
                           onPressed: () => _openUrl(

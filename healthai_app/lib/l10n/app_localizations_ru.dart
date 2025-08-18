@@ -1141,10 +1141,28 @@ class AppLocalizationsRu extends AppLocalizations {
   String get permissionsComplete => 'Разрешения завершены!';
 
   @override
-  String get enterYourPassword => 'Введите ваш пароль';
+  String get whyWeAskForPermissions => 'Почему мы запрашиваем разрешения';
 
   @override
-  String get securityAlerts => 'Предупреждения безопасности';
+  String get permissionsWhyBody => 'Мы используем камеру для сканирования продуктов и штрих‑кодов, получаем доступ к фотографиям при загрузке изображений и отправляем уведомления, чтобы напоминать вам записывать приёмы пищи и пить воду.';
+
+  @override
+  String get permissionsNextScreen => 'На следующем экране появятся системные запросы на доступ. Вы можете изменить это в Настройках в любое время.';
+
+  @override
+  String get references => 'Ссылки:';
+
+  @override
+  String get cdcAboutBmi => 'CDC: Об ИМТ';
+
+  @override
+  String get usdaDietaryGuidelines => 'Диетические рекомендации USDA';
+
+  @override
+  String get termsOfUseEula => 'Условия использования (EULA)';
+
+  @override
+  String get enterYourPassword => 'Введите ваш пароль';
 
   @override
   String get manageSessions => 'Управление сессиями';

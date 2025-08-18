@@ -1141,10 +1141,28 @@ class AppLocalizationsTr extends AppLocalizations {
   String get permissionsComplete => 'İzinler Tamamlandı!';
 
   @override
-  String get enterYourPassword => 'Şifrenizi girin';
+  String get whyWeAskForPermissions => 'Neden izin istiyoruz';
 
   @override
-  String get securityAlerts => 'Güvenlik Uyarıları';
+  String get permissionsWhyBody => 'Kamerayı yiyecekleri ve barkodları taramak için, görseller yüklediğinizde fotoğraflara erişmek ve yemek kaydı ile su içmeyi hatırlatmak için bildirimler göndermek amacıyla kullanıyoruz.';
+
+  @override
+  String get permissionsNextScreen => 'Bir sonraki ekranda erişim vermek için sistem istemlerini göreceksiniz. Bunu istediğiniz zaman Ayarlar\'dan değiştirebilirsiniz.';
+
+  @override
+  String get references => 'Kaynaklar:';
+
+  @override
+  String get cdcAboutBmi => 'CDC: BKİ Hakkında';
+
+  @override
+  String get usdaDietaryGuidelines => 'USDA Beslenme Rehberleri';
+
+  @override
+  String get termsOfUseEula => 'Kullanım Şartları (EULA)';
+
+  @override
+  String get enterYourPassword => 'Şifrenizi girin';
 
   @override
   String get manageSessions => 'Oturumları Yönet';
