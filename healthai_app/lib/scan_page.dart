@@ -41,6 +41,11 @@ class _ScanPageState extends State<ScanPage> {
   bool _isDecoding = false;
   RewardedAd? _rewardedAd;
   bool _isRewardedAdLoaded = false;
+  // Guidance UI state for barcode mode
+  Color _frameBorderColor = Colors.redAccent;
+  String _bottomGuidanceText = 'Not in frame, bring closer';
+  bool _isGuidanceStreaming = false;
+  bool _isGuidanceDecoding = false;
 
   @override
   void initState() {
@@ -81,7 +86,7 @@ class _ScanPageState extends State<ScanPage> {
 
   void _onBarcodeModeChanged(bool enabled) {
     setState(() { _isBarcodeMode = enabled; });
-    // Disable live auto-detection; use manual snapshot flow instead
+    // Disable live guidance stream and color/text cues; manual snapshot only
     _stopBarcodeStream();
   }
 
@@ -113,17 +118,57 @@ class _ScanPageState extends State<ScanPage> {
     });
   }
 
+  void _resetGuidance() {
+    _frameBorderColor = Colors.redAccent;
+    _bottomGuidanceText = 'Not in frame, bring closer';
+  }
+
+  Future<void> _startGuidanceStream() async {
+    if (!_isCameraInitialized || !_controller.value.isInitialized || _isGuidanceStreaming) return;
+    _barcodeService ??= BarcodeScannerService();
+    _isGuidanceStreaming = true;
+    if (_controller.value.isStreamingImages) return;
+    await _controller.startImageStream((image) async {
+      if (_isGuidanceDecoding || !_isBarcodeMode) return;
+      _isGuidanceDecoding = true;
+      try {
+        const rotation = InputImageRotation.rotation0deg;
+        final guidance = await _barcodeService!.processCameraImageForGuidance(image, rotation: rotation);
+        if (!mounted) return;
+        if (!_isBarcodeMode) return;
+        if (guidance == null || guidance.hasBarcode == false) {
+          setState(() {
+            _frameBorderColor = Colors.redAccent;
+            _bottomGuidanceText = 'Not in frame, bring closer';
+          });
+        } else {
+          final fraction = guidance.widthFraction ?? 0.0;
+          if (fraction < 0.35) {
+            setState(() {
+              _frameBorderColor = Colors.orangeAccent;
+              _bottomGuidanceText = 'Bring closer';
+            });
+          } else {
+            setState(() {
+              _frameBorderColor = Colors.greenAccent;
+              _bottomGuidanceText = 'Snap photo';
+            });
+          }
+        }
+      } catch (_) {
+        // ignore guidance errors
+      } finally {
+        _isGuidanceDecoding = false;
+      }
+    });
+  }
+
   Future<void> _onBarcodeDetected(String code) async {
     _stopBarcodeStream();
     final lookup = ProductLookupService(userAgent: 'Yumie/1.0 (contact@yumie.app)');
     final res = await lookup.fetchByBarcode(code);
     if (!mounted) return;
-    if (!res.found) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(AppLocalizations.of(context)!.productNotFound)),
-      );
-      return;
-    }
+    if (!res.found) { return; }
     final p = res.product!;
     await Navigator.of(context).push(
       MaterialPageRoute(builder: (_) => ScanResultProductPage(product: p)),
@@ -145,6 +190,7 @@ class _ScanPageState extends State<ScanPage> {
     setState(() {
       _isCameraInitialized = true;
     });
+    // Guidance stream removed
   }
 
   Future<bool> _shouldShowPaywall() async {
@@ -184,6 +230,11 @@ class _ScanPageState extends State<ScanPage> {
 
   Future<void> _captureImage() async {
     if (!_controller.value.isInitialized) return;
+    // Stop guidance stream before capturing to avoid conflicts
+    if (_isBarcodeMode && _controller.value.isStreamingImages) {
+      try { await _controller.stopImageStream(); } catch (_) {}
+      _isGuidanceStreaming = false;
+    }
     final file = await _controller.takePicture();
     // Removed cropping to eliminate image package; use original file directly
 
@@ -192,21 +243,11 @@ class _ScanPageState extends State<ScanPage> {
       _barcodeService ??= BarcodeScannerService();
       final code = await _barcodeService!.processFilePath(file.path);
       if (!mounted) return;
-      if (code == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(AppLocalizations.of(context)!.productNotFound)),
-        );
-        return;
-      }
+      if (code == null) { _startGuidanceStream(); return; }
       final lookup = ProductLookupService(userAgent: 'Yumie/1.0 (contact@yumie.app)');
       final res = await lookup.fetchByBarcode(code);
       if (!mounted) return;
-      if (!res.found) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(AppLocalizations.of(context)!.productNotFound)),
-        );
-        return;
-      }
+      if (!res.found) { _startGuidanceStream(); return; }
       await Navigator.of(context).push(
         MaterialPageRoute(builder: (_) => ScanResultProductPage(product: res.product!)),
       );
@@ -284,12 +325,7 @@ class _ScanPageState extends State<ScanPage> {
       _barcodeService ??= BarcodeScannerService();
       final code = await _barcodeService!.processFilePath(picked.path);
       if (!mounted) return;
-      if (code == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(AppLocalizations.of(context)!.productNotFound)),
-        );
-        return;
-      }
+      if (code == null) { return; }
       await _onBarcodeDetected(code);
       return;
     }
@@ -431,10 +467,12 @@ class _ScanPageState extends State<ScanPage> {
                     double frameWidth, frameHeight;
                     if (_isBarcodeMode) {
                       frameWidth = constraints.maxWidth * 0.90;
-                      frameHeight = frameWidth * 0.25;
+                      // Make barcode box taller vertically
+                      frameHeight = frameWidth * 0.45;
                     } else if (_isFridgeMode) {
                       frameWidth = constraints.maxWidth * 0.92;
-                      frameHeight = constraints.maxHeight * 0.60;
+                      // Make the fridge box taller so it extends further downward
+                      frameHeight = constraints.maxHeight * 0.58;
                     } else {
                       frameWidth = constraints.maxWidth * 0.7;
                       frameHeight = frameWidth;
@@ -450,13 +488,16 @@ class _ScanPageState extends State<ScanPage> {
                     // Keep the frame well above the toggles row
                     const double togglesHeight = 44;
                     final double maxFrameBottom = constraints.maxHeight - togglesBottom - togglesHeight - 12;
+                    final double maxFrameTop = maxFrameBottom - frameHeight;
                     final double overlap = (frameTop + frameHeight) - maxFrameBottom;
                     if (overlap > 0) {
                       frameTop = (frameTop - overlap).clamp(0.0, frameTop);
                     }
-                    // Add additional upward bias for tall fridge mode so it sits much higher
+                    // Nudge fridge frame slightly downward (more space above)
                     if (_isFridgeMode) {
-                      frameTop = (frameTop - constraints.maxHeight * 0.06).clamp(0.0, frameTop);
+                      final double downwardBias = constraints.maxHeight * 0.06;
+                      final double desiredTop = frameTop + downwardBias;
+                      frameTop = desiredTop.clamp(0.0, maxFrameTop);
                     }
                     final frameRect = Rect.fromLTWH(frameLeft, frameTop, frameWidth, frameHeight);
                     return Stack(
@@ -466,6 +507,7 @@ class _ScanPageState extends State<ScanPage> {
                           child: ScannerOverlay(
                             borderRadius: _frameBorderRadius,
                             frameRect: frameRect,
+                            // Use a single consistent color; remove red/orange/green cues
                             borderColor: Colors.greenAccent,
                             overlayOpacity: 0.7,
                           ),
@@ -625,7 +667,8 @@ class _ScanPageState extends State<ScanPage> {
             onPressed: _toggleFlash,
           ),
           GestureDetector(
-            onTap: _captureImage,
+            behavior: HitTestBehavior.opaque,
+            onTapDown: (_) => _captureImage(),
             child: Container(
               width: 72,
               height: 72,

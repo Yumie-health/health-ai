@@ -16,6 +16,8 @@ import 'log_meal_page.dart';
 import 'models/custom_meal.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:quick_actions/quick_actions.dart';
+
 import 'dart:io';
 import 'scan_page.dart';
 import 'nutritional_plan_page.dart';
@@ -199,6 +201,12 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
 
 // Simple Android notification system - no complex background callbacks needed
 
+// Quick Actions: hold pending action from launcher
+String? pendingQuickAction;
+
+
+
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
@@ -229,6 +237,8 @@ void main() async {
 
     },
   );
+
+
 
   // Create Android notification channels for proper Android notifications
   const AndroidNotificationChannel mealChannel = AndroidNotificationChannel(
@@ -334,6 +344,19 @@ void main() async {
   // Force Firebase to use the correct project
   // Firebase configuration verified
   try {
+    // Initialize Quick Actions (app icon long-press)
+    const QuickActions quickActions = QuickActions();
+    quickActions.initialize((String shortcutType) {
+      pendingQuickAction = shortcutType;
+    });
+
+    await quickActions.setShortcutItems(const <ShortcutItem>[
+      ShortcutItem(type: 'scan', localizedTitle: 'Scan', icon: 'ic_camera_simple'),
+      ShortcutItem(type: 'log', localizedTitle: 'Log Meal', icon: 'ic_pencil_simple'),
+    ]);
+
+
+
     // Services initialized
     final subscriptionService = SubscriptionService();
     await subscriptionService.initializeBilling();
@@ -428,7 +451,7 @@ class HealthAIApp extends StatelessWidget {
             GlobalWidgetsLocalizations.delegate,
             GlobalCupertinoLocalizations.delegate,
           ],
-          locale: languageProvider.isInitialized ? languageProvider.currentLocale : _getLocale(prefs.language),
+          locale: languageProvider.isInitialized ? languageProvider.currentLocale : (prefs.language.isNotEmpty ? Locale(prefs.language) : null),
           localeResolutionCallback: (deviceLocale, supportedLocales) {
             if (languageProvider.isInitialized) {
               return languageProvider.currentLocale;
@@ -648,6 +671,19 @@ class _SplashOrAppState extends State<SplashOrApp> with SingleTickerProviderStat
       );
     }
 
+    // Handle pending quick action after UI is ready
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (pendingQuickAction != null) {
+        final String action = pendingQuickAction!;
+        pendingQuickAction = null;
+        if (action == 'scan') {
+          Navigator.of(context).push(MaterialPageRoute(builder: (_) => const ScanPage()));
+        } else if (action == 'log') {
+          Navigator.of(context).push(MaterialPageRoute(builder: (_) => const LogMealPage()));
+        }
+      }
+    });
+
     return Container(
       color: kPrimaryGreen,
       child: Stack(
@@ -726,7 +762,6 @@ class _SplashOrAppState extends State<SplashOrApp> with SingleTickerProviderStat
     );
   }
 }
-
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
@@ -1426,7 +1461,6 @@ class _AuthScreenState extends State<AuthScreen> {
       },
     );
   }
-
   Future<void> _handleGoogleSignIn() async {
     setState(() => isLoading = true);
     try {
@@ -2060,7 +2094,6 @@ class _AuthScreenState extends State<AuthScreen> {
       }
     }
   }
-
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -2848,7 +2881,6 @@ class _FoodLogFormState extends State<FoodLogForm> {
     );
   }
 }
-
 class FoodLogList extends StatelessWidget {
   const FoodLogList({super.key});
 
@@ -2952,8 +2984,10 @@ class _MainNavScreenState extends State<MainNavScreen> with TickerProviderStateM
       _footerController.value = 1.0;
     }
     
-    // Initialize device session tracking for authenticated users
-    DeviceSessionService().initialize();
+    // Initialize device session tracking for authenticated users and enforce remote revocations
+    DeviceSessionService().initialize().then((_) {
+      DeviceSessionService().enforceRemoteRevocation();
+    });
 
     // Initial connectivity check and listener
     Connectivity().checkConnectivity().then((result) {
@@ -3471,7 +3505,6 @@ class DashboardScreen extends StatefulWidget {
   @override
   State<DashboardScreen> createState() => _DashboardScreenState();
 }
-
 class _DashboardScreenState extends State<DashboardScreen> with TickerProviderStateMixin {
   final MealService _mealService = MealService();
   Stream<List<Meal>>? _mealsStream;
@@ -4264,7 +4297,6 @@ class _MealCardModern extends StatefulWidget {
   @override
   State<_MealCardModern> createState() => _MealCardModernState();
 }
-
 class _MealCardModernState extends State<_MealCardModern> {
   bool _expanded = false;
   
@@ -4967,7 +4999,6 @@ Track your calories, scan food with AI, and get personalized nutrition insights 
       ),
     );
   }
-
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -5458,15 +5489,7 @@ Track your calories, scan food with AI, and get personalized nutrition insights 
                           ),
                           Divider(height: 1, color: Colors.grey[200]),
                           
-                          // Security Alerts
-                          _ProfileMenuTile(
-                            icon: Icons.security,
-                            label: AppLocalizations.of(context)!.securityAlerts,
-                            onTap: () {
-                              _securityService.showSecurityAlertsDialog(context);
-                            },
-                          ),
-                          Divider(height: 1, color: Colors.grey[200]),
+                          // Security Alerts removed
                           
                           // Language Settings
                           _ProfileMenuTile(
@@ -5924,7 +5947,6 @@ class CoachScreen extends StatefulWidget {
   @override
   State<CoachScreen> createState() => _CoachScreenState();
 }
-
 class _CoachScreenState extends State<CoachScreen> with TickerProviderStateMixin {
   int _tabIndex = 0;
   final TextEditingController _controller = TextEditingController();
@@ -6395,7 +6417,6 @@ class _CoachScreenState extends State<CoachScreen> with TickerProviderStateMixin
       );
     }
   }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -7088,7 +7109,6 @@ class FoodScreen extends StatefulWidget {
   @override
   State<FoodScreen> createState() => _FoodScreenState();
 }
-
 class _FoodScreenState extends State<FoodScreen> with TickerProviderStateMixin {
   DateTime _focusedDay = DateTime.now();
   DateTime? _selectedDay;
@@ -7863,7 +7883,6 @@ class _FoodMealCard extends StatefulWidget {
   @override
   State<_FoodMealCard> createState() => _FoodMealCardState();
 }
-
 class _FoodMealCardState extends State<_FoodMealCard> {
   bool _expanded = false;
   
@@ -8488,7 +8507,6 @@ class HealthAwarenessPage extends StatefulWidget {
   @override
   _HealthAwarenessPageState createState() => _HealthAwarenessPageState();
 }
-
 class _HealthAwarenessPageState extends State<HealthAwarenessPage> {
   String? _bloodType;
   bool? _isDiabetic;
@@ -8685,7 +8703,7 @@ class _WeightLogDialogState extends State<_WeightLogDialog> {
   final double _min = 0.1;
   final double _max = 10.0;
   final double _step = 0.1;
-  bool _isAdd = true;
+  bool _isAdd = false; // Default to LOST instead of gained
   
   // Convert values based on user's unit preference
   double _getDisplayValue(double kgValue, bool useMetric) {
@@ -8708,74 +8726,268 @@ class _WeightLogDialogState extends State<_WeightLogDialog> {
     final displayMin = _getDisplayValue(_min, useMetric);
     final displayMax = _getDisplayValue(_max, useMetric);
     final unit = _getUnit(useMetric);
+    final theme = Theme.of(context);
     
-    return AlertDialog(
-      title: Text(AppLocalizations.of(context)!.logWeightChange),
-      content: Column(
+    return Dialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+      child: Container(
+        padding: EdgeInsets.all(24),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(24),
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Colors.white,
+              Colors.grey[50]!,
+            ],
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.1),
+              blurRadius: 20,
+              offset: Offset(0, 10),
+            ),
+          ],
+        ),
+        child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Row(
+            // Header with icon
+            Container(
+              padding: EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: _isAdd ? Colors.red[50] : Colors.blue[50],
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              ChoiceChip(
-                label: Text(AppLocalizations.of(context)!.lost),
-                selected: !_isAdd,
-                selectedColor: Colors.blue[100],
-                onSelected: (selected) => setState(() => _isAdd = false),
-                labelStyle: TextStyle(
-                  color: !_isAdd ? Colors.blue[700] : Colors.black,
-                  fontWeight: FontWeight.bold,
-                ),
+                  Icon(
+                    _isAdd ? Icons.trending_up : Icons.trending_down,
+                    color: _isAdd ? Colors.red[600] : Colors.blue[600],
+                    size: 24,
+                  ),
+                  SizedBox(width: 8),
+                  Text(
+                    AppLocalizations.of(context)!.logWeightChange,
+                    style: theme.textTheme.headlineSmall?.copyWith(
+                      fontWeight: FontWeight.w700,
+                      color: _isAdd ? Colors.red[700] : Colors.blue[700],
+                    ),
+                  ),
+                ],
               ),
-              SizedBox(width: 12),
-              ChoiceChip(
-                label: Text(AppLocalizations.of(context)!.gained),
-                selected: _isAdd,
-                selectedColor: Colors.red[100],
-                onSelected: (selected) => setState(() => _isAdd = true),
-                labelStyle: TextStyle(
-                  color: _isAdd ? Colors.red[700] : Colors.black,
-                  fontWeight: FontWeight.bold,
+            ),
+            SizedBox(height: 24),
+            
+            // Weight change type selector
+            Container(
+              padding: EdgeInsets.all(4),
+              decoration: BoxDecoration(
+                color: Colors.grey[100],
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: () => setState(() => _isAdd = false),
+                      child: Container(
+                        padding: EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                        decoration: BoxDecoration(
+                          color: !_isAdd ? Colors.blue[600] : Colors.transparent,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.trending_down,
+                              color: !_isAdd ? Colors.white : Colors.grey[600],
+                              size: 18,
+                            ),
+                            SizedBox(width: 6),
+                            Text(
+                              AppLocalizations.of(context)!.lost,
+                              style: TextStyle(
+                                color: !_isAdd ? Colors.white : Colors.grey[600],
+                                fontWeight: FontWeight.w600,
+                                fontSize: 14,
                 ),
               ),
             ],
           ),
-          SizedBox(height: 18),
-          Text('${displayValue.toStringAsFixed(1)}$unit', style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: _isAdd ? Colors.red[400] : Colors.blue[400])),
-          SizedBox(height: 16),
-          Slider(
-            value: displayValue,
-            min: displayMin,
-            max: displayMax,
-            divisions: ((displayMax - displayMin) / _getDisplayValue(_step, useMetric)).round(),
-            onChanged: (v) => setState(() => _value = _getKgValue(double.parse(v.toStringAsFixed(1)), useMetric)),
-            activeColor: _isAdd ? Colors.red : Colors.blue,
-            inactiveColor: Colors.grey[300],
-            thumbColor: _isAdd ? Colors.red : Colors.blue,
-          ),
-          Row(
+                      ),
+                    ),
+                  ),
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: () => setState(() => _isAdd = true),
+                      child: Container(
+                        padding: EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                        decoration: BoxDecoration(
+                          color: _isAdd ? Colors.red[600] : Colors.transparent,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.trending_up,
+                              color: _isAdd ? Colors.white : Colors.grey[600],
+                              size: 18,
+                            ),
+                            SizedBox(width: 6),
+                            Text(
+                              AppLocalizations.of(context)!.gained,
+                              style: TextStyle(
+                                color: _isAdd ? Colors.white : Colors.grey[600],
+                                fontWeight: FontWeight.w600,
+                                fontSize: 14,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            SizedBox(height: 32),
+            
+            // Weight value display
+            Container(
+              padding: EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: _isAdd ? Colors.red[50] : Colors.blue[50],
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(
+                  color: _isAdd ? Colors.red[200]! : Colors.blue[200]!,
+                  width: 2,
+                ),
+              ),
+              child: Column(
+                children: [
+                  Text(
+                    '${displayValue.toStringAsFixed(1)}',
+                    style: TextStyle(
+                      fontSize: 48,
+                      fontWeight: FontWeight.w800,
+                      color: _isAdd ? Colors.red[700] : Colors.blue[700],
+                      letterSpacing: -1,
+                    ),
+                  ),
+                  Text(
+                    unit,
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                      color: _isAdd ? Colors.red[600] : Colors.blue[600],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            SizedBox(height: 24),
+            
+            // Slider
+            Column(
+              children: [
+                SliderTheme(
+                  data: SliderTheme.of(context).copyWith(
+                    activeTrackColor: _isAdd ? Colors.red[400] : Colors.blue[400],
+                    inactiveTrackColor: Colors.grey[200],
+                    thumbColor: _isAdd ? Colors.red[600] : Colors.blue[600],
+                    thumbShape: RoundSliderThumbShape(enabledThumbRadius: 12),
+                    overlayShape: RoundSliderOverlayShape(overlayRadius: 20),
+                    trackHeight: 6,
+                  ),
+                  child: Slider(
+                    value: _value,
+                    min: _min,
+                    max: _max,
+                    divisions: ((_max - _min) / _step).round(),
+                    onChanged: (v) => setState(() => _value = double.parse(v.toStringAsFixed(1))),
+                  ),
+                ),
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 16),
+                  child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('${displayMin.toStringAsFixed(1)}$unit'),
-              Text('${displayMax.toStringAsFixed(1)}$unit'),
-            ],
+                      Text(
+                        '${displayMin.toStringAsFixed(1)}$unit',
+                        style: TextStyle(
+                          color: Colors.grey[600],
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      Text(
+                        '${displayMax.toStringAsFixed(1)}$unit',
+                        style: TextStyle(
+                          color: Colors.grey[600],
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
           ),
         ],
       ),
-      actions: [
-        TextButton(
+            SizedBox(height: 32),
+            
+            // Action buttons
+            Row(
+              children: [
+                Expanded(
+                  child: TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: Text(AppLocalizations.of(context)!.cancel),
-        ),
-        ElevatedButton(
+                    style: TextButton.styleFrom(
+                      padding: EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: Text(
+                      AppLocalizations.of(context)!.cancel,
+                      style: TextStyle(
+                        color: Colors.grey[600],
+                        fontWeight: FontWeight.w600,
+                        fontSize: 16,
+                      ),
+                    ),
+                  ),
+                ),
+                SizedBox(width: 12),
+                Expanded(
+                  child: ElevatedButton(
           onPressed: () => Navigator.of(context).pop(_isAdd ? _value : -_value),
-          child: Text(_isAdd ? AppLocalizations.of(context)!.gained : AppLocalizations.of(context)!.lost),
           style: ElevatedButton.styleFrom(
-            backgroundColor: _isAdd ? Colors.red : Colors.blue,
+                      backgroundColor: _isAdd ? Colors.red[600] : Colors.blue[600],
             foregroundColor: Colors.white,
+                      padding: EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      elevation: 0,
+                      shadowColor: Colors.transparent,
+                    ),
+                    child: Text(
+                      _isAdd ? AppLocalizations.of(context)!.gained : AppLocalizations.of(context)!.lost,
+                      style: TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 16,
+                      ),
+                    ),
           ),
         ),
       ],
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
@@ -8816,43 +9028,189 @@ class _WaterLogSliderDialogState extends State<_WaterLogSliderDialog> {
 
   @override
   Widget build(BuildContext context) {
-    return AlertDialog(
-      title: Text(AppLocalizations.of(context)!.logWaterIntake),
-      content: Column(
+    final theme = Theme.of(context);
+    
+    return Dialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+      child: Container(
+        padding: EdgeInsets.all(24),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(24),
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Colors.white,
+              Colors.blue[50]!,
+            ],
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.1),
+              blurRadius: 20,
+              offset: Offset(0, 10),
+            ),
+          ],
+        ),
+        child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Row(
+            // Header with water icon
+            Container(
+              padding: EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.blue[50],
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              ChoiceChip(
-                label: Text(AppLocalizations.of(context)!.add),
-                selected: _isAdd,
-                selectedColor: Colors.blue[100],
-                onSelected: (selected) => setState(() => _isAdd = true),
-                labelStyle: TextStyle(
-                  color: _isAdd ? Colors.blue[700] : Colors.black,
-                  fontWeight: FontWeight.bold,
-                ),
+                  Icon(
+                    Icons.water_drop,
+                    color: Colors.blue[600],
+                    size: 24,
+                  ),
+                  SizedBox(width: 8),
+                  Text(
+                    AppLocalizations.of(context)!.logWaterIntake,
+                    style: theme.textTheme.headlineSmall?.copyWith(
+                      fontWeight: FontWeight.w700,
+                      color: Colors.blue[700],
+                    ),
+                  ),
+                ],
               ),
+            ),
+            SizedBox(height: 24),
+            
+            // Water action selector
               if (_hasWaterLogged) ...[
-                SizedBox(width: 12),
-                ChoiceChip(
-                  label: Text(AppLocalizations.of(context)!.remove),
-                  selected: !_isAdd,
-                  selectedColor: Colors.red[100],
-                  onSelected: (selected) => setState(() => _isAdd = false),
-                  labelStyle: TextStyle(
-                    color: !_isAdd ? Colors.red[700] : Colors.black,
-                    fontWeight: FontWeight.bold,
+              Container(
+                padding: EdgeInsets.all(4),
+                decoration: BoxDecoration(
+                  color: Colors.grey[100],
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: GestureDetector(
+                        onTap: () => setState(() => _isAdd = true),
+                        child: Container(
+                          padding: EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                          decoration: BoxDecoration(
+                            color: _isAdd ? Colors.blue[600] : Colors.transparent,
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.add,
+                                color: _isAdd ? Colors.white : Colors.grey[600],
+                                size: 18,
+                              ),
+                              SizedBox(width: 6),
+                              Text(
+                                AppLocalizations.of(context)!.add,
+                                style: TextStyle(
+                                  color: _isAdd ? Colors.white : Colors.grey[600],
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 14,
                   ),
                 ),
               ],
+                          ),
+                        ),
+                      ),
+                    ),
+                    Expanded(
+                      child: GestureDetector(
+                        onTap: () => setState(() => _isAdd = false),
+                        child: Container(
+                          padding: EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                          decoration: BoxDecoration(
+                            color: !_isAdd ? Colors.red[600] : Colors.transparent,
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.remove,
+                                color: !_isAdd ? Colors.white : Colors.grey[600],
+                                size: 18,
+                              ),
+                              SizedBox(width: 6),
+                              Text(
+                                AppLocalizations.of(context)!.remove,
+                                style: TextStyle(
+                                  color: !_isAdd ? Colors.white : Colors.grey[600],
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 14,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              SizedBox(height: 24),
             ],
-          ),
-          SizedBox(height: 18),
-          Text('${_value.toStringAsFixed(2)}L', style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: _isAdd ? Colors.blue[400] : Colors.red[400])),
-          SizedBox(height: 16),
-          Slider(
+            
+            // Water value display
+            Container(
+              padding: EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: _isAdd ? Colors.blue[50] : Colors.red[50],
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(
+                  color: _isAdd ? Colors.blue[200]! : Colors.red[200]!,
+                  width: 2,
+                ),
+              ),
+              child: Column(
+                children: [
+                  Text(
+                    '${_value.toStringAsFixed(2)}',
+                    style: TextStyle(
+                      fontSize: 48,
+                      fontWeight: FontWeight.w800,
+                      color: _isAdd ? Colors.blue[700] : Colors.red[700],
+                      letterSpacing: -1,
+                    ),
+                  ),
+                  Text(
+                    'L',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                      color: _isAdd ? Colors.blue[600] : Colors.red[600],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            SizedBox(height: 24),
+            
+            // Quick add removed
+            
+            // Slider
+            Column(
+              children: [
+                SliderTheme(
+                  data: SliderTheme.of(context).copyWith(
+                    activeTrackColor: _isAdd ? Colors.blue[400] : Colors.red[400],
+                    inactiveTrackColor: Colors.grey[200],
+                    thumbColor: _isAdd ? Colors.blue[600] : Colors.red[600],
+                    thumbShape: RoundSliderThumbShape(enabledThumbRadius: 12),
+                    overlayShape: RoundSliderOverlayShape(overlayRadius: 20),
+                    trackHeight: 6,
+                  ),
+                  child: Slider(
             value: _value,
             min: _isAdd ? _min : 0.1,
             max: _isAdd ? _max : (_currentWaterLogged / 1000.0).clamp(0.1, _max),
@@ -8861,47 +9219,85 @@ class _WaterLogSliderDialogState extends State<_WaterLogSliderDialog> {
                 : (((_currentWaterLogged / 1000.0).clamp(0.1, _max) - 0.1) / _step).round(),
             onChanged: (v) => setState(() => _value = double.parse(v.toStringAsFixed(2))),
           ),
-          Row(
+                ),
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 16),
+                  child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(_isAdd ? '${_min.toStringAsFixed(1)}L' : '0.1L'),
-              Text(_isAdd ? '${_max.toStringAsFixed(1)}L' : '${(_currentWaterLogged / 1000.0).clamp(0.1, _max).toStringAsFixed(1)}L'),
-            ],
+                      Text(
+                        _isAdd ? '${_min.toStringAsFixed(1)}L' : '0.1L',
+                        style: TextStyle(
+                          color: Colors.grey[600],
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      Text(
+                        _isAdd ? '${_max.toStringAsFixed(1)}L' : '${(_currentWaterLogged / 1000.0).clamp(0.1, _max).toStringAsFixed(1)}L',
+                        style: TextStyle(
+                          color: Colors.grey[600],
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
           ),
         ],
       ),
-      actions: [
-        TextButton(
+            SizedBox(height: 32),
+            
+            // Action buttons
+            Row(
+              children: [
+                Expanded(
+                  child: TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: Text(AppLocalizations.of(context)!.cancel),
-        ),
-        ElevatedButton(
+                    style: TextButton.styleFrom(
+                      padding: EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: Text(
+                      AppLocalizations.of(context)!.cancel,
+                      style: TextStyle(
+                        color: Colors.grey[600],
+                        fontWeight: FontWeight.w600,
+                        fontSize: 16,
+                      ),
+                    ),
+                  ),
+                ),
+                SizedBox(width: 12),
+                Expanded(
+                  child: ElevatedButton(
           onPressed: () => Navigator.of(context).pop(_isAdd ? (_value * 1000).round() : -(_value * 1000).round()),
-          child: Text(AppLocalizations.of(context)!.add),
           style: ElevatedButton.styleFrom(
-            backgroundColor: _isAdd ? Colors.green : Colors.red,
+                      backgroundColor: _isAdd ? Colors.blue[600] : Colors.red[600],
             foregroundColor: Colors.white,
+                      padding: EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      elevation: 0,
+                      shadowColor: Colors.transparent,
+                    ),
+                    child: Text(
+                      _isAdd ? AppLocalizations.of(context)!.add : AppLocalizations.of(context)!.remove,
+                      style: TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 16,
+                      ),
+                    ),
           ),
         ),
       ],
+            ),
+          ],
+        ),
+      ),
     );
   }
-}
-
-// Helper to remove Markdown formatting from AI responses - DUPLICATE REMOVED
-/* String removeMarkdown_OLD_DUPLICATE(String text) {
-  return text
-      .replaceAll(RegExp(r'\*\*(.*?)\*\*'), r'')
-      .replaceAll(RegExp(r'__(.*?)__'), r'')
-      .replaceAll(RegExp(r'\*(.*?)\*'), r'')
-      .replaceAll(RegExp(r'_(.*?)_'), r'');
-} */
-
-// Add this helper function to main.dart
-Locale _getLocale(String code) {
-  if (code == 'ar') return const Locale('ar');
-  if (code == 'es') return const Locale('es');
-  return const Locale('en');
 }
 
 // Helper to remove Markdown formatting from AI responses

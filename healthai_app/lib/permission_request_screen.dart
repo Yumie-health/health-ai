@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart' as ph;
+// removed unused SharedPreferences import to comply with iOS permissions flow
 import 'services/permission_service.dart';
 import 'utils/constants.dart';
 import 'l10n/app_localizations.dart';
@@ -129,6 +130,71 @@ class _PermissionRequestScreenState extends State<PermissionRequestScreen>
               padding: const EdgeInsets.all(24.0),
               child: Column(
                 children: [
+                  // Intro banner with image background explaining why we ask
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(18),
+                    child: Stack(
+                      children: [
+                        Positioned.fill(
+                          child: Image.asset(
+                            'assets/food_app_image.png',
+                            fit: BoxFit.cover,
+                          ),
+                        ),
+                        Positioned.fill(
+                          child: Container(
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                begin: Alignment.topCenter,
+                                end: Alignment.bottomCenter,
+                                colors: [
+                                  Colors.black.withOpacity(0.60),
+                                  Colors.black.withOpacity(0.35),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.all(18.0),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Why we ask for permissions',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 22,
+                                  fontWeight: FontWeight.w900,
+                                  shadows: [Shadow(color: Colors.black54, blurRadius: 6, offset: Offset(0,1))],
+                                ),
+                              ),
+                              const SizedBox(height: 10),
+                              Text(
+                                'We use your camera to scan foods and barcodes, access photos when you upload images, and notifications to remind you to log meals and hydrate.',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 15,
+                                  height: 1.4,
+                                  shadows: [Shadow(color: Colors.black45, blurRadius: 4, offset: Offset(0,1))],
+                                ),
+                              ),
+                              const SizedBox(height: 12),
+                              Text(
+                                'On the next screen, you\'ll see the system prompts to grant access. You can change this anytime in Settings.',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 14,
+                                  shadows: [Shadow(color: Colors.black45, blurRadius: 4, offset: Offset(0,1))],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 16),
                   // Header
                   Expanded(
                     flex: 2,
@@ -307,7 +373,7 @@ class _PermissionRequestScreenState extends State<PermissionRequestScreen>
                               ],
                             )
                           : Text(
-                              AppLocalizations.of(context)!.grantPermissions,
+                              AppLocalizations.of(context)!.continueButton,
                               style: TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w600,
@@ -315,17 +381,7 @@ class _PermissionRequestScreenState extends State<PermissionRequestScreen>
                             ),
                     ),
                   ),
-                  const SizedBox(height: 12),
-                  TextButton(
-                    onPressed: () => widget.onPermissionsComplete(),
-                    child: Text(
-                      AppLocalizations.of(context)!.skipForNow,
-                      style: TextStyle(
-                        color: Colors.grey[600],
-                        fontSize: 16,
-                      ),
-                    ),
-                  ),
+                  // Removed skip/exit per App Store guideline 5.1.1
                 ],
               ),
             ),

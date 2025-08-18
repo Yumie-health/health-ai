@@ -5,17 +5,9 @@ import 'package:firebase_auth/firebase_auth.dart';
 /// This replaces the multiple different implementations in main.dart
 bool hasCompletedOnboarding(Map<String, dynamic>? userData) {
   if (userData == null) return false;
-  
-  // Check the explicit flag first
-  if (userData['hasCompletedOnboarding'] == true) return true;
-  
-  // Fallback: check required fields
-  return userData['age'] != null &&
-         userData['height'] != null &&
-         userData['weight'] != null &&
-         userData['targetWeight'] != null &&
-         userData['activityLevel'] != null &&
-         userData['dailyCalorieGoal'] != null;
+  // Only the explicit final-step flag counts. This ensures users
+  // reach the AI-generated Nutrition Summary before entering the app.
+  return userData['hasCompletedOnboarding'] == true;
 }
 
 /// Helper to get current user

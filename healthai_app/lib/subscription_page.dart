@@ -7,6 +7,7 @@ import 'services/subscription_service.dart';
 import 'utils/constants.dart';
 import 'subscription_success_page.dart';
 import 'l10n/app_localizations.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class SubscriptionPage extends StatefulWidget {
   const SubscriptionPage({Key? key}) : super(key: key);
@@ -27,6 +28,24 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
   // Restore/purchase coordination
   Timer? _restoreCheckTimer;
   bool _sawRestoredOrPurchased = false;
+
+  Future<void> _openUrl(String url, {String? fallbackError}) async {
+    try {
+      final uri = Uri.parse(url);
+      final ok = await launchUrl(uri, mode: LaunchMode.externalApplication);
+      if (!ok && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(fallbackError ?? AppLocalizations.of(context)!.unknownErrorOccurred)),
+        );
+      }
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(fallbackError ?? AppLocalizations.of(context)!.unknownErrorOccurred)),
+        );
+      }
+    }
+  }
 
   @override
   void initState() {
@@ -318,7 +337,8 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
   Widget _buildPlanCard(ProductDetails product) {
     final isYearly = product.id == 'premium_yearly';
     final price = product.id == 'premium_monthly' ? '7.99' : '49.99';
-    final description = '';
+    final lengthLabel = isYearly ? '1 year' : '1 month';
+    final perUnit = isYearly ? '/year' : '/month';
     return Card(
       margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       elevation: 4,
@@ -345,20 +365,31 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
               ],
             ),
             SizedBox(height: 8),
-                         Text(
-               '\$$price',
-               style: TextStyle(
-                 fontSize: 32,
-                 fontWeight: FontWeight.bold,
-                 color: Colors.black87,
-               ),
-             ),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Text(
+                  '\$$price',
+                  style: TextStyle(
+                    fontSize: 32,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87,
+                  ),
+                ),
+                const SizedBox(width: 6),
+                Text(
+                  perUnit,
+                  style: const TextStyle(fontSize: 14, color: Colors.black54, fontWeight: FontWeight.w600),
+                ),
+              ],
+            ),
             SizedBox(height: 8),
             Text(
-              description,
+              'Subscription length: $lengthLabel',
               style: TextStyle(
-                fontSize: 16,
-                color: Colors.grey[600],
+                fontSize: 14,
+                color: Colors.grey[700],
+                fontWeight: FontWeight.w500,
               ),
             ),
             SizedBox(height: 20),
@@ -486,6 +517,32 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
                       color: Colors.grey[600],
                     ),
                     textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 8),
+                  Center(
+                    child: Wrap(
+                      alignment: WrapAlignment.center,
+                      spacing: 12,
+                      runSpacing: 4,
+                      children: [
+                        TextButton(
+                          onPressed: () => _openUrl(
+                            Platform.isIOS
+                                ? 'https://www.apple.com/legal/internet-services/itunes/dev/stdeula/'
+                                : 'https://yumie.me/terms',
+                            fallbackError: AppLocalizations.of(context)!.couldNotOpenTermsOfService,
+                          ),
+                          child: Text('Terms of Use (EULA)'),
+                        ),
+                        TextButton(
+                          onPressed: () => _openUrl(
+                            'https://yumie.me/privacy',
+                            fallbackError: AppLocalizations.of(context)!.couldNotOpenPrivacyPolicy,
+                          ),
+                          child: Text(AppLocalizations.of(context)!.privacyPolicy),
+                        ),
+                      ],
+                    ),
                   ),
                 ],
               ),

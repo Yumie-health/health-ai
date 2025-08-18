@@ -1,9 +1,11 @@
 // RECREATED PAGE (glassmorphism design)
 import 'dart:ui';
+import 'dart:math';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:provider/provider.dart';
 import '../providers/preferences_provider.dart';
 import '../l10n/app_localizations.dart';
@@ -33,11 +35,15 @@ class _WeightAnalyticsPageState extends State<WeightAnalyticsPage> {
   Future<void> _load() async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
+    
+    // Load user profile data
     final u = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
     final data = u.data() as Map<String, dynamic>?;
     _current = (data?['weight'] as num?)?.toDouble() ?? 0;
     _target = (data?['targetWeight'] as num?)?.toDouble() ?? 0;
     _starting = (data?['startingWeight'] as num?)?.toDouble() ?? 0;
+    
+    // Load weight entries
     final w = await FirebaseFirestore.instance
         .collection('users').doc(user.uid).collection('weights')
         .orderBy('timestamp', descending: true)
@@ -50,9 +56,24 @@ class _WeightAnalyticsPageState extends State<WeightAnalyticsPage> {
         .toList()
         .reversed
         .toList();
+    
     // Fallback starting weight from earliest record if not explicitly set
     final derivedStarting = list.isNotEmpty ? list.first.value : _current;
-    setState((){ _points = list.isEmpty? _synthetic() : list; _starting = _starting==0? derivedStarting : _starting; _loading=false; });
+    
+    // Debug: Check if we're using synthetic data
+    final usingSynthetic = list.isEmpty;
+    if (usingSynthetic) {
+      print('⚠️ Weight Analytics: Using synthetic data - no real weight entries found');
+      print('Current weight: $_current, Target: $_target');
+    } else {
+      print('✅ Weight Analytics: Using real data - ${list.length} weight entries found');
+    }
+    
+    setState((){ 
+      _points = list; // Only use real data, no synthetic fallback
+      _starting = _starting==0? derivedStarting : _starting; 
+      _loading=false; 
+    });
   }
 
   List<_Point> _synthetic(){
@@ -82,6 +103,142 @@ class _WeightAnalyticsPageState extends State<WeightAnalyticsPage> {
     return source;
   }
 
+  // Expected weekly from nutrition (signed): deficit -> negative, surplus -> positive
+double _expectedWeeklyFromNutrition(Map<String, dynamic>? userData, bool useMetric) {
+  if (userData == null) return 0.0;
+
+  // Prefer an explicit weekly goal if you store one (e.g., -0.5 kg/week)
+  final weeklyGoal = (userData['weeklyRateGoal'] as num?)?.toDouble();
+  if (weeklyGoal != null) return weeklyGoal;
+
+  // Daily energy balance (kcal/day), negative = deficit
+  final energyBalance = (userData['dailyEnergyBalance'] as num?)?.toDouble();
+  if (energyBalance != null) {
+    final perUnit = useMetric ? 7700.0 : 3500.0; // kcal per kg or lb
+    return (energyBalance * 7.0) / perUnit;
+  }
+
+  // Legacy fields
+  final calorieGoal = (userData['calorieGoal'] as num?)?.toDouble();
+  final currentCalories = (userData['currentCalories'] as num?)?.toDouble();
+  if (calorieGoal != null && calorieGoal > 0) {
+    // Handle case when currentCalories is 0 or null (no meals logged today)
+    final actualCalories = currentCalories ?? 0.0;
+    final dailyDeficit = calorieGoal - actualCalories; // >0 deficit (loss), <0 surplus (gain)
+    
+    // If no calories logged today, assume a reasonable daily intake
+    if (actualCalories == 0.0) {
+      // Assume user will eat around their goal, so small deficit
+      final assumedDeficit = useMetric ? 500.0 : 1000.0; // 500 cal deficit for kg, 1000 for lbs
+      final perUnit = useMetric ? 7700.0 : 3500.0;
+      final weekly = (assumedDeficit * 7.0) / perUnit;
+      final lo = useMetric ? -1.5 : -3.3;
+      final hi = useMetric ?  1.0 :  2.2;
+      return weekly.clamp(lo, hi);
+    }
+    
+    // Normal calculation when calories are logged
+    if (dailyDeficit.abs() < 200) return 0.0; // avoid noisy zeros
+    final perUnit = useMetric ? 7700.0 : 3500.0;
+    final weekly = (dailyDeficit * 7.0) / perUnit;
+    // keep expectations conservative
+    final lo = useMetric ? -1.5 : -3.3;
+    final hi = useMetric ?  1.0 :  2.2;
+    return weekly.clamp(lo, hi);
+  }
+
+  return 0.0;
+}
+
+// Robust weekly rate from weights via OLS over ~last 60 days (signed, in display units)
+double _weeklyFromWeights(List<_Point> pts, double scale) {
+  if (pts.length < 3) {
+    if (pts.length >= 2) {
+      final dDays = pts.last.time.difference(pts.first.time).inDays;
+      if (dDays >= 7) {
+        final dy = (pts.last.value - pts.first.value) * scale;
+        return (dy / dDays) * 7.0;
+      }
+    }
+    return 0.0;
+  }
+
+  final cutoff = DateTime.now().subtract(const Duration(days: 60));
+  final recent = pts.where((p) => p.time.isAfter(cutoff)).toList();
+  final used = recent.length >= 3 ? recent : pts;
+
+  final t0 = used.first.time;
+  final xs = <double>[];
+  final ys = <double>[];
+  for (final p in used) {
+    xs.add(p.time.difference(t0).inHours / 24.0); // days
+    ys.add(p.value * scale);                       // display units
+  }
+
+  final n = xs.length;
+  final meanX = xs.reduce((a, b) => a + b) / n;
+  final meanY = ys.reduce((a, b) => a + b) / n;
+
+  double num = 0, den = 0;
+  for (int i = 0; i < n; i++) {
+    final dx = xs[i] - meanX;
+    num += dx * (ys[i] - meanY);
+    den += dx * dx;
+  }
+  if (den == 0) return 0.0;
+
+  final slopePerDay = num / den;
+  final weekly = slopePerDay * 7.0; // signed
+  final lo = scale == 1.0 ? -2.0 : -4.4; // ~ -2 kg/wk | -4.4 lb/wk
+  final hi = scale == 1.0 ?  1.5 :  3.3; // ~ +1.5 kg/wk | +3.3 lb/wk
+  return weekly.clamp(lo, hi);
+}
+
+// Gentle fallback when measured trend ~0; sign points toward the goal
+double _healthyWeeklyFallback(bool useMetric, double distanceSigned) {
+  final loss = useMetric ? -0.5 : -1.0; // −0.5 kg/wk | −1 lb/wk
+  final gain = useMetric ?  0.25 :  0.5; // +0.25 kg/wk | +0.5 lb/wk
+  if (distanceSigned < 0) return loss; // need to go down
+  if (distanceSigned > 0) return gain; // need to go up
+  return 0.0;
+}
+
+Future<double> _calculateWeeklyRate(List<_Point> points, bool useMetric, double scale) async {
+  final user = FirebaseAuth.instance.currentUser;
+  if (user == null) {
+    print('❌ No user found for weekly rate calculation');
+    return 0.0;
+  }
+
+  try {
+    final userDoc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
+    final userData = userDoc.data() as Map<String, dynamic>?;
+
+    final expected = _expectedWeeklyFromNutrition(userData, useMetric); // signed
+    final measured = _weeklyFromWeights(points, scale);                  // signed
+
+    int spanDays = 0;
+    if (points.length >= 2) {
+      spanDays = max(0, points.last.time.difference(points.first.time).inDays);
+    }
+    final hasGoodData = points.length >= 3 && spanDays >= 14;
+
+    // Blend: if we have good data, weight trend dominates
+    final weekly = hasGoodData ? (measured * 0.7 + expected * 0.3)
+                               : (measured * 0.3 + expected * 0.7);
+
+    final lo = scale == 1.0 ? -2.0 : -4.4;
+    final hi = scale == 1.0 ?  1.5 :  3.3;
+    final result = weekly.clamp(lo, hi);
+
+    print('🍎 expected: ${expected.toStringAsFixed(3)}, 📈 measured: ${measured.toStringAsFixed(3)}, 🧮 weekly: ${result.toStringAsFixed(3)}');
+    return result;
+  } catch (e) {
+    print('❌ Error calculating weekly rate: $e');
+    return _weeklyFromWeights(points, scale);
+  }
+}
+
   @override
   Widget build(BuildContext context) {
     final useMetric = context.watch<PreferencesProvider?>()?.useMetric ?? true;
@@ -98,111 +255,105 @@ class _WeightAnalyticsPageState extends State<WeightAnalyticsPage> {
       );
     }
 
-    // compute realistic trend from weight history using 14-day regression fallback to deltas
-    double _trendPerDayScaled(List<_Point> points){
-      double healthyPerDay() => -(useMetric ? 0.45 : 1.0) / 7.0;
-      if(points.length < 2) return healthyPerDay();
+    return FutureBuilder<double>(
+      future: _calculateWeeklyRate(_points, useMetric, scale),
+      builder: (context, snapshot) {
+        final weekly = snapshot.data ?? 0.0;
 
-      double? regressionPerDay(List<_Point> pts){
-        if(pts.length < 2) return null;
-        final DateTime t0 = pts.first.time;
-        double sx=0, sy=0, sxx=0, sxy=0; int n=0;
-        for(final p in pts){
-          final x = p.time.difference(t0).inDays.toDouble();
-          final y = p.value * scale; // scaled (kg/lbs)
-          sx += x; sy += y; sxx += x*x; sxy += x*y; n++;
+        // Distances in scaled units
+        final currentScaled = _current * scale;
+        final targetScaled  = _target  * scale;
+
+        // Signed distance: positive if target above current (need to gain),
+        // negative if target below current (need to lose).
+        final distanceToGoal = (targetScaled - currentScaled);
+        final remainingScaled = distanceToGoal.abs();
+
+        double signedWeekly = weekly; // signed units/week (loss < 0, gain > 0)
+
+        // If weekly is ~0, nudge with a healthy fallback toward the goal
+        if (signedWeekly.abs() < (useMetric ? 0.05 : 0.1)) {
+          signedWeekly = _healthyWeeklyFallback(useMetric, distanceToGoal);
         }
-        final denom = n*sxx - sx*sx;
-        if(denom.abs() < 1e-6) return null;
-        final slopePerDay = (n*sxy - sx*sy) / denom; // scaled units/day
-        return slopePerDay;
-      }
 
-      List<_Point> withinDays(int d){
-        final cutoff = DateTime.now().subtract(Duration(days: d));
-        return points.where((p)=> p.time.isAfter(cutoff)).toList();
-      }
+        // ETA rules:
+        // - If essentially at goal -> 0
+        // - Only show ETA if the current trend heads TOWARD the goal
+        //   (distance and weekly must have the same sign).
+        double? weeksToGoal;
+        final atGoal = remainingScaled <= (useMetric ? 0.05 : 0.1);
+        if (atGoal) {
+          weeksToGoal = 0;
+        } else if (signedWeekly == 0) {
+          weeksToGoal = null;
+        } else if (distanceToGoal * signedWeekly > 0) {
+          weeksToGoal = remainingScaled / signedWeekly.abs();
+        } else {
+          weeksToGoal = null; // moving away from goal
+        }
 
-      final last14 = withinDays(14);
-      double? perDay = regressionPerDay(last14);
-      if(perDay == null && last14.length >= 2){
-        final first = last14.first; final last = last14.last;
-        final days = (last.time.difference(first.time).inDays).abs();
-        if(days >= 1) perDay = (last.value - first.value) * scale / days;
-      }
-      if(perDay == null){
-        final last30 = withinDays(30);
-        perDay = regressionPerDay(last30);
-      }
-      if(perDay == null){
-        final first = points.first; final last = points.last;
-        final days = (last.time.difference(first.time).inDays).abs();
-        perDay = days>=1 ? (last.value - first.value) * scale / days : healthyPerDay();
-      }
-      final maxLossPerDay = useMetric ? 0.1 : 0.25; // cap to reasonable bounds
-      return perDay!.clamp(-maxLossPerDay, maxLossPerDay);
-    }
-    final perDayTrend = _trendPerDayScaled(_points);
-    final weekly = perDayTrend*7;
-    // Distances in scaled units
-    final currentScaled = _current * scale;
-    final targetScaled = _target * scale;
-    final distanceToGoal = (targetScaled - currentScaled); // sign encodes direction
-    final remainingScaled = distanceToGoal.abs();
-    double? weeksToGoal;
-    final movingTowardGoal = weekly==0 ? false : (weekly.sign == distanceToGoal.sign);
-    final atGoal = remainingScaled <= 0.05;
-    if (atGoal) {
-      weeksToGoal = 0; // essentially at goal
-    } else if (weekly == 0 || !movingTowardGoal) {
-      weeksToGoal = null; // cannot project if trend is flat or moving away
-    } else {
-      weeksToGoal = (remainingScaled/weekly.abs());
-    }
-    final timeText = weeksToGoal==null? '—' : (weeksToGoal<=0.05? 'Reached' : _formatWeeks(weeksToGoal));
+        final timeText = weeksToGoal == null
+            ? '—'
+            : (weeksToGoal <= 0.05 ? 'Reached' : _formatWeeks(weeksToGoal));
 
-    // Build series from logged weights (solid) and projection (dashed)
-    final List<DateTime> xDates = [];
-    final List<FlSpot> actualSpots = [];
-    final List<FlSpot> projSpots = [];
-    final filtered = _filtered();
-    if(filtered.isNotEmpty){
-      final startDate = filtered.first.time;
-      for(final p in filtered){
-        final x = p.time.difference(startDate).inDays.toDouble();
-        xDates.add(p.time);
-        actualSpots.add(FlSpot(x, (p.value*scale)));
-      }
-      // Projection from last logged date
-      if(_range==_Range.plan){
-        final last = filtered.last;
-        final startX = last.time.difference(startDate).inDays.toDouble();
-        final startY = last.value*scale;
-        final perDay = perDayTrend; // already scaled
-        int horizonDays = weeksToGoal!=null && weeksToGoal!>0
-          ? (weeksToGoal!*7).ceil()
-          : 30;
-        horizonDays = horizonDays.clamp(7, 365);
-        for(int i=1;i<=horizonDays;i++){
-          final dt = last.time.add(Duration(days: i));
-          final x = startX + i;
-          double y = startY + perDay*i;
-          if ((perDay <= 0 && y <= targetScaled) || (perDay > 0 && y >= targetScaled)){
-            y = targetScaled;
+        // (Optional debug logs)
+        print('📊 Weekly (signed): ${signedWeekly.toStringAsFixed(2)} $unit/wk');
+        print('  Remaining: ${remainingScaled.toStringAsFixed(2)} $unit');
+        print('  WeeksToGoal: ${weeksToGoal?.toStringAsFixed(2) ?? 'null'}');
+        print('  ETA text: ${weeksToGoal == null ? '—' : _etaDateText(weeksToGoal)}');
+        
+        // Debug: Log the weekly rate calculation
+        print('📊 Weight Analytics Weekly Rate:');
+        print('  - Weekly rate: ${weekly.toStringAsFixed(1)} ${unit}/week');
+        print('  - Data points: ${_points.length}');
+        print('  - Remaining to goal: ${remainingScaled.toStringAsFixed(1)} $unit');
+        
+        // Debug: Log expectation text values
+        if (_points.length >= 2) {
+          print('📊 Expectation Text Values:');
+          print('  - Weekly rate: ${weekly.toStringAsFixed(1)} $unit/week');
+          print('  - Remaining to goal: ${remainingScaled.toStringAsFixed(1)} $unit');
+          print('  - Weeks to goal: ${weeksToGoal?.toStringAsFixed(1) ?? 'null'}');
+          print('  - ETA text: ${weeksToGoal==null? '—' : _etaDateText(weeksToGoal)}');
+        }
+
+        // Build series from logged weights (solid) and projection (dashed)
+        final List<DateTime> xDates = [];
+        final List<FlSpot> actualSpots = [];
+        final List<FlSpot> projSpots = [];
+        final filtered = _filtered();
+        if(filtered.isNotEmpty){
+          final startDate = filtered.first.time;
+          for(final p in filtered){
+            final x = p.time.difference(startDate).inDays.toDouble();
+            final y = p.value*scale;
+            actualSpots.add(FlSpot(x, y));
+            xDates.add(p.time);
           }
-          xDates.add(dt);
-          projSpots.add(FlSpot(x, y));
-          if(y==targetScaled) break;
         }
-      }
-    }
 
-    // Total change since start
-    final totalChangeScaled = ((_current - _starting) * scale);
-    final totalChangeAbsStr = totalChangeScaled.abs().toStringAsFixed(1);
-    final signedChangeStr = '${totalChangeScaled>=0? '+':'-'}$totalChangeAbsStr $unit';
+        // Projection line (dashed) based on current trend
+        if(actualSpots.isNotEmpty && weeksToGoal != null && weeksToGoal! > 0){
+          final last = actualSpots.last;
+          final startX = last.x;
+          final startY = last.y;
+          final perDay = weekly / 7; // Convert weekly rate to daily rate
+          int horizonDays = weeksToGoal!=null && weeksToGoal!>0
+            ? (weeksToGoal!*7).ceil()
+            : 30; // fallback to 30 days
+          for(int i=1; i<=horizonDays; i++){
+            final x = startX + i;
+            final y = startY + (perDay * i);
+            projSpots.add(FlSpot(x, y));
+          }
+        }
 
-    return Scaffold(
+        // Total change since start
+        final totalChangeScaled = ((_current - _starting) * scale);
+        final totalChangeAbsStr = totalChangeScaled.abs().toStringAsFixed(1);
+        final signedChangeStr = '${totalChangeScaled>=0? '+':'-'}$totalChangeAbsStr $unit';
+
+        return Scaffold(
       backgroundColor: bg,
       body: SafeArea(
         child: Padding(
@@ -242,8 +393,8 @@ class _WeightAnalyticsPageState extends State<WeightAnalyticsPage> {
                 const SizedBox(width: 12),
                 Expanded(child: _InfoCard(
                   title: AppLocalizations.of(context)!.weeklyRate,
-                  value: '${weekly.abs().toStringAsFixed(1)} $unit',
-                  subtitle: weekly<=0? AppLocalizations.of(context)!.weeklyLoss : 'weekly gain',
+                  value: '${signedWeekly.abs().toStringAsFixed(1)} $unit',
+                  subtitle: signedWeekly == 0.0 ? 'log weight to see trend' : (signedWeekly <= 0 ? AppLocalizations.of(context)!.weeklyLoss : 'weekly gain'),
                 )),
               ]),
               const SizedBox(height: 12),
@@ -277,12 +428,25 @@ class _WeightAnalyticsPageState extends State<WeightAnalyticsPage> {
               const SizedBox(height: 18),
 
               // Expectation text
-              _ExpectationBlock(
-                weekly: weekly,
-                unit: unit,
-                etaText: weeksToGoal==null? '—' : _etaDateText(weeksToGoal),
-                remaining: remainingScaled,
-              ),
+              signedWeekly == 0.0 
+                ? Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF7FAFF),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: const Color(0xFFE5EEF9)),
+                    ),
+                    child: Text(
+                      'Log your weight entries to see personalized trends and projections.',
+                      style: theme.textTheme.bodyMedium?.copyWith(height: 1.35),
+                    ),
+                  )
+                : _ExpectationBlock(
+                    weekly: signedWeekly,
+                    unit: unit,
+                    etaText: weeksToGoal==null? '—' : _etaDateText(weeksToGoal),
+                    remaining: remainingScaled,
+                  ),
               const SizedBox(height: 12),
               Text(AppLocalizations.of(context)!.expectationsDisclaimer, style: theme.textTheme.bodySmall?.copyWith(color: Colors.grey[600])),
 
@@ -291,10 +455,36 @@ class _WeightAnalyticsPageState extends State<WeightAnalyticsPage> {
                 isLoss: totalChangeScaled <= 0,
                 valueText: '${totalChangeScaled.abs().toStringAsFixed(1)} $unit',
               ),
+              const SizedBox(height: 12),
+              // References for medical guidance
+              Align(
+                alignment: Alignment.centerLeft,
+                child: Wrap(
+                  spacing: 8,
+                  runSpacing: 4,
+                  children: [
+                    Text('References:', style: theme.textTheme.bodySmall?.copyWith(color: Colors.grey[700], fontWeight: FontWeight.w600)),
+                    TextButton(
+                      onPressed: () {
+                        launchUrl(Uri.parse('https://www.cdc.gov/healthyweight/assessing/bmi/index.html'), mode: LaunchMode.externalApplication);
+                      },
+                      child: const Text('CDC: About BMI'),
+                    ),
+                    TextButton(
+                      onPressed: () {
+                        launchUrl(Uri.parse('https://www.dietaryguidelines.gov/'), mode: LaunchMode.externalApplication);
+                      },
+                      child: const Text('USDA Dietary Guidelines'),
+                    ),
+                  ],
+                ),
+              ),
             ],
           ),
         ),
       ),
+    );
+      },
     );
   }
 
@@ -464,9 +654,49 @@ class _ExpectationBlock extends StatelessWidget{
   const _ExpectationBlock({required this.weekly, required this.unit, required this.etaText, required this.remaining});
   @override Widget build(BuildContext context){
     final theme = Theme.of(context);
-    final losing = weekly<=0;
-    final dir = losing? AppLocalizations.of(context)!.loseVerb : AppLocalizations.of(context)!.gainVerb;
+    
+    // Handle case when weekly rate is 0 (no trend)
+    if (weekly == 0.0) {
+      return Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: const Color(0xFFF7FAFF),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: const Color(0xFFE5EEF9)),
+        ),
+        child: Text(
+          'Your weight trend is currently flat. Log more weight entries to see your progress trend.',
+          style: theme.textTheme.bodyMedium?.copyWith(height: 1.35),
+        ),
+      );
+    }
+    
+    final losing = weekly < 0;
+    final dir = losing ? AppLocalizations.of(context)!.loseVerb : AppLocalizations.of(context)!.gainVerb;
     final rate = weekly.abs().toStringAsFixed(1);
+    final remainingFormatted = remaining.toStringAsFixed(1);
+    
+    // Create properly formatted expectation text
+    String expectationText;
+    if (weekly < 0) {
+      // Losing weight with actual trend data
+      if (etaText == '—' || etaText == 'Reached') {
+        expectationText = 'Based on your recent trend, you are losing about $rate $unit per week. You have $remainingFormatted $unit remaining to reach your goal.';
+      } else {
+        expectationText = 'Based on your recent trend, you are losing about $rate $unit per week. At this pace, you will reach your goal in approximately $etaText. You have $remainingFormatted $unit remaining.';
+      }
+    } else if (weekly > 0) {
+      // Gaining weight
+      expectationText = 'Based on your recent trend, you are gaining about $rate $unit per week. Consider adjusting your nutrition plan to reach your goal.';
+    } else {
+      // No trend data available, provide estimate
+      if (etaText == '—' || etaText == 'Reached') {
+        expectationText = 'You have $remainingFormatted $unit remaining to reach your goal. Log weight entries to see your personalized trend.';
+      } else {
+        expectationText = 'At a healthy rate of 0.5 $unit per week, you could reach your goal in approximately $etaText. You have $remainingFormatted $unit remaining. Log weight entries to see your personalized trend.';
+      }
+    }
+    
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -475,13 +705,7 @@ class _ExpectationBlock extends StatelessWidget{
         border: Border.all(color: const Color(0xFFE5EEF9)),
       ),
       child: Text(
-        AppLocalizations.of(context)!.expectationBlurb(
-          dir,
-          rate,
-          unit,
-          etaText,
-          remaining.toStringAsFixed(1),
-        ),
+        expectationText,
         style: theme.textTheme.bodyMedium?.copyWith(height: 1.35),
       ),
     );

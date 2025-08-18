@@ -2382,8 +2382,7 @@ abstract class AppLocalizations {
   /// No description provided for @securityAlerts.
   ///
   /// In en, this message translates to:
-  /// **'Security Alerts'**
-  String get securityAlerts;
+  // String get securityAlerts;
 
   /// No description provided for @manageSessions.
   ///

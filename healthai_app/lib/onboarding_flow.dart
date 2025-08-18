@@ -7,6 +7,7 @@ import 'package:lottie/lottie.dart';
 import 'services/ai_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'providers/preferences_provider.dart';
 import 'subscription_popup_page.dart';
 import 'widgets/improved_age_selector.dart';
@@ -362,7 +363,14 @@ class _OnboardingFlowPageState extends State<OnboardingFlowPage> with SingleTick
                       selectedReminders.add(reminder);
                     }
                   }),
-                  onContinue: selectedReminders.isNotEmpty ? () { setState(() { step = 15; }); } : null,
+                  onContinue: selectedReminders.isNotEmpty
+                      ? () async {
+                          // Ensure we start fetching the AI plan before allowing proceed
+                          setState(() { step = 15; });
+                          // Kick off the nutrition plan fetch immediately
+                          try { _fetchNutritionPlan(); } catch (_) {}
+                        }
+                      : null,
                   onBack: prevStep,
                 );
               } else if (step == 15) {
@@ -402,31 +410,6 @@ class _OnboardingFlowPageState extends State<OnboardingFlowPage> with SingleTick
                         } catch (e) {
                           // Handle error silently
                         }
-                        
-                        // Force reload preferences after onboarding
-                        try {
-                          final prefsProvider = Provider.of<PreferencesProvider>(context, listen: false);
-                          await prefsProvider.loadPreferences();
-                          print('✅ Reloaded preferences after onboarding');
-                        } catch (e) {
-                          print('⚠️ Failed to reload preferences: $e');
-                        }
-                        
-                        // Wait for Firestore to update
-                        bool updated = false;
-                        while (!updated) {
-                          final doc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
-                          final data = doc.data();
-                          if (data != null &&
-                              data['dailyCalorieGoal'] == aiNutritionPlan!["calories"] &&
-                              data['proteinGoal'] == aiNutritionPlan!["protein"] &&
-                              data['fatGoal'] == aiNutritionPlan!["fat"] &&
-                              data['carbsGoal'] == aiNutritionPlan!["carbs"]) {
-                            updated = true;
-                          } else {
-                            await Future.delayed(Duration(milliseconds: 200));
-                          }
-                        }
                     }
                     
                     // Navigate to main app with post-onboarding flag
@@ -434,7 +417,7 @@ class _OnboardingFlowPageState extends State<OnboardingFlowPage> with SingleTick
                     final prefs = await SharedPreferences.getInstance();
                     await prefs.setBool('just_completed_onboarding', true);
                     
-                    // Navigate to main app
+                    // Navigate to main app immediately
                     Navigator.of(context).pushAndRemoveUntil(
                       MaterialPageRoute(builder: (_) => MainNavScreen()),
                       (route) => false,
@@ -478,6 +461,25 @@ class _OnboardingFlowPageState extends State<OnboardingFlowPage> with SingleTick
                       SizedBox(height: 16),
                       Text(AppLocalizations.of(context)!.somethingWentWrongRestart, style: TextStyle(fontSize: 18)),
                       SizedBox(height: 24),
+                      // References for BMI and guidance
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: Wrap(
+                          spacing: 8,
+                          runSpacing: 4,
+                          children: [
+                            Text('References:', style: TextStyle(color: Colors.grey[700], fontWeight: FontWeight.w600)),
+                            TextButton(
+                              onPressed: () => launchUrl(Uri.parse('https://www.cdc.gov/healthyweight/assessing/bmi/index.html'), mode: LaunchMode.externalApplication),
+                              child: const Text('CDC: About BMI'),
+                            ),
+                            TextButton(
+                              onPressed: () => launchUrl(Uri.parse('https://www.dietaryguidelines.gov/'), mode: LaunchMode.externalApplication),
+                              child: const Text('USDA Dietary Guidelines'),
+                            ),
+                          ],
+                        ),
+                      ),
                       ElevatedButton(
                         onPressed: () {
                           setState(() {
@@ -2455,7 +2457,7 @@ class _ProfileSummaryStep extends StatelessWidget {
                             children: [
                               Icon(Icons.water_drop, color: theme.primaryColor),
                               SizedBox(width: 6),
-                              Text('Water per day: ', style: TextStyle(fontWeight: FontWeight.w600)),
+                              Text(AppLocalizations.of(context)!.waterIntake + ': ', style: TextStyle(fontWeight: FontWeight.w600)),
                               Text(waterIntake ?? '-', style: TextStyle(fontWeight: FontWeight.bold)),
                             ],
                           ),
@@ -2463,6 +2465,25 @@ class _ProfileSummaryStep extends StatelessWidget {
                       ),
                     ),
                     SizedBox(height: 24),
+                    // References for BMI and guidance
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: Wrap(
+                        spacing: 8,
+                        runSpacing: 4,
+                        children: [
+                          Text('References:', style: TextStyle(color: Colors.grey[700], fontWeight: FontWeight.w600)),
+                          TextButton(
+                            onPressed: () => launchUrl(Uri.parse('https://www.cdc.gov/healthyweight/assessing/bmi/index.html'), mode: LaunchMode.externalApplication),
+                            child: const Text('CDC: About BMI'),
+                          ),
+                          TextButton(
+                            onPressed: () => launchUrl(Uri.parse('https://www.dietaryguidelines.gov/'), mode: LaunchMode.externalApplication),
+                            child: const Text('USDA Dietary Guidelines'),
+                          ),
+                        ],
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -3011,13 +3032,23 @@ class _WaterIntakeStep extends StatelessWidget {
           ),
         ),
         SizedBox(height: 32),
-        Text(AppLocalizations.of(context)!.howMuchWaterDaily, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 28)),
+        Text(
+          AppLocalizations.of(context)!.howMuchWaterDaily,
+          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 28),
+          textAlign: TextAlign.center,
+        ),
         SizedBox(height: 18),
-        Text(AppLocalizations.of(context)!.stayingHydratedIsKeyToYourHealth, style: TextStyle(color: Colors.grey[600], fontSize: 16)),
+        Text(
+          AppLocalizations.of(context)!.stayingHydratedIsKeyToYourHealth,
+          style: TextStyle(color: Colors.grey[600], fontSize: 16),
+          textAlign: TextAlign.center,
+        ),
         SizedBox(height: 32),
-        Wrap(
-          spacing: 18,
-          runSpacing: 18,
+        Center(
+          child: Wrap(
+            alignment: WrapAlignment.center,
+            spacing: 18,
+            runSpacing: 18,
           children: options.map((opt) {
             final isSelected = selectedWaterIntake == opt;
             return GestureDetector(
@@ -3044,6 +3075,7 @@ class _WaterIntakeStep extends StatelessWidget {
               ),
             );
           }).toList(),
+          ),
         ),
         SizedBox(height: 36),
               ],
@@ -3294,7 +3326,7 @@ class _RemindersStep extends StatelessWidget {
       {'emoji': '🍽️', 'label': AppLocalizations.of(context)!.mealReminders, 'value': 'Meal Logging Prompts'},
       {'emoji': '💧', 'label': AppLocalizations.of(context)!.waterReminders, 'value': 'Water Intake Reminders'},
       {'emoji': '🚶‍♂️', 'label': AppLocalizations.of(context)!.workoutReminders, 'value': 'Mindful Walks Reminders'},
-      {'emoji': '🧘‍♀️', 'label': AppLocalizations.of(context)!.dailyTips, 'value': 'Moment of Calm After Meals'},
+      {'emoji': '🧘‍♀️', 'label': AppLocalizations.of(context)!.momentOfCalmAfterMeals, 'value': 'Moment of Calm After Meals'},
     ];
   }
 

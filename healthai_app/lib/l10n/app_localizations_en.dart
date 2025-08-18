@@ -1144,7 +1144,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get enterYourPassword => 'Enter your password';
 
   @override
-  String get securityAlerts => 'Security Alerts';
+  // String get securityAlerts => 'Security Alerts';
 
   @override
   String get manageSessions => 'Manage Sessions';

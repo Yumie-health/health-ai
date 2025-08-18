@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'scan_result_page.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../l10n/app_localizations.dart';
 
 class GeneratedMealFromFridgePage extends StatefulWidget {
@@ -369,6 +370,49 @@ class _GeneratedMealFromFridgePageState extends State<GeneratedMealFromFridgePag
                   ),
                   
                   const SizedBox(height: 20),
+                  // References
+                  Container(
+                    margin: const EdgeInsets.symmetric(horizontal: 20),
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.05),
+                          blurRadius: 10,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Icon(Icons.menu_book, color: Colors.green[700], size: 22),
+                            const SizedBox(width: 8),
+                            Text('References', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.black87)),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 4,
+                          children: [
+                            TextButton(
+                              onPressed: () => launchUrl(Uri.parse('https://fdc.nal.usda.gov/'), mode: LaunchMode.externalApplication),
+                              child: const Text('USDA FoodData Central'),
+                            ),
+                            TextButton(
+                              onPressed: () => launchUrl(Uri.parse('https://www.dietaryguidelines.gov/'), mode: LaunchMode.externalApplication),
+                              child: const Text('USDA Dietary Guidelines'),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
                 ],
               ),
             ),

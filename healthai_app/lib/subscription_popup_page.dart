@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'utils/constants.dart';
+import 'dart:io' show Platform;
+import 'package:url_launcher/url_launcher.dart';
 import 'subscription_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'services/subscription_service.dart';
@@ -222,7 +224,7 @@ class _SubscriptionPopupPageState extends State<SubscriptionPopupPage>
                       ),
                     ),
                     
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 4),
                     
                     // App logo
                     SizedBox(
@@ -235,7 +237,7 @@ class _SubscriptionPopupPageState extends State<SubscriptionPopupPage>
                       ),
                     ),
                     
-                    SizedBox(height: isVerySmallScreen ? 8 : 16),
+                    SizedBox(height: isVerySmallScreen ? 6 : 12),
                     
                     // Title
                     Text(
@@ -250,7 +252,7 @@ class _SubscriptionPopupPageState extends State<SubscriptionPopupPage>
                       textAlign: TextAlign.center,
                     ),
                     
-                    SizedBox(height: isVerySmallScreen ? 8 : 16),
+                    SizedBox(height: isVerySmallScreen ? 6 : 12),
                     
                     // Subtitle
                     Text(
@@ -265,33 +267,52 @@ class _SubscriptionPopupPageState extends State<SubscriptionPopupPage>
                       textAlign: TextAlign.center,
                     ),
                     
-                    SizedBox(height: isVerySmallScreen ? 12 : 24),
+                    SizedBox(height: isVerySmallScreen ? 10 : 16),
                     
                     // Features list
                     _buildFeaturesList(isVerySmallScreen, isSmallScreen),
                     
-                    SizedBox(height: isVerySmallScreen ? 12 : 24),
+                    SizedBox(height: isVerySmallScreen ? 10 : 16),
                     
                     // Premium buttons
                     _buildPremiumButtons(isVerySmallScreen, isSmallScreen),
                     
-                    SizedBox(height: isVerySmallScreen ? 12 : 24),
-                    
-                    // Maybe later button
-                    GestureDetector(
-                      onTap: () async {
-                        await _markPopupShown();
-                        _dismissPopup();
-                      },
-                      child: Text(
-                        AppLocalizations.of(context)!.maybeLater,
-                        style: TextStyle(
-                          color: Colors.grey[600],
-                          fontSize: isVerySmallScreen ? 12 : 14,
-                          decoration: TextDecoration.underline,
+                    // Legal links: EULA and Privacy
+                    SizedBox(height: isVerySmallScreen ? 6 : 12),
+                    Wrap(
+                      alignment: WrapAlignment.center,
+                      spacing: 12,
+                      runSpacing: 4,
+                      children: [
+                        TextButton(
+                          onPressed: () async {
+                            final url = Platform.isIOS
+                                ? 'https://www.apple.com/legal/internet-services/itunes/dev/stdeula/'
+                                : 'https://yumie.me/terms';
+                            final uri = Uri.parse(url);
+                            if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text(AppLocalizations.of(context)!.couldNotOpenTermsOfService)),
+                              );
+                            }
+                          },
+                          child: const Text('Terms of Use (EULA)'),
                         ),
-                      ),
+                        TextButton(
+                          onPressed: () async {
+                            final uri = Uri.parse('https://yumie.me/privacy');
+                            if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text(AppLocalizations.of(context)!.couldNotOpenPrivacyPolicy)),
+                              );
+                            }
+                          },
+                          child: Text(AppLocalizations.of(context)!.privacyPolicy),
+                        ),
+                      ],
                     ),
+                    // Bottom spacer trimmed to avoid scrolling
+                    SizedBox(height: isVerySmallScreen ? 4 : 8),
                       ],
                     ),
                   ),

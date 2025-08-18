@@ -85,6 +85,10 @@ class PermissionService {
 
   // Check if this is first launch and permissions should be requested
   static Future<bool> shouldRequestPermissions() async {
+    final prefs = await SharedPreferences.getInstance();
+    
+    // Always proceed to permission request on first launch; no skip toggle
+    
     return await _isFirstTimeLaunch();
   }
 
@@ -122,10 +126,6 @@ class PermissionService {
           title: Text(title),
           content: Text(message),
           actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(false),
-              child: Text(AppLocalizations.of(context)!.notNow),
-            ),
             TextButton(
               onPressed: () => Navigator.of(context).pop(true),
               child: Text(AppLocalizations.of(context)!.continueButton),

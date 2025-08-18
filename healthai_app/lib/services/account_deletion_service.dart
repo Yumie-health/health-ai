@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'logging_service.dart';
 import '../l10n/app_localizations.dart';
+import '../main.dart';
 
 class AccountDeletionService {
   static final AccountDeletionService _instance = AccountDeletionService._internal();
@@ -565,10 +566,9 @@ class _RedirectScreenState extends State<_RedirectScreen> {
     // Redirect after 2 seconds
     Timer(Duration(seconds: 2), () {
       if (mounted) {
-        // Exit the app completely - user will need to restart to see sign-in
-        // This is the cleanest approach since the Firebase user is already deleted
+        // After deletion, always return to AuthScreen (sign in / sign up)
         Navigator.of(context).pushAndRemoveUntil(
-          MaterialPageRoute(builder: (context) => _ExitScreen()),
+          MaterialPageRoute(builder: (context) => AuthScreen()),
           (route) => false,
         );
       }

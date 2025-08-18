@@ -247,6 +247,13 @@ class DeviceSessionService {
       for (final doc in sessions.docs) {
         if (doc.id != _currentDeviceId) {
           await doc.reference.delete();
+          // Mark the session as revoked in a shared flag so that device logs out on next launch
+          await FirebaseFirestore.instance
+              .collection('users')
+              .doc(user.uid)
+              .collection('revocations')
+              .doc(doc.id)
+              .set({'revokedAt': DateTime.now().toIso8601String()});
           revokedCount++;
         }
       }
@@ -254,6 +261,31 @@ class DeviceSessionService {
       _log.info('All other sessions revoked', {'count': revokedCount});
     } catch (e) {
       _log.error('Error revoking all other sessions', e);
+    }
+  }
+
+  // Check if this device has been revoked remotely and sign out if so
+  Future<void> enforceRemoteRevocation() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null || _currentDeviceId == null) return;
+
+    try {
+      final ref = FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .collection('revocations')
+          .doc(_currentDeviceId);
+      final snap = await ref.get();
+      if (snap.exists) {
+        // Clear local login/session and sign out
+        await AuthService().logout();
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.remove('device_session_id');
+        // Clean up the revocation marker to avoid loops
+        await ref.delete();
+      }
+    } catch (e) {
+      _log.error('Error enforcing remote revocation', e);
     }
   }
 

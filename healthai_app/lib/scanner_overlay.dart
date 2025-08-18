@@ -30,6 +30,8 @@ class ScannerOverlay extends StatelessWidget {
             borderColor: borderColor,
             overlayOpacity: overlayOpacity,
           ),
+          isComplex: false,
+          willChange: true,
         );
       },
     );
@@ -78,5 +80,11 @@ class _ScannerOverlayPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+  bool shouldRepaint(covariant _ScannerOverlayPainter old) {
+    return old.borderColor != borderColor ||
+        old.borderWidth != borderWidth ||
+        old.borderRadius != borderRadius ||
+        old.overlayOpacity != overlayOpacity ||
+        old.frameRect != frameRect;
+  }
 } 

@@ -4,6 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'l10n/app_localizations.dart';
 import 'providers/preferences_provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class NutritionalPlanPage extends StatefulWidget {
   @override
@@ -332,6 +333,25 @@ class _NutritionalPlanPageState extends State<NutritionalPlanPage> {
               onCancel: _cancelEdit,
               onSave: _saveChanges,
               localizations: localizations,
+            ),
+            const SizedBox(height: 12),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Wrap(
+                spacing: 8,
+                runSpacing: 4,
+                children: [
+                  Text('References:', style: TextStyle(color: Colors.grey[700], fontWeight: FontWeight.w600)),
+                  TextButton(
+                    onPressed: () => launchUrl(Uri.parse('https://www.cdc.gov/healthyweight/assessing/bmi/index.html'), mode: LaunchMode.externalApplication),
+                    child: const Text('CDC: About BMI'),
+                  ),
+                  TextButton(
+                    onPressed: () => launchUrl(Uri.parse('https://www.dietaryguidelines.gov/'), mode: LaunchMode.externalApplication),
+                    child: const Text('USDA Dietary Guidelines'),
+                  ),
+                ],
+              ),
             ),
           ],
         ),

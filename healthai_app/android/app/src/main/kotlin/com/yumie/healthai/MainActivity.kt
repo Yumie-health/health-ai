@@ -11,12 +11,21 @@ class MainActivity: FlutterActivity() {
     private val CHANNEL = "play_integrity_channel"
     private val BILLING_CHANNEL = "billing_channel"
     private val NOTIFICATION_CHANNEL = "native_notifications"
+    private val DEEP_LINK_CHANNEL = "deep_link_channel"
     private lateinit var playIntegrityHelper: PlayIntegrityHelper
     private lateinit var billingService: BillingService
     private lateinit var notificationScheduler: NotificationScheduler
     
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
+        // Deep link / widget action channel
+        val deepLinkChannel = MethodChannel(flutterEngine.dartExecutor.binaryMessenger, DEEP_LINK_CHANNEL)
+        fun sendActionToFlutter(action: String?) {
+            if (action == null) return
+            deepLinkChannel.invokeMethod("action", action)
+        }
+        // Send current intent action if launched via widget
+        sendActionToFlutter(intent?.action)
         
         playIntegrityHelper = PlayIntegrityHelper(this)
         billingService = BillingService(this)
@@ -193,5 +202,13 @@ class MainActivity: FlutterActivity() {
                 }
             }
         }
+    }
+
+    override fun onNewIntent(intent: android.content.Intent) {
+        super.onNewIntent(intent)
+        // Forward new intent action to Flutter
+        val engine = flutterEngine ?: return
+        val deepLinkChannel = MethodChannel(engine.dartExecutor.binaryMessenger, DEEP_LINK_CHANNEL)
+        deepLinkChannel.invokeMethod("action", intent.action)
     }
 }

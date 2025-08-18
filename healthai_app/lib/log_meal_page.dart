@@ -21,6 +21,7 @@ import 'config/ad_config.dart';
 import 'services/consent_service.dart';
 import 'services/connectivity_service.dart';
 
+
 // Searchable meal input with dropdown suggestions
 class SearchableMealInput extends StatefulWidget {
   final TextEditingController controller;

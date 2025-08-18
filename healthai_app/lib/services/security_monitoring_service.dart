@@ -392,16 +392,10 @@ class SecurityMonitoringService {
     }
   }
 
-  // Show security alerts dialog
+  // Security Alerts UI has been removed from the app; keep data-layer APIs
+  // for potential future use, but do not present any dialog.
   Future<void> showSecurityAlertsDialog(BuildContext context) async {
-    final alerts = await getRecentSecurityAlerts();
-    
-    if (!context.mounted) return;
-
-    showDialog(
-      context: context,
-      builder: (context) => _SecurityAlertsDialog(alerts: alerts),
-    );
+    return; // no-op
   }
 
   // Clean up old events (older than 30 days)
@@ -457,13 +451,7 @@ class _SecurityAlertsDialog extends StatelessWidget {
         children: [
           Icon(Icons.security, color: Colors.orange, size: 20),
           SizedBox(width: 8),
-          Expanded(
-            child: Text(
-              AppLocalizations.of(context)!.securityAlerts,
-              style: TextStyle(fontSize: 18),
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
+          Expanded(child: SizedBox()),
         ],
       ),
       content: SizedBox(
