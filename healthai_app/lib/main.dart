@@ -856,8 +856,10 @@ class MyApp extends StatelessWidget {
                 );
               }
               
-              // Account exists, check if onboarding is completed
-          return FutureBuilder<DocumentSnapshot>(
+              // Check email verification for email/password accounts
+              return _EmailVerificationWrapper(
+                user: snapshot.data!,
+                child: FutureBuilder<DocumentSnapshot>(
             future: FirebaseFirestore.instance
                 .collection('users')
                 .doc(snapshot.data!.uid)
@@ -901,6 +903,7 @@ class MyApp extends StatelessWidget {
                 },
               );
                 },
+                ),
               );
             },
           );
@@ -926,6 +929,8 @@ class MyApp extends StatelessWidget {
     }
   }
 
+
+
   // Sign out user and clear any local data
   Future<void> _signOutAndRedirect() async {
     try {
@@ -939,6 +944,95 @@ class MyApp extends StatelessWidget {
     } catch (e) {
       print('Error signing out deleted account: $e');
     }
+  }
+}
+
+// Widget wrapper to handle email verification
+class _EmailVerificationWrapper extends StatefulWidget {
+  final User user;
+  final Widget child;
+
+  const _EmailVerificationWrapper({
+    Key? key,
+    required this.user,
+    required this.child,
+  }) : super(key: key);
+
+  @override
+  State<_EmailVerificationWrapper> createState() => _EmailVerificationWrapperState();
+}
+
+class _EmailVerificationWrapperState extends State<_EmailVerificationWrapper> {
+  bool _isCheckingVerification = true;
+  bool _verificationPassed = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkEmailVerification();
+  }
+
+  Future<void> _checkEmailVerification() async {
+    try {
+      // Skip verification for Apple and Google sign-in (trusted providers)
+      final providerData = widget.user.providerData;
+      final isAppleUser = providerData.any((provider) => provider.providerId == 'apple.com');
+      final isGoogleUser = providerData.any((provider) => provider.providerId == 'google.com');
+      
+      if (isAppleUser || isGoogleUser) {
+        setState(() {
+          _isCheckingVerification = false;
+          _verificationPassed = true;
+        });
+        return;
+      }
+
+      // Force reload user to get latest verification status
+      await widget.user.reload();
+      final currentUser = FirebaseAuth.instance.currentUser;
+      
+      if (currentUser != null && !currentUser.emailVerified) {
+        // Show verification dialog
+        final emailVerificationService = EmailVerificationService();
+        final verified = await emailVerificationService.showEmailVerificationDialog(context, currentUser);
+        
+        if (!verified) {
+          // User closed verification dialog, sign them out
+          await FirebaseAuth.instance.signOut();
+          setState(() {
+            _isCheckingVerification = false;
+            _verificationPassed = false;
+          });
+          return;
+        }
+      }
+
+      setState(() {
+        _isCheckingVerification = false;
+        _verificationPassed = true;
+      });
+    } catch (e) {
+      print('Error checking email verification: $e');
+      // If error, sign out for safety
+      await FirebaseAuth.instance.signOut();
+      setState(() {
+        _isCheckingVerification = false;
+        _verificationPassed = false;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_isCheckingVerification) {
+      return Center(child: CircularProgressIndicator());
+    }
+
+    if (!_verificationPassed) {
+      return AuthScreen();
+    }
+
+    return widget.child;
   }
 }
 
@@ -2020,6 +2114,25 @@ class _AuthScreenState extends State<AuthScreen> {
       final userService = UserService();
       final user = FirebaseAuth.instance.currentUser;
       if (user != null) {
+        // Check email verification status for email/password accounts
+        if (!user.emailVerified) {
+          // Force reload user to get latest verification status
+          await user.reload();
+          final currentUser = FirebaseAuth.instance.currentUser;
+          
+          if (currentUser != null && !currentUser.emailVerified) {
+            // Show email verification dialog
+            final emailVerificationService = EmailVerificationService();
+            final verified = await emailVerificationService.showEmailVerificationDialog(context, currentUser);
+            if (!verified) {
+              // User closed verification dialog, sign them out
+              await FirebaseAuth.instance.signOut();
+              setState(() => isLoading = false);
+              return;
+            }
+          }
+        }
+        
         final doc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
         if (!doc.exists) {
           await userService.createInitialUserProfile(user.email ?? '', '');
@@ -2032,7 +2145,7 @@ class _AuthScreenState extends State<AuthScreen> {
           // Check if onboarding is complete (mimic Google sign-in logic)
           final data = doc.data() as Map<String, dynamic>?;
           final onboardingCompleted = hasCompletedOnboarding(data);
-          setState(() => message = 'Sign in successful!');
+          setState(() => message = AppLocalizations.of(context)!.signInSuccessful);
           if (mounted) {
             if (!onboardingCompleted) {
               Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => OnboardingFlowPage()));
@@ -2046,7 +2159,7 @@ class _AuthScreenState extends State<AuthScreen> {
         return;
       }
       if (mounted) {
-        setState(() => message = 'Sign in successful!');
+        setState(() => message = AppLocalizations.of(context)!.signInSuccessful);
       }
     } catch (e) {
       log.error('Sign in failed', e);
@@ -2176,12 +2289,49 @@ class _AuthScreenState extends State<AuthScreen> {
           _showProviderConflictDialog('google.com', 'password');
           return;
         } else if (hasEmailProvider) {
-          // Account already exists with email/password - show the regular account exists dialog
+          // Account already exists with email/password - check if it's verified
+          try {
+            // Try to sign in to check verification status
+            final userCredential = await FirebaseAuth.instance.signInWithEmailAndPassword(
+              email: email,
+              password: password,
+            );
+            
+            if (userCredential.user != null && !userCredential.user!.emailVerified) {
+              // Account exists but is not verified - show verification dialog
+              await FirebaseAuth.instance.signOut(); // Sign out first
+              final emailVerificationService = EmailVerificationService();
+              final verified = await emailVerificationService.showEmailVerificationDialog(context, userCredential.user!);
+              if (!verified) {
+                // User closed verification dialog
+                if (mounted) {
+                  setState(() => isLoading = false);
+                }
+                return;
+              }
+              // If verified, proceed with onboarding
+              if (mounted) {
+                setState(() => message = AppLocalizations.of(context)!.emailVerifiedWelcome);
+                Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => OnboardingFlowPage()));
+              }
+              return;
+            } else {
+              // Account exists and is verified - show regular account exists dialog
+              await FirebaseAuth.instance.signOut(); // Sign out
           if (mounted) {
             setState(() => isLoading = false);
           }
           _showAccountExistsDialog();
           return;
+            }
+          } catch (e) {
+            // If sign-in fails, it means the password is wrong, so show account exists dialog
+            if (mounted) {
+              setState(() => isLoading = false);
+            }
+            _showAccountExistsDialog();
+            return;
+          }
         }
       }
       
@@ -2213,7 +2363,7 @@ class _AuthScreenState extends State<AuthScreen> {
         }
         
         if (mounted) {
-          setState(() => message = 'Sign up successful!');
+          setState(() => message = AppLocalizations.of(context)!.signUpSuccessful);
         Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => OnboardingFlowPage()));
         }
       }

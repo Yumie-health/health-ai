@@ -833,5 +833,8 @@
   "emailSignedUpWithGoogle": "이 이메일은 이미 Google로 등록되어 있습니다. 대신 \"Google로 로그인\"을 사용하세요.",
   "emailSignedUpWithPassword": "이 이메일은 이미 이메일과 비밀번호로 등록되어 있습니다. 비밀번호를 사용하여 로그인하세요.",
   "useGoogleSignIn": "Google 로그인 사용",
-  "signInWithEmail": "이메일로 로그인"
+  "signInWithEmail": "이메일로 로그인",
+  "signInSuccessful": "로그인 성공!",
+  "signUpSuccessful": "가입 성공!",
+  "emailVerifiedWelcome": "이메일이 인증되었습니다! 환영합니다!"
 }

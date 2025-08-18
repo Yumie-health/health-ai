@@ -2223,4 +2223,13 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get signInWithEmail => 'E-posta ile Giriş Yap';
+
+  @override
+  String get signInSuccessful => 'Giriş başarılı!';
+
+  @override
+  String get signUpSuccessful => 'Kayıt başarılı!';
+
+  @override
+  String get emailVerifiedWelcome => 'E-posta doğrulandı! Hoş geldiniz!';
 }

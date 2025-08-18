@@ -2223,4 +2223,13 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get signInWithEmail => '이메일로 로그인';
+
+  @override
+  String get signInSuccessful => '로그인 성공!';
+
+  @override
+  String get signUpSuccessful => '가입 성공!';
+
+  @override
+  String get emailVerifiedWelcome => '이메일이 인증되었습니다! 환영합니다!';
 }

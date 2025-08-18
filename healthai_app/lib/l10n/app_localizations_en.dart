@@ -2223,4 +2223,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get signInWithEmail => 'Sign In with Email';
+
+  @override
+  String get signInSuccessful => 'Sign in successful!';
+
+  @override
+  String get signUpSuccessful => 'Sign up successful!';
+
+  @override
+  String get emailVerifiedWelcome => 'Email verified! Welcome!';
 }
