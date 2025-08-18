@@ -827,5 +827,8 @@
   "emailSignedUpWithGoogle": "Этот email уже зарегистрирован с Google. Пожалуйста, используйте \"Войти через Google\" вместо этого.",
   "emailSignedUpWithPassword": "Этот email уже зарегистрирован с email и паролем. Пожалуйста, войдите, используя ваш пароль.",
   "useGoogleSignIn": "Использовать вход через Google",
-  "signInWithEmail": "Войти с email"
+  "signInWithEmail": "Войти с email",
+  "signInSuccessful": "Вход выполнен успешно!",
+  "signUpSuccessful": "Регистрация выполнена успешно!",
+  "emailVerifiedWelcome": "Email подтвержден! Добро пожаловать!"
 }

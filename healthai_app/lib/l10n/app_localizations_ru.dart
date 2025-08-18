@@ -2223,4 +2223,13 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get signInWithEmail => 'Войти с email';
+
+  @override
+  String get signInSuccessful => 'Вход выполнен успешно!';
+
+  @override
+  String get signUpSuccessful => 'Регистрация выполнена успешно!';
+
+  @override
+  String get emailVerifiedWelcome => 'Email подтвержден! Добро пожаловать!';
 }

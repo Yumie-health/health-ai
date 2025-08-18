@@ -2223,4 +2223,13 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get signInWithEmail => 'تسجيل الدخول بالبريد الإلكتروني';
+
+  @override
+  String get signInSuccessful => 'تم تسجيل الدخول بنجاح!';
+
+  @override
+  String get signUpSuccessful => 'تم التسجيل بنجاح!';
+
+  @override
+  String get emailVerifiedWelcome => 'تم تأكيد البريد الإلكتروني! مرحباً بك!';
 }

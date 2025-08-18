@@ -826,5 +826,8 @@
   "emailSignedUpWithGoogle": "Bu e-posta zaten Google ile kayıtlı. Lütfen bunun yerine \"Google ile Giriş Yap\" kullanın.",
   "emailSignedUpWithPassword": "Bu e-posta zaten e-posta ve şifre ile kayıtlı. Lütfen şifrenizi kullanarak giriş yapın.",
   "useGoogleSignIn": "Google Girişini Kullan",
-  "signInWithEmail": "E-posta ile Giriş Yap"
+  "signInWithEmail": "E-posta ile Giriş Yap",
+  "signInSuccessful": "Giriş başarılı!",
+  "signUpSuccessful": "Kayıt başarılı!",
+  "emailVerifiedWelcome": "E-posta doğrulandı! Hoş geldiniz!"
 }

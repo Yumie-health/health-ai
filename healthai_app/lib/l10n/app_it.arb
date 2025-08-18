@@ -845,5 +845,8 @@
   "emailSignedUpWithGoogle": "Questa email è già registrata con Google. Utilizza \"Accedi con Google\" invece.",
   "emailSignedUpWithPassword": "Questa email è già registrata con email e password. Accedi utilizzando la tua password.",
   "useGoogleSignIn": "Utilizza accesso Google",
-  "signInWithEmail": "Accedi con email"
+  "signInWithEmail": "Accedi con email",
+  "signInSuccessful": "Accesso riuscito!",
+  "signUpSuccessful": "Registrazione riuscita!",
+  "emailVerifiedWelcome": "Email verificata! Benvenuto!"
 }

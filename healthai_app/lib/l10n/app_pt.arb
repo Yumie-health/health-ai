@@ -826,5 +826,8 @@
   "emailSignedUpWithGoogle": "Este e-mail já está registrado com Google. Use \"Entrar com Google\" em vez disso.",
   "emailSignedUpWithPassword": "Este e-mail já está registrado com e-mail e senha. Faça login usando sua senha.",
   "useGoogleSignIn": "Usar login do Google",
-  "signInWithEmail": "Entrar com e-mail"
+  "signInWithEmail": "Entrar com e-mail",
+  "signInSuccessful": "Login bem-sucedido!",
+  "signUpSuccessful": "Cadastro bem-sucedido!",
+  "emailVerifiedWelcome": "Email verificado! Bem-vindo!"
 }

@@ -850,5 +850,8 @@
   "emailSignedUpWithGoogle": "यह ईमेल पहले से ही Google के साथ पंजीकृत है। कृपया इसके बजाय \"Google के साथ साइन इन करें\" का उपयोग करें।",
   "emailSignedUpWithPassword": "यह ईमेल पहले से ही ईमेल और पासवर्ड के साथ पंजीकृत है। कृपया अपने पासवर्ड का उपयोग करके साइन इन करें।",
   "useGoogleSignIn": "Google साइन-इन का उपयोग करें",
-  "signInWithEmail": "ईमेल के साथ साइन इन करें"
+  "signInWithEmail": "ईमेल के साथ साइन इन करें",
+  "signInSuccessful": "साइन इन सफल!",
+  "signUpSuccessful": "साइन अप सफल!",
+  "emailVerifiedWelcome": "ईमेल सत्यापित! स्वागत है!"
 }

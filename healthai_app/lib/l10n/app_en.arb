@@ -873,5 +873,8 @@
   "emailSignedUpWithGoogle": "This email is already signed up with Google. Please use \"Sign in with Google\" instead.",
   "emailSignedUpWithPassword": "This email is already signed up with email and password. Please sign in using your password instead.",
   "useGoogleSignIn": "Use Google Sign-In",
-  "signInWithEmail": "Sign In with Email"
+  "signInWithEmail": "Sign In with Email",
+  "signInSuccessful": "Sign in successful!",
+  "signUpSuccessful": "Sign up successful!",
+  "emailVerifiedWelcome": "Email verified! Welcome!"
 } 

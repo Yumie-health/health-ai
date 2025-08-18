@@ -833,5 +833,8 @@
   "emailSignedUpWithGoogle": "このメールは既にGoogleで登録されています。代わりに「Googleでサインイン」を使用してください。",
   "emailSignedUpWithPassword": "このメールは既にメールとパスワードで登録されています。パスワードを使用してサインインしてください。",
   "useGoogleSignIn": "Googleサインインを使用",
-  "signInWithEmail": "メールでサインイン"
+  "signInWithEmail": "メールでサインイン",
+  "signInSuccessful": "サインインに成功しました！",
+  "signUpSuccessful": "サインアップに成功しました！",
+  "emailVerifiedWelcome": "メールが認証されました！ようこそ！"
 }

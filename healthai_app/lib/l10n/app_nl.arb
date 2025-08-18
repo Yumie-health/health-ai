@@ -827,5 +827,8 @@
   "emailSignedUpWithGoogle": "Deze e-mail is al geregistreerd met Google. Gebruik in plaats daarvan \"Inloggen met Google\".",
   "emailSignedUpWithPassword": "Deze e-mail is al geregistreerd met e-mail en wachtwoord. Log in met je wachtwoord.",
   "useGoogleSignIn": "Google-aanmelding gebruiken",
-  "signInWithEmail": "Inloggen met e-mail"
+  "signInWithEmail": "Inloggen met e-mail",
+  "signInSuccessful": "Inloggen succesvol!",
+  "signUpSuccessful": "Registratie succesvol!",
+  "emailVerifiedWelcome": "E-mail geverifieerd! Welkom!"
 }

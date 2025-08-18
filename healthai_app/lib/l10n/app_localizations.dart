@@ -4520,6 +4520,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Sign In with Email'**
   String get signInWithEmail;
+
+  /// No description provided for @signInSuccessful.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in successful!'**
+  String get signInSuccessful;
+
+  /// No description provided for @signUpSuccessful.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign up successful!'**
+  String get signUpSuccessful;
+
+  /// No description provided for @emailVerifiedWelcome.
+  ///
+  /// In en, this message translates to:
+  /// **'Email verified! Welcome!'**
+  String get emailVerifiedWelcome;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {
