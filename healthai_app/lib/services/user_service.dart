@@ -48,7 +48,9 @@ class UserService {
       'photoUrl': user.photoURL ?? '',
     };
 
+    print('Creating user profile: $profile'); // Debug log
     await _firestore.collection('users').doc(user.uid).set(profile);
+    print('User profile created successfully for ${user.uid}'); // Debug log
   }
 
   // Update user goals

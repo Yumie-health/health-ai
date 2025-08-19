@@ -1975,13 +1975,46 @@ class _AuthScreenState extends State<AuthScreen> {
         final doc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
         if (!doc.exists) {
           // Create user profile with Apple data
-          final displayName = credential.givenName != null && credential.familyName != null
-              ? '${credential.givenName} ${credential.familyName}'
-              : user.displayName ?? '';
+          String displayName = '';
+          
+          // Try to get name from Apple credential first
+          if (credential.givenName != null && credential.familyName != null) {
+            displayName = '${credential.givenName} ${credential.familyName}';
+          } else if (user.displayName != null && user.displayName!.isNotEmpty) {
+            displayName = user.displayName!;
+          } else if (user.email != null && user.email!.isNotEmpty) {
+            // Use email prefix as fallback (e.g., "loushi.abbas05" from "loushi.abbas05@icloud.com")
+            final emailPrefix = user.email!.split('@')[0];
+            // Convert to title case and replace dots with spaces
+            displayName = emailPrefix
+                .replaceAll('.', ' ')
+                .split(' ')
+                .map((word) => word.isNotEmpty ? '${word[0].toUpperCase()}${word.substring(1).toLowerCase()}' : '')
+                .where((word) => word.isNotEmpty)
+                .join(' ');
+          }
+          
+          if (kDebugMode) {
+            log.info('Creating Apple user profile', {
+              'email': user.email,
+              'displayName': displayName,
+              'givenName': credential.givenName,
+              'familyName': credential.familyName,
+              'userDisplayName': user.displayName,
+            });
+          }
+          
           await userService.createInitialUserProfile(user.email ?? '', displayName);
+          
+          // For new users, always go to onboarding
+          setState(() => message = 'Apple sign-in successful!');
+          if (mounted) {
+            Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => OnboardingFlowPage()));
+          }
+          return;
         }
         
-        // Check if onboarding is complete
+        // Check if onboarding is complete for existing users
         final data = doc.data() as Map<String, dynamic>?;
         final onboardingCompleted = hasCompletedOnboarding(data);
         

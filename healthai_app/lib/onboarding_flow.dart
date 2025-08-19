@@ -511,6 +511,14 @@ class _OnboardingFlowPageState extends State<OnboardingFlowPage> with SingleTick
                             'mindfulWalksReminders': selectedReminders.contains('Mindful Walks Reminders'),
                             'momentOfCalmReminders': selectedReminders.contains('Moment of Calm After Meals'),
                           };
+                      // First, get the existing user data to preserve the name and photo URL
+                      final existingDoc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
+                      final existingData = existingDoc.data() as Map<String, dynamic>?;
+                      final existingName = existingData?['name'] ?? '';
+                      final existingPhotoUrl = existingData?['photoUrl'] ?? '';
+                      
+                      print('Onboarding: Preserving existing name: "$existingName", photoUrl: "$existingPhotoUrl"'); // Debug log
+                      
                       await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
                             'dailyCalorieGoal': aiNutritionPlan!["calories"],
                             'proteinGoal': aiNutritionPlan!["protein"],
@@ -531,6 +539,8 @@ class _OnboardingFlowPageState extends State<OnboardingFlowPage> with SingleTick
                             'bloodType': bloodType,
                             'isDiabetic': isDiabetic,
                             'waterIntake': waterIntake,
+                            'name': existingName, // Preserve the existing name from Apple Sign-In
+                            'photoUrl': existingPhotoUrl, // Preserve the existing photo URL
                       }, SetOptions(merge: true));
 
                         } catch (e) {
