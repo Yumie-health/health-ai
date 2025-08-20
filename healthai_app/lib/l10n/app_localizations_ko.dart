@@ -1712,6 +1712,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get oNegative => 'O-';
 
   @override
+  String get dontKnow => '모르겠어요';
+
+  @override
   String get oneToTwoGlasses => '1-2잔';
 
   @override
@@ -1848,6 +1851,9 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get couldNotOpenLink => '링크를 열 수 없습니다';
+
+  @override
+  String get nothingFoundInScan => '스캔에서 아무 것도 찾지 못했습니다';
 
   @override
   String get errorOpeningLink => '링크 열기 오류';
@@ -2250,4 +2256,15 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get emailVerifiedWelcome => '이메일이 인증되었습니다! 환영합니다!';
+
+  @override
+  String get premiumCancelledTitle => '구독이 취소되었습니다';
+
+  @override
+  String premiumCancelledWillEndOn(String date) {
+    return '프리미엄 이용은 $date에 종료됩니다';
+  }
+
+  @override
+  String get manageSubscriptions => '구독 관리';
 }

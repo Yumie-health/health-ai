@@ -406,7 +406,10 @@ class _ScanResultPageState extends State<ScanResultPage> {
     final language = prefs.language;
     final result = await aiService.analyzeMealImage(File(widget.imagePath), language: language);
 
-    if (result != null) {
+    if (result != null &&
+        (result['food_name']?.toString().trim().isNotEmpty ?? false) &&
+        result['food_name'].toString().toLowerCase() != 'unknown' &&
+        result['food_name'].toString().toLowerCase() != 'n/a') {
       setState(() {
         _foodNameController.text = result['food_name']?.toString() ?? '';
         _caloriesController.text = result['calories']?.toString() ?? '';
@@ -456,10 +459,15 @@ class _ScanResultPageState extends State<ScanResultPage> {
         _isLoadingAI = false;
       });
     } else {
-      setState(() {
-        _isLoadingAI = false;
-        _error = "Could not analyze meal. Try again or enter details manually.";
-      });
+      if (!mounted) return;
+      Navigator.of(context).pop();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(AppLocalizations.of(context)!.nothingFoundInScan),
+          backgroundColor: Colors.black87,
+          duration: Duration(seconds: 2),
+        ),
+      );
     }
   }
 

@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:confetti/confetti.dart';
 import '../utils/constants.dart';
+import 'dialog_coordinator.dart';
 import '../l10n/app_localizations.dart';
 
 class BirthdayService {
@@ -23,28 +23,44 @@ class BirthdayService {
       if (data != null && data['birthMonth'] != null && data['birthDay'] != null) {
         final int birthMonth = data['birthMonth'];
         final int birthDay = data['birthDay'];
-        final int currentAge = data['age'] ?? 18;
+        final int storedAge = data['age'] ?? 18;
+        final int? lastCelebrationYear = data['lastBirthdayCelebrationYear'];
         
         final now = DateTime.now();
         final isBirthday = (now.month == birthMonth && now.day == birthDay);
         
         if (isBirthday) {
-          // Check if we already celebrated this year
-          final prefs = await SharedPreferences.getInstance();
-          final lastCelebrationYear = prefs.getInt('last_birthday_celebration_${user.uid}') ?? 0;
-          
+          // Check if we already celebrated this year (using Firestore, not SharedPreferences)
           if (lastCelebrationYear != now.year) {
+            // Check if user signed up today (on their birthday)
+            final createdAt = data['createdAt'] as Timestamp?;
+            final isSignupDay = createdAt != null && 
+                createdAt.toDate().year == now.year &&
+                createdAt.toDate().month == now.month &&
+                createdAt.toDate().day == now.day;
+            
+            // Calculate correct age to display
+            int displayAge = storedAge;
+            if (!isSignupDay) {
+              // Only increment age if it's not the signup day
+              displayAge = storedAge + 1;
+            }
+            
             // Show birthday celebration
-            await _showBirthdayDialog(context, currentAge + 1);
+            await _showBirthdayDialog(context, displayAge);
             
-            // Update age in Firestore
-            await FirebaseFirestore.instance.collection('users').doc(user.uid).update({
-              'age': currentAge + 1,
+            // Update Firestore with the celebration year and potentially new age
+            final updateData = {
+              'lastBirthdayCelebrationYear': now.year,
               'lastUpdated': FieldValue.serverTimestamp(),
-            });
+            };
             
-            // Mark this year as celebrated
-            await prefs.setInt('last_birthday_celebration_${user.uid}', now.year);
+            // Only update age if it's not the signup day
+            if (!isSignupDay) {
+              updateData['age'] = displayAge;
+            }
+            
+            await FirebaseFirestore.instance.collection('users').doc(user.uid).update(updateData);
           }
         }
       }
@@ -54,7 +70,7 @@ class BirthdayService {
   }
 
   Future<void> _showBirthdayDialog(BuildContext context, int newAge) async {
-    await showDialog(
+    await DialogCoordinator.instance.showExclusiveDialog(
       context: context,
       barrierDismissible: false,
       builder: (context) => _BirthdayDialog(newAge: newAge),

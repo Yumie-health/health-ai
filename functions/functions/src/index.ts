@@ -387,7 +387,7 @@ export const verifyPlayIntegrityCallable = functions.https.onCall(async (data: a
   }
 });
 
-// iOS Receipt Validation - Updated
+// iOS Receipt Validation - Updated with Sandbox support
 export const validateIOSReceipt = functions.https.onCall(async (data: any, context) => {
   try {
     const { receiptData, productId, transactionId } = data;
@@ -396,33 +396,86 @@ export const validateIOSReceipt = functions.https.onCall(async (data: any, conte
       throw new functions.https.HttpsError('invalid-argument', 'Receipt data, product ID, and transaction ID are required');
     }
 
-    // For production, you should validate with Apple's servers
-    // This is a simplified validation for demo purposes
-    const response = await axios.post(
-      'https://buy.itunes.apple.com/verifyReceipt',
-      {
-        'receipt-data': receiptData,
-                 'password': functions.config().apple?.shared_secret || 'your_shared_secret_here',
-        'exclude-old-transactions': true
-      }
-    );
+    // First try production server
+    let response;
+    let usedSandbox = false;
+    
+    try {
+      response = await axios.post(
+        'https://buy.itunes.apple.com/verifyReceipt',
+        {
+          'receipt-data': receiptData,
+          'password': functions.config().apple?.shared_secret || 'your_shared_secret_here',
+          'exclude-old-transactions': true
+        }
+      );
+    } catch (error) {
+      console.error('Production verification failed, trying sandbox:', error);
+    }
+    
+    // If production fails with status 21007 (sandbox receipt), try sandbox
+    if (!response || response.data.status === 21007) {
+      console.log('Receipt is from sandbox environment, validating with sandbox server');
+      usedSandbox = true;
+      response = await axios.post(
+        'https://sandbox.itunes.apple.com/verifyReceipt',
+        {
+          'receipt-data': receiptData,
+          'password': functions.config().apple?.shared_secret || 'your_shared_secret_here',
+          'exclude-old-transactions': true
+        }
+      );
+    }
 
     const result = response.data;
+    console.log(`iOS receipt validation status: ${result.status}, environment: ${usedSandbox ? 'sandbox' : 'production'}`);
     
     if (result.status === 0) {
       // Valid receipt
-      const latestReceiptInfo = result.latest_receipt_info;
-      const isValid = latestReceiptInfo.some((transaction: any) => 
-        transaction.product_id === productId && 
-        transaction.transaction_id === transactionId &&
-        transaction.expires_date_ms && 
-        parseInt(transaction.expires_date_ms) > Date.now()
-      );
-      
-      return { isValid };
+      const latestReceiptInfo = (result.latest_receipt_info || []) as any[];
+      const pendingRenewal = (result.pending_renewal_info || []) as any[];
+
+      // Find the latest transaction for the product
+      const productTransactions = latestReceiptInfo.filter(t => t.product_id === productId);
+      let latestExpiryMs: number | null = null;
+      for (const t of productTransactions) {
+        const ms = t.expires_date_ms ? parseInt(t.expires_date_ms) : null;
+        if (ms && (!latestExpiryMs || ms > latestExpiryMs)) latestExpiryMs = ms;
+      }
+      const expiryDate = latestExpiryMs ? new Date(latestExpiryMs).toISOString() : null;
+
+      // Detect if user turned off auto-renew for this product
+      let isCancelled = false;
+      for (const r of pendingRenewal) {
+        if (r.product_id === productId) {
+          // auto_renew_status: 1 = on, 0 = off
+          if (String(r.auto_renew_status || '') === '0') {
+            isCancelled = true;
+          }
+          // expiration_intent present also indicates non-renewal reason
+          if (r.expiration_intent) {
+            isCancelled = true;
+          }
+        }
+      }
+
+      const isValid = productTransactions.some((transaction: any) => {
+        const transactionMatches = transaction.transaction_id === transactionId;
+        const hasExpiry = transaction.expires_date_ms;
+        const notExpired = hasExpiry && parseInt(transaction.expires_date_ms) > Date.now();
+        return transactionMatches && notExpired;
+      });
+
+      return { 
+        isValid, 
+        environment: usedSandbox ? 'sandbox' : 'production',
+        expiryDate,
+        isCancelled
+      };
     } else {
+      console.error(`iOS receipt validation failed with status: ${result.status}`);
       // Invalid receipt
-      return { isValid: false };
+      return { isValid: false, status: result.status };
     }
   } catch (error) {
     console.error('iOS receipt validation error:', error);

@@ -582,6 +582,7 @@
   "abNegative": "AB-",
   "oPositive": "O+",
   "oNegative": "O-",
+  "dontKnow": "모르겠어요",
   "unknown": "알 수 없음",
   "yes": "예",
   "no": "아니오",
@@ -647,6 +648,7 @@
   "errorOpeningWebsite": "웹사이트 열기 오류",
   "remove": "제거",
   "couldNotOpenLink": "링크를 열 수 없습니다",
+  "nothingFoundInScan": "스캔에서 아무 것도 찾지 못했습니다",
   "errorOpeningLink": "링크 열기 오류",
   "help": "도움말",
   "name": "이름",
@@ -836,5 +838,9 @@
   "signInWithEmail": "이메일로 로그인",
   "signInSuccessful": "로그인 성공!",
   "signUpSuccessful": "가입 성공!",
-  "emailVerifiedWelcome": "이메일이 인증되었습니다! 환영합니다!"
+  "emailVerifiedWelcome": "이메일이 인증되었습니다! 환영합니다!",
+  "manageSubscriptions": "구독 관리",
+  "premiumCancelledTitle": "구독이 취소되었습니다",
+  "premiumCancelledWillEndOn": "프리미엄 이용은 {date}에 종료됩니다",
+  "@premiumCancelledWillEndOn": {"placeholders": {"date": {"type": "String"}}}
 }

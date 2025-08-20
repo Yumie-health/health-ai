@@ -6,6 +6,7 @@ import 'subscription_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'services/subscription_service.dart';
 import 'l10n/app_localizations.dart';
+import 'services/dialog_coordinator.dart';
 
 class SubscriptionPopupPage extends StatefulWidget {
   final VoidCallback? onDismiss;
@@ -19,6 +20,19 @@ class SubscriptionPopupPage extends StatefulWidget {
 
   @override
   State<SubscriptionPopupPage> createState() => _SubscriptionPopupPageState();
+
+  // Show using DialogCoordinator to avoid overlapping with other modals
+  static Future<bool> showPopup(BuildContext context, {bool isOnboardingComplete = false, VoidCallback? onDismiss}) async {
+    final result = await DialogCoordinator.instance.showExclusiveDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => SubscriptionPopupPage(
+        isOnboardingComplete: isOnboardingComplete,
+        onDismiss: onDismiss,
+      ),
+    );
+    return result ?? false;
+  }
 
   static Future<bool> shouldShowPopup({bool isPostOnboarding = false}) async {
     try {

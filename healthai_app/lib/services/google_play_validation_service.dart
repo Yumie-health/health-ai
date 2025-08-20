@@ -65,6 +65,54 @@ class GooglePlayValidationService {
       return await _fallbackLocalValidation();
     }
   }
+
+  // Detailed check returning cancellation and expiry info
+  static Future<Map<String, dynamic>> checkSubscriptionDetails() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final purchaseToken = prefs.getString('purchaseToken');
+      final subscriptionType = prefs.getString('subscriptionType');
+      if (purchaseToken == null || subscriptionType == null) {
+        return { 'isActive': false };
+      }
+      if (!isConfigured()) {
+        final fallbackActive = await _fallbackLocalValidation();
+        return { 'isActive': fallbackActive };
+      }
+      final packageName = 'com.yumie.healthai';
+      final result = await validateSubscription(
+        packageName: packageName,
+        productId: subscriptionType,
+        purchaseToken: purchaseToken,
+      );
+      final data = result['data'] as Map<String, dynamic>?;
+      if (data == null) {
+        final fallbackActive = await _fallbackLocalValidation();
+        return { 'isActive': fallbackActive };
+      }
+      final paymentState = data['paymentState'] as int?; // 1 == received
+      final cancelReason = data['cancelReason']; // null if not cancelled
+      final expiryTimeMillis = data['expiryTimeMillis']?.toString();
+      DateTime? expiry;
+      if (expiryTimeMillis != null) {
+        try {
+          expiry = DateTime.fromMillisecondsSinceEpoch(int.parse(expiryTimeMillis));
+        } catch (_) {}
+      }
+      final now = DateTime.now();
+      final isActive = (paymentState == 1) && (expiry == null || expiry.isAfter(now));
+      final isCancelled = cancelReason != null && expiry != null && expiry.isAfter(now);
+      return {
+        'isActive': isActive,
+        'isCancelled': isCancelled,
+        'expiryDate': expiry?.toIso8601String(),
+      };
+    } catch (e) {
+      print('Error getting subscription details: $e');
+      final fallbackActive = await _fallbackLocalValidation();
+      return { 'isActive': fallbackActive };
+    }
+  }
   
   // Validate subscription with Google Play API
   static Future<Map<String, dynamic>> validateSubscription({

@@ -43,6 +43,11 @@ class _WeightAnalyticsPageState extends State<WeightAnalyticsPage> {
     _target = ((data?['targetWeightKg'] ?? data?['targetWeight']) as num?)?.toDouble() ?? 0;
     _starting = (data?['startingWeight'] as num?)?.toDouble() ?? 0;
     
+    // If starting weight is 0 or not set, use current weight as starting weight
+    if (_starting == 0) {
+      _starting = _current;
+    }
+    
     // Load weight entries
     final w = await FirebaseFirestore.instance
         .collection('users').doc(user.uid).collection('weights')

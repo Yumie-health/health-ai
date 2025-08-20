@@ -1712,6 +1712,9 @@ class AppLocalizationsTr extends AppLocalizations {
   String get oNegative => 'O-';
 
   @override
+  String get dontKnow => 'Bilmiyorum';
+
+  @override
   String get oneToTwoGlasses => '1-2 bardak';
 
   @override
@@ -1848,6 +1851,9 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get couldNotOpenLink => 'Bağlantı açılamadı';
+
+  @override
+  String get nothingFoundInScan => 'Taramada hiçbir şey bulunamadı';
 
   @override
   String get errorOpeningLink => 'Bağlantı açma hatası';
@@ -2250,4 +2256,15 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get emailVerifiedWelcome => 'E-posta doğrulandı! Hoş geldiniz!';
+
+  @override
+  String get premiumCancelledTitle => 'You have cancelled your subscription';
+
+  @override
+  String premiumCancelledWillEndOn(String date) {
+    return 'Your premium access will end on $date';
+  }
+
+  @override
+  String get manageSubscriptions => 'Manage Subscriptions';
 }

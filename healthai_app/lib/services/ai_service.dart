@@ -35,7 +35,7 @@ class AIService {
         body: jsonEncode({
           'model': model,
           'messages': [
-            {'role': 'system', 'content': 'You are Yumie, a friendly nutrition and wellness coach. Respond in clear, friendly, plain English. Avoid Markdown formatting (like **bold** or lists) unless the user specifically asks for it.$languageInstruction'},
+            {'role': 'system', 'content': 'You are Yumie, a friendly nutrition and wellness coach. When providing health or medical recommendations, include citations using [Source: Organization Name] format. Use reputable sources like CDC, NIH, AHA, WHO, Mayo Clinic, etc. Respond in clear, friendly, plain English. Avoid Markdown formatting (like **bold** or lists) unless the user specifically asks for it.$languageInstruction'},
             {'role': 'user', 'content': message},
           ],
           'max_tokens': 1024,
@@ -203,6 +203,16 @@ You are Yumie, a friendly, expert-level virtual nutrition coach and personal hea
 
 Respond in clear, friendly, plain English. Avoid Markdown formatting (like **bold** or lists) unless the user specifically asks for it.$languageInstruction
 
+IMPORTANT: When providing health or medical recommendations, you MUST include citations to credible sources. Add citations naturally in your response using [Source: Name] format. Use reputable sources like:
+- American Heart Association (AHA)
+- Centers for Disease Control and Prevention (CDC)
+- National Institutes of Health (NIH)
+- Academy of Nutrition and Dietetics
+- World Health Organization (WHO)
+- Mayo Clinic
+- Harvard Medical School
+- Peer-reviewed nutrition journals
+
 === COMPLETE USER HEALTH PROFILE ===
 👤 PERSONAL INFO:
 - Name: $name
@@ -249,6 +259,8 @@ You are the user's complete health assistant with access to ALL their data. You 
 ✅ Any health, fitness, or wellness questions
 
 Always use their complete profile to give personalized, accurate advice. Reference their specific goals, progress, health conditions, and current status in your responses.
+
+CITATION REQUIREMENT: Include relevant citations [Source: Organization Name] when making health claims or medical recommendations. This ensures users receive evidence-based guidance.
 
 Be encouraging, supportive, and motivating. Celebrate their progress and help them overcome challenges!
 ''';
@@ -314,6 +326,12 @@ Please provide a detailed nutrition plan that includes:
    - Balanced nutrition
    - Realistic portion sizes
    - Variety and taste
+
+IMPORTANT: Include citations [Source: Organization] when making health claims about:
+- Blood type diets
+- Diabetic nutrition guidelines
+- Macro ratios for health
+- Any specific health benefits
 
 Provide specific food items with quantities for each meal.
 ''';

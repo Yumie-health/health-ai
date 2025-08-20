@@ -345,7 +345,7 @@ class _ScanResultFridgePageState extends State<ScanResultFridgePage> {
     final prefs = Provider.of<PreferencesProvider>(context, listen: false);
     final language = prefs.language;
     final result = await aiService.analyzeFridgeImage(File(widget.imagePath), language: language);
-    if (result != null) {
+    if (result != null && result.isNotEmpty) {
       setState(() {
         _ingredients = result;
         // Set default quantity for ingredients (fridge items are typically ingredients)
@@ -356,7 +356,16 @@ class _ScanResultFridgePageState extends State<ScanResultFridgePage> {
         _isLoadingAI = false;
       });
     } else {
+      if (!mounted) return;
       setState(() { _isLoadingAI = false; });
+      Navigator.of(context).pop();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(AppLocalizations.of(context)!.nothingFoundInScan),
+          backgroundColor: Colors.black87,
+          duration: Duration(seconds: 2),
+        ),
+      );
     }
   }
 

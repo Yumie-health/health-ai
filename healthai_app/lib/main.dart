@@ -80,6 +80,7 @@ import 'services/birthday_service.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'config/payment_config.dart';
 import 'services/subscription_service.dart';
+import 'services/iap_coordinator.dart';
 import 'services/streak_service.dart';
 import 'services/streak_notification_service.dart';
 import 'widgets/streak_badge.dart';
@@ -952,6 +953,10 @@ class MyApp extends StatelessWidget {
   // Sign out user and clear any local data
   Future<void> _signOutAndRedirect() async {
     try {
+      // Clear subscription data before signing out
+      final subscriptionService = SubscriptionService();
+      await subscriptionService.clearLocalSubscriptionData();
+      
       await FirebaseAuth.instance.signOut();
       
       // Clear any local preferences related to the deleted account
@@ -2061,10 +2066,14 @@ class _AuthScreenState extends State<AuthScreen> {
           log.error('Make sure nonce is properly hashed before sending to Apple');
         }
         
-        // await analytics.logEvent(name: 'login_failed', parameters: {'method': 'apple', 'error': e.toString()});  // Removed due to Kotlin conflicts
-        ScaffoldMessenger.of(context).showSnackBar(
-                                                        SnackBar(content: Text('${AppLocalizations.of(context)!.appleSignInFailed}: $e')),
-        );
+        // Suppress snackbar on Apple cancel; keep logs for real errors
+        final msg = e.toString();
+        final isUserCancel = msg.contains('canceled') || msg.contains('AuthorizationCanceled') || msg.contains('user canceled');
+        if (!isUserCancel) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('${AppLocalizations.of(context)!.appleSignInFailed}: $e')),
+          );
+        }
       }
     }
   }
@@ -3425,6 +3434,9 @@ class _MainNavScreenState extends State<MainNavScreen> with TickerProviderStateM
       }
     });
     
+    // Do not auto-initialize global IAP restore to prevent auto-entitlements.
+    // Users can restore manually from the subscription page when desired.
+
     // Check for post-onboarding popup
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       final prefs = await SharedPreferences.getInstance();
@@ -3441,13 +3453,7 @@ class _MainNavScreenState extends State<MainNavScreen> with TickerProviderStateM
           await Future.delayed(Duration(seconds: 5)); // 5 second delay after reaching home screen
 
           if (mounted) {
-            showDialog(
-              context: context,
-              barrierDismissible: false,
-              builder: (context) => SubscriptionPopupPage(
-                isOnboardingComplete: true,
-              ),
-            );
+            await SubscriptionPopupPage.showPopup(context, isOnboardingComplete: true);
           }
         } else {
 
@@ -3589,8 +3595,19 @@ class _MainNavScreenState extends State<MainNavScreen> with TickerProviderStateM
           'totalWeightChange': newTotalChange,
         });
         
+        // Also save to weights collection for analytics tracking
+        await FirebaseFirestore.instance
+            .collection('users').doc(user.uid)
+            .collection('weights')
+            .add({
+          'weight': newWeight,
+          'timestamp': FieldValue.serverTimestamp(),
+          'note': 'Weight update',
+          'isDeleted': false,
+        });
+        
         // Check if user has reached their goal weight
-        final double targetWeight = (data['targetWeight'] ?? 0.0).toDouble();
+        final double targetWeight = (data['targetWeightKg'] ?? data['targetWeight'] ?? 0.0).toDouble();
         final bool hadReachedGoal = (data['hasReachedGoal'] ?? false) as bool;
         final String userGoal = (data['goal'] ?? 'Maintain body weight').toString();
         
@@ -3667,10 +3684,10 @@ class _MainNavScreenState extends State<MainNavScreen> with TickerProviderStateM
       final doc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
       final data = doc.data() ?? {};
       
-      // Get user data for nutrition calculation
+      // Get user data for nutrition calculation - handle both field names
       final int age = data['age'] ?? 25;
-      final double height = (data['height'] ?? 170.0).toDouble();
-      final double weight = (data['weight'] ?? 70.0).toDouble();
+      final double height = (data['heightCm'] ?? data['height'] ?? 170.0).toDouble();
+      final double weight = (data['weightKg'] ?? data['weight'] ?? 70.0).toDouble();
       final String activityLevel = data['activityLevel'] ?? 'Moderately Active';
       final String sex = data['sex'] ?? 'Other';
       
@@ -3821,6 +3838,8 @@ class _MainNavScreenState extends State<MainNavScreen> with TickerProviderStateM
         final user = FirebaseAuth.instance.currentUser;
         if (user != null) {
           final doc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
+          // Sync Google/Apple profile photo into Firestore if missing so Profile screen shows it
+          await UserService().syncPhotoFromAuthIfMissing();
           final data = doc.data() ?? {};
           final needsCelebrationFlow = data['needsCelebrationFlow'] ?? false;
           
@@ -3892,6 +3911,8 @@ class _MainNavScreenState extends State<MainNavScreen> with TickerProviderStateM
       final user = FirebaseAuth.instance.currentUser;
       if (user != null) {
         final doc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
+        // Ensure photoUrl exists in Firestore for profile page
+        await UserService().syncPhotoFromAuthIfMissing();
         final data = doc.data() ?? {};
         final int prev = (data['waterLoggedMl'] ?? 0) as int;
         final int newAmount = prev + amount;
@@ -6157,14 +6178,26 @@ Track your calories, scan food with AI, and get personalized nutrition insights 
                                       icon: Icons.settings,
                                       label: AppLocalizations.of(context)!.manageSubscription,
                                       iconColor: Colors.grey[600],
-                                      onTap: () {
-                                        // Open device subscription management
+                                      onTap: () async {
+                                        // Open device subscription management (OS-specific)
                                         if (Platform.isIOS) {
-                                          // For iOS, open Settings app
-                                          launchUrl(Uri.parse('App-Prefs:root=General&path=SUBSCRIBE_TO_APP'));
+                                          final uri = Uri.parse('https://apps.apple.com/account/subscriptions');
+                                          if (await canLaunchUrl(uri)) {
+                                            await launchUrl(uri, mode: LaunchMode.externalApplication);
+                                          } else {
+                                            ScaffoldMessenger.of(context).showSnackBar(
+                                              SnackBar(content: Text(AppLocalizations.of(context)!.couldNotOpenLink)),
+                                            );
+                                          }
                                         } else {
-                                          // For Android, open Play Store subscription management
-                                          launchUrl(Uri.parse('https://play.google.com/store/account/subscriptions'));
+                                          final uri = Uri.parse('https://play.google.com/store/account/subscriptions?package=com.yumie.healthai');
+                                          if (await canLaunchUrl(uri)) {
+                                            await launchUrl(uri, mode: LaunchMode.externalApplication);
+                                          } else {
+                                            ScaffoldMessenger.of(context).showSnackBar(
+                                              SnackBar(content: Text(AppLocalizations.of(context)!.couldNotOpenPlayStore)),
+                                            );
+                                          }
                                         }
                                       },
                                     ),
@@ -6955,7 +6988,7 @@ class _CoachScreenState extends State<CoachScreen> with TickerProviderStateMixin
       waterIntakeL: waterIntakeL,
       bloodType: userProfile.bloodType,
       isDiabetic: userProfile.isDiabetic,
-      specialInstruction: 'Provide exactly 3 concise health insights. Format as simple bullet points without markdown formatting. Focus on: 1) Calorie goal achievement with specific percentages, 2) Macro balance assessment, 3) One actionable recommendation. Be direct and factual - no greetings or conversational language. Keep each point brief to fit in the UI box.',
+      specialInstruction: 'Provide exactly 3 concise health insights with citations. Format as simple bullet points without markdown formatting. Focus on: 1) Calorie goal achievement with specific percentages, 2) Macro balance assessment, 3) One actionable recommendation. Include [Source: Organization] for each insight. Be direct and factual - no greetings or conversational language. Keep each point brief to fit in the UI box. Example: "• Consuming 30% protein supports muscle retention during weight loss [Source: Academy of Nutrition and Dietetics]"',
       language: prefs.language,
     );
     setState(() { _aiHealthInsight = aiResponse ?? "Could not get AI insight."; _loadingInsight = false; });
@@ -7001,6 +7034,8 @@ class _CoachScreenState extends State<CoachScreen> with TickerProviderStateMixin
   }
 
   void _sendMessage(String text) async {
+    // Close keyboard on send for better UX
+    FocusScope.of(context).unfocus();
     if (text.trim().isEmpty) return;
     
     final subscriptionService = SubscriptionService();
@@ -7498,10 +7533,9 @@ class _CoachScreenState extends State<CoachScreen> with TickerProviderStateMixin
                                                                       fontSize: 15, 
                                                                       color: Colors.black87, 
                                                                       fontWeight: FontWeight.w500,
-                                                                      height: 1.3,
+                                                                      height: 1.35,
                                                                     ),
-                                                                    maxLines: 4,
-                                                                    overflow: TextOverflow.ellipsis,
+                                                                    softWrap: true,
                                                                   ),
                                                                 ),
                                                               ],
@@ -7857,6 +7891,26 @@ class _FoodScreenState extends State<FoodScreen> with TickerProviderStateMixin {
     }
   }
 
+  // Normalize AI meal time text to a single concise duration (e.g., "10 mins")
+  String _formatMealTime(String? raw) {
+    final String input = (raw ?? '').trim();
+    if (input.isEmpty) return '5 mins';
+    String s = input;
+    // Keep only the first segment before any '+' or comma or parenthetical notes
+    for (final sep in ['+', ',', '(']) {
+      final idx = s.indexOf(sep);
+      if (idx > 0) {
+        s = s.substring(0, idx);
+      }
+    }
+    // Remove common trailing notes like 'overnight', 'rest', 'marinate'
+    s = s.replaceAll(RegExp(r'\b(overnight|rest|marinate|chill|rise|proof)\b', caseSensitive: false), '').trim();
+    // Collapse multiple spaces
+    s = s.replaceAll(RegExp(r'\s+'), ' ').trim();
+    if (s.isEmpty) return '5 mins';
+    return s;
+  }
+
   // AI-powered suggested meals (no longer hardcoded)
   List<Map<String, dynamic>> _aiMeals = [];
 
@@ -7981,6 +8035,7 @@ class _FoodScreenState extends State<FoodScreen> with TickerProviderStateMixin {
 
   @override
   void dispose() {
+    // Cancel any ongoing work/animations before disposal to avoid setState after dispose
     _tabController.dispose();
     _calendarController.dispose();
     _myMealsController.dispose();
@@ -7990,13 +8045,19 @@ class _FoodScreenState extends State<FoodScreen> with TickerProviderStateMixin {
 
   Future<void> _refreshAIMeals() async {
     final meals = await _getOrFetchAIMeals();
+    if (!mounted) return;
     if (meals != null) {
-      setState(() {
-        _aiMeals = meals;
-      });
+      if (mounted) {
+        setState(() {
+          _aiMeals = meals;
+        });
+      }
     }
-    _suggestedController.reset();
-    _suggestedController.forward();
+    if (!mounted) return;
+    if (mounted) {
+      _suggestedController.reset();
+      _suggestedController.forward();
+    }
   }
   
   // Method to force refresh meals (for manual refresh)
@@ -8438,7 +8499,7 @@ class _FoodScreenState extends State<FoodScreen> with TickerProviderStateMixin {
                                                                   borderRadius: BorderRadius.circular(8),
                                                                 ),
                                                                 child: Text(
-                                                                  meal['time'] as String? ?? '5 mins',
+                                                                  _formatMealTime(meal['time'] as String?),
                                                                   style: TextStyle(
                                                                     fontWeight: FontWeight.w500,
                                                                     fontSize: 14,
@@ -9245,8 +9306,21 @@ class _HealthAwarenessPageState extends State<HealthAwarenessPage> {
   String? _activityLevel;
   bool _saving = false;
 
-  final List<String> bloodTypes = [
-    'A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'
+  Future<void> _updateField(String field, dynamic value) async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+    try {
+      await FirebaseFirestore.instance.collection('users').doc(user.uid).update({
+        field: value,
+        'lastUpdated': FieldValue.serverTimestamp(),
+      });
+    } catch (_) {
+      // best-effort; UI state already updated
+    }
+  }
+
+  List<String> get bloodTypes => [
+    'A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-', '?'
   ];
 
   List<Map<String, dynamic>> get activityLevels => [
@@ -9314,7 +9388,10 @@ class _HealthAwarenessPageState extends State<HealthAwarenessPage> {
                         label: Text(type, style: TextStyle(fontWeight: FontWeight.bold)),
                         selected: isSelected,
                         selectedColor: theme.primaryColor.withOpacity(0.18),
-                        onSelected: (selected) => setState(() => _bloodType = type),
+                        onSelected: (selected) async {
+                          setState(() => _bloodType = type);
+                          await _updateField('bloodType', type);
+                        },
                         labelStyle: TextStyle(color: isSelected ? theme.primaryColor : Colors.black),
                         backgroundColor: Colors.white,
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -9331,7 +9408,10 @@ class _HealthAwarenessPageState extends State<HealthAwarenessPage> {
                         label: Row(children: [Icon(Icons.check_circle, color: Colors.green), SizedBox(width: 6), Text(AppLocalizations.of(context)!.yes)]),
                         selected: _isDiabetic == true,
                         selectedColor: Colors.green.withOpacity(0.18),
-                        onSelected: (selected) => setState(() => _isDiabetic = true),
+                        onSelected: (selected) async {
+                          setState(() => _isDiabetic = true);
+                          await _updateField('isDiabetic', true);
+                        },
                         labelStyle: TextStyle(color: _isDiabetic == true ? Colors.green : Colors.black),
                         backgroundColor: Colors.white,
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -9342,7 +9422,10 @@ class _HealthAwarenessPageState extends State<HealthAwarenessPage> {
                         label: Row(children: [Icon(Icons.cancel, color: Colors.red), SizedBox(width: 6), Text(AppLocalizations.of(context)!.no)]),
                         selected: _isDiabetic == false,
                         selectedColor: Colors.red.withOpacity(0.18),
-                        onSelected: (selected) => setState(() => _isDiabetic = false),
+                        onSelected: (selected) async {
+                          setState(() => _isDiabetic = false);
+                          await _updateField('isDiabetic', false);
+                        },
                         labelStyle: TextStyle(color: _isDiabetic == false ? Colors.red : Colors.black),
                         backgroundColor: Colors.white,
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -9363,7 +9446,10 @@ class _HealthAwarenessPageState extends State<HealthAwarenessPage> {
                       return Padding(
                         padding: const EdgeInsets.symmetric(vertical: 4),
                         child: GestureDetector(
-                          onTap: () => setState(() => _activityLevel = level['value']),
+                          onTap: () async {
+                            setState(() => _activityLevel = level['value']);
+                            await _updateField('activityLevel', level['value']);
+                          },
                           child: AnimatedContainer(
                             duration: Duration(milliseconds: 200),
                             padding: EdgeInsets.all(16),
@@ -9409,23 +9495,7 @@ class _HealthAwarenessPageState extends State<HealthAwarenessPage> {
                       );
                     },
                   ),
-                  SizedBox(height: 32),
-                  SafeArea(
-                    minimum: EdgeInsets.only(bottom: 16),
-                    child: SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton(
-                        onPressed: (_bloodType != null && _isDiabetic != null && _activityLevel != null && !_saving) ? _save : null,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: theme.primaryColor,
-                          foregroundColor: Colors.white,
-                          padding: EdgeInsets.symmetric(vertical: 16),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                        ),
-                        child: Text(AppLocalizations.of(context)!.save),
-                      ),
-                    ),
-                  ),
+                  SizedBox(height: 16),
                 ],
               ),
             ),

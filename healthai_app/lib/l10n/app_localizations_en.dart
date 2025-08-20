@@ -1616,7 +1616,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get dueToCurrentAnswers => 'Due to current answers';
 
   @override
-  String get remindersWouldYouLike => 'Reminders would you like to receive?';
+  String get remindersWouldYouLike => 'Which reminders would you like to receive?';
 
   @override
   String get yumieIsCookingUp => 'Yumie is cooking up your personalized nutrition plan...';
@@ -1710,6 +1710,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get oNegative => 'O-';
+
+  @override
+  String get dontKnow => 'Don\'t know';
 
   @override
   String get oneToTwoGlasses => '1-2 glasses';
@@ -1848,6 +1851,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get couldNotOpenLink => 'Could not open link';
+
+  @override
+  String get nothingFoundInScan => 'Nothing found in scan';
 
   @override
   String get errorOpeningLink => 'Error opening link';
@@ -2250,4 +2256,15 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get emailVerifiedWelcome => 'Email verified! Welcome!';
+
+  @override
+  String get premiumCancelledTitle => 'You have cancelled your subscription';
+
+  @override
+  String premiumCancelledWillEndOn(String date) {
+    return 'Your premium access will end on $date';
+  }
+
+  @override
+  String get manageSubscriptions => 'Manage Subscriptions';
 }

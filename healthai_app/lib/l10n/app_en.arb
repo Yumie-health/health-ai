@@ -587,7 +587,7 @@
   "howMuchWaterADay": "How much water a day?",
   "fitnessProfile": "Fitness profile",
   "dueToCurrentAnswers": "Due to current answers",
-  "remindersWouldYouLike": "Reminders would you like to receive?",
+  "remindersWouldYouLike": "Which reminders would you like to receive?",
   "yumieIsCookingUp": "Yumie is cooking up your personalized nutrition plan...",
   "yourAllSet": "You're all set!",
   "google": "Google",
@@ -621,6 +621,7 @@
   "abNegative": "AB-",
   "oPositive": "O+",
   "oNegative": "O-",
+  "dontKnow": "Don't know",
   "unknown": "Unknown",
   "yes": "Yes",
   "no": "No",
@@ -686,6 +687,7 @@
   "errorOpeningWebsite": "Error opening website",
   "remove": "Remove",
   "couldNotOpenLink": "Could not open link",
+  "nothingFoundInScan": "Nothing found in scan",
   "errorOpeningLink": "Error opening link",
   "help": "Help",
   "name": "Name",
@@ -882,5 +884,15 @@
   "signInWithEmail": "Sign In with Email",
   "signInSuccessful": "Sign in successful!",
   "signUpSuccessful": "Sign up successful!",
-  "emailVerifiedWelcome": "Email verified! Welcome!"
+  "emailVerifiedWelcome": "Email verified! Welcome!",
+  "premiumCancelledTitle": "You have cancelled your subscription",
+  "premiumCancelledWillEndOn": "Your premium access will end on {date}",
+  "@premiumCancelledWillEndOn": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "manageSubscriptions": "Manage Subscriptions"
 } 

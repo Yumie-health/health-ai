@@ -582,6 +582,7 @@
   "abNegative": "AB-",
   "oPositive": "O+",
   "oNegative": "O-",
+  "dontKnow": "لا أعرف",
   "unknown": "غير معروف",
   "yes": "نعم",
   "no": "لا",
@@ -647,6 +648,7 @@
   "errorOpeningWebsite": "خطأ في فتح الموقع الإلكتروني",
   "remove": "إزالة",
   "couldNotOpenLink": "لا يمكن فتح الرابط",
+  "nothingFoundInScan": "لم يتم العثور على شيء في المسح",
   "errorOpeningLink": "خطأ في فتح الرابط",
   "help": "مساعدة",
   "name": "الاسم",
@@ -856,5 +858,9 @@
   "signInWithEmail": "تسجيل الدخول بالبريد الإلكتروني",
   "signInSuccessful": "تم تسجيل الدخول بنجاح!",
   "signUpSuccessful": "تم التسجيل بنجاح!",
-  "emailVerifiedWelcome": "تم تأكيد البريد الإلكتروني! مرحباً بك!"
+  "emailVerifiedWelcome": "تم تأكيد البريد الإلكتروني! مرحباً بك!",
+  "manageSubscriptions": "إدارة الاشتراكات",
+  "premiumCancelledTitle": "لقد قمت بإلغاء الاشتراك",
+  "premiumCancelledWillEndOn": "ستنتهي ميزة بريميوم في {date}",
+  "@premiumCancelledWillEndOn": {"placeholders": {"date": {"type": "String"}}}
 }

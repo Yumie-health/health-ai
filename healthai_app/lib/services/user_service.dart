@@ -29,6 +29,25 @@ class UserService {
     await _firestore.collection('users').doc(user.uid).update(updateData);
   }
 
+  // Ensure Firestore photoUrl matches FirebaseAuth photoURL for social sign-ins
+  Future<void> syncPhotoFromAuthIfMissing() async {
+    final user = _auth.currentUser;
+    if (user == null) return;
+    try {
+      final docRef = _firestore.collection('users').doc(user.uid);
+      final snap = await docRef.get();
+      final authPhoto = user.photoURL ?? '';
+      if (!snap.exists) return;
+      final data = snap.data() as Map<String, dynamic>? ?? {};
+      final storedPhoto = (data['photoUrl'] as String?) ?? '';
+      if (storedPhoto.isEmpty && authPhoto.isNotEmpty) {
+        await docRef.update({'photoUrl': authPhoto, 'lastUpdated': DateTime.now()});
+      }
+    } catch (_) {
+      // best-effort sync
+    }
+  }
+
   // Create initial user profile
   Future<void> createInitialUserProfile(String email, String name) async {
     final user = _auth.currentUser;

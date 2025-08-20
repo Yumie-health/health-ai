@@ -579,6 +579,7 @@
   "abNegative": "AB-",
   "oPositive": "O+",
   "oNegative": "O-",
+  "dontKnow": "पता नहीं",
   "unknown": "अज्ञात",
   "yes": "हाँ",
   "no": "नहीं",
@@ -644,6 +645,7 @@
   "errorOpeningWebsite": "वेबसाइट खोलने में त्रुटि",
   "remove": "हटाएं",
   "couldNotOpenLink": "लिंक नहीं खोल सके",
+  "nothingFoundInScan": "स्कैन में कुछ नहीं मिला",
   "errorOpeningLink": "लिंक खोलने में त्रुटि",
   "help": "सहायता",
   "name": "नाम",
@@ -853,5 +855,9 @@
   "signInWithEmail": "ईमेल के साथ साइन इन करें",
   "signInSuccessful": "साइन इन सफल!",
   "signUpSuccessful": "साइन अप सफल!",
-  "emailVerifiedWelcome": "ईमेल सत्यापित! स्वागत है!"
+  "emailVerifiedWelcome": "ईमेल सत्यापित! स्वागत है!",
+  "manageSubscriptions": "सदस्यताएँ प्रबंधित करें",
+  "premiumCancelledTitle": "आपने सदस्यता रद्द कर दी है",
+  "premiumCancelledWillEndOn": "आपकी प्रीमियम पहुंच {date} को समाप्त होगी",
+  "@premiumCancelledWillEndOn": {"placeholders": {"date": {"type": "String"}}}
 }

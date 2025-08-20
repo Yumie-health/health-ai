@@ -320,6 +320,11 @@ class _NewPlanDisplayState extends State<NewPlanDisplay> with TickerProviderStat
     try {
       final user = FirebaseAuth.instance.currentUser;
       if (user != null) {
+        // Get current user data to update starting weight
+        final doc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
+        final currentData = doc.data() ?? {};
+        final double currentWeight = (currentData['weightKg'] ?? currentData['weight'] ?? 70.0).toDouble();
+        
         final updateData = {
           'dailyCalorieGoal': widget.planData['calories'],
           'proteinGoal': widget.planData['protein'],
@@ -328,11 +333,14 @@ class _NewPlanDisplayState extends State<NewPlanDisplay> with TickerProviderStat
           'lastUpdated': FieldValue.serverTimestamp(),
           'goal': widget.planData['goal'] ?? 'Maintain body weight', // Save the fitness goal
           'nutritionalPlanType': widget.planData['goal']?.toLowerCase().replaceAll(' ', '_') ?? 'maintenance',
+          // Update starting weight to current weight when starting a new journey
+          'startingWeight': currentWeight,
         };
         
         // Update target weight if provided
         if (widget.planData['targetWeight'] != null) {
           updateData['targetWeight'] = widget.planData['targetWeight'];
+          updateData['targetWeightKg'] = widget.planData['targetWeight']; // Save with both field names
           updateData['hasReachedGoal'] = false; // Reset goal achievement if new target set
         }
         

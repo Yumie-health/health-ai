@@ -1712,6 +1712,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get oNegative => 'O-';
 
   @override
+  String get dontKnow => '分からない';
+
+  @override
   String get oneToTwoGlasses => '1-2杯';
 
   @override
@@ -1848,6 +1851,9 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get couldNotOpenLink => 'リンクを開けませんでした';
+
+  @override
+  String get nothingFoundInScan => 'スキャンで何も見つかりませんでした';
 
   @override
   String get errorOpeningLink => 'リンクを開くエラー';
@@ -2250,4 +2256,15 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get emailVerifiedWelcome => 'メールが認証されました！ようこそ！';
+
+  @override
+  String get premiumCancelledTitle => 'You have cancelled your subscription';
+
+  @override
+  String premiumCancelledWillEndOn(String date) {
+    return 'Your premium access will end on $date';
+  }
+
+  @override
+  String get manageSubscriptions => 'Manage Subscriptions';
 }

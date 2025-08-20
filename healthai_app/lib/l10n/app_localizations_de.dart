@@ -1712,6 +1712,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get oNegative => 'O-';
 
   @override
+  String get dontKnow => 'Weiß nicht';
+
+  @override
   String get oneToTwoGlasses => '1-2 Gläser';
 
   @override
@@ -1848,6 +1851,9 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get couldNotOpenLink => 'Link konnte nicht geöffnet werden';
+
+  @override
+  String get nothingFoundInScan => 'Beim Scan wurde nichts gefunden';
 
   @override
   String get errorOpeningLink => 'Fehler beim Öffnen des Links';
@@ -2250,4 +2256,15 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get emailVerifiedWelcome => 'E-Mail verifiziert! Willkommen!';
+
+  @override
+  String get premiumCancelledTitle => 'You have cancelled your subscription';
+
+  @override
+  String premiumCancelledWillEndOn(String date) {
+    return 'Your premium access will end on $date';
+  }
+
+  @override
+  String get manageSubscriptions => 'Manage Subscriptions';
 }

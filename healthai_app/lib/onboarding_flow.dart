@@ -529,6 +529,8 @@ class _OnboardingFlowPageState extends State<OnboardingFlowPage> with SingleTick
                             'reminders': remindersMap, // Save reminders as a map of booleans
                             'useMetric': useMetricWeight, // Save unit preference
                             'age': selectedAge,
+                            'birthMonth': selectedBirthMonth,
+                            'birthDay': selectedBirthDay,
                             'heightCm': selectedHeightCm,
                             'weightKg': selectedWeightKg,
                             'startingWeight': selectedWeightKg, // Save starting weight
@@ -541,6 +543,7 @@ class _OnboardingFlowPageState extends State<OnboardingFlowPage> with SingleTick
                             'waterIntake': waterIntake,
                             'name': existingName, // Preserve the existing name from Apple Sign-In
                             'photoUrl': existingPhotoUrl, // Preserve the existing photo URL
+                            'createdAt': FieldValue.serverTimestamp(), // Track when account was created
                       }, SetOptions(merge: true));
 
                         } catch (e) {
@@ -3021,10 +3024,11 @@ class _BloodTypeStep extends StatelessWidget {
   final VoidCallback onBack;
   _BloodTypeStep({required this.fadeAnimation, required this.slideAnimation, required this.selectedBloodType, required this.onSelect, required this.onContinue, required this.onBack});
 
-  final List<String> bloodTypes = const [
-    'A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'
+  List<String> _getBloodTypes(BuildContext context) => [
+    'A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-', '?'
   ];
-  final Map<String, IconData> bloodIcons = const {
+  
+  Map<String, IconData> _getBloodIcons(BuildContext context) => {
     'A+': Icons.bloodtype,
     'A-': Icons.bloodtype,
     'B+': Icons.bloodtype,
@@ -3033,6 +3037,7 @@ class _BloodTypeStep extends StatelessWidget {
     'AB-': Icons.bloodtype,
     'O+': Icons.bloodtype,
     'O-': Icons.bloodtype,
+    '?': Icons.help_outline,
   };
 
   @override
@@ -3070,39 +3075,55 @@ class _BloodTypeStep extends StatelessWidget {
         SizedBox(height: 18),
         Text(AppLocalizations.of(context)!.thisHelpsUsPersonalizeExperience, style: TextStyle(color: Colors.grey[600], fontSize: 16)),
         SizedBox(height: 32),
-        Wrap(
-          spacing: 18,
-          runSpacing: 18,
-          children: bloodTypes.map((type) {
-            final isSelected = selectedBloodType == type;
-            return GestureDetector(
-              onTap: () => onSelect(type),
-              child: AnimatedContainer(
-                duration: Duration(milliseconds: 180),
-                padding: EdgeInsets.symmetric(vertical: 18, horizontal: 28),
-                decoration: BoxDecoration(
-                  color: isSelected ? theme.primaryColor.withOpacity(0.12) : Colors.white,
-                  borderRadius: BorderRadius.circular(18),
-                  border: Border.all(color: isSelected ? theme.primaryColor : Colors.grey[300]!, width: 2),
-                  boxShadow: isSelected
-                      ? [BoxShadow(color: theme.primaryColor.withOpacity(0.08), blurRadius: 12, offset: Offset(0, 4))]
-                      : [],
-                ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      bloodIcons[type],
-                      color: isSelected ? theme.primaryColor : Color(0xFFFFCDD2), // faded red for unselected
-                      size: 36,
+        Builder(
+          builder: (context) {
+            final bloodTypes = _getBloodTypes(context);
+            final bloodIcons = _getBloodIcons(context);
+            
+            return Wrap(
+              spacing: 18,
+              runSpacing: 18,
+              children: bloodTypes.map((type) {
+                final isSelected = selectedBloodType == type;
+                final isDontKnow = type == '?';
+                
+                return GestureDetector(
+                  onTap: () => onSelect(type),
+                  child: AnimatedContainer(
+                    duration: Duration(milliseconds: 180),
+                    padding: EdgeInsets.symmetric(vertical: 18, horizontal: 28),
+                    decoration: BoxDecoration(
+                      color: isSelected ? theme.primaryColor.withOpacity(0.12) : Colors.white,
+                      borderRadius: BorderRadius.circular(18),
+                      border: Border.all(color: isSelected ? theme.primaryColor : Colors.grey[300]!, width: 2),
+                      boxShadow: isSelected
+                          ? [BoxShadow(color: theme.primaryColor.withOpacity(0.08), blurRadius: 12, offset: Offset(0, 4))]
+                          : [],
                     ),
-                    SizedBox(height: 8),
-                    Text(type, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 22, color: isSelected ? theme.primaryColor : Colors.black)),
-                  ],
-                ),
-              ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          bloodIcons[type],
+                          color: isSelected ? theme.primaryColor : Color(0xFFFFCDD2), // faded red for unselected
+                          size: 36,
+                        ),
+                        SizedBox(height: 8),
+                        if (isDontKnow)
+                          Icon(
+                            Icons.question_mark,
+                            color: isSelected ? theme.primaryColor : Colors.grey[600],
+                            size: 22,
+                          )
+                        else
+                          Text(type, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 22, color: isSelected ? theme.primaryColor : Colors.black)),
+                      ],
+                    ),
+                  ),
+                );
+              }).toList(),
             );
-          }).toList(),
+          },
         ),
         SizedBox(height: 36),
               ],

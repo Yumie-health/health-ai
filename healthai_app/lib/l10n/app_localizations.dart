@@ -3318,7 +3318,7 @@ abstract class AppLocalizations {
   /// No description provided for @remindersWouldYouLike.
   ///
   /// In en, this message translates to:
-  /// **'Reminders would you like to receive?'**
+  /// **'Which reminders would you like to receive?'**
   String get remindersWouldYouLike;
 
   /// No description provided for @yumieIsCookingUp.
@@ -3506,6 +3506,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'O-'**
   String get oNegative;
+
+  /// No description provided for @dontKnow.
+  ///
+  /// In en, this message translates to:
+  /// **'Don\'t know'**
+  String get dontKnow;
 
   /// No description provided for @oneToTwoGlasses.
   ///
@@ -3782,6 +3788,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Could not open link'**
   String get couldNotOpenLink;
+
+  /// No description provided for @nothingFoundInScan.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing found in scan'**
+  String get nothingFoundInScan;
 
   /// No description provided for @errorOpeningLink.
   ///
@@ -4574,6 +4586,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Email verified! Welcome!'**
   String get emailVerifiedWelcome;
+
+  /// No description provided for @premiumCancelledTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'You have cancelled your subscription'**
+  String get premiumCancelledTitle;
+
+  /// No description provided for @premiumCancelledWillEndOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Your premium access will end on {date}'**
+  String premiumCancelledWillEndOn(String date);
+
+  /// No description provided for @manageSubscriptions.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage Subscriptions'**
+  String get manageSubscriptions;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {
