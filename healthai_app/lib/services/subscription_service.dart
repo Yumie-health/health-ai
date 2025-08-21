@@ -112,15 +112,7 @@ class SubscriptionService {
             if (firestorePurchaseDate != null) {
               await prefs.setString('purchaseDate', firestorePurchaseDate);
             }
-            // Pull cancellation/expiry if present
-            final cancelled = userData['subscriptionCancelled'] as bool? ?? false;
-            final expiryIso = userData['subscriptionExpiryDate'] as String?;
-            await prefs.setBool('subscriptionCancelled', cancelled);
-            if (expiryIso != null) {
-              await prefs.setString('subscriptionExpiryDate', expiryIso);
-            } else {
-              await prefs.remove('subscriptionExpiryDate');
-            }
+
             premium.value = true;
             return true;
           }
@@ -284,8 +276,7 @@ class SubscriptionService {
         'isPremium': true,
         'subscriptionType': productId,
         'purchaseDate': purchaseDate,
-        'subscriptionCancelled': false,
-        'subscriptionExpiryDate': null,
+
         'lastUpdated': FieldValue.serverTimestamp(),
       });
       
@@ -295,8 +286,7 @@ class SubscriptionService {
       await prefs.setString('subscriptionType', productId);
       await prefs.setString('purchaseDate', purchaseDate);
       await prefs.setBool('hadPremiumEver', true);
-      await prefs.setBool('subscriptionCancelled', false);
-      await prefs.remove('subscriptionExpiryDate');
+
       
       print('Subscription set: $productId for user: ${user.uid}');
       premium.value = true;
@@ -347,38 +337,9 @@ class SubscriptionService {
           if (Platform.isAndroid) {
             final details = await GooglePlayValidationService.checkSubscriptionDetails();
             final isActive = details['isActive'] as bool? ?? false;
-            final isCancelled = details['isCancelled'] as bool? ?? false;
-            final expiryIso = details['expiryDate'] as String?;
             if (!isActive) {
               await clearSubscription();
               print('Subscription expired - premium access removed');
-            } else {
-              // Persist cancellation and expiry info
-              if (isCancelled || expiryIso != null) {
-                final user = FirebaseAuth.instance.currentUser;
-                if (user != null) {
-                  await FirebaseFirestore.instance.collection('users').doc(user.uid).update({
-                    'subscriptionCancelled': isCancelled,
-                    'subscriptionExpiryDate': expiryIso,
-                    'lastUpdated': FieldValue.serverTimestamp(),
-                  });
-                }
-                await prefs.setBool('subscriptionCancelled', isCancelled);
-                if (expiryIso != null) {
-                  await prefs.setString('subscriptionExpiryDate', expiryIso);
-                }
-              } else {
-                final user = FirebaseAuth.instance.currentUser;
-                if (user != null) {
-                  await FirebaseFirestore.instance.collection('users').doc(user.uid).update({
-                    'subscriptionCancelled': false,
-                    'subscriptionExpiryDate': null,
-                    'lastUpdated': FieldValue.serverTimestamp(),
-                  });
-                }
-                await prefs.setBool('subscriptionCancelled', false);
-                await prefs.remove('subscriptionExpiryDate');
-              }
             }
           } else if (Platform.isIOS) {
             // iOS: server-side receipt validation occurs at purchase/restore time.

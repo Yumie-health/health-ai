@@ -2,6 +2,7 @@ import 'dart:io';
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
+import '../config/ad_config.dart';
 
 
 class ConsentService {
@@ -106,11 +107,11 @@ class ConsentService {
 
   Future<void> _forceTestAdLoad() async {
     try {
-      // Use the test rewarded ad unit ID to force the device ID log
-      const testAdUnitId = 'ca-app-pub-6978915708810799/8277465670';
+      // Use the proper ad unit ID from configuration
+      final adUnitId = AdConfig.rewardedAdUnitId;
       
       RewardedAd.load(
-        adUnitId: testAdUnitId,
+        adUnitId: adUnitId,
         request: const AdRequest(),
         rewardedAdLoadCallback: RewardedAdLoadCallback(
           onAdLoaded: (ad) {

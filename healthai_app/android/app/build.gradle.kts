@@ -93,8 +93,8 @@ dependencies {
     // Google Sign-In
     implementation("com.google.android.gms:play-services-auth:20.7.0")
 
-    // Jetpack Glance for rich widgets (Compose-style)
-    implementation("androidx.glance:glance-appwidget:1.1.0")
-    implementation("androidx.glance:glance-material3:1.1.0")
+    // Jetpack Glance for rich widgets (Compose-style) - Updated to fix CVE-2024-7254
+    implementation("androidx.glance:glance-appwidget:1.1.1")
+    implementation("androidx.glance:glance-material3:1.1.1")
 
 }

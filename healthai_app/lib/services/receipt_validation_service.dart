@@ -61,16 +61,7 @@ class ReceiptValidationService {
       });
 
       final data = result.data as Map<String, dynamic>?;
-      // Persist cancellation/expiry info if provided (iOS sandbox/prod)
-      try {
-        final expiryIso = data?['expiryDate'] as String?;
-        final isCancelled = data?['isCancelled'] as bool? ?? false;
-        final prefs = await SharedPreferences.getInstance();
-        if (expiryIso != null) {
-          await prefs.setString('subscriptionExpiryDate', expiryIso);
-        }
-        await prefs.setBool('subscriptionCancelled', isCancelled);
-      } catch (_) {}
+
 
       return data?['isValid'] as bool? ?? false;
     } catch (e) {

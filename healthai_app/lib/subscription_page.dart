@@ -39,9 +39,7 @@ class _SubscriptionPageState extends State<SubscriptionPage> with WidgetsBinding
   String? _selectedProductId;
   bool _userInitiatedRestore = false;
   Timer? _purchaseTimeoutTimer;
-  // Cancellation state
-  bool _subscriptionCancelled = false;
-  DateTime? _subscriptionExpiry;
+
   
   Future<void> _openUrl(String url, {String? fallbackError}) async {
     try {
@@ -118,35 +116,7 @@ class _SubscriptionPageState extends State<SubscriptionPage> with WidgetsBinding
       if (mounted) {
         setState(() => _isPremium = isPremium);
       }
-      // Load cancellation info from Firestore or local prefs if available
-      try {
-        final user = FirebaseAuth.instance.currentUser;
-        if (user != null) {
-          final doc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
-          final data = doc.data() as Map<String, dynamic>?;
-          if (data != null) {
-            final cancelled = data['subscriptionCancelled'] as bool? ?? false;
-            final expiryIso = data['subscriptionExpiryDate'] as String?;
-            if (mounted) {
-              setState(() {
-                _subscriptionCancelled = cancelled;
-                _subscriptionExpiry = expiryIso != null ? DateTime.tryParse(expiryIso) : null;
-              });
-            }
-          }
-        } else {
-          // Fallback to local prefs
-          final prefs = await SharedPreferences.getInstance();
-          final cancelled = prefs.getBool('subscriptionCancelled') ?? false;
-          final expiryIso = prefs.getString('subscriptionExpiryDate');
-          if (mounted) {
-            setState(() {
-              _subscriptionCancelled = cancelled;
-              _subscriptionExpiry = expiryIso != null ? DateTime.tryParse(expiryIso) : null;
-            });
-          }
-        }
-      } catch (_) {}
+
     } catch (e) {
       print('Error checking premium status: $e');
     }
@@ -231,21 +201,7 @@ class _SubscriptionPageState extends State<SubscriptionPage> with WidgetsBinding
             print('Purchase attempt returned restored status - treating as success');
             await _handlePurchaseSuccess(purchase);
           } else {
-            // Passive restore - validate to fetch cancellation/expiry (iOS sandbox/prod)
-            () async {
-              try {
-                final valid = await ReceiptValidationService.validateReceipt(purchase);
-                if (valid && mounted) {
-                  final prefs = await SharedPreferences.getInstance();
-                  final cancelled = prefs.getBool('subscriptionCancelled') ?? false;
-                  final expiryIso = prefs.getString('subscriptionExpiryDate');
-                  setState(() {
-                    _subscriptionCancelled = cancelled;
-                    _subscriptionExpiry = expiryIso != null ? DateTime.tryParse(expiryIso) : null;
-                  });
-                }
-              } catch (_) {}
-            }();
+
             if (purchase.pendingCompletePurchase) {
               await _iap.completePurchase(purchase);
             }
@@ -836,69 +792,14 @@ class _SubscriptionPageState extends State<SubscriptionPage> with WidgetsBinding
                 ],
               ),
             ),
-            if (_subscriptionCancelled) ...[
-              SizedBox(height: 24),
-              Container(
-                padding: EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.amber.withOpacity(0.12),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.amber.withOpacity(0.4)),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Icon(Icons.info_outline, color: Colors.amber[800]),
-                        SizedBox(width: 8),
-                        Text(
-                          AppLocalizations.of(context)!.premiumCancelledTitle,
-                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: Colors.amber[800]),
-                        ),
-                      ],
-                    ),
-                    SizedBox(height: 8),
-                    Text(
-                      _subscriptionExpiry != null
-                          ? AppLocalizations.of(context)!.premiumCancelledWillEndOn(_formatDate(_subscriptionExpiry!))
-                          : AppLocalizations.of(context)!.premiumCancelledWillEndOn('—'),
-                      style: TextStyle(fontSize: 14, color: Colors.black87),
-                    ),
-                    SizedBox(height: 8),
-                    GestureDetector(
-                      onTap: () {
-                        final url = Platform.isIOS
-                            ? 'https://apps.apple.com/account/subscriptions'
-                            : 'https://play.google.com/store/account/subscriptions?package=com.yumie.healthai';
-                        _openUrl(url, fallbackError: AppLocalizations.of(context)!.couldNotOpenLink);
-                      },
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            AppLocalizations.of(context)!.manageSubscriptions,
-                            style: TextStyle(color: kPrimaryGreen, fontWeight: FontWeight.w700),
-                          ),
-                          const SizedBox(width: 6),
-                          const Icon(Icons.open_in_new, size: 16, color: kPrimaryGreen),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
+
           ],
         ),
       ),
     );
   }
 
-  String _formatDate(DateTime dt) {
-    // Simple localized date formatting (YYYY-MM-DD)
-    return '${dt.year}-${dt.month.toString().padLeft(2, '0')}-${dt.day.toString().padLeft(2, '0')}';
-  }
+
 
   Widget _buildErrorView() {
     return Center(
