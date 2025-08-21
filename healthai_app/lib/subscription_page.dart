@@ -40,6 +40,18 @@ class _SubscriptionPageState extends State<SubscriptionPage> with WidgetsBinding
   bool _userInitiatedRestore = false;
   Timer? _purchaseTimeoutTimer;
 
+  bool _isUserCancelledError(Object error) {
+    final msg = error.toString().toLowerCase();
+    return msg.contains('storekit2_purchase_cancelled') ||
+        msg.contains('authorizationcanceled') ||
+        msg.contains('user canceled') ||
+        msg.contains('user cancelled') ||
+        msg.contains('purchase_cancelled') ||
+        msg.contains('purchase canceled') ||
+        msg.contains('canceled') ||
+        msg.contains('cancelled');
+  }
+
   
   Future<void> _openUrl(String url, {String? fallbackError}) async {
     try {
@@ -403,14 +415,16 @@ class _SubscriptionPageState extends State<SubscriptionPage> with WidgetsBinding
         _isProcessingPayment = false;
         _selectedProductId = null;
       });
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Purchase failed: ${e.toString()}'),
-            backgroundColor: kWarningRed,
-          ),
-        );
-      }
+      if (!mounted) return;
+      final friendly = _isUserCancelledError(e)
+          ? 'Purchase cancelled'
+          : 'Purchase error. Please try again.';
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(friendly),
+          backgroundColor: kWarningRed,
+        ),
+      );
     }
   }
 
