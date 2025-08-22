@@ -503,6 +503,9 @@ class AppLocalizationsPt extends AppLocalizations {
   String get bloodType => 'Tipo sanguíneo';
 
   @override
+  String get bloodTypeOptional => 'O tipo sanguíneo é opcional e não afeta o rastreamento de calorias ou as recomendações.';
+
+  @override
   String get areYouDiabetic => 'Você é diabético?';
 
   @override
@@ -865,10 +868,10 @@ class AppLocalizationsPt extends AppLocalizations {
   String get logWeightChange => 'Peso';
 
   @override
-  String get lost => 'Perdido';
+  String get lost => 'perdido';
 
   @override
-  String get gained => 'Ganho';
+  String get gained => 'ganho';
 
   @override
   String get googleSignInHelp => 'Ajuda do Google Sign-In';
@@ -2267,4 +2270,142 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get manageSubscriptions => 'Manage Subscriptions';
+
+  @override
+  String get buildingMuscle => 'construindo músculo';
+
+  @override
+  String get weightMaintained => 'peso mantido';
+
+  @override
+  String get eatingHealthier => 'comendo mais saudável';
+
+  @override
+  String get goalReached => 'meta alcançada';
+
+  @override
+  String get noDataYet => 'sem dados ainda';
+
+  @override
+  String get needMoreData => 'precisa de mais dados';
+
+  @override
+  String get weeklyGain => 'ganho semanal';
+
+  @override
+  String get onTrack => 'no caminho certo';
+
+  @override
+  String get insufficientData => 'dados insuficientes';
+
+  @override
+  String get reached => 'Alcançado';
+
+  @override
+  String get sinceGoalStart => 'desde o início da meta';
+
+  @override
+  String get viewPreviousPlans => 'Ver Planos Anteriores';
+
+  @override
+  String get previousPlans => 'Planos Anteriores';
+
+  @override
+  String get yourWeightJourney => 'Sua Jornada de Peso';
+
+  @override
+  String get trackProgressThroughGoals => 'Acompanhe seu progresso através de diferentes metas';
+
+  @override
+  String get noPreviousPlans => 'Nenhum Plano Anterior';
+
+  @override
+  String get previousPlansWillAppear => 'Seus planos anteriores aparecerão aqui quando você mudar metas.';
+
+  @override
+  String get completed => 'Concluído';
+
+  @override
+  String get changed => 'Alterado';
+
+  @override
+  String get nutritionGoals => 'Metas Nutricionais';
+
+  @override
+  String get weightEntries => 'Entradas de Peso';
+
+  @override
+  String get noWeightEntriesRecorded => 'Nenhuma entrada de peso registrada durante este período';
+
+  @override
+  String get months => 'meses';
+
+  @override
+  String get unknownGoal => 'Meta Desconhecida';
+
+  @override
+  String get failedToSavePlan => 'Falha ao salvar plano. Tente novamente.';
+
+  @override
+  String get failedToGeneratePlan => 'Falha ao gerar plano. Tente novamente.';
+
+  @override
+  String get updateTargetAndRecalculate => 'Atualizar Meta e Recalcular';
+
+  @override
+  String get neverMind => 'Deixa pra lá';
+
+  @override
+  String get saveAndRecalculate => 'Salvar e Recalcular';
+
+  @override
+  String get targetUpdatedAndPlanRecalculated => 'Meta atualizada e plano recalculado';
+
+  @override
+  String get recalculateNote => 'Recalcularemos calorias e macros para esta nova meta. Você ainda pode gerar um novo plano de IA mais tarde.';
+
+  @override
+  String get startLoggingWeight => 'Comece a registrar seu peso para ver as tendências do seu progresso.';
+
+  @override
+  String get logMoreWeights => 'Registre mais pesos para ver sua tendência.';
+
+  @override
+  String get weightTrendFlat => 'Sua tendência de peso está atualmente estável. Registre mais entradas de peso para ver sua tendência de progresso.';
+
+  @override
+  String get maintenanceRangeDrifted => 'Seu peso se afastou da sua faixa de manutenção. Registre mais entradas para estimar o tempo de retorno ao seu peso.';
+
+  @override
+  String trendingBackMaintenance(String eta) {
+    return 'Você está tendendo de volta ao seu peso de manutenção. Tempo estimado: $eta';
+  }
+
+  @override
+  String get stayConsistentHealthy => 'Mantenha-se consistente com escolhas saudáveis; conforme mais dados chegam estimaremos o tempo de retorno à sua faixa saudável.';
+
+  @override
+  String trendingBackOnTrack(String eta) {
+    return 'Você está tendendo de volta ao caminho certo. Tempo estimado: $eta';
+  }
+
+  @override
+  String get strengthPhaseActive => 'Fase de força ativa. Mantenha proteína e treinamento consistentes; a linha do tempo aparecerá conforme os dados crescem.';
+
+  @override
+  String trendingTowardBuildGoal(String eta) {
+    return 'Você está tendendo em direção à sua meta de construção. Tempo estimado: $eta';
+  }
+
+  @override
+  String get timeToGoal => 'Tempo para a Meta';
+
+  @override
+  String get timeline => 'Linha do Tempo';
+
+  @override
+  String get allTime => 'Todo o Tempo';
+
+  @override
+  String get planToGoal => 'Plano para a Meta';
 }

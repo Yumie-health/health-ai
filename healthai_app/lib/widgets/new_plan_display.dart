@@ -325,6 +325,44 @@ class _NewPlanDisplayState extends State<NewPlanDisplay> with TickerProviderStat
         final currentData = doc.data() ?? {};
         final double currentWeight = (currentData['weightKg'] ?? currentData['weight'] ?? 70.0).toDouble();
         
+        // Save current plan as previous plan before updating
+        final currentPlanData = {
+          'startDate': currentData['lastUpdated'] is Timestamp
+              ? currentData['lastUpdated']
+              : Timestamp.now(),
+          'endDate': Timestamp.now(),
+          'startingWeight': currentData['startingWeight'] ?? currentWeight,
+          'targetWeight': currentData['targetWeightKg'] ?? currentData['targetWeight'] ?? currentWeight,
+          'goal': currentData['goal'] ?? 'Maintain body weight',
+          'dailyCalorieGoal': currentData['dailyCalorieGoal'],
+          'proteinGoal': currentData['proteinGoal'],
+          'carbsGoal': currentData['carbsGoal'],
+          'fatGoal': currentData['fatGoal'],
+          'status': 'changed', // manual change via NewPlanDisplay
+        };
+
+        // Add to previous plans array - use data from goal change flow if available, otherwise from current data
+        final previousPlans = List<Map<String, dynamic>>.from(widget.planData['previousPlans'] ?? currentData['previousPlans'] ?? []);
+        // Avoid duplicate: skip if a plan with same goal and weights already exists
+        final double swNew = (currentPlanData['startingWeight'] as num?)?.toDouble() ?? 0.0;
+        final double twNew = (currentPlanData['targetWeight'] as num?)?.toDouble() ?? 0.0;
+        final String goalNew = currentPlanData['goal'] ?? '';
+        final bool alreadyExists = previousPlans.any((p) {
+          final double sw = (p['startingWeight'] as num?)?.toDouble() ?? -9999;
+          final double tw = (p['targetWeight'] as num?)?.toDouble() ?? -9999;
+          final String g = p['goal'] ?? '';
+          return g == goalNew && (sw - swNew).abs() < 0.001 && (tw - twNew).abs() < 0.001;
+        });
+        if (!alreadyExists) {
+          previousPlans.add(currentPlanData);
+        }
+
+        // Debug logging
+        print('💾 Saving Previous Plan:');
+        print('  Current plans count: ${previousPlans.length}');
+        print('  Adding plan: ${currentPlanData['goal']} (${currentPlanData['startingWeight']} → ${currentPlanData['targetWeight']})');
+        print('  Status: ${currentPlanData['status']}');
+
         final updateData = {
           'dailyCalorieGoal': widget.planData['calories'],
           'proteinGoal': widget.planData['protein'],
@@ -335,6 +373,8 @@ class _NewPlanDisplayState extends State<NewPlanDisplay> with TickerProviderStat
           'nutritionalPlanType': widget.planData['goal']?.toLowerCase().replaceAll(' ', '_') ?? 'maintenance',
           // Update starting weight to current weight when starting a new journey
           'startingWeight': currentWeight,
+          // Save previous plans
+          'previousPlans': previousPlans,
         };
         
         // Update target weight if provided
@@ -356,13 +396,14 @@ class _NewPlanDisplayState extends State<NewPlanDisplay> with TickerProviderStat
         widget.onComplete();
       }
     } catch (e) {
+      print('❌ Error saving new plan: $e');
       setState(() {
         isSaving = false;
       });
       
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(AppLocalizations.of(context)!.failedToGenerateMaintenancePlan),
+          content: Text(AppLocalizations.of(context)!.failedToSavePlan),
           backgroundColor: Colors.red,
         ),
       );

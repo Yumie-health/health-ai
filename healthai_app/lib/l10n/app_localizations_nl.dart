@@ -503,6 +503,9 @@ class AppLocalizationsNl extends AppLocalizations {
   String get bloodType => 'Bloedgroep';
 
   @override
+  String get bloodTypeOptional => 'Bloedgroep is optioneel en heeft geen invloed op calorieën bijhouden of aanbevelingen.';
+
+  @override
   String get areYouDiabetic => 'Heb je diabetes?';
 
   @override
@@ -865,10 +868,10 @@ class AppLocalizationsNl extends AppLocalizations {
   String get logWeightChange => 'Gewicht';
 
   @override
-  String get lost => 'Verloren';
+  String get lost => 'verloren';
 
   @override
-  String get gained => 'Gewonnen';
+  String get gained => 'gewonnen';
 
   @override
   String get googleSignInHelp => 'Google Inlog Help';
@@ -2267,4 +2270,142 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get manageSubscriptions => 'Manage Subscriptions';
+
+  @override
+  String get buildingMuscle => 'spieren opbouwen';
+
+  @override
+  String get weightMaintained => 'gewicht behouden';
+
+  @override
+  String get eatingHealthier => 'gezonder eten';
+
+  @override
+  String get goalReached => 'doel bereikt';
+
+  @override
+  String get noDataYet => 'nog geen gegevens';
+
+  @override
+  String get needMoreData => 'meer gegevens nodig';
+
+  @override
+  String get weeklyGain => 'wekelijkse toename';
+
+  @override
+  String get onTrack => 'op koers';
+
+  @override
+  String get insufficientData => 'onvoldoende gegevens';
+
+  @override
+  String get reached => 'Bereikt';
+
+  @override
+  String get sinceGoalStart => 'sinds doel start';
+
+  @override
+  String get viewPreviousPlans => 'Vorige Plannen Bekijken';
+
+  @override
+  String get previousPlans => 'Vorige Plannen';
+
+  @override
+  String get yourWeightJourney => 'Jouw Gewichtsreis';
+
+  @override
+  String get trackProgressThroughGoals => 'Volg je voortgang door verschillende doelen';
+
+  @override
+  String get noPreviousPlans => 'Geen Vorige Plannen';
+
+  @override
+  String get previousPlansWillAppear => 'Je vorige plannen verschijnen hier wanneer je doelen wijzigt.';
+
+  @override
+  String get completed => 'Voltooid';
+
+  @override
+  String get changed => 'Gewijzigd';
+
+  @override
+  String get nutritionGoals => 'Voedingsdoelen';
+
+  @override
+  String get weightEntries => 'Gewichtsinvoer';
+
+  @override
+  String get noWeightEntriesRecorded => 'Geen gewichtsinvoer opgenomen tijdens deze periode';
+
+  @override
+  String get months => 'maanden';
+
+  @override
+  String get unknownGoal => 'Onbekend Doel';
+
+  @override
+  String get failedToSavePlan => 'Plan opslaan mislukt. Probeer opnieuw.';
+
+  @override
+  String get failedToGeneratePlan => 'Plan genereren mislukt. Probeer opnieuw.';
+
+  @override
+  String get updateTargetAndRecalculate => 'Doel Bijwerken & Herberekenen';
+
+  @override
+  String get neverMind => 'Laat maar';
+
+  @override
+  String get saveAndRecalculate => 'Opslaan & Herberekenen';
+
+  @override
+  String get targetUpdatedAndPlanRecalculated => 'Doel bijgewerkt en plan herberekend';
+
+  @override
+  String get recalculateNote => 'We herberekenen calorieën en macro\'s voor dit nieuwe doel. Je kunt later nog steeds een gloednieuw AI-plan genereren.';
+
+  @override
+  String get startLoggingWeight => 'Begin met het loggen van je gewicht om je voortgangstrends te zien.';
+
+  @override
+  String get logMoreWeights => 'Log meer gewichten om je trend te zien.';
+
+  @override
+  String get weightTrendFlat => 'Je gewichtstrend is momenteel vlak. Log meer gewichtsinvoer om je voortgangstrend te zien.';
+
+  @override
+  String get maintenanceRangeDrifted => 'Je gewicht is afgeweken van je onderhoudsbereik. Log meer invoer om de tijd terug naar je gewicht in te schatten.';
+
+  @override
+  String trendingBackMaintenance(String eta) {
+    return 'Je bent op weg terug naar je onderhoudsgewicht. Geschatte tijd: $eta';
+  }
+
+  @override
+  String get stayConsistentHealthy => 'Blijf consistent met gezonde keuzes; naarmate er meer gegevens binnenkomen schatten we de tijd terug naar je gezonde bereik in.';
+
+  @override
+  String trendingBackOnTrack(String eta) {
+    return 'Je bent op weg terug op koers. Geschatte tijd: $eta';
+  }
+
+  @override
+  String get strengthPhaseActive => 'Krachtfase actief. Houd eiwitten en training consistent; tijdlijn verschijnt naarmate gegevens groeien.';
+
+  @override
+  String trendingTowardBuildGoal(String eta) {
+    return 'Je bent op weg naar je opbouwdoel. Geschatte tijd: $eta';
+  }
+
+  @override
+  String get timeToGoal => 'Tijd tot Doel';
+
+  @override
+  String get timeline => 'Tijdlijn';
+
+  @override
+  String get allTime => 'Alle Tijd';
+
+  @override
+  String get planToGoal => 'Plan naar Doel';
 }

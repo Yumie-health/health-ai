@@ -2274,7 +2274,7 @@ class _GoalWeightStep extends StatelessWidget {
             child: Column(
               children: [
                 Text(
-                  AppLocalizations.of(context)!.yourGoalWeight,
+                  _getLocalizedPlanName(selectedGoal ?? 'Maintain body weight', AppLocalizations.of(context)!),
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 32,
@@ -2357,6 +2357,24 @@ class _GoalWeightStep extends StatelessWidget {
         ),
       ],
     );
+  }
+
+  // Helper function to get localized plan name
+  String _getLocalizedPlanName(String goal, AppLocalizations localizations) {
+    switch (goal.toLowerCase()) {
+      case 'lose body weight':
+        return localizations.loseBodyWeight;
+      case 'gain weight':
+        return localizations.gainWeight;
+      case 'build muscle':
+        return localizations.buildMuscle;
+      case 'maintain body weight':
+        return localizations.maintainBodyWeight;
+      case 'eat healthier':
+        return localizations.eatHealthier;
+      default:
+        return localizations.maintainBodyWeight; // fallback
+    }
   }
 }
 
@@ -3074,6 +3092,8 @@ class _BloodTypeStep extends StatelessWidget {
         Text(AppLocalizations.of(context)!.whatIsYourBloodType, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 28)),
         SizedBox(height: 18),
         Text(AppLocalizations.of(context)!.thisHelpsUsPersonalizeExperience, style: TextStyle(color: Colors.grey[600], fontSize: 16)),
+        SizedBox(height: 12),
+        Text(AppLocalizations.of(context)!.bloodTypeOptional, style: TextStyle(color: Colors.grey[500], fontSize: 14, fontStyle: FontStyle.italic)),
         SizedBox(height: 32),
         Builder(
           builder: (context) {

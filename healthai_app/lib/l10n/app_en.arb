@@ -164,6 +164,7 @@
   "delete": "Delete",
   "editName": "Edit name",
   "bloodType": "Blood Type",
+  "bloodTypeOptional": "Blood type is optional and does not affect calorie tracking or recommendations.",
   "areYouDiabetic": "Are you diabetic?",
   "healthAwarenessUpdated": "Health awareness updated!",
   "takeMomentToAppreciate": "Take a moment to appreciate your meal and practice mindful eating.",
@@ -894,5 +895,74 @@
       }
     }
   },
-  "manageSubscriptions": "Manage Subscriptions"
+  "manageSubscriptions": "Manage Subscriptions",
+  "buildingMuscle": "building muscle",
+  "weightMaintained": "weight maintained",
+  "eatingHealthier": "eating healthier",
+  "goalReached": "goal reached",
+  "noDataYet": "no data yet",
+  "needMoreData": "need more data",
+  "weeklyGain": "weekly gain",
+  "onTrack": "on track",
+  "insufficientData": "insufficient data",
+  "reached": "Reached",
+  "sinceGoalStart": "since goal start",
+  "viewPreviousPlans": "View Previous Plans",
+  "previousPlans": "Previous Plans",
+  "yourWeightJourney": "Your Weight Journey",
+  "trackProgressThroughGoals": "Track your progress through different goals",
+  "noPreviousPlans": "No Previous Plans",
+  "previousPlansWillAppear": "Your previous plans will appear here once you change goals.",
+  "completed": "Completed",
+  "changed": "Changed",
+  "nutritionGoals": "Nutrition Goals",
+  "weightEntries": "Weight Entries",
+  "noWeightEntriesRecorded": "No weight entries recorded during this period",
+  "lost": "lost",
+  "gained": "gained",
+  "days": "days",
+  "months": "months",
+  "unknownGoal": "Unknown Goal",
+  "unknown": "Unknown",
+  "failedToSavePlan": "Failed to save plan. Please try again.",
+  "failedToGeneratePlan": "Failed to generate plan. Please try again.",
+  "updateTargetAndRecalculate": "Update Target & Recalculate",
+  "neverMind": "Never mind",
+  "saveAndRecalculate": "Save & Recalculate",
+  "targetUpdatedAndPlanRecalculated": "Target updated and plan recalculated",
+  "recalculateNote": "We will recalculate calories and macros for this new target. You can still generate a brand‑new AI plan later.",
+  "startLoggingWeight": "Start logging your weight to see your progress trends.",
+  "logMoreWeights": "Log a few more weights to see your trend.",
+  "weightTrendFlat": "Your weight trend is currently flat. Log more weight entries to see your progress trend.",
+  "maintenanceRangeDrifted": "Your weight moved away from your maintenance range. Log more entries to estimate time back to your weight.",
+  "trendingBackMaintenance": "You are trending back toward your maintenance weight. Estimated time: {eta}",
+  "@trendingBackMaintenance": {
+    "placeholders": {
+      "eta": {
+        "type": "String"
+      }
+    }
+  },
+  "stayConsistentHealthy": "Stay consistent with healthy choices; as more data comes in we will estimate time back to your healthy range.",
+  "trendingBackOnTrack": "You are trending back on track. Estimated time: {eta}",
+  "@trendingBackOnTrack": {
+    "placeholders": {
+      "eta": {
+        "type": "String"
+      }
+    }
+  },
+  "strengthPhaseActive": "Strength phase active. Keep protein and training consistent; timeline will appear as data grows.",
+  "trendingTowardBuildGoal": "You are trending toward your build goal. Estimated time: {eta}",
+  "@trendingTowardBuildGoal": {
+    "placeholders": {
+      "eta": {
+        "type": "String"
+      }
+    }
+  },
+  "timeToGoal": "Time to Goal",
+  "timeline": "Timeline",
+  "allTime": "All time",
+  "planToGoal": "Plan to goal"
 } 

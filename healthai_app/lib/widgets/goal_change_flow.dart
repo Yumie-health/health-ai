@@ -112,7 +112,11 @@ class _GoalChangeFlowState extends State<GoalChangeFlow> {
                 SizedBox(height: isSmallScreen ? 32 : 40),
                 
                 // Goal options
-                ...goals.map((goal) => Padding(
+                ...(
+                  (widget.onBackToMaintenancePlan != null
+                    ? goals.where((g)=> g['id'] != 'Maintain body weight')
+                    : goals)
+                ).map((goal) => Padding(
                   padding: EdgeInsets.only(bottom: 12),
                   child: _buildGoalOption(goal, isSmallScreen),
                 )).toList(),
@@ -269,7 +273,7 @@ class _GoalChangeFlowState extends State<GoalChangeFlow> {
                 FutureBuilder<Map<String, dynamic>?>(
                   future: FirebaseFirestore.instance.collection('users').doc(FirebaseAuth.instance.currentUser!.uid).get().then((d)=>d.data()),
                   builder: (context, snap) {
-                    final double currentWeightKg = (snap.data?['weight'] ?? 70.0).toDouble();
+                    final double currentWeightKg = (snap.data?['weightKg'] ?? snap.data?['weight'] ?? 70.0).toDouble();
                     final bool useMetric = Provider.of<PreferencesProvider>(context).useMetric;
                     final bool isLose = (selectedGoal == 'Lose body weight');
                     
@@ -432,10 +436,10 @@ class _GoalChangeFlowState extends State<GoalChangeFlow> {
         final doc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
         final data = doc.data() ?? {};
         
-        // Get user data
+        // Get user data - handle both old and new field names
         final int age = data['age'] ?? 25;
-        final double height = (data['height'] ?? 170.0).toDouble();
-        final double currentWeight = (data['weight'] ?? 70.0).toDouble();
+        final double height = (data['heightCm'] ?? data['height'] ?? 170.0).toDouble();
+        final double currentWeight = (data['weightKg'] ?? data['weight'] ?? 70.0).toDouble();
         final String activityLevel = data['activityLevel'] ?? 'Moderately Active';
         final String bloodType = data['bloodType'] ?? 'O+';
         final bool isDiabetic = data['isDiabetic'] ?? false;
@@ -513,6 +517,39 @@ class _GoalChangeFlowState extends State<GoalChangeFlow> {
           isDiabetic: isDiabetic,
         );
         
+        // Save current plan as previous plan before updating
+        final currentPlanData = {
+          'startDate': data['lastUpdated'] is Timestamp
+              ? data['lastUpdated']
+              : Timestamp.now(),
+          'endDate': Timestamp.now(),
+          'startingWeight': data['startingWeight'] ?? currentWeight,
+          'targetWeight': data['targetWeightKg'] ?? data['targetWeight'] ?? currentWeight,
+          'goal': data['goal'] ?? 'Maintain body weight',
+          'dailyCalorieGoal': data['dailyCalorieGoal'],
+          'proteinGoal': data['proteinGoal'],
+          'carbsGoal': data['carbsGoal'],
+          'fatGoal': data['fatGoal'],
+          'status': 'changed', // Manual goal change
+        };
+
+        // Add to previous plans array
+        final previousPlans = List<Map<String, dynamic>>.from(data['previousPlans'] ?? []);
+        // Deduplicate entries to avoid both changed & completed duplicates
+        final double swNew = (currentPlanData['startingWeight'] as num?)?.toDouble() ?? 0.0;
+        final double twNew = (currentPlanData['targetWeight'] as num?)?.toDouble() ?? 0.0;
+        final String goalNew = currentPlanData['goal'] ?? '';
+        final bool alreadyExists = previousPlans.any((p) {
+          final double sw = (p['startingWeight'] as num?)?.toDouble() ?? -9999;
+          final double tw = (p['targetWeight'] as num?)?.toDouble() ?? -9999;
+          final String g = p['goal'] ?? '';
+          final String st = p['status'] ?? '';
+          return st == 'changed' && g == goalNew && (sw - swNew).abs() < 0.001 && (tw - twNew).abs() < 0.001;
+        });
+        if (!alreadyExists) {
+          previousPlans.add(currentPlanData);
+        }
+
         // Prepare plan data
         final planData = {
           'calories': calorieGoal,
@@ -522,6 +559,7 @@ class _GoalChangeFlowState extends State<GoalChangeFlow> {
           'goal': selectedGoal,
           'targetWeight': targetWeight,
           'ai_plan': aiPlan?['ai_plan'],
+          'previousPlans': previousPlans, // Include previous plans in the new plan data
         };
         
         // Ensure minimum loading time for better UX
@@ -536,7 +574,7 @@ class _GoalChangeFlowState extends State<GoalChangeFlow> {
       
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(AppLocalizations.of(context)!.failedToGenerateMaintenancePlan),
+          content: Text(AppLocalizations.of(context)!.failedToGeneratePlan),
           backgroundColor: Colors.red,
         ),
       );

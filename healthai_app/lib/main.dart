@@ -670,7 +670,6 @@ class SplashOrApp extends StatefulWidget {
   @override
   State<SplashOrApp> createState() => _SplashOrAppState();
 }
-
 class _SplashOrAppState extends State<SplashOrApp> with SingleTickerProviderStateMixin {
   bool _ready = false;
   bool _hasCheckedPermissions = false;
@@ -1098,7 +1097,6 @@ class AuthScreen extends StatefulWidget {
   @override
   _AuthScreenState createState() => _AuthScreenState();
 }
-
 class _AuthScreenState extends State<AuthScreen> {
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
@@ -1891,7 +1889,6 @@ class _AuthScreenState extends State<AuthScreen> {
       }
     }
   }
-
   Future<void> _handleAppleSignIn() async {
     setState(() => isLoading = true);
     try {
@@ -3667,20 +3664,26 @@ class _MainNavScreenState extends State<MainNavScreen> with TickerProviderStateM
             },
           ),
         );
+      } else {
+        // If maintenance plan calculation failed, show goal change flow directly
+        print('⚠️ Maintenance plan calculation failed, showing goal change flow directly');
+        _showGoalChangeFlow();
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(AppLocalizations.of(context)!.failedToGenerateMaintenancePlan),
-          backgroundColor: Colors.red,
-        ),
-      );
+      print('❌ Error in goal weight celebration: $e');
+      // Show goal change flow instead of error message
+      _showGoalChangeFlow();
     }
   }
 
   Future<Map<String, dynamic>?> _calculateMaintenancePlan() async {
+    try {
     final user = FirebaseAuth.instance.currentUser;
-    if (user != null) {
+      if (user == null) {
+        print('❌ No user found for maintenance plan calculation');
+        return null;
+      }
+      
       final doc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
       final data = doc.data() ?? {};
       
@@ -3690,6 +3693,10 @@ class _MainNavScreenState extends State<MainNavScreen> with TickerProviderStateM
       final double weight = (data['weightKg'] ?? data['weight'] ?? 70.0).toDouble();
       final String activityLevel = data['activityLevel'] ?? 'Moderately Active';
       final String sex = data['sex'] ?? 'Other';
+      
+      print('🔧 Maintenance Plan Calculation:');
+      print('  Age: $age, Height: ${height.toStringAsFixed(1)} cm, Weight: ${weight.toStringAsFixed(1)} kg');
+      print('  Activity: $activityLevel, Sex: $sex');
       
       // Calculate BMR using Mifflin-St Jeor equation
       double bmr;
@@ -3717,6 +3724,9 @@ class _MainNavScreenState extends State<MainNavScreen> with TickerProviderStateM
         case 'extremely active':
           tdee = bmr * 1.9;
           break;
+        default:
+          tdee = bmr * 1.55; // Default to moderately active
+          break;
       }
       
       // For maintenance, use TDEE as calorie goal
@@ -3727,20 +3737,71 @@ class _MainNavScreenState extends State<MainNavScreen> with TickerProviderStateM
       int fatGoal = (calorieGoal * 0.25 / 9).round(); // 25% of calories from fat
       int carbsGoal = ((calorieGoal - (proteinGoal * 4) - (fatGoal * 9)) / 4).round(); // Remaining calories from carbs
       
-      return {
+      final plan = {
         'calories': calorieGoal,
         'protein': proteinGoal,
         'carbs': carbsGoal,
         'fat': fatGoal,
       };
-    }
+      
+      print('  BMR: ${bmr.toStringAsFixed(0)} kcal, TDEE: ${tdee.toStringAsFixed(0)} kcal');
+      print('  Plan: $plan');
+      
+      return plan;
+    } catch (e) {
+      print('❌ Error calculating maintenance plan: $e');
     return null;
+    }
   }
 
   Future<void> _applyMaintenancePlan(Map<String, dynamic> plan) async {
     try {
       final user = FirebaseAuth.instance.currentUser;
       if (user != null) {
+        // Get current user data to save previous plan
+        final doc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
+        final currentData = doc.data() ?? {};
+        final double currentWeight = (currentData['weightKg'] ?? currentData['weight'] ?? 70.0).toDouble();
+        
+        // Save current plan as previous plan before updating
+        final currentPlanData = {
+          'startDate': currentData['lastUpdated'] is Timestamp
+              ? currentData['lastUpdated']
+              : Timestamp.now(),
+          'endDate': Timestamp.now(),
+          'startingWeight': currentData['startingWeight'] ?? currentWeight,
+          'targetWeight': currentData['targetWeightKg'] ?? currentData['targetWeight'] ?? currentWeight,
+          'goal': currentData['goal'] ?? 'Maintain body weight',
+          'dailyCalorieGoal': currentData['dailyCalorieGoal'],
+          'proteinGoal': currentData['proteinGoal'],
+          'carbsGoal': currentData['carbsGoal'],
+          'fatGoal': currentData['fatGoal'],
+          'status': 'completed', // Goal reached and kept maintenance plan
+        };
+
+        // Add to previous plans array
+        final previousPlans = List<Map<String, dynamic>>.from(currentData['previousPlans'] ?? []);
+        // Deduplicate by goal + weights
+        final double swNew = (currentPlanData['startingWeight'] as num?)?.toDouble() ?? 0.0;
+        final double twNew = (currentPlanData['targetWeight'] as num?)?.toDouble() ?? 0.0;
+        final String goalNew = currentPlanData['goal'] ?? '';
+        final bool alreadyExists = previousPlans.any((p) {
+          final double sw = (p['startingWeight'] as num?)?.toDouble() ?? -9999;
+          final double tw = (p['targetWeight'] as num?)?.toDouble() ?? -9999;
+          final String g = p['goal'] ?? '';
+          final String st = p['status'] ?? '';
+          return st == 'completed' && g == goalNew && (sw - swNew).abs() < 0.001 && (tw - twNew).abs() < 0.001;
+        });
+        if (!alreadyExists) {
+          previousPlans.add(currentPlanData);
+        }
+        
+        // Debug logging
+        print('💾 Saving Previous Plan (Maintenance):');
+        print('  Current plans count: ${previousPlans.length}');
+        print('  Adding plan: ${currentPlanData['goal']} (${currentPlanData['startingWeight']} → ${currentPlanData['targetWeight']})');
+        print('  Status: ${currentPlanData['status']}');
+
         await FirebaseFirestore.instance.collection('users').doc(user.uid).update({
           'dailyCalorieGoal': plan['calories'],
           'proteinGoal': plan['protein'],
@@ -3748,6 +3809,9 @@ class _MainNavScreenState extends State<MainNavScreen> with TickerProviderStateM
           'fatGoal': plan['fat'],
           'lastUpdated': FieldValue.serverTimestamp(),
           'nutritionalPlanType': 'maintenance',
+          'goal': 'Maintain body weight', // Set goal to maintenance
+          'startingWeight': currentWeight, // Update starting weight to current weight
+          'previousPlans': previousPlans, // Save previous plans
           'needsCelebrationFlow': false, // Clear celebration flag
         });
         
@@ -3923,7 +3987,6 @@ class _MainNavScreenState extends State<MainNavScreen> with TickerProviderStateM
       }
     }
   }
-
   @override
   Widget build(BuildContext context) {
     return Stack(
@@ -4424,7 +4487,6 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
     _mealsController.dispose();
     super.dispose();
   }
-
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -5500,7 +5562,12 @@ Track your calories, scan food with AI, and get personalized nutrition insights 
           title: Text(AppLocalizations.of(context)!.changeProfileName),
           content: TextField(
             controller: controller,
-            decoration: InputDecoration(hintText: 'Enter new name', errorText: error),
+            decoration: InputDecoration(
+              hintText: 'Enter new name', 
+              errorText: error,
+              counterText: '${controller.text.length}/25',
+            ),
+            maxLength: 25,
           ),
           actions: [
             TextButton(onPressed: () => Navigator.pop(dialogContext), child: Text(AppLocalizations.of(context)!.cancel)),
@@ -5575,8 +5642,10 @@ Track your calories, scan food with AI, and get personalized nutrition insights 
                     fillColor: theme.cardColor,
                     border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
                     labelStyle: TextStyle(color: theme.textTheme.bodyLarge?.color),
+                    counterText: '${nameController.text.length}/25',
                   ),
                   style: TextStyle(color: theme.textTheme.bodyLarge?.color),
+                  maxLength: 25,
                 ),
                 const SizedBox(height: 12),
                 _NumericTextField(
@@ -5911,7 +5980,14 @@ Track your calories, scan food with AI, and get personalized nutrition insights 
                                   children: [
                                     Row(
                                       children: [
-                                        Text(userName, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 22)),
+                                        Expanded(
+                                          child: Text(
+                                            userName, 
+                                            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 22),
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                        ),
                                         IconButton(
                                           icon: Icon(Icons.edit, color: kPrimaryGreen, size: 20),
                                           tooltip: AppLocalizations.of(context)!.editName,
@@ -5957,6 +6033,56 @@ Track your calories, scan food with AI, and get personalized nutrition insights 
                           ),
                           const SizedBox(height: 14),
                           if (profile != null) ...[
+                            // Plan name display
+                            FutureBuilder<DocumentSnapshot>(
+                              future: FirebaseFirestore.instance.collection('users').doc(FirebaseAuth.instance.currentUser?.uid).get(),
+                              builder: (context, snapshot) {
+                                if (snapshot.hasData && snapshot.data != null) {
+                                  final data = snapshot.data!.data() as Map<String, dynamic>?;
+                                  final goal = data?['goal'] ?? 'Maintain body weight';
+                                  final planName = _getLocalizedPlanName(goal, AppLocalizations.of(context)!);
+                                  IconData _goalIcon(String g){
+                                    final gl = (g as String).toLowerCase();
+                                    if(gl.contains('lose')) return Icons.trending_down;
+                                    if(gl.contains('gain')) return Icons.trending_up;
+                                    if(gl.contains('build')) return Icons.fitness_center;
+                                    if(gl.contains('eat')) return Icons.restaurant;
+                                    return Icons.monitor_weight;
+                                  }
+                                  
+                                  return Container(
+                                    width: double.infinity,
+                                    padding: EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                                    margin: EdgeInsets.only(bottom: 12),
+                                    decoration: BoxDecoration(
+                                      color: kPrimaryGreen.withOpacity(0.1),
+                                      borderRadius: BorderRadius.circular(12),
+                                      border: Border.all(color: kPrimaryGreen.withOpacity(0.2)),
+                                    ),
+                                    child: Row(
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      children: [
+                                        Icon(_goalIcon(goal), color: kPrimaryGreen, size: 20),
+                                        SizedBox(width: 8),
+                                        Flexible(
+                                          child: Text(
+                                            planName,
+                                            textAlign: TextAlign.center,
+                                            overflow: TextOverflow.ellipsis,
+                                            style: TextStyle(
+                                              color: kPrimaryGreen,
+                                              fontWeight: FontWeight.w600,
+                                              fontSize: 16,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  );
+                                }
+                                return SizedBox.shrink();
+                              },
+                            ),
                             Builder(
                               builder: (context) {
                                 final prefs = Provider.of<PreferencesProvider>(context);
@@ -6250,8 +6376,6 @@ Track your calories, scan food with AI, and get personalized nutrition insights 
                             },
                           ),
                           Divider(height: 1, color: Colors.grey[200]),
-                          
-                          // Security Alerts removed
                           
                           // Language Settings
                           _ProfileMenuTile(
@@ -6680,7 +6804,23 @@ Track your calories, scan food with AI, and get personalized nutrition insights 
     );
   }
 
-
+  // Helper function to get localized plan name
+  String _getLocalizedPlanName(String goal, AppLocalizations localizations) {
+    switch (goal.toLowerCase()) {
+      case 'lose body weight':
+        return localizations.loseBodyWeight;
+      case 'gain weight':
+        return localizations.gainWeight;
+      case 'build muscle':
+        return localizations.buildMuscle;
+      case 'maintain body weight':
+        return localizations.maintainBodyWeight;
+      case 'eat healthier':
+        return localizations.eatHealthier;
+      default:
+        return localizations.maintainBodyWeight; // fallback
+    }
+  }
 }
 
 // Helper widget for menu tiles
@@ -7691,17 +7831,37 @@ class _CoachScreenState extends State<CoachScreen> with TickerProviderStateMixin
                                           opacity: value,
                                           child: Transform.translate(
                                             offset: Offset(0, (1 - value) * 20),
-                                            child: ListTile(
-                                              leading: Container(
-                                                decoration: BoxDecoration(
-                                                  color: kPrimaryGreen.withOpacity(0.10),
-                                                  shape: BoxShape.circle,
+                                            child: Material(
+                                              color: Colors.transparent,
+                                              child: InkWell(
+                                                onTap: () => _handleCommonQuestion(q),
+                                                borderRadius: BorderRadius.circular(12),
+                                                child: Container(
+                                                  padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                                                  child: Row(
+                                                    children: [
+                                                      Container(
+                                                        decoration: BoxDecoration(
+                                                          color: kPrimaryGreen.withOpacity(0.10),
+                                                          shape: BoxShape.circle,
+                                                        ),
+                                                        padding: EdgeInsets.all(10),
+                                                        child: Icon(Icons.search, color: Colors.black54, size: 20),
+                                                      ),
+                                                      SizedBox(width: 16),
+                                                      Expanded(
+                                                        child: Text(
+                                                          q, 
+                                                          style: TextStyle(
+                                                            fontWeight: FontWeight.w500,
+                                                            fontSize: 16,
+                                                          ),
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
                                                 ),
-                                                padding: EdgeInsets.all(8),
-                                                child: Icon(Icons.search, color: Colors.black54, size: 22),
                                               ),
-                                              title: Text(q, style: TextStyle(fontWeight: FontWeight.w500)),
-                                              onTap: () => _handleCommonQuestion(q),
                                             ),
                                           ),
                                         ),
@@ -7783,28 +7943,36 @@ class _CoachScreenState extends State<CoachScreen> with TickerProviderStateMixin
                       AnimatedSwitcher(
                         duration: Duration(milliseconds: 200),
                         child: _showScrollToBottomButton
-                            ? GestureDetector(
+                            ? Material(
                                 key: ValueKey('scroll_button'),
-                                onTap: _scrollToBottom,
-                                child: Container(
-                                  decoration: BoxDecoration(
-                                    color: kPrimaryGreen,
-                                    borderRadius: BorderRadius.circular(16),
+                                color: Colors.transparent,
+                                child: InkWell(
+                                  onTap: _scrollToBottom,
+                                  borderRadius: BorderRadius.circular(16),
+                                  child: Container(
+                                    decoration: BoxDecoration(
+                                      color: kPrimaryGreen,
+                                      borderRadius: BorderRadius.circular(16),
+                                    ),
+                                    padding: EdgeInsets.all(12),
+                                    child: Icon(Icons.keyboard_arrow_down, color: Colors.white, size: 22),
                                   ),
-                                  padding: EdgeInsets.all(12),
-                                  child: Icon(Icons.keyboard_arrow_down, color: Colors.white, size: 22),
                                 ),
                               )
-                            : GestureDetector(
+                            : Material(
                                 key: ValueKey('send_button'),
-                                onTap: () => _sendMessage(_controller.text),
-                                child: Container(
-                                  decoration: BoxDecoration(
-                                    color: kPrimaryGreen,
-                                    borderRadius: BorderRadius.circular(16),
+                                color: Colors.transparent,
+                                child: InkWell(
+                                  onTap: () => _sendMessage(_controller.text),
+                                  borderRadius: BorderRadius.circular(16),
+                                  child: Container(
+                                    decoration: BoxDecoration(
+                                      color: kPrimaryGreen,
+                                      borderRadius: BorderRadius.circular(16),
+                                    ),
+                                    padding: EdgeInsets.all(12),
+                                    child: Icon(Icons.send, color: Colors.white, size: 22),
                                   ),
-                                  padding: EdgeInsets.all(12),
-                                  child: Icon(Icons.send, color: Colors.white, size: 22),
                                 ),
                               ),
                       ),
@@ -7832,16 +8000,27 @@ class _QuickReplyButton extends StatelessWidget {
   const _QuickReplyButton({required this.text, required this.onTap});
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: EdgeInsets.symmetric(horizontal: 18, vertical: 10),
-        decoration: BoxDecoration(
-          color: kPrimaryGreen.withOpacity(0.08),
-          borderRadius: BorderRadius.circular(22),
-          border: Border.all(color: kPrimaryGreen.withOpacity(0.18)),
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(22),
+        child: Container(
+          padding: EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+          decoration: BoxDecoration(
+            color: kPrimaryGreen.withOpacity(0.08),
+            borderRadius: BorderRadius.circular(22),
+            border: Border.all(color: kPrimaryGreen.withOpacity(0.18)),
+          ),
+          child: Text(
+            text, 
+            style: TextStyle(
+              fontWeight: FontWeight.w500, 
+              color: kPrimaryGreen,
+              fontSize: 15,
+            ),
+          ),
         ),
-        child: Text(text, style: TextStyle(fontWeight: FontWeight.w500, color: kPrimaryGreen)),
       ),
     );
   }
@@ -9808,7 +9987,6 @@ class _WaterLogSliderDialog extends StatefulWidget {
   @override
   State<_WaterLogSliderDialog> createState() => _WaterLogSliderDialogState();
 }
-
 class _WaterLogSliderDialogState extends State<_WaterLogSliderDialog> {
   double _value = 0.25; // default 0.25L
   final double _min = 0.1;

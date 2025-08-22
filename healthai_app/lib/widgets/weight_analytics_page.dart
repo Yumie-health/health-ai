@@ -9,6 +9,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:provider/provider.dart';
 import '../providers/preferences_provider.dart';
 import '../l10n/app_localizations.dart';
+import 'previous_plans_page.dart';
 
 enum _Range { w1, m1, m3, m6, y1, all, plan }
 
@@ -25,6 +26,7 @@ class _WeightAnalyticsPageState extends State<WeightAnalyticsPage> {
   double _current = 0;
   double _target = 0;
   double _starting = 0;
+  String _goal = 'Maintain body weight';
 
   @override
   void initState() {
@@ -42,6 +44,7 @@ class _WeightAnalyticsPageState extends State<WeightAnalyticsPage> {
     _current = ((data?['weightKg'] ?? data?['weight']) as num?)?.toDouble() ?? 0;
     _target = ((data?['targetWeightKg'] ?? data?['targetWeight']) as num?)?.toDouble() ?? 0;
     _starting = (data?['startingWeight'] as num?)?.toDouble() ?? 0;
+    _goal = (data?['goal'] as String?) ?? 'Maintain body weight';
     
     // If starting weight is 0 or not set, use current weight as starting weight
     if (_starting == 0) {
@@ -54,7 +57,7 @@ class _WeightAnalyticsPageState extends State<WeightAnalyticsPage> {
         .orderBy('timestamp', descending: true)
         .limit(400)
         .get();
-    final list = w.docs
+    final allEntries = w.docs
         .map((d)=>d.data())
         .where((m)=> (m['isDeleted'] ?? false)==false)
         .map((m)=> _Point(((m['timestamp'] as Timestamp?)?.toDate()??DateTime.now()), (m['weight'] as num?)?.toDouble() ?? _current))
@@ -62,20 +65,56 @@ class _WeightAnalyticsPageState extends State<WeightAnalyticsPage> {
         .reversed
         .toList();
     
+    // Filter weight entries to only include those from the current goal period.
+    // Prefer using a plan start timestamp if available (e.g., 'lastUpdated'),
+    // otherwise fall back to finding the closest entry to the starting weight.
+    List<_Point> goalPeriodEntries = [];
+    final Timestamp? planStartTs = data?['lastUpdated'] as Timestamp?;
+    if (allEntries.isNotEmpty) {
+      if (planStartTs != null) {
+        final DateTime planStart = planStartTs.toDate();
+        goalPeriodEntries = allEntries
+            .where((p) => p.time.isAtSameMomentAs(planStart) || p.time.isAfter(planStart))
+            .toList();
+        // If filtering by timestamp yields nothing (rare clock issues),
+        // fall back to closest-weight heuristic below
+      }
+
+      if (goalPeriodEntries.isEmpty) {
+        _Point? startingEntry;
+        double closestDiff = double.infinity;
+        for (final entry in allEntries) {
+          final diff = (entry.value - _starting).abs();
+          if (diff < closestDiff) {
+            closestDiff = diff;
+            startingEntry = entry;
+          }
+        }
+        if (startingEntry != null) {
+          goalPeriodEntries = allEntries.where((entry) =>
+              entry.time.isAfter(startingEntry!.time) ||
+              entry.time.isAtSameMomentAs(startingEntry!.time)).toList();
+        } else {
+          goalPeriodEntries = allEntries;
+        }
+      }
+    }
+    
     // Fallback starting weight from earliest record if not explicitly set
-    final derivedStarting = list.isNotEmpty ? list.first.value : _current;
+    final derivedStarting = goalPeriodEntries.isNotEmpty ? goalPeriodEntries.first.value : _current;
     
     // Debug: Check if we're using synthetic data
-    final usingSynthetic = list.isEmpty;
+    final usingSynthetic = goalPeriodEntries.isEmpty;
     if (usingSynthetic) {
       print('⚠️ Weight Analytics: Using synthetic data - no real weight entries found');
-      print('Current weight: $_current, Target: $_target');
+      print('Current weight: $_current, Target: $_target, Starting: $_starting');
     } else {
-      print('✅ Weight Analytics: Using real data - ${list.length} weight entries found');
+      print('✅ Weight Analytics: Using real data - ${goalPeriodEntries.length} weight entries found for current goal period');
+      print('Goal period: ${_starting.toStringAsFixed(1)} → ${_target.toStringAsFixed(1)}');
     }
     
     setState((){ 
-      _points = list; // Only use real data, no synthetic fallback
+      _points = goalPeriodEntries; // Only use entries from current goal period
       _starting = _starting==0? derivedStarting : _starting; 
       _loading=false; 
     });
@@ -172,6 +211,21 @@ double _weeklyFromWeights(List<_Point> pts, double scale) {
   final recent = pts.where((p) => p.time.isAfter(cutoff)).toList();
   final used = recent.length >= 3 ? recent : pts;
 
+  // Check if all entries have the same timestamp (testing scenario)
+  final allSameTime = used.every((p) => p.time.difference(used.first.time).inMinutes.abs() < 1);
+  if (allSameTime) {
+    print('⚠️ All weight entries have the same timestamp - using simple calculation');
+    // Use simple calculation based on first and last weight
+    final firstWeight = used.first.value * scale;
+    final lastWeight = used.last.value * scale;
+    final weightChange = lastWeight - firstWeight;
+    
+    // Assume entries are spread over the number of entries (minimum 1 day per entry)
+    final assumedDays = max(used.length - 1, 1);
+    final weeklyRate = (weightChange / assumedDays) * 7.0;
+    return weeklyRate; // no early clamp
+  }
+
   final t0 = used.first.time;
   final xs = <double>[];
   final ys = <double>[];
@@ -194,9 +248,15 @@ double _weeklyFromWeights(List<_Point> pts, double scale) {
 
   final slopePerDay = num / den;
   final weekly = slopePerDay * 7.0; // signed
-  final lo = scale == 1.0 ? -2.0 : -4.4; // ~ -2 kg/wk | -4.4 lb/wk
-  final hi = scale == 1.0 ?  1.5 :  3.3; // ~ +1.5 kg/wk | +3.3 lb/wk
-  return weekly.clamp(lo, hi);
+  return weekly; // no early clamp; clamp later at display stage
+}
+
+// Simple weekly rate: average change since start of current goal period
+double _weeklyFromSinceStart(List<_Point> pts, double scale) {
+  if (pts.length < 2) return 0.0;
+  final double dy = (pts.last.value - pts.first.value) * scale; // signed
+  final double days = max(1.0, pts.last.time.difference(pts.first.time).inHours / 24.0);
+  return (dy / days) * 7.0; // signed per week
 }
 
 // Gentle fallback when measured trend ~0; sign points toward the goal
@@ -220,25 +280,48 @@ Future<double> _calculateWeeklyRate(List<_Point> points, bool useMetric, double 
     final userData = userDoc.data() as Map<String, dynamic>?;
 
     final expected = _expectedWeeklyFromNutrition(userData, useMetric); // signed
-    final measured = _weeklyFromWeights(points, scale);                  // signed
+    final measuredOls = _weeklyFromWeights(points, scale);               // signed
+    final measuredSinceStart = _weeklyFromSinceStart(points, scale);     // signed
 
     int spanDays = 0;
     if (points.length >= 2) {
       spanDays = max(0, points.last.time.difference(points.first.time).inDays);
     }
-    final hasGoodData = points.length >= 3 && spanDays >= 14;
+    // Treat 3+ entries as sufficient even if logged on the same day
+    // Also allow 2 points if they span at least a week
+    final hasGoodData = (points.length >= 3) || (points.length >= 2 && spanDays >= 7);
 
-    // Blend: if we have good data, weight trend dominates
-    final weekly = hasGoodData ? (measured * 0.7 + expected * 0.3)
-                               : (measured * 0.3 + expected * 0.7);
+    // Prefer the user's "since goal start" mental model: average since start
+    // Use OLS as a stabilizer when span is long (>=21 days) and differs a lot
+    double weekly = 0.0;
+    if (points.length >= 2) {
+      weekly = measuredSinceStart;
+      if (spanDays >= 21) {
+        // Gentle blend for long periods to reduce noise
+        weekly = (measuredSinceStart * 0.6 + measuredOls * 0.4);
+      }
+    } else {
+      weekly = expected; // not enough data
+    }
 
-    final lo = scale == 1.0 ? -2.0 : -4.4;
-    final hi = scale == 1.0 ?  1.5 :  3.3;
+    // Clamp more permissively so fast changes are shown but bounded
+    final lo = useMetric ? -3.0 : -6.6;  // allow up to ~3 kg/wk | 6.6 lb/wk loss
+    final hi = useMetric ?  2.5 :  5.5;  // allow up to ~2.5 kg/wk | 5.5 lb/wk gain
     final result = weekly.clamp(lo, hi);
 
+    // Debug logging
+    print('📊 Weekly Rate Debug:');
+    print('  Points: ${points.length}, Span: ${spanDays} days');
+    print('  Measured(OLS): ${measuredOls.toStringAsFixed(2)} ${useMetric ? 'kg' : 'lbs'}/week');
+    print('  Measured(SinceStart): ${measuredSinceStart.toStringAsFixed(2)} ${useMetric ? 'kg' : 'lbs'}/week');
+    print('  Expected: ${expected.toStringAsFixed(2)} ${useMetric ? 'kg' : 'lbs'}/week');
+    print('  Weekly before clamp: ${weekly.toStringAsFixed(2)} ${useMetric ? 'kg' : 'lbs'}/week');
+    print('  Clamp range: $lo to $hi');
+    print('  Final: ${result.toStringAsFixed(2)} ${useMetric ? 'kg' : 'lbs'}/week');
 
     return result;
   } catch (e) {
+    print('❌ Error in weekly rate calculation: $e');
     // Error calculating weekly rate
     return _weeklyFromWeights(points, scale);
   }
@@ -274,32 +357,75 @@ Future<double> _calculateWeeklyRate(List<_Point> points, bool useMetric, double 
         final distanceToGoal = (targetScaled - currentScaled);
         final remainingScaled = distanceToGoal.abs();
 
+        // Determine data availability for conditional display
+        final hasNoData = _points.isEmpty;
+        final hasSomeData = _points.length >= 1 && _points.length <= 2;
+        final hasSufficientData = _points.length >= 3;
+
         double signedWeekly = weekly; // signed units/week (loss < 0, gain > 0)
 
-        // If weekly is ~0, nudge with a healthy fallback toward the goal
-        if (signedWeekly.abs() < (useMetric ? 0.05 : 0.1)) {
+        // Only apply healthy fallback if we have sufficient data
+        if (hasSufficientData && signedWeekly.abs() < (useMetric ? 0.05 : 0.1)) {
           signedWeekly = _healthyWeeklyFallback(useMetric, distanceToGoal);
         }
 
-        // ETA rules:
-        // - If essentially at goal -> 0
-        // - Only show ETA if the current trend heads TOWARD the goal
-        //   (distance and weekly must have the same sign).
+        // ETA/status rules (goal-aware):
+        // Lose/Gain: standard ETA logic.
+        // Build/Maintain/Eat healthier: show status text when within tolerance; if drifted, show ETA to return.
         double? weeksToGoal;
+        String? statusText; // overrides ETA text when set
         final atGoal = remainingScaled <= (useMetric ? 0.05 : 0.1);
-        if (atGoal) {
-          weeksToGoal = 0;
-        } else if (signedWeekly == 0) {
-          weeksToGoal = null;
-        } else if (distanceToGoal * signedWeekly > 0) {
-          weeksToGoal = remainingScaled / signedWeekly.abs();
+        final goalLower = _goal.toLowerCase();
+        final nonWeightGoal = goalLower.contains('build') || goalLower.contains('maintain') || goalLower.contains('eat');
+        String etaReason = '';
+        if (nonWeightGoal) {
+          final tolerance = useMetric ? 0.5 : 1.0; // within this of target = on track
+          if (remainingScaled <= tolerance) {
+            if (goalLower.contains('build')) statusText = AppLocalizations.of(context)!.buildingMuscle;
+            else if (goalLower.contains('maintain')) statusText = AppLocalizations.of(context)!.weightMaintained;
+            else statusText = AppLocalizations.of(context)!.eatingHealthier;
+            weeksToGoal = null; // show status only
+            etaReason = 'within_tolerance_status';
+          } else {
+            // Drifted: compute ETA back using recent magnitude even if current direction is away
+            final minAbs = useMetric ? 0.05 : 0.1;
+            final mag = signedWeekly.abs();
+            if ((_points.length >= 2) && mag >= minAbs) {
+              weeksToGoal = remainingScaled / max(mag, minAbs);
+              etaReason = 'drifted_with_measurable_rate';
+            } else {
+              weeksToGoal = null; // need more data
+              etaReason = 'drifted_insufficient_data';
+            }
+          }
         } else {
-          weeksToGoal = null; // moving away from goal
+          if (atGoal) {
+            weeksToGoal = 0;
+            etaReason = 'at_goal';
+          } else if (!hasSufficientData) {
+            weeksToGoal = null; etaReason = 'insufficient_data';
+          } else if (signedWeekly == 0) {
+            weeksToGoal = null; etaReason = 'zero_weekly';
+          } else if (distanceToGoal * signedWeekly > 0) {
+            weeksToGoal = remainingScaled / signedWeekly.abs(); etaReason = 'toward_goal';
+          } else {
+            weeksToGoal = null; etaReason = 'moving_away';
+          }
         }
 
-        final timeText = weeksToGoal == null
+        final timeText = statusText ?? (weeksToGoal == null
             ? '—'
-            : (weeksToGoal <= 0.05 ? 'Reached' : _formatWeeks(weeksToGoal));
+            : (weeksToGoal <= 0.05 ? AppLocalizations.of(context)!.reached : _formatWeeks(weeksToGoal)));
+
+        // Debug log for ETA/status path
+        print('⏱️ ETA Debug:');
+        print('  Goal: ${_goal}');
+        print('  Remaining: ${remainingScaled.toStringAsFixed(2)} ${unit}');
+        print('  Weekly(signed): ${signedWeekly.toStringAsFixed(2)} ${unit}/wk');
+        print('  HasSufficientData: $hasSufficientData');
+        print('  StatusText: ${statusText ?? 'null'}');
+        print('  WeeksToGoal: ${weeksToGoal?.toStringAsFixed(2) ?? 'null'}');
+        print('  Reason: $etaReason');
 
 
 
@@ -334,7 +460,7 @@ Future<double> _calculateWeeklyRate(List<_Point> points, bool useMetric, double 
           }
         }
 
-        // Total change since start
+        // Total change since start of current goal period
         final totalChangeScaled = ((_current - _starting) * scale);
         final totalChangeAbsStr = totalChangeScaled.abs().toStringAsFixed(1);
         final signedChangeStr = '${totalChangeScaled>=0? '+':'-'}$totalChangeAbsStr $unit';
@@ -349,7 +475,7 @@ Future<double> _calculateWeeklyRate(List<_Point> points, bool useMetric, double 
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Header with back button
+                    // Header with back button and previous plans button
                     Row(
                       children: [
                         IconButton(
@@ -366,6 +492,42 @@ Future<double> _calculateWeeklyRate(List<_Point> points, bool useMetric, double 
                             ),
                           ),
                         ),
+                        // Previous Plans Button
+                        FutureBuilder<DocumentSnapshot>(
+                          future: FirebaseFirestore.instance
+                              .collection('users')
+                              .doc(FirebaseAuth.instance.currentUser?.uid)
+                              .get(),
+                          builder: (context, snapshot) {
+                            if (snapshot.hasData) {
+                              final data = snapshot.data?.data() as Map<String, dynamic>?;
+                              final previousPlans = List<Map<String, dynamic>>.from(data?['previousPlans'] ?? []);
+                              
+                              // Debug logging
+                              print('🔍 Previous Plans Debug:');
+                              print('  Previous plans count: ${previousPlans.length}');
+                              if (previousPlans.isNotEmpty) {
+                                print('  First plan: ${previousPlans.first}');
+                              }
+                              
+                              if (previousPlans.isNotEmpty) {
+                                return IconButton(
+                                  icon: const Icon(Icons.history),
+                                  onPressed: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => const PreviousPlansPage(),
+                                      ),
+                                    );
+                                  },
+                                  tooltip: AppLocalizations.of(context)!.viewPreviousPlans,
+                                );
+                              }
+                            }
+                            return const SizedBox.shrink();
+                          },
+                        ),
                       ],
                     ),
                     const SizedBox(height: 18),
@@ -375,14 +537,16 @@ Future<double> _calculateWeeklyRate(List<_Point> points, bool useMetric, double 
                       Expanded(child: _InfoCard(
                         title: AppLocalizations.of(context)!.toGoal,
                         value: '${remainingScaled.abs().toStringAsFixed(1)} $unit',
-                        subtitle: atGoal? 'goal reached' : AppLocalizations.of(context)!.remaining,
+                        subtitle: atGoal? AppLocalizations.of(context)!.goalReached : AppLocalizations.of(context)!.remaining,
                         highlight: true,
                       )),
                       const SizedBox(width: 12),
                       Expanded(child: _InfoCard(
                         title: AppLocalizations.of(context)!.weeklyRate,
-                        value: '${signedWeekly.abs().toStringAsFixed(1)} $unit',
-                        subtitle: signedWeekly == 0.0 ? 'log weight to see trend' : (signedWeekly <= 0 ? AppLocalizations.of(context)!.weeklyLoss : 'weekly gain'),
+                        value: hasSufficientData ? '${signedWeekly.abs().toStringAsFixed(1)} $unit' : '—',
+                        subtitle: hasNoData ? AppLocalizations.of(context)!.noDataYet : 
+                                 hasSomeData ? AppLocalizations.of(context)!.needMoreData : 
+                                 (signedWeekly <= 0 ? AppLocalizations.of(context)!.weeklyLoss : AppLocalizations.of(context)!.weeklyGain),
                       )),
                     ]),
                     const SizedBox(height: 12),
@@ -409,14 +573,20 @@ Future<double> _calculateWeeklyRate(List<_Point> points, bool useMetric, double 
                       const SizedBox(width: 12),
                       Expanded(child: _InfoCard(
                         title: AppLocalizations.of(context)!.eta,
-                        value: weeksToGoal==null? '—' : (weeksToGoal<=0.05? 'Reached' : _formatWeeks(weeksToGoal)),
-                        subtitle: weeksToGoal==null? 'insufficient data' : _etaDateText(weeksToGoal),
+                        value: statusText != null
+                                ? '—'
+                                : (weeksToGoal==null? '—' : (weeksToGoal<=0.05? 'Reached' : _formatWeeks(weeksToGoal))),
+                        subtitle: statusText != null
+                                  ? AppLocalizations.of(context)!.onTrack
+                                  : hasNoData ? AppLocalizations.of(context)!.noDataYet : 
+                                    hasSomeData ? AppLocalizations.of(context)!.needMoreData : 
+                                    (weeksToGoal==null? AppLocalizations.of(context)!.insufficientData : _etaDateText(weeksToGoal)),
                       )),
                     ]),
                     const SizedBox(height: 18),
 
-                    // Expectation text
-                    signedWeekly == 0.0 
+                    // Expectation text - goal-aware & conditional based on data availability
+                    hasNoData 
                       ? Container(
                           padding: const EdgeInsets.all(16),
                           decoration: BoxDecoration(
@@ -425,18 +595,36 @@ Future<double> _calculateWeeklyRate(List<_Point> points, bool useMetric, double 
                             border: Border.all(color: const Color(0xFFE5EEF9)),
                           ),
                           child: Text(
-                            'Log your weight entries to see personalized trends and projections.',
+                            AppLocalizations.of(context)!.startLoggingWeight,
                             style: theme.textTheme.bodyMedium?.copyWith(height: 1.35),
                           ),
                         )
-                      : _ExpectationBlock(
-                          weekly: signedWeekly,
-                          unit: unit,
-                          etaText: weeksToGoal==null? '—' : _etaDateText(weeksToGoal),
-                          remaining: remainingScaled,
-                        ),
+                      : hasSomeData
+                        ? Container(
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFF7FAFF),
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(color: const Color(0xFFE5EEF9)),
+                            ),
+                            child: Text(
+                              AppLocalizations.of(context)!.logMoreWeights,
+                              style: theme.textTheme.bodyMedium?.copyWith(height: 1.35),
+                            ),
+                          )
+                        : _ExpectationBlockGoalAware(
+                            weekly: signedWeekly,
+                            unit: unit,
+                            etaText: statusText != null ? statusText! : (weeksToGoal==null? '—' : _etaDateText(weeksToGoal)),
+                            remaining: remainingScaled,
+                            goal: _goal,
+                            onTrackStatus: statusText,
+                          ),
                     const SizedBox(height: 12),
-                    Text(AppLocalizations.of(context)!.expectationsDisclaimer, style: theme.textTheme.bodySmall?.copyWith(color: Colors.grey[600])),
+                    // Only show expectations disclaimer if we have sufficient data
+                    hasSufficientData 
+                      ? Text(AppLocalizations.of(context)!.expectationsDisclaimer, style: theme.textTheme.bodySmall?.copyWith(color: Colors.grey[600]))
+                      : const SizedBox.shrink(),
 
                     const SizedBox(height: 18),
                     _BigDeltaCard(
@@ -568,7 +756,7 @@ class _TimeToGoalCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
           Text(
-            'Time to Goal',
+            AppLocalizations.of(context)!.timeToGoal,
             style: theme.textTheme.labelSmall?.copyWith(
               color: theme.textTheme.bodyMedium?.color?.withOpacity(0.6),
               letterSpacing: 0.4,
@@ -654,7 +842,7 @@ class _ExpectationBlock extends StatelessWidget{
           border: Border.all(color: const Color(0xFFE5EEF9)),
         ),
         child: Text(
-          'Your weight trend is currently flat. Log more weight entries to see your progress trend.',
+          AppLocalizations.of(context)!.weightTrendFlat,
           style: theme.textTheme.bodyMedium?.copyWith(height: 1.35),
         ),
       );
@@ -703,6 +891,67 @@ class _ExpectationBlock extends StatelessWidget{
   }
 }
 
+class _ExpectationBlockGoalAware extends StatelessWidget{
+  final double weekly; final String unit; final String etaText; final double remaining; final String goal; final String? onTrackStatus;
+  const _ExpectationBlockGoalAware({required this.weekly, required this.unit, required this.etaText, required this.remaining, required this.goal, this.onTrackStatus});
+  @override Widget build(BuildContext context){
+    final theme = Theme.of(context);
+    final goalLower = goal.toLowerCase();
+
+    // Non-weight goals: show status when on track
+    if (onTrackStatus != null) {
+      return Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        decoration: BoxDecoration(
+          color: const Color(0xFFEFFAF1),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: const Color(0xFFBEE3C2)),
+        ),
+        child: Row(children:[
+          const Icon(Icons.check_circle, size: 18, color: Color(0xFF2E7D32)),
+          const SizedBox(width: 8),
+          Text(onTrackStatus!, style: theme.textTheme.bodyMedium?.copyWith(color: const Color(0xFF2E7D32), fontWeight: FontWeight.w600)),
+        ]),
+      );
+    }
+
+    // Drifted: provide guidance per goal
+    if (goalLower.contains('maintain')) {
+      final txt = etaText == '—' || etaText == AppLocalizations.of(context)!.weightMaintained
+        ? AppLocalizations.of(context)!.maintenanceRangeDrifted
+        : AppLocalizations.of(context)!.trendingBackMaintenance(etaText);
+      return _messageContainer(theme, txt);
+    }
+    if (goalLower.contains('eat')) {
+      final txt = etaText == '—' || etaText == AppLocalizations.of(context)!.eatingHealthier
+        ? AppLocalizations.of(context)!.stayConsistentHealthy
+        : AppLocalizations.of(context)!.trendingBackOnTrack(etaText);
+      return _messageContainer(theme, txt);
+    }
+    if (goalLower.contains('build')) {
+      final txt = etaText == '—' || etaText == AppLocalizations.of(context)!.buildingMuscle
+        ? AppLocalizations.of(context)!.strengthPhaseActive
+        : AppLocalizations.of(context)!.trendingTowardBuildGoal(etaText);
+      return _messageContainer(theme, txt);
+    }
+
+    // Default to weight goal expectation block
+    return _ExpectationBlock(weekly: weekly, unit: unit, etaText: etaText, remaining: remaining);
+  }
+
+  Widget _messageContainer(ThemeData theme, String text){
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF7FAFF),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFE5EEF9)),
+      ),
+      child: Text(text, style: theme.textTheme.bodyMedium?.copyWith(height: 1.35)),
+    );
+  }
+}
+
 class _BigDeltaCard extends StatelessWidget{
   final bool isLoss; final String valueText;
   const _BigDeltaCard({required this.isLoss, required this.valueText});
@@ -730,7 +979,7 @@ class _BigDeltaCard extends StatelessWidget{
             const SizedBox(width: 10),
             Text(valueText, style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w800, color: textColor)),
           ]),
-          Text(AppLocalizations.of(context)!.sinceStart, style: theme.textTheme.bodyMedium?.copyWith(color: Colors.grey[700])),
+          Text(AppLocalizations.of(context)!.sinceGoalStart, style: theme.textTheme.bodyMedium?.copyWith(color: Colors.grey[700])),
         ],
       ),
     );
@@ -1130,7 +1379,7 @@ class _WeightLineChart extends StatelessWidget {
             axisNameWidget: Padding(
               padding: const EdgeInsets.only(top: 0),
               child: Text(
-                'Timeline',
+                AppLocalizations.of(context)!.timeline,
                 style: TextStyle(
                   fontSize: 12,
                   letterSpacing: 0.1,

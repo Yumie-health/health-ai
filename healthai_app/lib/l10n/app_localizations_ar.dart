@@ -503,6 +503,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get bloodType => 'فصيلة الدم';
 
   @override
+  String get bloodTypeOptional => 'فصيلة الدم اختيارية ولا تؤثر على تتبع السعرات الحرارية أو التوصيات.';
+
+  @override
   String get areYouDiabetic => 'هل أنت مريض بالسكري؟';
 
   @override
@@ -865,10 +868,10 @@ class AppLocalizationsAr extends AppLocalizations {
   String get logWeightChange => 'الوزن';
 
   @override
-  String get lost => 'فقد';
+  String get lost => 'فقدان';
 
   @override
-  String get gained => 'اكتسب';
+  String get gained => 'زيادة';
 
   @override
   String get googleSignInHelp => 'مساعدة تسجيل الدخول بجوجل';
@@ -2267,4 +2270,142 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get manageSubscriptions => 'إدارة الاشتراكات';
+
+  @override
+  String get buildingMuscle => 'بناء العضلات';
+
+  @override
+  String get weightMaintained => 'تم الحفاظ على الوزن';
+
+  @override
+  String get eatingHealthier => 'تناول طعام أكثر صحة';
+
+  @override
+  String get goalReached => 'تم الوصول للهدف';
+
+  @override
+  String get noDataYet => 'لا توجد بيانات بعد';
+
+  @override
+  String get needMoreData => 'نحتاج المزيد من البيانات';
+
+  @override
+  String get weeklyGain => 'زيادة أسبوعية';
+
+  @override
+  String get onTrack => 'على المسار الصحيح';
+
+  @override
+  String get insufficientData => 'بيانات غير كافية';
+
+  @override
+  String get reached => 'تم الوصول';
+
+  @override
+  String get sinceGoalStart => 'منذ بداية الهدف';
+
+  @override
+  String get viewPreviousPlans => 'عرض الخطط السابقة';
+
+  @override
+  String get previousPlans => 'الخطط السابقة';
+
+  @override
+  String get yourWeightJourney => 'رحلة وزنك';
+
+  @override
+  String get trackProgressThroughGoals => 'تتبع تقدمك من خلال أهداف مختلفة';
+
+  @override
+  String get noPreviousPlans => 'لا توجد خطط سابقة';
+
+  @override
+  String get previousPlansWillAppear => 'ستظهر خططك السابقة هنا عند تغيير الأهداف.';
+
+  @override
+  String get completed => 'مكتمل';
+
+  @override
+  String get changed => 'تم التغيير';
+
+  @override
+  String get nutritionGoals => 'أهداف التغذية';
+
+  @override
+  String get weightEntries => 'إدخالات الوزن';
+
+  @override
+  String get noWeightEntriesRecorded => 'لم يتم تسجيل إدخالات وزن خلال هذه الفترة';
+
+  @override
+  String get months => 'شهور';
+
+  @override
+  String get unknownGoal => 'هدف غير معروف';
+
+  @override
+  String get failedToSavePlan => 'فشل في حفظ الخطة. يرجى المحاولة مرة أخرى.';
+
+  @override
+  String get failedToGeneratePlan => 'فشل في إنشاء الخطة. يرجى المحاولة مرة أخرى.';
+
+  @override
+  String get updateTargetAndRecalculate => 'تحديث الهدف وإعادة الحساب';
+
+  @override
+  String get neverMind => 'لا يهم';
+
+  @override
+  String get saveAndRecalculate => 'حفظ وإعادة حساب';
+
+  @override
+  String get targetUpdatedAndPlanRecalculated => 'تم تحديث الهدف وإعادة حساب الخطة';
+
+  @override
+  String get recalculateNote => 'سنعيد حساب السعرات الحرارية والعناصر الغذائية لهذا الهدف الجديد. يمكنك لا تزال إنشاء خطة ذكية جديدة لاحقاً.';
+
+  @override
+  String get startLoggingWeight => 'ابدأ في تسجيل وزنك لرؤية اتجاهات تقدمك.';
+
+  @override
+  String get logMoreWeights => 'سجل المزيد من الأوزان لرؤية اتجاهك.';
+
+  @override
+  String get weightTrendFlat => 'اتجاه وزنك مسطح حالياً. سجل المزيد من إدخالات الوزن لرؤية اتجاه تقدمك.';
+
+  @override
+  String get maintenanceRangeDrifted => 'انحرف وزنك عن نطاق الحفاظ عليه. سجل المزيد من الإدخالات لتقدير الوقت للعودة إلى وزنك.';
+
+  @override
+  String trendingBackMaintenance(String eta) {
+    return 'أنت تتجه نحو وزن الحفاظ عليه. الوقت المقدر: $eta';
+  }
+
+  @override
+  String get stayConsistentHealthy => 'حافظ على الاختيارات الصحية؛ مع توفر المزيد من البيانات سنقدر الوقت للعودة إلى نطاقك الصحي.';
+
+  @override
+  String trendingBackOnTrack(String eta) {
+    return 'أنت تتجه للعودة إلى المسار الصحيح. الوقت المقدر: $eta';
+  }
+
+  @override
+  String get strengthPhaseActive => 'مرحلة القوة نشطة. حافظ على البروتين والتدريب بشكل ثابت؛ سيظهر الجدول الزمني مع نمو البيانات.';
+
+  @override
+  String trendingTowardBuildGoal(String eta) {
+    return 'أنت تتجه نحو هدف البناء. الوقت المقدر: $eta';
+  }
+
+  @override
+  String get timeToGoal => 'الوقت للهدف';
+
+  @override
+  String get timeline => 'الجدول الزمني';
+
+  @override
+  String get allTime => 'كل الوقت';
+
+  @override
+  String get planToGoal => 'خطة للهدف';
 }

@@ -105,7 +105,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get entriesInStreak => 'Записей в серии';
 
   @override
-  String get days => 'дней';
+  String get days => 'дни';
 
   @override
   String get startedOn => 'Началась';
@@ -503,6 +503,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get bloodType => 'Группа крови';
 
   @override
+  String get bloodTypeOptional => 'Группа крови является необязательной и не влияет на отслеживание калорий или рекомендации.';
+
+  @override
   String get areYouDiabetic => 'У вас диабет?';
 
   @override
@@ -865,10 +868,10 @@ class AppLocalizationsRu extends AppLocalizations {
   String get logWeightChange => 'Вес';
 
   @override
-  String get lost => 'Потеряно';
+  String get lost => 'потеряно';
 
   @override
-  String get gained => 'Набрано';
+  String get gained => 'набрано';
 
   @override
   String get googleSignInHelp => 'Помощь по входу через Google';
@@ -2267,4 +2270,142 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get manageSubscriptions => 'Manage Subscriptions';
+
+  @override
+  String get buildingMuscle => 'наращивание мышц';
+
+  @override
+  String get weightMaintained => 'вес поддерживается';
+
+  @override
+  String get eatingHealthier => 'питание более здоровое';
+
+  @override
+  String get goalReached => 'цель достигнута';
+
+  @override
+  String get noDataYet => 'данных пока нет';
+
+  @override
+  String get needMoreData => 'нужно больше данных';
+
+  @override
+  String get weeklyGain => 'еженедельный прирост';
+
+  @override
+  String get onTrack => 'на правильном пути';
+
+  @override
+  String get insufficientData => 'недостаточно данных';
+
+  @override
+  String get reached => 'Достигнуто';
+
+  @override
+  String get sinceGoalStart => 'с начала цели';
+
+  @override
+  String get viewPreviousPlans => 'Посмотреть Предыдущие Планы';
+
+  @override
+  String get previousPlans => 'Предыдущие Планы';
+
+  @override
+  String get yourWeightJourney => 'Ваш Путь Веса';
+
+  @override
+  String get trackProgressThroughGoals => 'Отслеживайте свой прогресс через разные цели';
+
+  @override
+  String get noPreviousPlans => 'Нет Предыдущих Планов';
+
+  @override
+  String get previousPlansWillAppear => 'Ваши предыдущие планы появятся здесь, когда вы измените цели.';
+
+  @override
+  String get completed => 'Завершено';
+
+  @override
+  String get changed => 'Изменено';
+
+  @override
+  String get nutritionGoals => 'Цели Питания';
+
+  @override
+  String get weightEntries => 'Записи Веса';
+
+  @override
+  String get noWeightEntriesRecorded => 'Не записано записей веса в этот период';
+
+  @override
+  String get months => 'месяцы';
+
+  @override
+  String get unknownGoal => 'Неизвестная Цель';
+
+  @override
+  String get failedToSavePlan => 'Не удалось сохранить план. Попробуйте снова.';
+
+  @override
+  String get failedToGeneratePlan => 'Не удалось создать план. Попробуйте снова.';
+
+  @override
+  String get updateTargetAndRecalculate => 'Обновить Цель и Пересчитать';
+
+  @override
+  String get neverMind => 'Неважно';
+
+  @override
+  String get saveAndRecalculate => 'Сохранить и Пересчитать';
+
+  @override
+  String get targetUpdatedAndPlanRecalculated => 'Цель обновлена и план пересчитан';
+
+  @override
+  String get recalculateNote => 'Мы пересчитаем калории и макросы для этой новой цели. Вы все еще можете создать совершенно новый ИИ план позже.';
+
+  @override
+  String get startLoggingWeight => 'Начните записывать свой вес, чтобы увидеть тенденции вашего прогресса.';
+
+  @override
+  String get logMoreWeights => 'Записывайте больше весов, чтобы увидеть вашу тенденцию.';
+
+  @override
+  String get weightTrendFlat => 'Ваша тенденция веса в настоящее время плоская. Записывайте больше записей веса, чтобы увидеть тенденцию вашего прогресса.';
+
+  @override
+  String get maintenanceRangeDrifted => 'Ваш вес отклонился от диапазона поддержания. Записывайте больше записей для оценки времени возврата к вашему весу.';
+
+  @override
+  String trendingBackMaintenance(String eta) {
+    return 'Вы возвращаетесь к вашему весу поддержания. Расчетное время: $eta';
+  }
+
+  @override
+  String get stayConsistentHealthy => 'Оставайтесь последовательными со здоровыми выборами; по мере поступления большего количества данных мы оценим время возврата к вашему здоровому диапазону.';
+
+  @override
+  String trendingBackOnTrack(String eta) {
+    return 'Вы возвращаетесь на правильный путь. Расчетное время: $eta';
+  }
+
+  @override
+  String get strengthPhaseActive => 'Фаза силы активна. Поддерживайте белок и тренировки последовательно; временная шкала появится по мере роста данных.';
+
+  @override
+  String trendingTowardBuildGoal(String eta) {
+    return 'Вы движетесь к вашей цели строительства. Расчетное время: $eta';
+  }
+
+  @override
+  String get timeToGoal => 'Время до Цели';
+
+  @override
+  String get timeline => 'Временная Шкала';
+
+  @override
+  String get allTime => 'Все Время';
+
+  @override
+  String get planToGoal => 'План к Цели';
 }

@@ -503,6 +503,9 @@ class AppLocalizationsTr extends AppLocalizations {
   String get bloodType => 'Kan grubu';
 
   @override
+  String get bloodTypeOptional => 'Kan grubu isteğe bağlıdır ve kalori takibi veya önerileri etkilemez.';
+
+  @override
   String get areYouDiabetic => 'Diyabetik misiniz?';
 
   @override
@@ -841,7 +844,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get areYouSureDeleteMeal => 'Bu yemeği silmek istediğinizden emin misiniz?';
 
   @override
-  String get unknown => 'Bilinmiyor';
+  String get unknown => 'Bilinmeyen';
 
   @override
   String get servings1 => 'porsiyon 1';
@@ -865,10 +868,10 @@ class AppLocalizationsTr extends AppLocalizations {
   String get logWeightChange => 'Kilo';
 
   @override
-  String get lost => 'Kaybedilen';
+  String get lost => 'kaybedilen';
 
   @override
-  String get gained => 'Kazanılan';
+  String get gained => 'kazanılan';
 
   @override
   String get googleSignInHelp => 'Google Giriş Yardımı';
@@ -2267,4 +2270,142 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get manageSubscriptions => 'Manage Subscriptions';
+
+  @override
+  String get buildingMuscle => 'kas geliştirme';
+
+  @override
+  String get weightMaintained => 'kilo korundu';
+
+  @override
+  String get eatingHealthier => 'daha sağlıklı beslenme';
+
+  @override
+  String get goalReached => 'hedefe ulaşıldı';
+
+  @override
+  String get noDataYet => 'henüz veri yok';
+
+  @override
+  String get needMoreData => 'daha fazla veri gerekli';
+
+  @override
+  String get weeklyGain => 'haftalık artış';
+
+  @override
+  String get onTrack => 'yolunda';
+
+  @override
+  String get insufficientData => 'yetersiz veri';
+
+  @override
+  String get reached => 'Ulaşıldı';
+
+  @override
+  String get sinceGoalStart => 'hedef başlangıcından beri';
+
+  @override
+  String get viewPreviousPlans => 'Önceki Planları Görüntüle';
+
+  @override
+  String get previousPlans => 'Önceki Planlar';
+
+  @override
+  String get yourWeightJourney => 'Kilo Yolculuğunuz';
+
+  @override
+  String get trackProgressThroughGoals => 'Farklı hedefler boyunca ilerlemenizi takip edin';
+
+  @override
+  String get noPreviousPlans => 'Önceki Plan Yok';
+
+  @override
+  String get previousPlansWillAppear => 'Hedefleri değiştirdiğinizde önceki planlarınız burada görünecektir.';
+
+  @override
+  String get completed => 'Tamamlandı';
+
+  @override
+  String get changed => 'Değiştirildi';
+
+  @override
+  String get nutritionGoals => 'Beslenme Hedefleri';
+
+  @override
+  String get weightEntries => 'Kilo Girişleri';
+
+  @override
+  String get noWeightEntriesRecorded => 'Bu dönem boyunca kilo girişi kaydedilmedi';
+
+  @override
+  String get months => 'ay';
+
+  @override
+  String get unknownGoal => 'Bilinmeyen Hedef';
+
+  @override
+  String get failedToSavePlan => 'Plan kaydetme başarısız. Lütfen tekrar deneyin.';
+
+  @override
+  String get failedToGeneratePlan => 'Plan oluşturma başarısız. Lütfen tekrar deneyin.';
+
+  @override
+  String get updateTargetAndRecalculate => 'Hedefi Güncelle ve Yeniden Hesapla';
+
+  @override
+  String get neverMind => 'Boş ver';
+
+  @override
+  String get saveAndRecalculate => 'Kaydet ve Yeniden Hesapla';
+
+  @override
+  String get targetUpdatedAndPlanRecalculated => 'Hedef güncellendi ve plan yeniden hesaplandı';
+
+  @override
+  String get recalculateNote => 'Bu yeni hedef için kalori ve makroları yeniden hesaplayacağız. Daha sonra hala yepyeni bir AI planı oluşturabilirsiniz.';
+
+  @override
+  String get startLoggingWeight => 'İlerleme eğilimlerinizi görmek için kilonuzu kaydetmeye başlayın.';
+
+  @override
+  String get logMoreWeights => 'Eğiliminizi görmek için daha fazla kilo kaydedin.';
+
+  @override
+  String get weightTrendFlat => 'Kilo eğiliminiz şu anda düz. İlerleme eğiliminizi görmek için daha fazla kilo girişi kaydedin.';
+
+  @override
+  String get maintenanceRangeDrifted => 'Kilonuz bakım aralığından saptı. Kilonuza geri dönme süresini tahmin etmek için daha fazla giriş kaydedin.';
+
+  @override
+  String trendingBackMaintenance(String eta) {
+    return 'Bakım kilonuza geri dönme eğilimindesiniz. Tahmini süre: $eta';
+  }
+
+  @override
+  String get stayConsistentHealthy => 'Sağlıklı seçimlerle tutarlı kalın; daha fazla veri geldikçe sağlıklı aralığınıza geri dönme süresini tahmin edeceğiz.';
+
+  @override
+  String trendingBackOnTrack(String eta) {
+    return 'Yoluna geri dönme eğilimindesiniz. Tahmini süre: $eta';
+  }
+
+  @override
+  String get strengthPhaseActive => 'Güç fazı aktif. Protein ve antrenmanı tutarlı tutun; veriler büyüdükçe zaman çizelgesi görünecektir.';
+
+  @override
+  String trendingTowardBuildGoal(String eta) {
+    return 'Yapı hedefinize doğru eğilim gösteriyorsunuz. Tahmini süre: $eta';
+  }
+
+  @override
+  String get timeToGoal => 'Hedefe Süre';
+
+  @override
+  String get timeline => 'Zaman Çizelgesi';
+
+  @override
+  String get allTime => 'Tüm Zaman';
+
+  @override
+  String get planToGoal => 'Hedefe Plan';
 }

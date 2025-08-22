@@ -171,6 +171,9 @@ class _NutritionalPlanPageState extends State<NutritionalPlanPage> {
     final int carbs = userData!['carbsGoal'] ?? 250;
     final int fat = userData!['fatGoal'] ?? 70;
     
+    // Get the current plan name
+    final String currentPlan = _getLocalizedPlanName(userData!['goal'] ?? 'Maintain body weight', localizations);
+    
     // Calculate BMI
     final double heightM = heightCm / 100.0;
     final double bmi = weight / (heightM * heightM);
@@ -214,7 +217,7 @@ class _NutritionalPlanPageState extends State<NutritionalPlanPage> {
               child: Column(
                 children: [
                   Text(
-                    localizations.yourGoalWeight,
+                    currentPlan,
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
@@ -576,5 +579,23 @@ class _NutritionalPlanPageState extends State<NutritionalPlanPage> {
     final now = DateTime.now();
     final daysSince = now.difference(lastPlanGeneration!).inDays;
     return 14 - daysSince;
+  }
+
+  // Helper function to get localized plan name
+  String _getLocalizedPlanName(String goal, AppLocalizations localizations) {
+    switch (goal.toLowerCase()) {
+      case 'lose body weight':
+        return localizations.loseBodyWeight;
+      case 'gain weight':
+        return localizations.gainWeight;
+      case 'build muscle':
+        return localizations.buildMuscle;
+      case 'maintain body weight':
+        return localizations.maintainBodyWeight;
+      case 'eat healthier':
+        return localizations.eatHealthier;
+      default:
+        return localizations.maintainBodyWeight; // fallback
+    }
   }
 }

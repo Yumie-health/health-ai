@@ -503,6 +503,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get bloodType => '혈액형';
 
   @override
+  String get bloodTypeOptional => '혈액형은 선택사항이며 칼로리 추적이나 권장사항에 영향을 주지 않습니다.';
+
+  @override
   String get areYouDiabetic => '당뇨병이 있나요?';
 
   @override
@@ -865,10 +868,10 @@ class AppLocalizationsKo extends AppLocalizations {
   String get logWeightChange => '체중';
 
   @override
-  String get lost => '감량';
+  String get lost => '감소';
 
   @override
-  String get gained => '증량';
+  String get gained => '증가';
 
   @override
   String get googleSignInHelp => 'Google 로그인 도움말';
@@ -2267,4 +2270,142 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get manageSubscriptions => '구독 관리';
+
+  @override
+  String get buildingMuscle => '근육 만들기';
+
+  @override
+  String get weightMaintained => '체중 유지됨';
+
+  @override
+  String get eatingHealthier => '더 건강하게 먹기';
+
+  @override
+  String get goalReached => '목표 달성';
+
+  @override
+  String get noDataYet => '아직 데이터 없음';
+
+  @override
+  String get needMoreData => '더 많은 데이터 필요';
+
+  @override
+  String get weeklyGain => '주간 증가';
+
+  @override
+  String get onTrack => '순조롭게 진행';
+
+  @override
+  String get insufficientData => '데이터 부족';
+
+  @override
+  String get reached => '달성';
+
+  @override
+  String get sinceGoalStart => '목표 시작부터';
+
+  @override
+  String get viewPreviousPlans => '이전 계획 보기';
+
+  @override
+  String get previousPlans => '이전 계획';
+
+  @override
+  String get yourWeightJourney => '당신의 체중 여행';
+
+  @override
+  String get trackProgressThroughGoals => '다양한 목표를 통해 진행 상황 추적';
+
+  @override
+  String get noPreviousPlans => '이전 계획 없음';
+
+  @override
+  String get previousPlansWillAppear => '목표를 변경하면 이전 계획이 여기에 나타납니다.';
+
+  @override
+  String get completed => '완료됨';
+
+  @override
+  String get changed => '변경됨';
+
+  @override
+  String get nutritionGoals => '영양 목표';
+
+  @override
+  String get weightEntries => '체중 기록';
+
+  @override
+  String get noWeightEntriesRecorded => '이 기간 동안 체중 기록이 기록되지 않았습니다';
+
+  @override
+  String get months => '개월';
+
+  @override
+  String get unknownGoal => '알 수 없는 목표';
+
+  @override
+  String get failedToSavePlan => '계획 저장에 실패했습니다. 다시 시도하세요.';
+
+  @override
+  String get failedToGeneratePlan => '계획 생성에 실패했습니다. 다시 시도하세요.';
+
+  @override
+  String get updateTargetAndRecalculate => '목표 업데이트 및 재계산';
+
+  @override
+  String get neverMind => '상관없어';
+
+  @override
+  String get saveAndRecalculate => '저장 및 재계산';
+
+  @override
+  String get targetUpdatedAndPlanRecalculated => '목표가 업데이트되고 계획이 재계산되었습니다';
+
+  @override
+  String get recalculateNote => '이 새로운 목표에 대해 칼로리와 매크로를 재계산합니다. 나중에 완전히 새로운 AI 계획을 생성할 수도 있습니다.';
+
+  @override
+  String get startLoggingWeight => '체중을 기록하기 시작하여 진행 상황 추세를 확인하세요.';
+
+  @override
+  String get logMoreWeights => '더 많은 체중을 기록하여 추세를 확인하세요.';
+
+  @override
+  String get weightTrendFlat => '현재 체중 추세가 평평합니다. 더 많은 체중 기록을 기록하여 진행 상황 추세를 확인하세요.';
+
+  @override
+  String get maintenanceRangeDrifted => '체중이 유지 범위에서 벗어났습니다. 더 많은 기록을 기록하여 체중으로 돌아가는 시간을 추정하세요.';
+
+  @override
+  String trendingBackMaintenance(String eta) {
+    return '유지 체중으로 돌아가는 추세입니다. 예상 시간: $eta';
+  }
+
+  @override
+  String get stayConsistentHealthy => '건강한 선택을 일관되게 유지하세요; 더 많은 데이터가 들어오면 건강한 범위로 돌아가는 시간을 추정합니다.';
+
+  @override
+  String trendingBackOnTrack(String eta) {
+    return '올바른 길로 돌아가는 추세입니다. 예상 시간: $eta';
+  }
+
+  @override
+  String get strengthPhaseActive => '근력 단계가 활성화되었습니다. 단백질과 훈련을 일관되게 유지하세요; 데이터가 성장함에 따라 타임라인이 나타납니다.';
+
+  @override
+  String trendingTowardBuildGoal(String eta) {
+    return '구축 목표를 향해 나아가고 있습니다. 예상 시간: $eta';
+  }
+
+  @override
+  String get timeToGoal => '목표까지의 시간';
+
+  @override
+  String get timeline => '타임라인';
+
+  @override
+  String get allTime => '전체 시간';
+
+  @override
+  String get planToGoal => '목표로의 계획';
 }

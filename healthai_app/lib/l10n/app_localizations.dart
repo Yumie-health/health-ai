@@ -1101,6 +1101,12 @@ abstract class AppLocalizations {
   /// **'Blood type'**
   String get bloodType;
 
+  /// No description provided for @bloodTypeOptional.
+  ///
+  /// In en, this message translates to:
+  /// **'Blood type is optional and does not affect calorie tracking or recommendations.'**
+  String get bloodTypeOptional;
+
   /// No description provided for @areYouDiabetic.
   ///
   /// In en, this message translates to:
@@ -1824,13 +1830,13 @@ abstract class AppLocalizations {
   /// No description provided for @lost.
   ///
   /// In en, this message translates to:
-  /// **'Lost'**
+  /// **'lost'**
   String get lost;
 
   /// No description provided for @gained.
   ///
   /// In en, this message translates to:
-  /// **'Gained'**
+  /// **'gained'**
   String get gained;
 
   /// No description provided for @googleSignInHelp.
@@ -4604,6 +4610,270 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Manage Subscriptions'**
   String get manageSubscriptions;
+
+  /// No description provided for @buildingMuscle.
+  ///
+  /// In en, this message translates to:
+  /// **'building muscle'**
+  String get buildingMuscle;
+
+  /// No description provided for @weightMaintained.
+  ///
+  /// In en, this message translates to:
+  /// **'weight maintained'**
+  String get weightMaintained;
+
+  /// No description provided for @eatingHealthier.
+  ///
+  /// In en, this message translates to:
+  /// **'eating healthier'**
+  String get eatingHealthier;
+
+  /// No description provided for @goalReached.
+  ///
+  /// In en, this message translates to:
+  /// **'goal reached'**
+  String get goalReached;
+
+  /// No description provided for @noDataYet.
+  ///
+  /// In en, this message translates to:
+  /// **'no data yet'**
+  String get noDataYet;
+
+  /// No description provided for @needMoreData.
+  ///
+  /// In en, this message translates to:
+  /// **'need more data'**
+  String get needMoreData;
+
+  /// No description provided for @weeklyGain.
+  ///
+  /// In en, this message translates to:
+  /// **'weekly gain'**
+  String get weeklyGain;
+
+  /// No description provided for @onTrack.
+  ///
+  /// In en, this message translates to:
+  /// **'on track'**
+  String get onTrack;
+
+  /// No description provided for @insufficientData.
+  ///
+  /// In en, this message translates to:
+  /// **'insufficient data'**
+  String get insufficientData;
+
+  /// No description provided for @reached.
+  ///
+  /// In en, this message translates to:
+  /// **'Reached'**
+  String get reached;
+
+  /// No description provided for @sinceGoalStart.
+  ///
+  /// In en, this message translates to:
+  /// **'since goal start'**
+  String get sinceGoalStart;
+
+  /// No description provided for @viewPreviousPlans.
+  ///
+  /// In en, this message translates to:
+  /// **'View Previous Plans'**
+  String get viewPreviousPlans;
+
+  /// No description provided for @previousPlans.
+  ///
+  /// In en, this message translates to:
+  /// **'Previous Plans'**
+  String get previousPlans;
+
+  /// No description provided for @yourWeightJourney.
+  ///
+  /// In en, this message translates to:
+  /// **'Your Weight Journey'**
+  String get yourWeightJourney;
+
+  /// No description provided for @trackProgressThroughGoals.
+  ///
+  /// In en, this message translates to:
+  /// **'Track your progress through different goals'**
+  String get trackProgressThroughGoals;
+
+  /// No description provided for @noPreviousPlans.
+  ///
+  /// In en, this message translates to:
+  /// **'No Previous Plans'**
+  String get noPreviousPlans;
+
+  /// No description provided for @previousPlansWillAppear.
+  ///
+  /// In en, this message translates to:
+  /// **'Your previous plans will appear here once you change goals.'**
+  String get previousPlansWillAppear;
+
+  /// No description provided for @completed.
+  ///
+  /// In en, this message translates to:
+  /// **'Completed'**
+  String get completed;
+
+  /// No description provided for @changed.
+  ///
+  /// In en, this message translates to:
+  /// **'Changed'**
+  String get changed;
+
+  /// No description provided for @nutritionGoals.
+  ///
+  /// In en, this message translates to:
+  /// **'Nutrition Goals'**
+  String get nutritionGoals;
+
+  /// No description provided for @weightEntries.
+  ///
+  /// In en, this message translates to:
+  /// **'Weight Entries'**
+  String get weightEntries;
+
+  /// No description provided for @noWeightEntriesRecorded.
+  ///
+  /// In en, this message translates to:
+  /// **'No weight entries recorded during this period'**
+  String get noWeightEntriesRecorded;
+
+  /// No description provided for @months.
+  ///
+  /// In en, this message translates to:
+  /// **'months'**
+  String get months;
+
+  /// No description provided for @unknownGoal.
+  ///
+  /// In en, this message translates to:
+  /// **'Unknown Goal'**
+  String get unknownGoal;
+
+  /// No description provided for @failedToSavePlan.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to save plan. Please try again.'**
+  String get failedToSavePlan;
+
+  /// No description provided for @failedToGeneratePlan.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to generate plan. Please try again.'**
+  String get failedToGeneratePlan;
+
+  /// No description provided for @updateTargetAndRecalculate.
+  ///
+  /// In en, this message translates to:
+  /// **'Update Target & Recalculate'**
+  String get updateTargetAndRecalculate;
+
+  /// No description provided for @neverMind.
+  ///
+  /// In en, this message translates to:
+  /// **'Never mind'**
+  String get neverMind;
+
+  /// No description provided for @saveAndRecalculate.
+  ///
+  /// In en, this message translates to:
+  /// **'Save & Recalculate'**
+  String get saveAndRecalculate;
+
+  /// No description provided for @targetUpdatedAndPlanRecalculated.
+  ///
+  /// In en, this message translates to:
+  /// **'Target updated and plan recalculated'**
+  String get targetUpdatedAndPlanRecalculated;
+
+  /// No description provided for @recalculateNote.
+  ///
+  /// In en, this message translates to:
+  /// **'We will recalculate calories and macros for this new target. You can still generate a brand‑new AI plan later.'**
+  String get recalculateNote;
+
+  /// No description provided for @startLoggingWeight.
+  ///
+  /// In en, this message translates to:
+  /// **'Start logging your weight to see your progress trends.'**
+  String get startLoggingWeight;
+
+  /// No description provided for @logMoreWeights.
+  ///
+  /// In en, this message translates to:
+  /// **'Log a few more weights to see your trend.'**
+  String get logMoreWeights;
+
+  /// No description provided for @weightTrendFlat.
+  ///
+  /// In en, this message translates to:
+  /// **'Your weight trend is currently flat. Log more weight entries to see your progress trend.'**
+  String get weightTrendFlat;
+
+  /// No description provided for @maintenanceRangeDrifted.
+  ///
+  /// In en, this message translates to:
+  /// **'Your weight moved away from your maintenance range. Log more entries to estimate time back to your weight.'**
+  String get maintenanceRangeDrifted;
+
+  /// No description provided for @trendingBackMaintenance.
+  ///
+  /// In en, this message translates to:
+  /// **'You are trending back toward your maintenance weight. Estimated time: {eta}'**
+  String trendingBackMaintenance(String eta);
+
+  /// No description provided for @stayConsistentHealthy.
+  ///
+  /// In en, this message translates to:
+  /// **'Stay consistent with healthy choices; as more data comes in we will estimate time back to your healthy range.'**
+  String get stayConsistentHealthy;
+
+  /// No description provided for @trendingBackOnTrack.
+  ///
+  /// In en, this message translates to:
+  /// **'You are trending back on track. Estimated time: {eta}'**
+  String trendingBackOnTrack(String eta);
+
+  /// No description provided for @strengthPhaseActive.
+  ///
+  /// In en, this message translates to:
+  /// **'Strength phase active. Keep protein and training consistent; timeline will appear as data grows.'**
+  String get strengthPhaseActive;
+
+  /// No description provided for @trendingTowardBuildGoal.
+  ///
+  /// In en, this message translates to:
+  /// **'You are trending toward your build goal. Estimated time: {eta}'**
+  String trendingTowardBuildGoal(String eta);
+
+  /// No description provided for @timeToGoal.
+  ///
+  /// In en, this message translates to:
+  /// **'Time to Goal'**
+  String get timeToGoal;
+
+  /// No description provided for @timeline.
+  ///
+  /// In en, this message translates to:
+  /// **'Timeline'**
+  String get timeline;
+
+  /// No description provided for @allTime.
+  ///
+  /// In en, this message translates to:
+  /// **'All time'**
+  String get allTime;
+
+  /// No description provided for @planToGoal.
+  ///
+  /// In en, this message translates to:
+  /// **'Plan to goal'**
+  String get planToGoal;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

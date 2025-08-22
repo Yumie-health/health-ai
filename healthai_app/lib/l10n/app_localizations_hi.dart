@@ -503,6 +503,9 @@ class AppLocalizationsHi extends AppLocalizations {
   String get bloodType => 'रक्त समूह';
 
   @override
+  String get bloodTypeOptional => 'रक्त समूह वैकल्पिक है और कैलोरी ट्रैकिंग या सिफारिशों को प्रभावित नहीं करता है।';
+
+  @override
   String get areYouDiabetic => 'क्या आप मधुमेही हैं?';
 
   @override
@@ -868,7 +871,7 @@ class AppLocalizationsHi extends AppLocalizations {
   String get lost => 'खोया';
 
   @override
-  String get gained => 'प्राप्त किया';
+  String get gained => 'बढ़ाया';
 
   @override
   String get googleSignInHelp => 'Google साइन-इन सहायता';
@@ -2267,4 +2270,142 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get manageSubscriptions => 'सदस्यताएँ प्रबंधित करें';
+
+  @override
+  String get buildingMuscle => 'मांसपेशी निर्माण';
+
+  @override
+  String get weightMaintained => 'वजन बनाए रखा गया';
+
+  @override
+  String get eatingHealthier => 'स्वस्थ खाना';
+
+  @override
+  String get goalReached => 'लक्ष्य पहुंचा';
+
+  @override
+  String get noDataYet => 'अभी तक कोई डेटा नहीं';
+
+  @override
+  String get needMoreData => 'अधिक डेटा चाहिए';
+
+  @override
+  String get weeklyGain => 'साप्ताहिक वृद्धि';
+
+  @override
+  String get onTrack => 'सही रास्ते पर';
+
+  @override
+  String get insufficientData => 'अपर्याप्त डेटा';
+
+  @override
+  String get reached => 'पहुंचा';
+
+  @override
+  String get sinceGoalStart => 'लक्ष्य शुरुआत से';
+
+  @override
+  String get viewPreviousPlans => 'पिछली योजनाएं देखें';
+
+  @override
+  String get previousPlans => 'पिछली योजनाएं';
+
+  @override
+  String get yourWeightJourney => 'आपकी वजन यात्रा';
+
+  @override
+  String get trackProgressThroughGoals => 'विभिन्न लक्ष्यों के माध्यम से अपनी प्रगति ट्रैक करें';
+
+  @override
+  String get noPreviousPlans => 'कोई पिछली योजना नहीं';
+
+  @override
+  String get previousPlansWillAppear => 'जब आप लक्ष्य बदलेंगे तो आपकी पिछली योजनाएं यहां दिखाई देंगी।';
+
+  @override
+  String get completed => 'पूर्ण';
+
+  @override
+  String get changed => 'बदला गया';
+
+  @override
+  String get nutritionGoals => 'पोषण लक्ष्य';
+
+  @override
+  String get weightEntries => 'वजन प्रविष्टियां';
+
+  @override
+  String get noWeightEntriesRecorded => 'इस अवधि के दौरान कोई वजन प्रविष्टि दर्ज नहीं की गई';
+
+  @override
+  String get months => 'महीने';
+
+  @override
+  String get unknownGoal => 'अज्ञात लक्ष्य';
+
+  @override
+  String get failedToSavePlan => 'योजना सहेजने में विफल। कृपया पुनः प्रयास करें।';
+
+  @override
+  String get failedToGeneratePlan => 'योजना बनाने में विफल। कृपया पुनः प्रयास करें।';
+
+  @override
+  String get updateTargetAndRecalculate => 'लक्ष्य अपडेट करें और पुनः गणना करें';
+
+  @override
+  String get neverMind => 'कोई बात नहीं';
+
+  @override
+  String get saveAndRecalculate => 'सहेजें और पुनः गणना करें';
+
+  @override
+  String get targetUpdatedAndPlanRecalculated => 'लक्ष्य अपडेट किया गया और योजना पुनः गणना की गई';
+
+  @override
+  String get recalculateNote => 'हम इस नए लक्ष्य के लिए कैलोरी और मैक्रो की पुनः गणना करेंगे। आप बाद में एक बिल्कुल नई AI योजना भी बना सकते हैं।';
+
+  @override
+  String get startLoggingWeight => 'अपनी प्रगति की प्रवृत्तियों को देखने के लिए अपना वजन लॉग करना शुरू करें।';
+
+  @override
+  String get logMoreWeights => 'अपनी प्रवृत्ति देखने के लिए अधिक वजन लॉग करें।';
+
+  @override
+  String get weightTrendFlat => 'आपकी वजन प्रवृत्ति वर्तमान में सपाट है। अपनी प्रगति की प्रवृत्ति देखने के लिए अधिक वजन प्रविष्टियां लॉग करें।';
+
+  @override
+  String get maintenanceRangeDrifted => 'आपका वजन रखरखाव सीमा से हट गया है। अपने वजन पर वापस आने का समय अनुमानित करने के लिए अधिक प्रविष्टियां लॉग करें।';
+
+  @override
+  String trendingBackMaintenance(String eta) {
+    return 'आप अपने रखरखाव वजन की ओर वापस जा रहे हैं। अनुमानित समय: $eta';
+  }
+
+  @override
+  String get stayConsistentHealthy => 'स्वस्थ विकल्पों के साथ निरंतर रहें; जैसे-जैसे अधिक डेटा आएगा हम आपकी स्वस्थ सीमा में वापस आने का समय अनुमानित करेंगे।';
+
+  @override
+  String trendingBackOnTrack(String eta) {
+    return 'आप सही रास्ते पर वापस जा रहे हैं। अनुमानित समय: $eta';
+  }
+
+  @override
+  String get strengthPhaseActive => 'शक्ति चरण सक्रिय है। प्रोटीन और प्रशिक्षण को निरंतर रखें; डेटा बढ़ने के साथ टाइमलाइन दिखाई देगी।';
+
+  @override
+  String trendingTowardBuildGoal(String eta) {
+    return 'आप अपने निर्माण लक्ष्य की ओर जा रहे हैं। अनुमानित समय: $eta';
+  }
+
+  @override
+  String get timeToGoal => 'लक्ष्य तक का समय';
+
+  @override
+  String get timeline => 'टाइमलाइन';
+
+  @override
+  String get allTime => 'सभी समय';
+
+  @override
+  String get planToGoal => 'लक्ष्य की योजना';
 }

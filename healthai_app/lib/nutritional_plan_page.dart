@@ -64,6 +64,9 @@ class _NutritionalPlanPageState extends State<NutritionalPlanPage> {
           lastPlanGeneration = lastGen;
         });
       }
+    } else {
+      // Initialize if missing
+      await prefs.setInt('plans_generated_count', plansCount);
     }
   }
 
@@ -87,6 +90,35 @@ class _NutritionalPlanPageState extends State<NutritionalPlanPage> {
             backgroundColor: kPrimaryGreen,
           ),
         );
+      }
+    } catch (e) {
+      setState(() => isLoading = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(AppLocalizations.of(context)!.errorUpdatingProfile),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  Future<void> _updateFields(Map<String, dynamic> fields, {bool showSnack = true}) async {
+    setState(() => isLoading = true);
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user != null) {
+        final data = Map<String, dynamic>.from(fields);
+        data['lastUpdated'] = FieldValue.serverTimestamp();
+        await FirebaseFirestore.instance.collection('users').doc(user.uid).update(data);
+        await _loadUserData();
+        if (showSnack) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(AppLocalizations.of(context)!.profileUpdatedSuccessfully),
+              backgroundColor: kPrimaryGreen,
+            ),
+          );
+        }
       }
     } catch (e) {
       setState(() => isLoading = false);
@@ -194,6 +226,9 @@ class _NutritionalPlanPageState extends State<NutritionalPlanPage> {
     final int rawWaterGoal = userData!['waterGoal'] ?? 2000; // assume ml default
     final int waterGoalMl = rawWaterGoal <= 30 ? (rawWaterGoal * 240) : rawWaterGoal; // convert glasses -> ml if needed
     
+    // Get the current plan name
+    final String currentPlan = _getLocalizedPlanName(userData!['goal'] ?? 'Maintain body weight', localizations);
+    
     // Calculate BMI
     final double heightM = heightCm / 100.0;
     final double bmi = weight / (heightM * heightM);
@@ -237,7 +272,7 @@ class _NutritionalPlanPageState extends State<NutritionalPlanPage> {
               child: Column(
                 children: [
                   Text(
-                    localizations.yourGoalWeight,
+                    currentPlan,
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
@@ -344,6 +379,42 @@ class _NutritionalPlanPageState extends State<NutritionalPlanPage> {
             
             SizedBox(height: 32),
             
+            // Update Target & Recalculate (only for lose/gain)
+            if (((userData!['goal'] ?? '').toString().toLowerCase().contains('lose')) || ((userData!['goal'] ?? '').toString().toLowerCase().contains('gain'))) ...[
+              Container(
+                width: double.infinity,
+                height: 56,
+                margin: EdgeInsets.only(bottom: 12),
+                child: ElevatedButton.icon(
+                  onPressed: () {
+                    final goal = (userData!['goal'] ?? '').toString().toLowerCase();
+                    final isLose = goal.contains('lose');
+                    _showTargetRecalcDialog(
+                      useMetric: useMetric,
+                      isLose: isLose,
+                      currentWeightKg: weight,
+                      currentTargetKg: targetWeight,
+                      localizations: localizations,
+                    );
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: kPrimaryGreen,
+                    foregroundColor: Colors.white,
+                    elevation: 2,
+                    shadowColor: kPrimaryGreen.withOpacity(0.3),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                  ),
+                  icon: Icon(Icons.tune, size: 24),
+                  label: Text(
+                    AppLocalizations.of(context)!.updateTargetAndRecalculate,
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                ),
+              ),
+            ],
+
             // Generate New Plan Button
             Container(
               width: double.infinity,
@@ -734,5 +805,117 @@ class _NutritionalPlanPageState extends State<NutritionalPlanPage> {
     final now = DateTime.now();
     final daysSince = now.difference(lastPlanGeneration!).inDays;
     return 14 - daysSince;
+  }
+
+  // Helper function to get localized plan name
+  String _getLocalizedPlanName(String goal, AppLocalizations localizations) {
+    switch (goal.toLowerCase()) {
+      case 'lose body weight':
+        return localizations.loseBodyWeight;
+      case 'gain weight':
+        return localizations.gainWeight;
+      case 'build muscle':
+        return localizations.buildMuscle;
+      case 'maintain body weight':
+        return localizations.maintainBodyWeight;
+      case 'eat healthier':
+        return localizations.eatHealthier;
+      default:
+        return localizations.maintainBodyWeight; // fallback
+    }
+  }
+}
+
+extension on _NutritionalPlanPageState {
+  void _showTargetRecalcDialog({required bool useMetric, required bool isLose, required double currentWeightKg, required double currentTargetKg, required AppLocalizations localizations}) {
+    double display = useMetric ? currentTargetKg : currentTargetKg * 2.20462;
+    final String unit = useMetric ? 'kg' : 'lb';
+    final double currentDisp = useMetric ? currentWeightKg : currentWeightKg * 2.20462;
+    final double min = isLose ? (useMetric ? 30.0 : 66.0) : currentDisp;
+    final double max = isLose ? currentDisp : (useMetric ? 300.0 : 660.0);
+
+    showDialog(context: context, builder: (_) => StatefulBuilder(builder: (context, setStateDialog){
+      return AlertDialog(
+        title: Text(AppLocalizations.of(context)!.updateTargetAndRecalculate),
+        content: Column(mainAxisSize: MainAxisSize.min, children: [
+          Text('${display.toStringAsFixed(1)} $unit', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: kPrimaryGreen)),
+          const SizedBox(height: 8),
+          Slider(
+            value: display.clamp(min, max),
+            min: min,
+            max: max,
+            divisions: ((max-min) * (useMetric?2:1)).round().clamp(1, 1000),
+            activeColor: kPrimaryGreen,
+            onChanged: (v){ setStateDialog(()=> display = v); },
+          ),
+          const SizedBox(height: 8),
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(color: Colors.orange.withOpacity(0.1), borderRadius: BorderRadius.circular(8), border: Border.all(color: Colors.orange.withOpacity(0.3))),
+            child: Text(AppLocalizations.of(context)!.recalculateNote, style: TextStyle(fontSize: 12, color: Colors.orange[800])),
+          ),
+        ]),
+        actions: [
+          TextButton(onPressed: ()=> Navigator.pop(context), child: Text(AppLocalizations.of(context)!.neverMind)),
+          ElevatedButton(
+            onPressed: () async {
+              final newKg = useMetric ? display : display / 2.20462;
+              await _updateFields({
+                'targetWeightKg': newKg,
+                'targetWeight': newKg,
+              }, showSnack: false);
+              await _recalculateFromTarget(newKg, silent: true);
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text(AppLocalizations.of(context)!.targetUpdatedAndPlanRecalculated), backgroundColor: kPrimaryGreen),
+              );
+              Navigator.pop(context);
+            },
+            style: ElevatedButton.styleFrom(backgroundColor: kPrimaryGreen, foregroundColor: Colors.white),
+            child: Text(AppLocalizations.of(context)!.saveAndRecalculate),
+          ),
+        ],
+      );
+    }));
+  }
+
+  Future<void> _recalculateFromTarget(double targetKg, {bool silent = false}) async {
+    final data = Map<String, dynamic>.from(userData ?? {});
+    final int age = (data['age'] ?? 25).toInt();
+    final double height = (data['heightCm'] ?? data['height'] ?? 170.0).toDouble();
+    final String activityLevel = (data['activityLevel'] ?? 'Moderately Active').toString();
+    final String goal = (data['goal'] ?? 'Maintain body weight').toString().toLowerCase();
+    final String sex = (data['sex'] ?? 'Other').toString();
+
+    // BMR Mifflin-St Jeor
+    double bmr;
+    if (sex.toLowerCase() == 'male') {
+      bmr = 10 * targetKg + 6.25 * height - 5 * age + 5;
+    } else {
+      bmr = 10 * targetKg + 6.25 * height - 5 * age - 161;
+    }
+    double tdee = bmr;
+    switch (activityLevel.toLowerCase()) {
+      case 'sedentary': tdee = bmr * 1.2; break;
+      case 'lightly active': tdee = bmr * 1.375; break;
+      case 'moderately active': tdee = bmr * 1.55; break;
+      case 'very active': tdee = bmr * 1.725; break;
+      case 'extremely active': tdee = bmr * 1.9; break;
+    }
+    int calories;
+    if (goal.contains('lose')) calories = (tdee - 500).round();
+    else if (goal.contains('gain')) calories = (tdee + 300).round();
+    else if (goal.contains('build')) calories = (tdee + 200).round();
+    else calories = tdee.round();
+
+    int protein = goal.contains('build') ? (targetKg * 2.2).round() : (targetKg * 1.6).round();
+    int fat = (calories * 0.25 / 9).round();
+    int carbs = ((calories - (protein * 4) - (fat * 9)) / 4).round();
+
+    await _updateFields({
+      'dailyCalorieGoal': calories,
+      'proteinGoal': protein,
+      'carbsGoal': carbs,
+      'fatGoal': fat,
+    }, showSnack: !silent);
   }
 }
