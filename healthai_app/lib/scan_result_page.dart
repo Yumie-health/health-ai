@@ -12,6 +12,7 @@ import 'providers/preferences_provider.dart';
 import 'utils/constants.dart';
 import 'package:flutter/foundation.dart';
 import 'widgets/quantity_selection_dialog.dart';
+import 'widgets/edge_to_edge_scaffold.dart';
 
 // Custom TextField with floating Done button for iOS
 class _NumericTextField extends StatefulWidget {
@@ -785,45 +786,60 @@ class _ScanResultPageState extends State<ScanResultPage> {
                       padding: const EdgeInsets.only(top: 12),
                       child: Text(_error!, style: const TextStyle(color: Colors.red)),
                     ),
+                  // Add extra padding at bottom to ensure content doesn't get hidden behind fixed buttons
+                  const SizedBox(height: 100),
                 ],
               ),
             ),
           ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-            child: SafeArea(
-              minimum: EdgeInsets.only(bottom: 8),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: ElevatedButton(
-                      onPressed: _isSaving ? null : _discard,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.red,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                      ),
-                      child: Text(AppLocalizations.of(context)!.discard),
+          // Fixed bottom buttons that are always visible and device-aware
+          EdgeToEdgeContainer(
+            padding: EdgeInsets.only(
+              left: 20,
+              right: 20,
+              top: 16,
+              bottom: 16,
+            ),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.1),
+                  blurRadius: 8,
+                  offset: Offset(0, -2),
+                ),
+              ],
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: _isSaving ? null : _discard,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.red,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                     ),
+                    child: Text(AppLocalizations.of(context)!.discard),
                   ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: ElevatedButton(
-                      onPressed: _isSaving || _foodNameController.text.trim().isEmpty ? null : _saveMeal,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.green,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                      ),
-                      child: _isSaving
-                          ? const SizedBox(height: 22, width: 22, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                          : Text(AppLocalizations.of(context)!.saveMeal),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: _isSaving || _foodNameController.text.trim().isEmpty ? null : _saveMeal,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.green,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                     ),
+                    child: _isSaving
+                        ? const SizedBox(height: 22, width: 22, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                        : Text(AppLocalizations.of(context)!.saveMeal),
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
         ],

@@ -16,11 +16,14 @@ class ConsentService {
 
   Future<void> initializeAndObtainConsent() async {
     // Request/update consent status using UMP via Google Mobile Ads SDK
+    print('ConsentService: Starting consent initialization');
 
     // Force reset consent info to ensure clean state
     try {
       await ConsentInformation.instance.reset();
+      print('ConsentService: Consent info reset successfully');
     } catch (e) {
+      print('ConsentService: Error resetting consent info: $e');
       // Handle reset error silently
     }
     
@@ -55,19 +58,25 @@ class ConsentService {
           final available = await ConsentInformation.instance.isConsentFormAvailable();
           _isConsentFormAvailable = available;
           
+          print('ConsentService: Can request ads: $_lastCanRequestAds');
+          print('ConsentService: Consent form available: $available');
+          
           if (available) {
+            print('ConsentService: Loading and showing consent form');
             ConsentForm.loadConsentForm((form) async {
               form.show((_) async {
                 _lastCanRequestAds = await ConsentInformation.instance.canRequestAds();
+                print('ConsentService: After consent form - can request ads: $_lastCanRequestAds');
                 _consentFlowCompleted = true;
                 if (!completer.isCompleted) completer.complete();
               });
             }, (error) {
+              print('ConsentService: Error loading consent form: $error');
               _consentFlowCompleted = true;
               if (!completer.isCompleted) completer.complete();
             });
           } else {
-            
+            print('ConsentService: No consent form available, using non-personalized ads');
             // For debugging: assume consent is obtained (non-personalized ads)
             // In production, this should be handled properly through UMP
             _lastCanRequestAds = false; // Force non-personalized ads for safety
@@ -189,6 +198,7 @@ class ConsentService {
 
   AdRequest buildAdRequest() {
     final nonPersonalized = !_lastCanRequestAds;
+    print('ConsentService: Building ad request - nonPersonalized: $nonPersonalized');
     return AdRequest(
       nonPersonalizedAds: nonPersonalized,
     );

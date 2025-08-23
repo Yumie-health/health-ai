@@ -79,6 +79,7 @@ import 'services/birthday_service.dart';
 
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'config/payment_config.dart';
+import 'config/ad_config.dart';
 import 'services/subscription_service.dart';
 import 'services/iap_coordinator.dart';
 import 'services/streak_service.dart';
@@ -396,16 +397,22 @@ void main() async {
   // Do not force debug regions.
   const bool _disableConsentForScreenshots = false;
 
-  // 1) Obtain consent (EEA/UK/US states) and initialize ads BEFORE any ad loads
+  // 1) Initialize MobileAds first
+  await MobileAds.instance.initialize();
+  
+  // 2) Obtain consent (EEA/UK/US states) and configure ads
   await ConsentService.instance.initializeAndObtainConsent();
   await ConsentService.instance.configureMobileAds();
   
-  // 2) iOS ATT prompt only when UMP indicates privacy options are applicable
+  // 3) PRELOAD ADS IMMEDIATELY for fast scan experience
+  _preloadAdsForFastScan();
+  
+  // 3) iOS ATT prompt only when UMP indicates privacy options are applicable
   if (ConsentService.instance.isPrivacyOptionsAvailable && !_disableConsentForScreenshots) {
     await TrackingService.instance.requestATTIfNeeded();
   }
 
-  // 3) Respect analytics consent
+  // 4) Respect analytics consent
   await FirebaseAnalytics.instance.setAnalyticsCollectionEnabled(ConsentService.instance.analyticsAllowed);
 
   log.initialize(); // THEN: Initialize logging service
@@ -430,8 +437,6 @@ void main() async {
     
     // Check and refresh subscription status on app start
     await subscriptionService.refreshSubscriptionStatus();
-
-    MobileAds.instance.initialize(); // Initialize AdMob
 
     runApp(
       MultiProvider(
@@ -458,6 +463,58 @@ void main() async {
     // Startup error handled
     runApp(ErrorScreen(error: e.toString()));
   }
+}
+
+// PRELOAD ADS FOR FAST SCAN EXPERIENCE
+void _preloadAdsForFastScan() {
+  print('🚀 PRELOADING ADS FOR FAST SCAN EXPERIENCE');
+  
+  // Load rewarded ad immediately in background
+  RewardedAd.load(
+    adUnitId: AdConfig.rewardedAdUnitId,
+    request: ConsentService.instance.buildAdRequest(),
+    rewardedAdLoadCallback: RewardedAdLoadCallback(
+      onAdLoaded: (ad) {
+        print('✅ REWARDED AD PRELOADED SUCCESSFULLY - READY FOR FAST SCAN');
+        // Dispose the ad to free memory, but the ad unit is now "warmed up"
+        ad.dispose();
+      },
+      onAdFailedToLoad: (error) {
+        print('❌ REWARDED AD PRELOAD FAILED: ${error.message}');
+        // Try test ad as fallback
+        RewardedAd.load(
+          adUnitId: AdConfig.testRewardedAdUnitId,
+          request: ConsentService.instance.buildAdRequest(),
+          rewardedAdLoadCallback: RewardedAdLoadCallback(
+            onAdLoaded: (ad) {
+              print('✅ TEST REWARDED AD PRELOADED SUCCESSFULLY');
+              ad.dispose();
+            },
+            onAdFailedToLoad: (testError) {
+              print('❌ TEST REWARDED AD PRELOAD ALSO FAILED: ${testError.message}');
+            },
+          ),
+        );
+      },
+    ),
+  );
+  
+  // Also preload a second ad for even faster experience
+  Future.delayed(Duration(seconds: 2), () {
+    RewardedAd.load(
+      adUnitId: AdConfig.rewardedAdUnitId,
+      request: ConsentService.instance.buildAdRequest(),
+      rewardedAdLoadCallback: RewardedAdLoadCallback(
+        onAdLoaded: (ad) {
+          print('✅ SECOND REWARDED AD PRELOADED - ULTRA FAST SCAN READY');
+          ad.dispose();
+        },
+        onAdFailedToLoad: (error) {
+          print('❌ SECOND REWARDED AD PRELOAD FAILED: ${error.message}');
+        },
+      ),
+    );
+  });
 }
 
 class ErrorScreen extends StatelessWidget {
@@ -552,6 +609,7 @@ class HealthAIApp extends StatelessWidget {
         appBarTheme: AppBarTheme(
           backgroundColor: kPrimaryGreen,
           foregroundColor: Colors.white,
+          systemOverlayStyle: SystemUiOverlayStyle.light,
         ),
         elevatedButtonTheme: ElevatedButtonThemeData(
           style: ElevatedButton.styleFrom(

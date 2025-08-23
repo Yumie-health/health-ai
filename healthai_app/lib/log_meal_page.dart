@@ -88,6 +88,7 @@ class _SearchableMealInputState extends State<SearchableMealInput> {
     super.initState();
     _focusNode.addListener(_onFocusChange);
     widget.controller.addListener(_onTextChanged);
+    // Ads are already preloaded at app startup for FAST experience
     _loadRewardedAd(() {});
   }
 
@@ -106,18 +107,38 @@ class _SearchableMealInputState extends State<SearchableMealInput> {
   }
 
   void _loadRewardedAd(VoidCallback onAdLoaded) {
+    _loadRewardedAdWithFallback(AdConfig.rewardedAdUnitId, onAdLoaded);
+  }
+
+  void _loadRewardedAdWithFallback(String adUnitId, VoidCallback onAdLoaded) {
+    print('LogMeal: Loading rewarded ad with unit ID: $adUnitId');
+    print('LogMeal: Consent status - can request ads: ${ConsentService.instance.userConsentedPersonalizedAds}');
+    
     RewardedAd.load(
-      adUnitId: AdConfig.rewardedAdUnitId,
+      adUnitId: adUnitId,
       request: ConsentService.instance.buildAdRequest(),
       rewardedAdLoadCallback: RewardedAdLoadCallback(
         onAdLoaded: (ad) {
+          print('LogMeal: Rewarded ad loaded successfully');
           _rewardedAd = ad;
           _isRewardedAdLoaded = true;
           onAdLoaded();
         },
         onAdFailedToLoad: (error) {
+          print('LogMeal: Rewarded ad failed to load: ${error.message}');
+          print('LogMeal: Error code: ${error.code}');
           _isRewardedAdLoaded = false;
           _rewardedAd = null;
+          
+          // If production ad failed, try test ad as fallback
+          if (adUnitId == AdConfig.rewardedAdUnitId) {
+            print('LogMeal: Production ad failed, trying test ad as fallback');
+            Future.delayed(Duration(seconds: 2), () {
+              if (mounted && !_isRewardedAdLoaded) {
+                _loadRewardedAdWithFallback(AdConfig.testRewardedAdUnitId, onAdLoaded);
+              }
+            });
+          }
         },
       ),
     );
@@ -156,13 +177,96 @@ class _SearchableMealInputState extends State<SearchableMealInput> {
         onRewardEarned(); // Continue anyway
       }
     } else {
+      // Ad is not ready - show loading and wait for it to load
+      print('Ad not ready, showing loading and waiting for ad to load');
+      
+      // Show loading indicator
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(AppLocalizations.of(context)!.adNotLoadedYet)),
+        SnackBar(
+          content: Row(
+            children: [
+              SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+              ),
+              SizedBox(width: 16),
+              Text('Loading ad...'),
+            ],
+          ),
+          duration: Duration(seconds: 30), // Long duration while we wait
+        ),
       );
-      // Try to load ad for next time
-      _loadRewardedAd(() {});
-      // Continue with the action
-      onRewardEarned();
+      
+      // Try to load ad and wait for it
+      bool adLoaded = false;
+      int attempts = 0;
+      const maxAttempts = 3;
+      
+      while (!adLoaded && attempts < maxAttempts && mounted) {
+        attempts++;
+        print('Attempting to load ad, attempt $attempts');
+        
+        _loadRewardedAd(() {
+          adLoaded = true;
+          print('Ad loaded successfully on attempt $attempts');
+        });
+        
+        // Wait a bit before next attempt
+        if (!adLoaded && attempts < maxAttempts) {
+          await Future.delayed(Duration(seconds: 2));
+        }
+      }
+      
+      // Clear loading message
+      if (mounted) {
+        ScaffoldMessenger.of(context).clearSnackBars();
+      }
+      
+      if (adLoaded && _isRewardedAdLoaded && _rewardedAd != null) {
+        // Now show the ad
+        _rewardedAd!.fullScreenContentCallback = FullScreenContentCallback(
+          onAdDismissedFullScreenContent: (ad) {
+            ad.dispose();
+            _isRewardedAdLoaded = false;
+            _rewardedAd = null;
+            _loadRewardedAd(() {}); // Preload next ad
+          },
+          onAdFailedToShowFullScreenContent: (ad, error) {
+            ad.dispose();
+            _isRewardedAdLoaded = false;
+            _rewardedAd = null;
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(AppLocalizations.of(context)!.adFailedToShow)),
+            );
+            _loadRewardedAd(() {});
+          },
+        );
+        
+        try {
+          await _rewardedAd!.show(
+            onUserEarnedReward: (ad, reward) {
+              onRewardEarned();
+            },
+          );
+        } catch (e) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(AppLocalizations.of(context)!.adFailedToShow)),
+          );
+          onRewardEarned(); // Continue anyway
+        }
+      } else {
+        // If we still can't load an ad after multiple attempts, show error
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Unable to load ad. Please try again.'),
+              duration: Duration(seconds: 3),
+            ),
+          );
+        }
+        // Don't call onRewardEarned() - user must wait for ad to work
+      }
     }
   }
 

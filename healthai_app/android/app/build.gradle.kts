@@ -80,6 +80,9 @@ dependencies {
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
     implementation("androidx.multidex:multidex:2.0.1")
     
+    // Edge-to-edge support for Android 15+
+    implementation("androidx.core:core-ktx:1.15.0")
+    
     // Play Integrity API - Updated to latest version
     implementation("com.google.android.play:integrity:1.4.0")
     

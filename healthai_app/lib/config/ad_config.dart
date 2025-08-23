@@ -27,6 +27,19 @@ class AdConfig {
     return _rewardedAndroid; // Default to Android ad unit
   }
 
+  static String get testRewardedAdUnitId {
+    // Test ad unit IDs for debugging
+    if (Platform.isIOS) {
+      return _testRewardedIOS;
+    }
+    
+    if (Platform.isAndroid) {
+      return _testRewardedAndroid;
+    }
+    
+    return _testRewardedAndroid; // Default to Android test ad unit
+  }
+
   static bool get isUsingTestIds {
     return false; // Both platforms now use production ads
   }
