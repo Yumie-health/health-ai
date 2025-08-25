@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'models/meal.dart';
@@ -37,7 +38,6 @@ import 'services/ai_service.dart';
 import 'package:lottie/lottie.dart';
 import 'generated_meal_fridge_page.dart';
 import 'package:flutter/services.dart';
-import 'dart:convert';
 
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -373,6 +373,15 @@ void main() async {
 
   // Initialize Firebase - Android will use google-services.json, iOS will use the options
   await Firebase.initializeApp();
+  
+  // Configure Firebase Auth persistence to prevent logout on app updates
+  try {
+    // Firebase Auth automatically uses LOCAL persistence by default
+    // This ensures users stay logged in across app updates
+    print('Firebase Auth persistence configured for app updates');
+  } catch (e) {
+    print('Error configuring Firebase Auth persistence: $e');
+  }
   
   // Configure device orientation based on device type
   await _configureDeviceOrientation();
@@ -747,19 +756,36 @@ class _SplashOrAppState extends State<SplashOrApp> with SingleTickerProviderStat
     final minSplash = Future.delayed(const Duration(milliseconds: 350));
     User? user;
     try {
-      await for (final u in FirebaseAuth.instance.authStateChanges()) {
-        user = u;
-        break;
+      // Wait for auth state with timeout to handle potential issues after app updates
+      try {
+        await for (final u in FirebaseAuth.instance.authStateChanges().timeout(
+          Duration(seconds: 10),
+        )) {
+          user = u;
+          break;
+        }
+      } catch (e) {
+        print('Auth state timeout - checking current user');
+        user = FirebaseAuth.instance.currentUser;
       }
+      
+      // Additional check for current user if auth state stream didn't work
+      if (user == null) {
+        user = FirebaseAuth.instance.currentUser;
+        print('Auth state stream returned null, current user: ${user?.uid ?? 'none'}');
+      }
+      
       if (user != null) {
         try {
           await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
         } catch (e, stack) {
           // Firestore fetch failed
+          print('Firestore fetch failed for user ${user.uid}: $e');
         }
       }
     } catch (e, stack) {
       // Auth state error
+      print('Auth state error: $e');
     }
     
     // Check permissions
@@ -886,8 +912,15 @@ class _SplashOrAppState extends State<SplashOrApp> with SingleTickerProviderStat
     );
   }
 }
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
   const MyApp({super.key});
+
+  @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  String? _previousUserId;
 
   @override
   Widget build(BuildContext context) {
@@ -895,6 +928,27 @@ class MyApp extends StatelessWidget {
     return StreamBuilder<User?>(
       stream: FirebaseAuth.instance.authStateChanges(),
       builder: (context, snapshot) {
+        // Handle user switching - clear subscription data when user changes
+        if (snapshot.hasData) {
+          final currentUserId = snapshot.data!.uid;
+          if (_previousUserId != null && _previousUserId != currentUserId) {
+            // User has changed, clear subscription data
+            print('User changed from $_previousUserId to $currentUserId - clearing subscription data');
+            WidgetsBinding.instance.addPostFrameCallback((_) async {
+              final subscriptionService = SubscriptionService();
+              await subscriptionService.clearLocalSubscriptionData();
+            });
+          }
+          _previousUserId = currentUserId;
+        } else {
+          _previousUserId = null;
+          // Clear subscription data when no user is logged in
+          print('No user logged in - clearing subscription data');
+          WidgetsBinding.instance.addPostFrameCallback((_) async {
+            final subscriptionService = SubscriptionService();
+            await subscriptionService.clearLocalSubscriptionData();
+          });
+        }
         if (snapshot.connectionState == ConnectionState.waiting) {
           return Center(child: CircularProgressIndicator());
         }
@@ -1414,6 +1468,31 @@ class _AuthScreenState extends State<AuthScreen> {
           ),
         );
       },
+    );
+  }
+
+  void _showTermsRequiredDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Row(
+          children: [
+            Icon(Icons.warning_amber_rounded, color: Colors.orange, size: 24),
+            SizedBox(width: 8),
+            Text('Terms Required'),
+          ],
+        ),
+        content: Text(
+          'To continue with social sign-in, you must first accept the Terms of Service and Privacy Policy. Please check the box above and try again.',
+          style: TextStyle(fontSize: 16),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: Text('OK'),
+          ),
+        ],
+      ),
     );
   }
 
@@ -2755,83 +2834,150 @@ class _AuthScreenState extends State<AuthScreen> {
                       ),
                     ],
                     const SizedBox(height: 18),
-                    if (showSignUp)
-                      Row(
-                        children: [
-                          Checkbox(
-                            value: acceptTerms,
-                            onChanged: (v) => setState(() => acceptTerms = v ?? false),
-                            activeColor: kPrimaryGreen,
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
-                          ),
-                          Expanded(
-                            child: Wrap(
-                              crossAxisAlignment: WrapCrossAlignment.center,
-                              children: [
-                                Text(
-                                  AppLocalizations.of(context)!.iAcceptThe + ' ',
-                                  style: TextStyle(
-                                    color: Colors.grey[700],
-                                    fontSize: 14,
-                                  ),
+                    // Social sign-in buttons (moved up after password field)
+                    if (showSignUp && !acceptTerms) ...[
+                      // Warning message when terms not accepted
+                      Container(
+                        padding: EdgeInsets.all(16),
+                        margin: EdgeInsets.only(bottom: 16),
+                        decoration: BoxDecoration(
+                          color: Colors.orange.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: Colors.orange.withOpacity(0.3)),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(Icons.info_outline, color: Colors.orange, size: 20),
+                            SizedBox(width: 12),
+                            Expanded(
+                              child: Text(
+                                'Please accept the Terms of Service and Privacy Policy to continue with social sign-in',
+                                style: TextStyle(
+                                  color: Colors.orange[700],
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w500,
                                 ),
-                                GestureDetector(
-                                  onTap: () async {
-                                    try {
-                                      final uri = Uri.parse('https://yumie.me/terms');
-                                      if (await canLaunchUrl(uri)) {
-                                        await launchUrl(uri, mode: LaunchMode.externalApplication);
-                                      }
-                                    } catch (e) {
-                                      ScaffoldMessenger.of(context).showSnackBar(
-                                        SnackBar(content: Text(AppLocalizations.of(context)!.couldNotOpenTermsOfService)),
-                                      );
-                                    }
-                                  },
-                                  child: Text(
-                                    'Terms of Service',
-                                    style: TextStyle(
-                                      color: kPrimaryGreen,
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w500,
-                                      decoration: TextDecoration.underline,
-                                    ),
-                                  ),
-                                ),
-                                Text(
-                                  ' ' + AppLocalizations.of(context)!.and + ' ',
-                                  style: TextStyle(
-                                    color: Colors.grey[700],
-                                    fontSize: 14,
-                                  ),
-                                ),
-                                GestureDetector(
-                                  onTap: () async {
-                                    try {
-                                      final uri = Uri.parse('https://yumie.me/privacy');
-                                      if (await canLaunchUrl(uri)) {
-                                        await launchUrl(uri, mode: LaunchMode.externalApplication);
-                                      }
-                                    } catch (e) {
-                                      ScaffoldMessenger.of(context).showSnackBar(
-                                        SnackBar(content: Text(AppLocalizations.of(context)!.couldNotOpenPrivacyPolicy)),
-                                      );
-                                    }
-                                  },
-                                  child: Text(
-                                    'Privacy Policy',
-                                    style: TextStyle(
-                                      color: kPrimaryGreen,
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w500,
-                                      decoration: TextDecoration.underline,
-                                    ),
-                                  ),
-                                ),
-                              ],
+                              ),
                             ),
+                          ],
+                        ),
+                      ),
+                    ],
+                    if (isIOS) ...[
+                      _GoogleSignInButton(
+                        onTap: _handleGoogleSignIn, 
+                        isSignUp: showSignUp,
+                        isDisabled: showSignUp && !acceptTerms,
+                      ),
+                      SizedBox(height: 12),
+                      FutureBuilder<bool>(
+                        future: SignInWithApple.isAvailable(),
+                        builder: (context, snapshot) {
+                          final available = snapshot.data ?? false;
+                          if (!available) return const SizedBox.shrink();
+                          return _AppleSignInButton(
+                            onTap: _handleAppleSignIn,
+                            isSignUp: showSignUp,
+                            isDisabled: showSignUp && !acceptTerms,
+                          );
+                        },
+                      ),
+                    ] else if (isAndroid) ...[
+                      _GoogleSignInButton(
+                        onTap: _handleGoogleSignIn, 
+                        isSignUp: showSignUp,
+                        isDisabled: showSignUp && !acceptTerms,
+                      ),
+                    ],
+                    const SizedBox(height: 18),
+                    if (showSignUp)
+                      Container(
+                        padding: EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: acceptTerms ? Colors.green.withOpacity(0.05) : Colors.orange.withOpacity(0.05),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: acceptTerms ? Colors.green.withOpacity(0.3) : Colors.orange.withOpacity(0.3),
+                            width: 2,
                           ),
-                        ],
+                        ),
+                        child: Row(
+                          children: [
+                            Checkbox(
+                              value: acceptTerms,
+                              onChanged: (v) => setState(() => acceptTerms = v ?? false),
+                              activeColor: kPrimaryGreen,
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+                            ),
+                            Expanded(
+                              child: Wrap(
+                                crossAxisAlignment: WrapCrossAlignment.center,
+                                children: [
+                                  Text(
+                                    AppLocalizations.of(context)!.iAcceptThe + ' ',
+                                    style: TextStyle(
+                                      color: Colors.grey[700],
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                                  GestureDetector(
+                                    onTap: () async {
+                                      try {
+                                        final uri = Uri.parse('https://yumie.me/terms');
+                                        if (await canLaunchUrl(uri)) {
+                                          await launchUrl(uri, mode: LaunchMode.externalApplication);
+                                        }
+                                      } catch (e) {
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          SnackBar(content: Text(AppLocalizations.of(context)!.couldNotOpenTermsOfService)),
+                                        );
+                                      }
+                                    },
+                                    child: Text(
+                                      'Terms of Service',
+                                      style: TextStyle(
+                                        color: kPrimaryGreen,
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w500,
+                                        decoration: TextDecoration.underline,
+                                      ),
+                                    ),
+                                  ),
+                                  Text(
+                                    ' ' + AppLocalizations.of(context)!.and + ' ',
+                                    style: TextStyle(
+                                      color: Colors.grey[700],
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                                  GestureDetector(
+                                    onTap: () async {
+                                      try {
+                                        final uri = Uri.parse('https://yumie.me/privacy');
+                                        if (await canLaunchUrl(uri)) {
+                                          await launchUrl(uri, mode: LaunchMode.externalApplication);
+                                        }
+                                      } catch (e) {
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          SnackBar(content: Text(AppLocalizations.of(context)!.couldNotOpenPrivacyPolicy)),
+                                        );
+                                      }
+                                    },
+                                    child: Text(
+                                      'Privacy Policy',
+                                      style: TextStyle(
+                                        color: kPrimaryGreen,
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w500,
+                                        decoration: TextDecoration.underline,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     const SizedBox(height: 18),
                     SizedBox(
@@ -2882,34 +3028,6 @@ class _AuthScreenState extends State<AuthScreen> {
                           color: message.startsWith('Error') ? kWarningRed : kPrimaryGreen,
                           fontWeight: FontWeight.bold,
                         ),
-                      ),
-                    ],
-                    const SizedBox(height: 24),
-                    // Social sign-in buttons
-                    if (isIOS) ...[
-                      _GoogleSignInButton(
-                        onTap: _handleGoogleSignIn, 
-                        isSignUp: showSignUp,
-                        isDisabled: showSignUp && !acceptTerms,
-                      ),
-                      SizedBox(height: 12),
-                      FutureBuilder<bool>(
-                        future: SignInWithApple.isAvailable(),
-                        builder: (context, snapshot) {
-                          final available = snapshot.data ?? false;
-                          if (!available) return const SizedBox.shrink();
-                          return _AppleSignInButton(
-                            onTap: _handleAppleSignIn,
-                            isSignUp: showSignUp,
-                            isDisabled: showSignUp && !acceptTerms,
-                          );
-                        },
-                      ),
-                    ] else if (isAndroid) ...[
-                      _GoogleSignInButton(
-                        onTap: _handleGoogleSignIn, 
-                        isSignUp: showSignUp,
-                        isDisabled: showSignUp && !acceptTerms,
                       ),
                     ],
                     const SizedBox(height: 24),
@@ -9538,7 +9656,6 @@ class HealthAwarenessPage extends StatefulWidget {
   _HealthAwarenessPageState createState() => _HealthAwarenessPageState();
 }
 class _HealthAwarenessPageState extends State<HealthAwarenessPage> {
-  String? _bloodType;
   bool? _isDiabetic;
   String? _activityLevel;
   bool _saving = false;
@@ -9556,9 +9673,7 @@ class _HealthAwarenessPageState extends State<HealthAwarenessPage> {
     }
   }
 
-  List<String> get bloodTypes => [
-    'A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-', '?'
-  ];
+
 
   List<Map<String, dynamic>> get activityLevels => [
     {'label': AppLocalizations.of(context)!.sedentary, 'value': 'Sedentary', 'desc': AppLocalizations.of(context)!.littleOrNoExercise, 'icon': Icons.self_improvement},
@@ -9579,7 +9694,6 @@ class _HealthAwarenessPageState extends State<HealthAwarenessPage> {
       final doc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
       final data = doc.data() ?? {};
       setState(() {
-        _bloodType = data['bloodType'] as String?;
         _isDiabetic = data['isDiabetic'] as bool?;
         _activityLevel = data['activityLevel'] as String?;
       });
@@ -9591,7 +9705,6 @@ class _HealthAwarenessPageState extends State<HealthAwarenessPage> {
     final user = FirebaseAuth.instance.currentUser;
     if (user != null) {
       await FirebaseFirestore.instance.collection('users').doc(user.uid).update({
-        'bloodType': _bloodType,
         'isDiabetic': _isDiabetic,
         'activityLevel': _activityLevel,
         'lastUpdated': DateTime.now(),
@@ -9614,29 +9727,6 @@ class _HealthAwarenessPageState extends State<HealthAwarenessPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(AppLocalizations.of(context)!.bloodType, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20)),
-                  SizedBox(height: 12),
-                  Wrap(
-                    spacing: 12,
-                    runSpacing: 12,
-                    children: bloodTypes.map((type) {
-                      final isSelected = _bloodType == type;
-                      return ChoiceChip(
-                        label: Text(type, style: TextStyle(fontWeight: FontWeight.bold)),
-                        selected: isSelected,
-                        selectedColor: theme.primaryColor.withOpacity(0.18),
-                        onSelected: (selected) async {
-                          setState(() => _bloodType = type);
-                          await _updateField('bloodType', type);
-                        },
-                        labelStyle: TextStyle(color: isSelected ? theme.primaryColor : Colors.black),
-                        backgroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                        side: BorderSide(color: isSelected ? theme.primaryColor : Colors.grey[300]!, width: 2),
-                      );
-                    }).toList(),
-                  ),
-                  SizedBox(height: 32),
                   Text(AppLocalizations.of(context)!.areYouDiabetic, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20)),
                   SizedBox(height: 12),
                   Row(

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../l10n/app_localizations.dart';
+import '../utils/responsive_text.dart';
 
 class ImprovedAgeSelector extends StatefulWidget {
   final int? selectedAge;
@@ -146,13 +147,12 @@ class _ImprovedAgeSelectorState extends State<ImprovedAgeSelector>
                                 color: Theme.of(context).primaryColor,
                               ),
                               SizedBox(height: 8),
-                              Text(
+                              ResponsiveText.responsiveText(
+                                context,
                                 AppLocalizations.of(context)!.younger,
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w600,
-                                  color: Theme.of(context).primaryColor,
-                                ),
+                                baseFontSize: 14,
+                                fontWeight: FontWeight.w600,
+                                color: Theme.of(context).primaryColor,
                               ),
                             ],
                           ),
@@ -200,22 +200,21 @@ class _ImprovedAgeSelectorState extends State<ImprovedAgeSelector>
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Text(
+                            ResponsiveText.fittedText(
+                              context,
                               "$currentAge",
-                              style: TextStyle(
-                                fontSize: 72,
-                                fontWeight: FontWeight.bold,
-                                color: Theme.of(context).primaryColor,
-                                height: 1.0,
-                              ),
+                              baseFontSize: 72,
+                              fontWeight: FontWeight.bold,
+                              color: Theme.of(context).primaryColor,
+                              height: 1.0,
+                              textAlign: TextAlign.center,
                             ),
-                            Text(
+                            ResponsiveText.responsiveText(
+                              context,
                               AppLocalizations.of(context)!.yearsOld,
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w600,
-                                color: Theme.of(context).primaryColor.withOpacity(0.8),
-                              ),
+                              baseFontSize: 16,
+                              fontWeight: FontWeight.w600,
+                              color: Theme.of(context).primaryColor.withOpacity(0.8),
                             ),
                           ],
                         ),
@@ -259,13 +258,12 @@ class _ImprovedAgeSelectorState extends State<ImprovedAgeSelector>
                                 color: Theme.of(context).primaryColor,
                               ),
                               SizedBox(height: 8),
-                              Text(
+                              ResponsiveText.responsiveText(
+                                context,
                                 AppLocalizations.of(context)!.older,
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w600,
-                                  color: Theme.of(context).primaryColor,
-                                ),
+                                baseFontSize: 14,
+                                fontWeight: FontWeight.w600,
+                                color: Theme.of(context).primaryColor,
                               ),
                             ],
                           ),
@@ -313,15 +311,14 @@ class _DecadeButton extends StatelessWidget {
             width: 1,
           ),
         ),
-        child: Text(
+        child: ResponsiveText.responsiveText(
+          context,
           label,
-          style: TextStyle(
-            fontSize: 12,
-            fontWeight: FontWeight.w600,
-            color: isActive
-                ? Colors.white
-                : Theme.of(context).primaryColor,
-          ),
+          baseFontSize: 12,
+          fontWeight: FontWeight.w600,
+          color: isActive
+              ? Colors.white
+              : Theme.of(context).primaryColor,
         ),
       ),
     );

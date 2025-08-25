@@ -550,6 +550,14 @@ class _GoalChangeFlowState extends State<GoalChangeFlow> {
           previousPlans.add(currentPlanData);
         }
 
+        // For build muscle, eat healthier, or maintain weight, set target weight to current weight
+        double finalTargetWeight = targetWeight ?? currentWeight;
+        if (selectedGoal?.toLowerCase() == 'build muscle' || 
+            selectedGoal?.toLowerCase() == 'eat healthier' || 
+            selectedGoal?.toLowerCase() == 'maintain body weight') {
+          finalTargetWeight = currentWeight;
+        }
+        
         // Prepare plan data
         final planData = {
           'calories': calorieGoal,
@@ -557,7 +565,7 @@ class _GoalChangeFlowState extends State<GoalChangeFlow> {
           'carbs': carbsGoal,
           'fat': fatGoal,
           'goal': selectedGoal,
-          'targetWeight': targetWeight,
+          'targetWeight': finalTargetWeight,
           'ai_plan': aiPlan?['ai_plan'],
           'previousPlans': previousPlans, // Include previous plans in the new plan data
         };

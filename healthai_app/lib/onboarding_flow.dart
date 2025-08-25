@@ -16,6 +16,7 @@ import 'widgets/improved_height_step.dart';
 import 'widgets/improved_weight_step.dart';
 import 'widgets/improved_goal_weight_step.dart';
 import 'l10n/app_localizations.dart';
+import 'utils/responsive_text.dart';
 
 class OnboardingFlowPage extends StatefulWidget {
   const OnboardingFlowPage({Key? key}) : super(key: key);
@@ -44,7 +45,7 @@ class _OnboardingFlowPageState extends State<OnboardingFlowPage> with SingleTick
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _slideAnimation;
   List<String> selectedHabits = [];
-  String? bloodType;
+
   bool? isDiabetic;
   String? waterIntake;
   String? selectedSex;
@@ -82,7 +83,7 @@ class _OnboardingFlowPageState extends State<OnboardingFlowPage> with SingleTick
         'targetWeightKg': targetWeightKg,
         'activityLevel': activityLevel,
         'selectedSex': selectedSex,
-        'bloodType': bloodType,
+
         'isDiabetic': isDiabetic,
         'waterIntake': waterIntake,
         'selectedReminders': selectedReminders,
@@ -141,7 +142,7 @@ class _OnboardingFlowPageState extends State<OnboardingFlowPage> with SingleTick
         targetWeightKg = _parse<double>('targetWeightKg', (s) => s == 'null' ? null : double.tryParse(s));
         activityLevel = _parse<String>('activityLevel', (s) => s == 'null' ? null : s);
         selectedSex = _parse<String>('selectedSex', (s) => s == 'null' ? null : s);
-        bloodType = _parse<String>('bloodType', (s) => s == 'null' ? null : s);
+
         isDiabetic = _parse<bool>('isDiabetic', (s) => s == 'true' ? true : s == 'false' ? false : null);
         waterIntake = _parse<String>('waterIntake', (s) => s == 'null' ? null : s);
       });
@@ -170,7 +171,7 @@ class _OnboardingFlowPageState extends State<OnboardingFlowPage> with SingleTick
       final prefs = await SharedPreferences.getInstance();
       final uid = FirebaseAuth.instance.currentUser?.uid;
       int? saved = prefs.getInt(_onboardingStepKeyForUser(uid));
-      if (saved != null && saved >= 0 && saved <= 15 && mounted) {
+      if (saved != null && saved >= 0 && saved <= 14 && mounted) {
         setState(() {
           step = saved!;
           _controller.reset();
@@ -235,12 +236,12 @@ class _OnboardingFlowPageState extends State<OnboardingFlowPage> with SingleTick
   void prevStep() {
     if (!mounted) return; // Prevent setState after dispose
     setState(() {
-      if (step == 15) {
-        step = 13;
+      if (step == 14) {
+        step = 12;
         _controller.reset();
         _controller.forward();
-      } else if (step == 14) {
-        step = 13;
+      } else if (step == 13) {
+        step = 12;
         _controller.reset();
         _controller.forward();
       } else if (step > 0) {
@@ -416,15 +417,6 @@ class _OnboardingFlowPageState extends State<OnboardingFlowPage> with SingleTick
                   onBack: prevStep,
                 );
               } else if (step == 9) {
-                return _BloodTypeStep(
-                  fadeAnimation: _fadeAnimation,
-                  slideAnimation: _slideAnimation,
-                  selectedBloodType: bloodType,
-                  onSelect: (type) => setState(() => bloodType = type),
-                  onContinue: bloodType == null ? null : nextStep,
-                  onBack: prevStep,
-                );
-              } else if (step == 10) {
                 return _DiabeticStep(
                   fadeAnimation: _fadeAnimation,
                   slideAnimation: _slideAnimation,
@@ -433,7 +425,7 @@ class _OnboardingFlowPageState extends State<OnboardingFlowPage> with SingleTick
                   onContinue: isDiabetic == null ? null : nextStep,
                   onBack: prevStep,
                 );
-              } else if (step == 11) {
+              } else if (step == 10) {
                 return _WaterIntakeStep(
                   fadeAnimation: _fadeAnimation,
                   slideAnimation: _slideAnimation,
@@ -443,7 +435,7 @@ class _OnboardingFlowPageState extends State<OnboardingFlowPage> with SingleTick
                   onContinue: waterIntake == null ? null : nextStep,
                   onBack: prevStep,
                 );
-              } else if (step == 12) {
+              } else if (step == 11) {
                 return _ProfileSummaryStep(
                   fadeAnimation: _fadeAnimation,
                   slideAnimation: _slideAnimation,
@@ -461,11 +453,10 @@ class _OnboardingFlowPageState extends State<OnboardingFlowPage> with SingleTick
                         }
                       : null,
                   onBack: prevStep,
-                  bloodType: bloodType,
                   isDiabetic: isDiabetic,
                   waterIntake: waterIntake,
                 );
-              } else if (step == 13) {
+              } else if (step == 12) {
                 return _RemindersStep(
                   fadeAnimation: _fadeAnimation,
                   slideAnimation: _slideAnimation,
@@ -487,10 +478,10 @@ class _OnboardingFlowPageState extends State<OnboardingFlowPage> with SingleTick
                       : null,
                   onBack: prevStep,
                 );
-              } else if (step == 14) {
+              } else if (step == 13) {
                 // Loading step - show loading animation while nutrition plan is being generated
                 return NutritionLoadingAnimation(message: AppLocalizations.of(context)!.yumieIsCookingUp);
-              } else if (step == 15) {
+              } else if (step == 14) {
                 if (aiNutritionPlan != null) {
                 return _NutritionPlanSummaryStep(
                   fadeAnimation: _fadeAnimation,
@@ -538,7 +529,7 @@ class _OnboardingFlowPageState extends State<OnboardingFlowPage> with SingleTick
                             'activityLevel': activityLevel,
                             'goal': selectedGoal,
                             'sex': selectedSex,
-                            'bloodType': bloodType,
+
                             'isDiabetic': isDiabetic,
                             'waterIntake': waterIntake,
                             'name': existingName, // Preserve the existing name from Apple Sign-In
@@ -664,7 +655,7 @@ class _OnboardingFlowPageState extends State<OnboardingFlowPage> with SingleTick
       final String sex = selectedSex ?? "Other";
       final String goal = selectedGoal ?? "Maintenance";
       final String activity = activityLevel ?? "Sedentary";
-      final String blood = bloodType ?? "O+";
+
       final bool diabetic = isDiabetic ?? false;
       final String? water = waterIntake;
       final start = DateTime.now();
@@ -736,7 +727,7 @@ class _OnboardingFlowPageState extends State<OnboardingFlowPage> with SingleTick
         proteinGoal: proteinGoal,
         carbsGoal: carbsGoal,
         fatGoal: fatGoal,
-        bloodType: blood,
+        bloodType: 'O+', // Default blood type since we removed the step
         isDiabetic: diabetic,
       );
 
@@ -751,10 +742,10 @@ class _OnboardingFlowPageState extends State<OnboardingFlowPage> with SingleTick
         aiNutritionPlan = plan;
         isLoadingNutritionPlan = false;
       });
-      // Automatically advance to step 15 when nutrition plan is ready
+      // Automatically advance to step 14 when nutrition plan is ready
       if (mounted) {
         setState(() {
-          step = 15;
+          step = 14;
         });
       }
     } catch (e) {
@@ -762,10 +753,10 @@ class _OnboardingFlowPageState extends State<OnboardingFlowPage> with SingleTick
         aiError = e.toString();
         isLoadingNutritionPlan = false;
       });
-      // Automatically advance to step 15 even on error
+      // Automatically advance to step 14 even on error
       if (mounted) {
         setState(() {
-          step = 15;
+          step = 14;
         });
       }
     }
@@ -1534,22 +1525,19 @@ class _AgeStep extends StatelessWidget {
                       position: slideAnimation,
                       child: Column(
                         children: [
-                          Text(
+                          ResponsiveText.responsiveText(
+                            context,
                             AppLocalizations.of(context)!.howOldAreYou,
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: isSmallScreen ? 24 : 28,
-                              letterSpacing: -0.5,
-                            ),
+                            baseFontSize: isSmallScreen ? 24 : 28,
+                            fontWeight: FontWeight.bold,
                             textAlign: TextAlign.center,
                           ),
                           SizedBox(height: isSmallScreen ? 6 : 8),
-                          Text(
+                          ResponsiveText.responsiveText(
+                            context,
                             AppLocalizations.of(context)!.thisHelpsUsPersonalizeExperience,
-                            style: TextStyle(
-                              color: Colors.grey[600],
-                              fontSize: isSmallScreen ? 12 : 14,
-                            ),
+                            baseFontSize: isSmallScreen ? 12 : 14,
+                            color: Colors.grey[600],
                             textAlign: TextAlign.center,
                           ),
                         ],
@@ -1569,13 +1557,12 @@ class _AgeStep extends StatelessWidget {
                           ),
                           SizedBox(height: isSmallScreen ? 20 : 24),
                           // Birthday selection
-                          Text(
+                          ResponsiveText.responsiveText(
+                            context,
                             AppLocalizations.of(context)!.selectBirthday,
-                            style: TextStyle(
-                              fontSize: isSmallScreen ? 16 : 18,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.black87,
-                            ),
+                            baseFontSize: isSmallScreen ? 16 : 18,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.black87,
                           ),
                           SizedBox(height: isSmallScreen ? 12 : 16),
                           Row(
@@ -2560,7 +2547,7 @@ class _ProfileSummaryStep extends StatelessWidget {
   final void Function(String) onActivityLevelChanged;
   final VoidCallback? onContinue;
   final VoidCallback onBack;
-  final String? bloodType;
+
   final bool? isDiabetic;
   final String? waterIntake;
   _ProfileSummaryStep({
@@ -2576,7 +2563,7 @@ class _ProfileSummaryStep extends StatelessWidget {
     required this.onActivityLevelChanged,
     required this.onContinue,
     required this.onBack,
-    this.bloodType,
+
     this.isDiabetic,
     this.waterIntake,
   });
@@ -2720,15 +2707,7 @@ class _ProfileSummaryStep extends StatelessWidget {
                             ],
                           ),
                           SizedBox(height: 8),
-                          Row(
-                            children: [
-                              Icon(Icons.bloodtype, color: theme.primaryColor),
-                              SizedBox(width: 6),
-                              Text('${AppLocalizations.of(context)!.bloodTypeLabel}: ', style: TextStyle(fontWeight: FontWeight.w600)),
-                              Text(bloodType ?? '-', style: TextStyle(fontWeight: FontWeight.bold)),
-                            ],
-                          ),
-                          SizedBox(height: 8),
+
                           Row(
                             children: [
                               Icon(Icons.check_circle, color: theme.primaryColor),
@@ -3032,146 +3011,6 @@ class _NutritionRow extends StatelessWidget {
     );
   }
 } 
-
-class _BloodTypeStep extends StatelessWidget {
-  final Animation<double> fadeAnimation;
-  final Animation<Offset> slideAnimation;
-  final String? selectedBloodType;
-  final void Function(String) onSelect;
-  final VoidCallback? onContinue;
-  final VoidCallback onBack;
-  _BloodTypeStep({required this.fadeAnimation, required this.slideAnimation, required this.selectedBloodType, required this.onSelect, required this.onContinue, required this.onBack});
-
-  List<String> _getBloodTypes(BuildContext context) => [
-    'A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-', '?'
-  ];
-  
-  Map<String, IconData> _getBloodIcons(BuildContext context) => {
-    'A+': Icons.bloodtype,
-    'A-': Icons.bloodtype,
-    'B+': Icons.bloodtype,
-    'B-': Icons.bloodtype,
-    'AB+': Icons.bloodtype,
-    'AB-': Icons.bloodtype,
-    'O+': Icons.bloodtype,
-    'O-': Icons.bloodtype,
-    '?': Icons.help_outline,
-  };
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Column(
-      children: [
-        Expanded(
-          child: SingleChildScrollView(
-            child: Column(
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        Align(
-          alignment: Alignment.centerLeft,
-          child: Container(
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
-                  blurRadius: 8,
-                  offset: Offset(0, 2),
-                ),
-              ],
-            ),
-            child: IconButton(
-              icon: Icon(Icons.arrow_back, color: theme.primaryColor, size: 24),
-              onPressed: onBack,
-            ),
-          ),
-        ),
-        SizedBox(height: 32),
-        Text(AppLocalizations.of(context)!.whatIsYourBloodType, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 28)),
-        SizedBox(height: 18),
-        Text(AppLocalizations.of(context)!.thisHelpsUsPersonalizeExperience, style: TextStyle(color: Colors.grey[600], fontSize: 16)),
-        SizedBox(height: 12),
-        Text(AppLocalizations.of(context)!.bloodTypeOptional, style: TextStyle(color: Colors.grey[500], fontSize: 14, fontStyle: FontStyle.italic)),
-        SizedBox(height: 32),
-        Builder(
-          builder: (context) {
-            final bloodTypes = _getBloodTypes(context);
-            final bloodIcons = _getBloodIcons(context);
-            
-            return Wrap(
-              spacing: 18,
-              runSpacing: 18,
-              children: bloodTypes.map((type) {
-                final isSelected = selectedBloodType == type;
-                final isDontKnow = type == '?';
-                
-                return GestureDetector(
-                  onTap: () => onSelect(type),
-                  child: AnimatedContainer(
-                    duration: Duration(milliseconds: 180),
-                    padding: EdgeInsets.symmetric(vertical: 18, horizontal: 28),
-                    decoration: BoxDecoration(
-                      color: isSelected ? theme.primaryColor.withOpacity(0.12) : Colors.white,
-                      borderRadius: BorderRadius.circular(18),
-                      border: Border.all(color: isSelected ? theme.primaryColor : Colors.grey[300]!, width: 2),
-                      boxShadow: isSelected
-                          ? [BoxShadow(color: theme.primaryColor.withOpacity(0.08), blurRadius: 12, offset: Offset(0, 4))]
-                          : [],
-                    ),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          bloodIcons[type],
-                          color: isSelected ? theme.primaryColor : Color(0xFFFFCDD2), // faded red for unselected
-                          size: 36,
-                        ),
-                        SizedBox(height: 8),
-                        if (isDontKnow)
-                          Icon(
-                            Icons.question_mark,
-                            color: isSelected ? theme.primaryColor : Colors.grey[600],
-                            size: 22,
-                          )
-                        else
-                          Text(type, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 22, color: isSelected ? theme.primaryColor : Colors.black)),
-                      ],
-                    ),
-                  ),
-                );
-              }).toList(),
-            );
-          },
-        ),
-        SizedBox(height: 36),
-              ],
-            ),
-          ),
-        ),
-        SafeArea(
-          minimum: EdgeInsets.only(left: 16, right: 16, bottom: 16),
-          child: SizedBox(
-          width: double.infinity,
-          child: ElevatedButton(
-            onPressed: onContinue,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: theme.primaryColor,
-              foregroundColor: Colors.white,
-              padding: EdgeInsets.symmetric(vertical: 20),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-              elevation: 0,
-              textStyle: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            child: Text(AppLocalizations.of(context)!.continueButton),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-}
 
 class _DiabeticStep extends StatelessWidget {
   final Animation<double> fadeAnimation;

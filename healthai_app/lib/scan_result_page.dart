@@ -13,6 +13,7 @@ import 'utils/constants.dart';
 import 'package:flutter/foundation.dart';
 import 'widgets/quantity_selection_dialog.dart';
 import 'widgets/edge_to_edge_scaffold.dart';
+import 'utils/responsive_text.dart';
 
 // Custom TextField with floating Done button for iOS
 class _NumericTextField extends StatefulWidget {
@@ -503,13 +504,12 @@ class _ScanResultPageState extends State<ScanResultPage> {
                     : [],
               ),
               child: Center(
-                child: Text(
+                child: ResponsiveText.responsiveText(
+                  context,
                   mealTypeLabels[type]!,
-                  style: TextStyle(
-                    fontWeight: FontWeight.w600,
-                    fontSize: 18,
-                    color: textColor,
-                  ),
+                  baseFontSize: 18,
+                  fontWeight: FontWeight.w600,
+                  color: textColor,
                 ),
               ),
             ),
@@ -553,13 +553,12 @@ class _ScanResultPageState extends State<ScanResultPage> {
             children: [
               Text(emoji, style: TextStyle(fontSize: 20)),
               const SizedBox(height: 4),
-              Text(
+              ResponsiveText.responsiveText(
+                context,
                 label,
-                style: TextStyle(
-                  fontWeight: FontWeight.w600,
-                  fontSize: 14,
-                  color: textColor,
-                ),
+                baseFontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: textColor,
                 textAlign: TextAlign.center,
               ),
             ],
@@ -671,7 +670,12 @@ class _ScanResultPageState extends State<ScanResultPage> {
                     ],
                   ),
                   const SizedBox(height: 24),
-                  Text(AppLocalizations.of(context)!.foodNameLabel, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+                  ResponsiveText.responsiveText(
+                    context,
+                    AppLocalizations.of(context)!.foodNameLabel,
+                    baseFontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
                   const SizedBox(height: 8),
                   TextField(
                     controller: _foodNameController,
@@ -690,9 +694,11 @@ class _ScanResultPageState extends State<ScanResultPage> {
                   Row(
                     children: [
                       Expanded(
-                        child: Text(
+                        child: ResponsiveText.responsiveText(
+                          context,
                           AppLocalizations.of(context)!.quantity,
-                          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                          baseFontSize: 18,
+                          fontWeight: FontWeight.bold,
                         ),
                       ),
                       GestureDetector(
@@ -707,13 +713,12 @@ class _ScanResultPageState extends State<ScanResultPage> {
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              Text(
+                              ResponsiveText.responsiveText(
+                                context,
                                 '${_quantity ?? 1} ${_getLocalizedUnit(_quantityUnit ?? 'servings')}',
-                                style: TextStyle(
-                                  color: kPrimaryGreen,
-                                  fontWeight: FontWeight.w600,
-                                  fontSize: 16,
-                                ),
+                                baseFontSize: 16,
+                                color: kPrimaryGreen,
+                                fontWeight: FontWeight.w600,
                               ),
                               SizedBox(width: 8),
                               Icon(Icons.edit, color: kPrimaryGreen, size: 18),
@@ -748,7 +753,13 @@ class _ScanResultPageState extends State<ScanResultPage> {
                     ],
                   ),
                   const SizedBox(height: 18),
-                  Text(AppLocalizations.of(context)!.ingredients, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 17, color: Colors.green)),
+                  ResponsiveText.responsiveText(
+                    context,
+                    AppLocalizations.of(context)!.ingredients,
+                    baseFontSize: 17,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.green,
+                  ),
                   const SizedBox(height: 8),
                   Row(
                     children: [
@@ -793,12 +804,12 @@ class _ScanResultPageState extends State<ScanResultPage> {
             ),
           ),
           // Fixed bottom buttons that are always visible and device-aware
-          EdgeToEdgeContainer(
+          Container(
             padding: EdgeInsets.only(
               left: 20,
               right: 20,
               top: 16,
-              bottom: 16,
+              bottom: MediaQuery.of(context).padding.bottom + 16,
             ),
             decoration: BoxDecoration(
               color: Colors.white,
@@ -861,7 +872,13 @@ class _ScanResultPageState extends State<ScanResultPage> {
           children: [
             Container(width: 8, height: 8, decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
             const SizedBox(width: 6),
-            Text(localizedLabel, style: TextStyle(color: color, fontWeight: FontWeight.w600)),
+            ResponsiveText.responsiveText(
+              context,
+              localizedLabel,
+              baseFontSize: 14,
+              color: color,
+              fontWeight: FontWeight.w600,
+            ),
           ],
         ),
         const SizedBox(height: 6),

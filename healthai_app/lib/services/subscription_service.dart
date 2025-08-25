@@ -213,6 +213,8 @@ class SubscriptionService {
       await prefs.remove('subscriptionType');
       await prefs.remove('purchaseDate');
       await prefs.remove('hadPremiumEver');
+      await prefs.remove('purchaseToken');
+      await prefs.remove('orderId');
       
       print('Local subscription data cleared on sign out');
       premium.value = false;
