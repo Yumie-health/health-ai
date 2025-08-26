@@ -263,12 +263,56 @@ class SubscriptionService {
       print('Local subscriptionType: ${prefs.getString('subscriptionType') ?? 'none'}');
       print('Local purchaseDate: ${prefs.getString('purchaseDate') ?? 'none'}');
       print('Local hadPremiumEver: ${prefs.getBool('hadPremiumEver') ?? false}');
+      print('Local cachedUserId: ${prefs.getString('cachedUserId') ?? 'none'}');
       
       // Check current premium value
       print('Current premium.value: ${premium.value}');
       print('=== END DEBUG ===');
     } catch (e) {
       print('Debug error: $e');
+    }
+  }
+  
+  // Force clear premium status for current user (both Firestore and local)
+  Future<void> forceClearPremiumForCurrentUser() async {
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) {
+        print('[FORCE CLEAR] No user logged in');
+        return;
+      }
+      
+      print('[FORCE CLEAR] Clearing premium for: ${user.email} (${user.uid})');
+      
+      // 1) Clear from Firestore - FORCE DELETE ALL PREMIUM FIELDS
+      await FirebaseFirestore.instance.collection('users').doc(user.uid).update({
+        'isPremium': false,
+        'subscriptionType': FieldValue.delete(),
+        'purchaseDate': FieldValue.delete(),
+        'lastUpdated': FieldValue.serverTimestamp(),
+        'premiumExpiryDate': FieldValue.delete(),
+        'premiumStartDate': FieldValue.delete(),
+        'purchaseToken': FieldValue.delete(),
+        'orderId': FieldValue.delete(),
+      });
+      print('[FORCE CLEAR] Firestore cleared - ALL premium fields deleted');
+      
+      // 2) Clear all local storage
+      await clearLocalSubscriptionData();
+      print('[FORCE CLEAR] Local storage cleared');
+      
+      // 3) Reset premium state
+      premium.value = false;
+      print('[FORCE CLEAR] Premium state reset');
+      
+      // 4) Force refresh from Firestore
+      await refreshSubscriptionStatus();
+      print('[FORCE CLEAR] Refreshed from Firestore');
+      
+      // 5) Verify the clear worked
+      await debugPremiumStatus();
+    } catch (e) {
+      print('[FORCE CLEAR] Error: $e');
     }
   }
 

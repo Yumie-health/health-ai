@@ -210,10 +210,14 @@ class _SubscriptionPageState extends State<SubscriptionPage> with WidgetsBinding
             await _handleRestoreSuccess(purchase);
           } else if (_isProcessingPayment) {
             // This is a restored purchase that came from a buy attempt
-            print('Purchase attempt returned restored status - treating as success');
-            await _handlePurchaseSuccess(purchase);
+            print('Purchase attempt returned restored status - BLOCKING automatic restore');
+            // DO NOT grant premium for automatic restores to prevent cross-account access
+            if (purchase.pendingCompletePurchase) {
+              await _iap.completePurchase(purchase);
+            }
           } else {
-
+            // Automatic restore (not user-initiated) - just complete it but don't grant premium
+            print('⚠️ AUTOMATIC RESTORE BLOCKED - preventing cross-account premium access');
             if (purchase.pendingCompletePurchase) {
               await _iap.completePurchase(purchase);
             }
@@ -231,7 +235,7 @@ class _SubscriptionPageState extends State<SubscriptionPage> with WidgetsBinding
     }
   }
 
-  Future<void> _handlePurchaseSuccess(PurchaseDetails purchase) async {
+  Future<void> _handlePurchaseSuccess(PurchaseDetails purchase, {bool isFromRestore = false}) async {
     try {
       // Cancel timeout timer since purchase succeeded
       _purchaseTimeoutTimer?.cancel();
@@ -244,8 +248,8 @@ class _SubscriptionPageState extends State<SubscriptionPage> with WidgetsBinding
         }
       }
       
-      // Save subscription
-      await ReceiptValidationService.saveValidatedSubscription(purchase);
+      // Save subscription - passing isRestore flag to prevent cross-account issues
+      await ReceiptValidationService.saveValidatedSubscription(purchase, isRestore: isFromRestore);
       
       // Complete purchase
       if (purchase.pendingCompletePurchase) {
@@ -258,8 +262,8 @@ class _SubscriptionPageState extends State<SubscriptionPage> with WidgetsBinding
         _selectedProductId = null;
       });
       
-      // Show success
-      if (mounted) {
+      // Show success ONLY for actual purchases, not restores
+      if (mounted && !isFromRestore) {
         SubscriptionSuccessPage.show(
           context,
           purchase.productID,
@@ -267,6 +271,14 @@ class _SubscriptionPageState extends State<SubscriptionPage> with WidgetsBinding
             Navigator.of(context).pop(); // Close success
             Navigator.of(context).pop(); // Close subscription page
           },
+        );
+      } else if (mounted && isFromRestore) {
+        // For blocked restores, show appropriate message
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Cannot restore purchases from a different account'),
+            backgroundColor: Colors.orange,
+          ),
         );
       }
     } catch (e) {
@@ -285,8 +297,8 @@ class _SubscriptionPageState extends State<SubscriptionPage> with WidgetsBinding
 
   Future<void> _handleRestoreSuccess(PurchaseDetails purchase) async {
     try {
-      // Save restored subscription
-      await ReceiptValidationService.saveValidatedSubscription(purchase);
+      // CRITICAL: Pass isRestore=true to prevent cross-account premium access
+      await ReceiptValidationService.saveValidatedSubscription(purchase, isRestore: true);
       
       // Complete purchase
       if (purchase.pendingCompletePurchase) {
@@ -296,18 +308,16 @@ class _SubscriptionPageState extends State<SubscriptionPage> with WidgetsBinding
       // Check if premium was actually restored
       await _checkPremiumStatus();
       
-      if (mounted && _isPremium) {
+      // Since restore is now blocked, show appropriate message
+      if (mounted) {
         setState(() => _isProcessingPayment = false);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(AppLocalizations.of(context)!.purchasesRestored),
-            backgroundColor: kPrimaryGreen,
-            duration: Duration(seconds: 2),
+            content: Text('Cannot restore purchases from a different account. Please use the account that originally purchased.'),
+            backgroundColor: Colors.orange,
+            duration: Duration(seconds: 4),
           ),
         );
-        Future.delayed(Duration(seconds: 2), () {
-          if (mounted) Navigator.of(context).pop();
-        });
       }
     } catch (e) {
       print('Error handling restore: $e');

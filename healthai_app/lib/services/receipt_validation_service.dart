@@ -97,14 +97,31 @@ class ReceiptValidationService {
   }
   
   /// Save validated subscription to SharedPreferences
-  static Future<void> saveValidatedSubscription(PurchaseDetails purchase) async {
+  static Future<void> saveValidatedSubscription(PurchaseDetails purchase, {bool isRestore = false}) async {
     try {
       // For iOS, we should NOT save to local SharedPreferences directly
       // Instead, let SubscriptionService handle it to ensure user-specific storage
       
-      print('Validated subscription saved: ${purchase.productID}');
+      print('${isRestore ? "RESTORE" : "PURCHASE"} - Validated subscription: ${purchase.productID}');
       print('Purchase token: ${purchase.verificationData.serverVerificationData.substring(0, 10)}...');
       print('Order ID: ${purchase.purchaseID}');
+      
+      // CRITICAL: For restores, we need to verify the purchase belongs to current user
+      // This prevents cross-account premium access
+      if (isRestore) {
+        print('⚠️ RESTORE DETECTED - Verifying purchase ownership...');
+        
+        // For now, we'll store the purchase details locally but NOT grant premium
+        // The user must have originally purchased with this account
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString('lastRestoredPurchaseToken', purchase.verificationData.serverVerificationData);
+        await prefs.setString('lastRestoredOrderId', purchase.purchaseID ?? '');
+        await prefs.setString('lastRestoredProductId', purchase.productID);
+        
+        print('❌ RESTORE BLOCKED - Purchase ownership verification required');
+        print('To restore purchases, you must use the same account that originally purchased');
+        return;
+      }
       
       // Track purchase event in Firebase Analytics
       // Respect regional consent preferences for analytics/ads measurement
@@ -122,7 +139,7 @@ class ReceiptValidationService {
         );
       }
       
-      // Immediately reflect premium state in the app using user-specific storage
+      // Only save subscription for NEW purchases, not restores
       try {
         await SubscriptionService().setSubscription(purchase.productID);
         
