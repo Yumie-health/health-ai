@@ -166,15 +166,7 @@ class _ScanPageState extends State<ScanPage> {
       }
     } catch (e) {
       print('Error initializing camera: $e');
-      // Show error to user
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(AppLocalizations.of(context)!.cameraInitializationError ?? 'Camera initialization failed'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
+      // Don't show error - iOS will handle permission dialogs automatically
     }
   }
 
@@ -211,7 +203,7 @@ class _ScanPageState extends State<ScanPage> {
   }
 
   Future<void> _captureImage() async {
-    if (!_controller.value.isInitialized) return;
+    if (!_isCameraInitialized || !_controller.value.isInitialized) return;
     final file = await _controller.takePicture();
 
     // In barcode mode, decode from snapshot and navigate directly (no paywall)
@@ -300,6 +292,7 @@ class _ScanPageState extends State<ScanPage> {
   }
 
   void _toggleFlash() async {
+    if (!_isCameraInitialized || !_controller.value.isInitialized) return;
     _isFlashOn = !_isFlashOn;
     await _controller.setFlashMode(_isFlashOn ? FlashMode.torch : FlashMode.off);
     setState(() {});
