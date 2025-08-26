@@ -9642,64 +9642,6 @@ class SettingsPage extends StatelessWidget {
               ),
               SizedBox(height: 20), // Extra bottom padding
 
-              // DEBUG SECTION - Remove in production
-              SizedBox(height: 32),
-              Text('Debug Premium Status', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 22, color: Colors.red)),
-              SizedBox(height: 18),
-              Card(
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-                elevation: 2,
-                color: Colors.red[50],
-                child: Column(
-                  children: [
-                    ListTile(
-                      leading: Icon(Icons.bug_report, color: Colors.red),
-                      title: Text('Check Premium Status', style: TextStyle(fontWeight: FontWeight.w600)),
-                      subtitle: Text('Show current premium status details'),
-                      trailing: Icon(Icons.chevron_right),
-                      onTap: () async {
-                        await SubscriptionService().debugPremiumStatus();
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('Check console logs for debug info')),
-                        );
-                      },
-                    ),
-                    Divider(height: 1, thickness: 1, indent: 16, endIndent: 16),
-                    ListTile(
-                      leading: Icon(Icons.clear, color: Colors.red),
-                      title: Text('Force Clear Premium', style: TextStyle(fontWeight: FontWeight.w600)),
-                      subtitle: Text('Clear premium status for current account'),
-                      trailing: Icon(Icons.chevron_right),
-                      onTap: () async {
-                        showDialog(
-                          context: context,
-                          builder: (context) => AlertDialog(
-                            title: Text('Clear Premium Status?'),
-                            content: Text('This will remove premium access for ${FirebaseAuth.instance.currentUser?.email ?? "current user"}'),
-                            actions: [
-                              TextButton(
-                                onPressed: () => Navigator.pop(context),
-                                child: Text('Cancel'),
-                              ),
-                              TextButton(
-                                onPressed: () async {
-                                  Navigator.pop(context);
-                                  await SubscriptionService().forceClearPremiumForCurrentUser();
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(content: Text('Premium status cleared')),
-                                  );
-                                },
-                                child: Text('Clear', style: TextStyle(color: Colors.red)),
-                              ),
-                            ],
-                          ),
-                        );
-                      },
-                    ),
-                  ],
-                ),
-              ),
-
             ],
             ),
           ),
