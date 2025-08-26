@@ -883,5 +883,6 @@
   "timeToGoal": "Tempo para a Meta",
   "timeline": "Linha do Tempo",
   "allTime": "Todo o Tempo",
-  "planToGoal": "Plano para a Meta"
+  "planToGoal": "Plano para a Meta",
+  "cameraInitializationError": "Falha na inicialização da câmera. Verifique as permissões da câmera."
 }

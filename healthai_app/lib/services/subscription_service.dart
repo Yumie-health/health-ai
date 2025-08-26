@@ -92,6 +92,17 @@ class SubscriptionService {
         return false;
       }
 
+      // CRITICAL: First check if this is a different user than what's cached
+      final prefs = await SharedPreferences.getInstance();
+      final cachedUserId = prefs.getString('cachedUserId');
+      if (cachedUserId != null && cachedUserId != user.uid) {
+        print('User changed from $cachedUserId to ${user.uid} - clearing subscription data');
+        await clearLocalSubscriptionData();
+        await prefs.setString('cachedUserId', user.uid);
+      } else if (cachedUserId == null) {
+        await prefs.setString('cachedUserId', user.uid);
+      }
+
       // 1) Check Firestore first for user-specific premium status
       try {
         final doc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
@@ -106,7 +117,6 @@ class SubscriptionService {
           if (firestoreIsPremium && firestoreSubscriptionType != null) {
             // User has premium in Firestore - this is the source of truth
             // Sync to local storage for offline access
-            final prefs = await SharedPreferences.getInstance();
             await prefs.setBool('isPremium', true);
             await prefs.setString('subscriptionType', firestoreSubscriptionType);
             if (firestorePurchaseDate != null) {
@@ -119,18 +129,15 @@ class SubscriptionService {
         }
       } catch (e) {
         print('Error checking Firestore premium status: $e');
-        // Continue to local check as fallback
+        // Continue to integrity check as fallback
       }
 
-      // 2) For iOS, if no Firestore premium, clear any local premium status
+      // 2) If no Firestore premium, clear any local premium status
       // This prevents cross-account premium access
-      if (Platform.isIOS) {
-        final prefs = await SharedPreferences.getInstance();
-        final localIsPremium = prefs.getBool('isPremium') ?? false;
-        if (localIsPremium) {
-          print('Clearing local premium status as Firestore shows no premium');
-          await clearLocalSubscriptionData();
-        }
+      final localIsPremium = prefs.getBool('isPremium') ?? false;
+      if (localIsPremium) {
+        print('Clearing local premium status as Firestore shows no premium');
+        await clearLocalSubscriptionData();
       }
 
       // 3) If no premium in Firestore, perform integrity check
@@ -141,6 +148,7 @@ class SubscriptionService {
       }
 
       // 4) No premium found
+      premium.value = false;
       return false;
     } catch (e) {
       print('Error checking premium status: $e');
@@ -215,8 +223,9 @@ class SubscriptionService {
       await prefs.remove('hadPremiumEver');
       await prefs.remove('purchaseToken');
       await prefs.remove('orderId');
+      await prefs.remove('cachedUserId');
       
-      print('Local subscription data cleared on sign out');
+      print('Local subscription data cleared');
       premium.value = false;
     } catch (e) {
       print('Error clearing local subscription data: $e');

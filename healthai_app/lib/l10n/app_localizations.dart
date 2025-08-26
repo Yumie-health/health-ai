@@ -4874,6 +4874,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Plan to goal'**
   String get planToGoal;
+
+  /// No description provided for @cameraInitializationError.
+  ///
+  /// In en, this message translates to:
+  /// **'Camera initialization failed. Please check camera permissions.'**
+  String get cameraInitializationError;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

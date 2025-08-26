@@ -2408,4 +2408,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get planToGoal => 'Plan vers l\'Objectif';
+
+  @override
+  String get cameraInitializationError => 'Échec de l\'initialisation de la caméra. Veuillez vérifier les autorisations de la caméra.';
 }

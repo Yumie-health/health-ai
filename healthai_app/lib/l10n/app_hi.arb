@@ -911,5 +911,6 @@
   "timeToGoal": "लक्ष्य तक का समय",
   "timeline": "टाइमलाइन",
   "allTime": "सभी समय",
-  "planToGoal": "लक्ष्य की योजना"
+  "planToGoal": "लक्ष्य की योजना",
+  "cameraInitializationError": "कैमरा प्रारंभीकरण विफल हुआ। कृपया कैमरा अनुमतियाँ जांचें।"
 }

@@ -883,5 +883,6 @@
   "timeToGoal": "Hedefe Süre",
   "timeline": "Zaman Çizelgesi",
   "allTime": "Tüm Zaman",
-  "planToGoal": "Hedefe Plan"
+  "planToGoal": "Hedefe Plan",
+  "cameraInitializationError": "Kamera başlatılamadı. Lütfen kamera izinlerini kontrol edin."
 }

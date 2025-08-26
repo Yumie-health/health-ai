@@ -964,5 +964,6 @@
   "timeToGoal": "Time to Goal",
   "timeline": "Timeline",
   "allTime": "All time",
-  "planToGoal": "Plan to goal"
+  "planToGoal": "Plan to goal",
+  "cameraInitializationError": "Camera initialization failed. Please check camera permissions."
 } 

@@ -902,5 +902,6 @@
   "timeToGoal": "Tempo all'Obiettivo",
   "timeline": "Timeline",
   "allTime": "Tutto il Tempo",
-  "planToGoal": "Piano all'Obiettivo"
+  "planToGoal": "Piano all'Obiettivo",
+  "cameraInitializationError": "Inizializzazione della fotocamera fallita. Controlla i permessi della fotocamera."
 }

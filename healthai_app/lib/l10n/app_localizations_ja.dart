@@ -2408,4 +2408,7 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get planToGoal => '目標へのプラン';
+
+  @override
+  String get cameraInitializationError => 'カメラの初期化に失敗しました。カメラのアクセス許可を確認してください。';
 }

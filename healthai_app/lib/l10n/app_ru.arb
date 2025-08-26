@@ -884,5 +884,6 @@
   "timeToGoal": "Время до Цели",
   "timeline": "Временная Шкала",
   "allTime": "Все Время",
-  "planToGoal": "План к Цели"
+  "planToGoal": "План к Цели",
+  "cameraInitializationError": "Ошибка инициализации камеры. Проверьте разрешения камеры."
 }

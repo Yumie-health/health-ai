@@ -2408,4 +2408,7 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get planToGoal => 'Plan naar Doel';
+
+  @override
+  String get cameraInitializationError => 'Camera-initialisatie mislukt. Controleer de cameratoestemmingen.';
 }

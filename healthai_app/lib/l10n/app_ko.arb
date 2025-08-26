@@ -894,5 +894,6 @@
   "timeToGoal": "목표까지의 시간",
   "timeline": "타임라인",
   "allTime": "전체 시간",
-  "planToGoal": "목표로의 계획"
+  "planToGoal": "목표로의 계획",
+  "cameraInitializationError": "카메라 초기화 실패. 카메라 권한을 확인해주세요."
 }

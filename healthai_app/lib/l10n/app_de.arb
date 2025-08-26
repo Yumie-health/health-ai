@@ -923,5 +923,6 @@
   "timeToGoal": "Zeit zum Ziel",
   "timeline": "Zeitlinie",
   "allTime": "Alle Zeit",
-  "planToGoal": "Plan zum Ziel"
+  "planToGoal": "Plan zum Ziel",
+  "cameraInitializationError": "Kamerainitialisierung fehlgeschlagen. Bitte überprüfen Sie die Kameraberechtigungen."
 }

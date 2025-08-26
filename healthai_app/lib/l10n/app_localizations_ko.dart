@@ -2408,4 +2408,7 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get planToGoal => '목표로의 계획';
+
+  @override
+  String get cameraInitializationError => '카메라 초기화 실패. 카메라 권한을 확인해주세요.';
 }

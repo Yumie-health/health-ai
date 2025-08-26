@@ -2408,4 +2408,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get planToGoal => 'План к Цели';
+
+  @override
+  String get cameraInitializationError => 'Ошибка инициализации камеры. Проверьте разрешения камеры.';
 }

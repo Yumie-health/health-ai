@@ -2408,4 +2408,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get planToGoal => 'Hedefe Plan';
+
+  @override
+  String get cameraInitializationError => 'Kamera başlatılamadı. Lütfen kamera izinlerini kontrol edin.';
 }

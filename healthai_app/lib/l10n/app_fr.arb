@@ -914,5 +914,6 @@
   "timeToGoal": "Temps à l'Objectif",
   "timeline": "Chronologie",
   "allTime": "Tout le Temps",
-  "planToGoal": "Plan vers l'Objectif"
+  "planToGoal": "Plan vers l'Objectif",
+  "cameraInitializationError": "Échec de l'initialisation de la caméra. Veuillez vérifier les autorisations de la caméra."
 }

@@ -2408,4 +2408,7 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get planToGoal => 'लक्ष्य की योजना';
+
+  @override
+  String get cameraInitializationError => 'कैमरा प्रारंभीकरण विफल हुआ। कृपया कैमरा अनुमतियाँ जांचें।';
 }

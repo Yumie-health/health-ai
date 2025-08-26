@@ -884,5 +884,6 @@
   "timeToGoal": "Tijd tot Doel",
   "timeline": "Tijdlijn",
   "allTime": "Alle Tijd",
-  "planToGoal": "Plan naar Doel"
+  "planToGoal": "Plan naar Doel",
+  "cameraInitializationError": "Camera-initialisatie mislukt. Controleer de cameratoestemmingen."
 }

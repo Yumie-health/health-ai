@@ -2408,4 +2408,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get planToGoal => 'خطة للهدف';
+
+  @override
+  String get cameraInitializationError => 'فشل تشغيل الكاميرا. يرجى التحقق من أذونات الكاميرا.';
 }

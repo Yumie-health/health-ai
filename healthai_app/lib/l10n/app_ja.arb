@@ -890,5 +890,6 @@
   "timeToGoal": "目標までの時間",
   "timeline": "タイムライン",
   "allTime": "全期間",
-  "planToGoal": "目標へのプラン"
+  "planToGoal": "目標へのプラン",
+  "cameraInitializationError": "カメラの初期化に失敗しました。カメラのアクセス許可を確認してください。"
 }

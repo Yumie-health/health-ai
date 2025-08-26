@@ -2408,4 +2408,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get planToGoal => 'Plano para a Meta';
+
+  @override
+  String get cameraInitializationError => 'Falha na inicialização da câmera. Verifique as permissões da câmera.';
 }

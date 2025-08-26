@@ -143,18 +143,39 @@ class _ScanPageState extends State<ScanPage> {
   @override
   void dispose() {
     _stopBarcodeStream();
-    _controller.dispose();
+    if (_isCameraInitialized) {
+      _controller.dispose();
+    }
+    _rewardedAd?.dispose();
     super.dispose();
   }
 
   Future<void> _initCamera() async {
-    _cameras = await availableCameras();
-    _controller = CameraController(_cameras[0], ResolutionPreset.high, enableAudio: false);
-    await _controller.initialize();
-    setState(() {
-      _isCameraInitialized = true;
-    });
-    // Guidance stream removed
+    try {
+      _cameras = await availableCameras();
+      if (_cameras.isEmpty) {
+        print('No cameras available');
+        return;
+      }
+      _controller = CameraController(_cameras[0], ResolutionPreset.high, enableAudio: false);
+      await _controller.initialize();
+      if (mounted) {
+        setState(() {
+          _isCameraInitialized = true;
+        });
+      }
+    } catch (e) {
+      print('Error initializing camera: $e');
+      // Show error to user
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(AppLocalizations.of(context)!.cameraInitializationError ?? 'Camera initialization failed'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 
   Future<bool> _shouldShowPaywall() async {

@@ -914,5 +914,6 @@
   "timeToGoal": "الوقت للهدف",
   "timeline": "الجدول الزمني",
   "allTime": "كل الوقت",
-  "planToGoal": "خطة للهدف"
+  "planToGoal": "خطة للهدف",
+  "cameraInitializationError": "فشل تشغيل الكاميرا. يرجى التحقق من أذونات الكاميرا."
 }
