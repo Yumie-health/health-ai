@@ -1,4 +1,6 @@
 
+import * as functions from 'firebase-functions';
+
 // App Update Check Function
 export const checkAppUpdate = functions.https.onRequest(async (req, res) => {
   try {
@@ -17,12 +19,12 @@ export const checkAppUpdate = functions.https.onRequest(async (req, res) => {
     
     // Define update information
     const updateInfo = {
-      latestVersion: "1.0.5",
-      latestBuildNumber: 35,
+      latestVersion: "1.0.7",
+      latestBuildNumber: 50,
       title: "Update Available",
-      description: "A new version of Yumie is available with bug fixes and improvements.",
-      isForceUpdate: false,
-      releaseNotes: "• Fixed weight logging bug\n• Improved app performance\n• Enhanced user interface\n• Better error handling",
+      description: "A new version of Yumie is available with improvements and bug fixes.",
+      isForceUpdate: true,
+      releaseNotes: "• Fixed subscription pricing for international users\n• Improved loading states for in-app purchases\n• Enhanced app performance\n• Better error handling",
       published: true // Set to false when update is not yet available in stores
     };
 
