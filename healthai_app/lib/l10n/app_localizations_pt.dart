@@ -308,16 +308,16 @@ class AppLocalizationsPt extends AppLocalizations {
   String get failedToOpenStore => 'Failed to open app store';
 
   @override
-  String get updateAvailable => 'Update Available';
+  String get updateAvailable => 'Atualização Disponível';
 
   @override
-  String get newVersionAvailable => 'A new version of Yumie is available.';
+  String get newVersionAvailable => 'Uma nova versão do Yumie está disponível.';
 
   @override
-  String get updateNow => 'Update Now';
+  String get updateNow => 'Atualizar Agora';
 
   @override
-  String get later => 'Later';
+  String get later => 'Mais Tarde';
 
   @override
   String get whatsNew => 'What\'s New:';

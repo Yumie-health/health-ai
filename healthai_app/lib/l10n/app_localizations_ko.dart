@@ -308,16 +308,16 @@ class AppLocalizationsKo extends AppLocalizations {
   String get failedToOpenStore => 'Failed to open app store';
 
   @override
-  String get updateAvailable => 'Update Available';
+  String get updateAvailable => '업데이트 가능';
 
   @override
-  String get newVersionAvailable => 'A new version of Yumie is available.';
+  String get newVersionAvailable => 'Yumie의 새 버전이 사용 가능합니다.';
 
   @override
-  String get updateNow => 'Update Now';
+  String get updateNow => '지금 업데이트';
 
   @override
-  String get later => 'Later';
+  String get later => '나중에';
 
   @override
   String get whatsNew => 'What\'s New:';

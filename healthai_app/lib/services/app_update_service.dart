@@ -11,7 +11,7 @@ class AppUpdateService {
   AppUpdateService._internal();
 
   // Store URLs for both platforms
-  static const String _iosAppStoreUrl = 'https://apps.apple.com/app/yumie-health-ai/id1234567890'; // Replace with your actual App Store ID when published
+  static const String _iosAppStoreUrl = 'https://apps.apple.com/app/yumie-calorie-tracker/id6748360245';
   static const String _androidPlayStoreUrl = 'https://play.google.com/store/apps/details?id=com.yumie.healthai';
 
   // API endpoint to check for updates
@@ -27,6 +27,8 @@ class AppUpdateService {
       final packageInfo = await PackageInfo.fromPlatform();
       final currentVersion = packageInfo.version;
       final currentBuildNumber = packageInfo.buildNumber;
+      
+      print('📱 User app version: $currentVersion (Build $currentBuildNumber)');
 
       // Check for updates from your backend
       final updateInfo = await _fetchUpdateInfo();

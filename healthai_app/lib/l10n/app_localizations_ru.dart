@@ -308,16 +308,16 @@ class AppLocalizationsRu extends AppLocalizations {
   String get failedToOpenStore => 'Failed to open app store';
 
   @override
-  String get updateAvailable => 'Update Available';
+  String get updateAvailable => 'Доступно обновление';
 
   @override
-  String get newVersionAvailable => 'A new version of Yumie is available.';
+  String get newVersionAvailable => 'Доступна новая версия Yumie.';
 
   @override
-  String get updateNow => 'Update Now';
+  String get updateNow => 'Обновить сейчас';
 
   @override
-  String get later => 'Later';
+  String get later => 'Позже';
 
   @override
   String get whatsNew => 'What\'s New:';

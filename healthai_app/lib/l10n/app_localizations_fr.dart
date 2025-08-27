@@ -1515,19 +1515,19 @@ class AppLocalizationsFr extends AppLocalizations {
   String get chooseGoalDescription => 'Choose the goal that best aligns with your journey';
 
   @override
-  String get loseBodyWeight => 'Lose body weight';
+  String get loseBodyWeight => 'Perdre du poids';
 
   @override
-  String get gainWeight => 'Gain weight';
+  String get gainWeight => 'Prendre du poids';
 
   @override
-  String get buildMuscle => 'Build muscle';
+  String get buildMuscle => 'Développer les muscles';
 
   @override
-  String get eatHealthier => 'Eat healthier';
+  String get eatHealthier => 'Manger plus sainement';
 
   @override
-  String get maintainBodyWeight => 'Maintain body weight';
+  String get maintainBodyWeight => 'Maintenir le poids';
 
   @override
   String get setRealisticGoalForJourney => 'Set a realistic goal for your journey';

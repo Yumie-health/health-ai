@@ -4113,9 +4113,9 @@ class _MainNavScreenState extends State<MainNavScreen> with TickerProviderStateM
     try {
       // Check for available updates
       final updateInfo = await AppUpdateService.checkForUpdate();
-      if (updateInfo == null) return;
+      if (updateInfo == null) return; // User is up to date, no dialog needed
 
-      // Show update dialog every time (no skip logic)
+      // Show update dialog (AppUpdateService already confirmed update is needed)
       if (mounted) {
         await Future.delayed(Duration(seconds: 2)); // Small delay to not interrupt other dialogs
         

@@ -308,13 +308,13 @@ class AppLocalizationsNl extends AppLocalizations {
   String get failedToOpenStore => 'Failed to open app store';
 
   @override
-  String get updateAvailable => 'Update Available';
+  String get updateAvailable => 'Update Beschikbaar';
 
   @override
-  String get newVersionAvailable => 'A new version of Yumie is available.';
+  String get newVersionAvailable => 'Er is een nieuwe versie van Yumie beschikbaar.';
 
   @override
-  String get updateNow => 'Update Now';
+  String get updateNow => 'Nu Bijwerken';
 
   @override
   String get later => 'Later';
