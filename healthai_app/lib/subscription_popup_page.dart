@@ -150,6 +150,14 @@ class _SubscriptionPopupPageState extends State<SubscriptionPopupPage>
 
     // Load product details
     _loadProducts();
+    
+    // Give products a moment to load before showing UI
+    Future.delayed(const Duration(milliseconds: 500), () {
+      if (mounted && _isLoadingProducts) {
+        // Force a rebuild to show loading state
+        setState(() {});
+      }
+    });
   }
 
   Future<void> _loadProducts() async {
@@ -223,8 +231,8 @@ class _SubscriptionPopupPageState extends State<SubscriptionPopupPage>
       final product = _products.firstWhere((p) => p.id == productId);
       return product.price;
     } catch (e) {
-      // Fallback price if product not found
-      return productId == 'premium_monthly' ? '\$7.99' : '\$49.99';
+      // Return loading indicator if products not loaded yet
+      return _isLoadingProducts ? '...' : '--';
     }
   }
 
@@ -488,8 +496,11 @@ class _SubscriptionPopupPageState extends State<SubscriptionPopupPage>
     required bool isVerySmallScreen,
     required bool isSmallScreen,
   }) {
+    // Show shimmer effect while loading prices
+    final bool isLoadingPrice = price.contains('...') || price.contains('--');
+    
     return GestureDetector(
-      onTap: onTap,
+      onTap: isLoadingPrice ? null : onTap,
       child: Container(
         width: double.infinity,
         padding: EdgeInsets.all(isVerySmallScreen ? 12 : (isSmallScreen ? 14 : 16)),
