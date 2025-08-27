@@ -19,6 +19,7 @@ import 'services/barcode_scanner_service.dart';
 import 'services/product_lookup_service.dart';
 import 'package:google_mlkit_barcode_scanning/google_mlkit_barcode_scanning.dart';
 import 'scan_result_product_page.dart';
+import 'package:app_settings/app_settings.dart';
 
 class ScanPage extends StatefulWidget {
   const ScanPage({Key? key}) : super(key: key);
@@ -43,6 +44,8 @@ class _ScanPageState extends State<ScanPage> {
   RewardedAd? _rewardedAd;
   bool _isRewardedAdLoaded = false;
   bool _showBarcodeError = false; // shows red error under the frame when not recognized
+  String? _cameraError; // To track camera initialization errors
+  bool _isRetryingCamera = false;
 
   @override
   void initState() {
@@ -152,21 +155,70 @@ class _ScanPageState extends State<ScanPage> {
 
   Future<void> _initCamera() async {
     try {
+      setState(() {
+        _cameraError = null;
+        _isRetryingCamera = true;
+      });
+      
       _cameras = await availableCameras();
       if (_cameras.isEmpty) {
         print('No cameras available');
+        if (mounted) {
+          setState(() {
+            _cameraError = 'No cameras found on this device';
+            _isRetryingCamera = false;
+          });
+        }
         return;
       }
+      
       _controller = CameraController(_cameras[0], ResolutionPreset.high, enableAudio: false);
       await _controller.initialize();
+      
       if (mounted) {
         setState(() {
           _isCameraInitialized = true;
+          _cameraError = null;
+          _isRetryingCamera = false;
+        });
+      }
+    } on CameraException catch (e) {
+      print('Camera error: ${e.code} - ${e.description}');
+      if (mounted) {
+        String errorMessage = 'Camera initialization failed';
+        
+        // Handle specific camera errors
+        switch (e.code) {
+          case 'CameraAccessDenied':
+          case 'CameraAccessDeniedWithoutPrompt':
+          case 'CameraAccessRestricted':
+            errorMessage = 'Camera access denied. Please enable camera permissions in Settings.';
+            break;
+          case 'AudioAccessDenied':
+          case 'AudioAccessDeniedWithoutPrompt':
+          case 'AudioAccessRestricted':
+            // We don't need audio, but iOS might still require it
+            errorMessage = 'Microphone access denied. Please enable permissions in Settings.';
+            break;
+          default:
+            errorMessage = 'Camera error: ${e.description ?? e.code}';
+        }
+        
+        setState(() {
+          _cameraError = errorMessage;
+          _isRetryingCamera = false;
+          _isCameraInitialized = false;
         });
       }
     } catch (e) {
       print('Error initializing camera: $e');
-      // Don't show error - iOS will handle permission dialogs automatically
+      if (mounted) {
+        setState(() {
+          _cameraError = 'Failed to initialize camera. Please try again.';
+          _isRetryingCamera = false;
+          _isCameraInitialized = false;
+        });
+      }
     }
   }
 
@@ -645,7 +697,113 @@ class _ScanPageState extends State<ScanPage> {
                     );
                   },
                 )
-              : const Center(child: CircularProgressIndicator()),
+              : Center(
+                  child: _cameraError != null
+                      ? Container(
+                          padding: const EdgeInsets.all(24),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.camera_alt_outlined,
+                                size: 64,
+                                color: Colors.white54,
+                              ),
+                              const SizedBox(height: 24),
+                              Text(
+                                'Camera Not Available',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              const SizedBox(height: 16),
+                              Text(
+                                _cameraError!,
+                                style: TextStyle(
+                                  color: Colors.white70,
+                                  fontSize: 16,
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                              const SizedBox(height: 32),
+                              if (_cameraError!.contains('permissions') || _cameraError!.contains('denied'))
+                                Column(
+                                  children: [
+                                    ElevatedButton.icon(
+                                      onPressed: () => AppSettings.openAppSettings(),
+                                      icon: Icon(Icons.settings),
+                                      label: Text('Open Settings'),
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: Colors.blue,
+                                        foregroundColor: Colors.white,
+                                        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(8),
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(height: 12),
+                                  ],
+                                ),
+                              ElevatedButton.icon(
+                                onPressed: _isRetryingCamera ? null : _initCamera,
+                                icon: _isRetryingCamera
+                                    ? SizedBox(
+                                        width: 20,
+                                        height: 20,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                        ),
+                                      )
+                                    : Icon(Icons.refresh),
+                                label: Text(_isRetryingCamera ? 'Retrying...' : 'Retry'),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.green,
+                                  foregroundColor: Colors.white,
+                                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 16),
+                              TextButton(
+                                onPressed: () => Navigator.of(context).pop(),
+                                child: Text(
+                                  'Go Back',
+                                  style: TextStyle(
+                                    color: Colors.white70,
+                                    fontSize: 16,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        )
+                      : _isRetryingCamera
+                          ? Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                CircularProgressIndicator(
+                                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                ),
+                                const SizedBox(height: 16),
+                                Text(
+                                  'Initializing camera...',
+                                  style: TextStyle(
+                                    color: Colors.white70,
+                                    fontSize: 16,
+                                  ),
+                                ),
+                              ],
+                            )
+                          : CircularProgressIndicator(
+                              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                            ),
+                ),
         ),
         ValueListenableBuilder<bool>(
           valueListenable: ConnectivityService.instance.online,

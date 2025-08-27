@@ -74,6 +74,7 @@ dependencies:
   google_mlkit_barcode_scanning: ^0.14.1
   share_plus: ^11.0.0
   permission_handler: ^11.3.1
+  app_settings: ^5.1.1
   logging: ^1.2.0
   googleapis_auth: ^1.4.1
   fl_chart: ^0.68.0

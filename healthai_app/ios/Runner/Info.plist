@@ -47,6 +47,8 @@
 	<true/>
 	<key>NSCameraUsageDescription</key>
 	<string>This app needs camera access to scan food items and take photos of meals.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>This app needs microphone access to enable camera functionality.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>This app may use location to provide personalized recommendations.</string>
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
