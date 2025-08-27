@@ -2334,14 +2334,14 @@ abstract class AppLocalizations {
   /// No description provided for @yearPrice.
   ///
   /// In en, this message translates to:
-  /// **'year/\$49.99'**
-  String get yearPrice;
+  /// **'year/{price}'**
+  String yearPrice(Object price);
 
   /// No description provided for @monthPrice.
   ///
   /// In en, this message translates to:
-  /// **'month/\$7.99'**
-  String get monthPrice;
+  /// **'month/{price}'**
+  String monthPrice(Object price);
 
   /// No description provided for @save37.
   ///

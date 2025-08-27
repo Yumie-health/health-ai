@@ -488,7 +488,8 @@ class _SubscriptionPageState extends State<SubscriptionPage> with WidgetsBinding
 
   Widget _buildPlanCard(ProductDetails product) {
     final isYearly = product.id == 'premium_yearly';
-    final price = product.id == 'premium_monthly' ? '7.99' : '49.99';
+    // Use actual product price instead of hardcoded values
+    final price = product.price;
     final lengthLabel = isYearly ? '1 year' : '1 month';
     final perUnit = isYearly ? '/year' : '/month';
     
@@ -524,7 +525,7 @@ class _SubscriptionPageState extends State<SubscriptionPage> with WidgetsBinding
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 Text(
-                  '\$$price',
+                  price,
                   style: TextStyle(
                     fontSize: 32,
                     fontWeight: FontWeight.bold,
