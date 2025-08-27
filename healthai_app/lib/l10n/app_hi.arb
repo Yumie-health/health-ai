@@ -366,7 +366,21 @@
   "yearlyPremium": "वार्षिक प्रीमियम",
   "monthlyPremium": "मासिक प्रीमियम",
   "yearPrice": "वर्ष/{price}",
+  "@yearPrice": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
   "monthPrice": "महीना/{price}",
+  "@monthPrice": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
   "save37": "37% बचाएं",
   "popular": "लोकप्रिय",
   "maybeLater": "शायद बाद में",

@@ -2335,13 +2335,13 @@ abstract class AppLocalizations {
   ///
   /// In en, this message translates to:
   /// **'year/{price}'**
-  String yearPrice(Object price);
+  String yearPrice(String price);
 
   /// No description provided for @monthPrice.
   ///
   /// In en, this message translates to:
   /// **'month/{price}'**
-  String monthPrice(Object price);
+  String monthPrice(String price);
 
   /// No description provided for @save37.
   ///

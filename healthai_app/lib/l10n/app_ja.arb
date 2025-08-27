@@ -370,7 +370,21 @@
   "yearlyPremium": "年間プレミアム",
   "monthlyPremium": "月間プレミアム",
   "yearPrice": "年/{price}",
+  "@yearPrice": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
   "monthPrice": "月/{price}",
+  "@monthPrice": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
   "save37": "37%節約",
   "popular": "人気",
   "maybeLater": "後で",

@@ -783,24 +783,7 @@ class _ScanPageState extends State<ScanPage> {
                             ],
                           ),
                         )
-                      : _isRetryingCamera
-                          ? Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                CircularProgressIndicator(
-                                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                                ),
-                                const SizedBox(height: 16),
-                                Text(
-                                  'Initializing camera...',
-                                  style: TextStyle(
-                                    color: Colors.white70,
-                                    fontSize: 16,
-                                  ),
-                                ),
-                              ],
-                            )
-                          : CircularProgressIndicator(
+                      : CircularProgressIndicator(
                               valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                             ),
                 ),

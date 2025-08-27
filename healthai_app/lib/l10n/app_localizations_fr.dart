@@ -1120,12 +1120,12 @@ class AppLocalizationsFr extends AppLocalizations {
   String get unlimitedFoodScanning => 'Scan d\'aliments illimité';
 
   @override
-  String yearPrice(Object price) {
+  String yearPrice(String price) {
     return 'an/$price';
   }
 
   @override
-  String monthPrice(Object price) {
+  String monthPrice(String price) {
     return 'mois/$price';
   }
 

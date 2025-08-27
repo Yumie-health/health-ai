@@ -377,7 +377,21 @@
   "yearlyPremium": "Jährliches Premium",
   "monthlyPremium": "Monatliches Premium",
   "yearPrice": "Jahr/{price}",
+  "@yearPrice": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
   "monthPrice": "Monat/{price}",
+  "@monthPrice": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
   "save37": "Sparen Sie 37%",
   "popular": "BELIEBT",
   "maybeLater": "Vielleicht später",

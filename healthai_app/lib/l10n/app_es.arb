@@ -375,7 +375,21 @@
   "yearlyPremium": "Premium Anual",
   "monthlyPremium": "Premium Mensual",
   "yearPrice": "año/{price}",
+  "@yearPrice": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
   "monthPrice": "mes/{price}",
+  "@monthPrice": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
   "save37": "Ahorra 37%",
   "popular": "POPULAR",
   "maybeLater": "Tal vez más tarde",

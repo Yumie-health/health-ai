@@ -370,7 +370,21 @@
   "yearlyPremium": "بريميوم سنوي",
   "monthlyPremium": "بريميوم شهري",
   "yearPrice": "سنة/{price}",
+  "@yearPrice": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
   "monthPrice": "شهر/{price}",
+  "@monthPrice": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
   "save37": "وفر 37%",
   "popular": "شائع",
   "maybeLater": "ربما لاحقاً",

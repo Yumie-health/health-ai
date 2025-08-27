@@ -400,7 +400,21 @@
   "yearlyPremium": "Yearly Premium",
   "monthlyPremium": "Monthly Premium",
   "yearPrice": "year/{price}",
+  "@yearPrice": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
   "monthPrice": "month/{price}",
+  "@monthPrice": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
   "save37": "Save 37%",
   "popular": "POPULAR",
   "maybeLater": "Maybe later",

@@ -370,7 +370,21 @@
   "yearlyPremium": "Yıllık Premium",
   "monthlyPremium": "Aylık Premium",
   "yearPrice": "yıl/{price}",
+  "@yearPrice": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
   "monthPrice": "ay/{price}",
+  "@monthPrice": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
   "save37": "%37 tasarruf et",
   "popular": "POPÜLER",
   "maybeLater": "Belki daha sonra",

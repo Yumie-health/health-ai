@@ -370,7 +370,21 @@
   "yearlyPremium": "연간 프리미엄",
   "monthlyPremium": "월간 프리미엄",
   "yearPrice": "년/{price}",
+  "@yearPrice": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
   "monthPrice": "월/{price}",
+  "@monthPrice": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
   "save37": "37% 절약",
   "popular": "인기",
   "maybeLater": "나중에",

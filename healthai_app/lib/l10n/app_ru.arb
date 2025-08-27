@@ -370,7 +370,21 @@
   "yearlyPremium": "Годовой Premium",
   "monthlyPremium": "Месячный Premium",
   "yearPrice": "год/{price}",
+  "@yearPrice": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
   "monthPrice": "месяц/{price}",
+  "@monthPrice": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
   "save37": "Сэкономить 37%",
   "popular": "ПОПУЛЯРНО",
   "maybeLater": "Может быть позже",

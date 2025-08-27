@@ -219,18 +219,13 @@ class _SubscriptionPopupPageState extends State<SubscriptionPopupPage>
 
   // Helper method to get product price
   String _getProductPrice(String productId) {
-    final product = _products.firstWhere(
-      (p) => p.id == productId,
-      orElse: () => ProductDetails(
-        id: productId,
-        title: '',
-        description: '',
-        price: productId == 'premium_monthly' ? '\$7.99' : '\$49.99', // Fallback price
-        rawPrice: productId == 'premium_monthly' ? 7.99 : 49.99, // Fallback raw price
-        currencyCode: 'USD', // Fallback currency
-      ),
-    );
-    return product.price;
+    try {
+      final product = _products.firstWhere((p) => p.id == productId);
+      return product.price;
+    } catch (e) {
+      // Fallback price if product not found
+      return productId == 'premium_monthly' ? '\$7.99' : '\$49.99';
+    }
   }
 
   // Helper method to get localized price string
@@ -239,9 +234,9 @@ class _SubscriptionPopupPageState extends State<SubscriptionPopupPage>
     final localizations = AppLocalizations.of(context)!;
     
     if (productId == 'premium_yearly') {
-      return localizations.yearPrice.replaceAll('{price}', price);
+      return localizations.yearPrice(price);
     } else {
-      return localizations.monthPrice.replaceAll('{price}', price);
+      return localizations.monthPrice(price);
     }
   }
 

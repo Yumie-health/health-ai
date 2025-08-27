@@ -341,7 +341,21 @@
   "yearlyPremium": "Jaarlijks Premium",
   "monthlyPremium": "Maandelijks Premium",
   "yearPrice": "jaar/{price}",
+  "@yearPrice": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
   "monthPrice": "maand/{price}",
+  "@monthPrice": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
   "save37": "Bespaar 37%",
   "popular": "POPULAIR",
   "maybeLater": "Misschien later",
