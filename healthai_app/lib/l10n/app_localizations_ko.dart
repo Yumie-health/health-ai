@@ -1120,10 +1120,14 @@ class AppLocalizationsKo extends AppLocalizations {
   String get unlimitedFoodScanning => '무제한 음식 스캔';
 
   @override
-  String get yearPrice => '년/\$49.99';
+  String yearPrice(Object price) {
+    return '년/$price';
+  }
 
   @override
-  String get monthPrice => '월/\$7.99';
+  String monthPrice(Object price) {
+    return '월/$price';
+  }
 
   @override
   String get save37 => '37% 절약';

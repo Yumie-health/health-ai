@@ -7,6 +7,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'services/subscription_service.dart';
 import 'l10n/app_localizations.dart';
 import 'services/dialog_coordinator.dart';
+import 'package:in_app_purchase/in_app_purchase.dart';
 
 class SubscriptionPopupPage extends StatefulWidget {
   final VoidCallback? onDismiss;
@@ -90,6 +91,10 @@ class _SubscriptionPopupPageState extends State<SubscriptionPopupPage>
   late Animation<Offset> _slideAnimation;
   late Animation<double> _scaleAnimation;
 
+  // Product details for pricing
+  List<ProductDetails> _products = [];
+  bool _isLoadingProducts = true;
+
   @override
   void initState() {
     super.initState();
@@ -142,6 +147,41 @@ class _SubscriptionPopupPageState extends State<SubscriptionPopupPage>
     Future.delayed(const Duration(milliseconds: 400), () {
       _scaleController.forward();
     });
+
+    // Load product details
+    _loadProducts();
+  }
+
+  Future<void> _loadProducts() async {
+    try {
+      final InAppPurchase iap = InAppPurchase.instance;
+      final bool available = await iap.isAvailable();
+      
+      if (available) {
+        final Set<String> productIds = {'premium_monthly', 'premium_yearly'};
+        final ProductDetailsResponse response = await iap.queryProductDetails(productIds);
+        
+        if (response.error == null && response.productDetails.isNotEmpty) {
+          setState(() {
+            _products = response.productDetails;
+            _isLoadingProducts = false;
+          });
+        } else {
+          setState(() {
+            _isLoadingProducts = false;
+          });
+        }
+      } else {
+        setState(() {
+          _isLoadingProducts = false;
+        });
+      }
+    } catch (e) {
+      print('Error loading products: $e');
+      setState(() {
+        _isLoadingProducts = false;
+      });
+    }
   }
 
   @override
@@ -175,6 +215,34 @@ class _SubscriptionPopupPageState extends State<SubscriptionPopupPage>
     Navigator.of(context).push(
       MaterialPageRoute(builder: (context) => const SubscriptionPage()),
     );
+  }
+
+  // Helper method to get product price
+  String _getProductPrice(String productId) {
+    final product = _products.firstWhere(
+      (p) => p.id == productId,
+      orElse: () => ProductDetails(
+        id: productId,
+        title: '',
+        description: '',
+        price: productId == 'premium_monthly' ? '\$7.99' : '\$49.99', // Fallback price
+        rawPrice: productId == 'premium_monthly' ? 7.99 : 49.99, // Fallback raw price
+        currencyCode: 'USD', // Fallback currency
+      ),
+    );
+    return product.price;
+  }
+
+  // Helper method to get localized price string
+  String _getLocalizedPriceString(String productId) {
+    final price = _getProductPrice(productId);
+    final localizations = AppLocalizations.of(context)!;
+    
+    if (productId == 'premium_yearly') {
+      return localizations.yearPrice.replaceAll('{price}', price);
+    } else {
+      return localizations.monthPrice.replaceAll('{price}', price);
+    }
   }
 
   @override
@@ -392,7 +460,7 @@ class _SubscriptionPopupPageState extends State<SubscriptionPopupPage>
         // Yearly plan (highlighted)
         _buildPlanButton(
           title: AppLocalizations.of(context)!.yearlyPremium,
-          price: AppLocalizations.of(context)!.yearPrice,
+          price: _getLocalizedPriceString('premium_yearly'),
           savings: AppLocalizations.of(context)!.save37,
           isPopular: true,
           onTap: _navigateToSubscription,
@@ -405,7 +473,7 @@ class _SubscriptionPopupPageState extends State<SubscriptionPopupPage>
         // Monthly plan
         _buildPlanButton(
           title: AppLocalizations.of(context)!.monthlyPremium,
-          price: AppLocalizations.of(context)!.monthPrice,
+          price: _getLocalizedPriceString('premium_monthly'),
           savings: null,
           isPopular: false,
           onTap: _navigateToSubscription,

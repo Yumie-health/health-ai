@@ -132,8 +132,8 @@ class ReceiptValidationService {
           parameters: {
             'product_id': purchase.productID,
             'transaction_id': purchase.purchaseID ?? '',
-            'value': purchase.productID.contains('yearly') ? 49.99 : 7.99,
-            'currency': 'USD',
+            'value': purchase.productID.contains('yearly') ? 49.99 : 7.99, // Fallback value for analytics
+            'currency': 'USD', // Fallback currency for analytics
             'platform': Platform.isAndroid ? 'android' : 'ios',
           },
         );
