@@ -19,12 +19,12 @@ export const checkAppUpdate = functions.https.onRequest(async (req, res) => {
     
     // Define update information
     const updateInfo = {
-      latestVersion: "1.0.7",
-      latestBuildNumber: 50,
+      latestVersion: "1.0.8",
+      latestBuildNumber: 51,
       title: "Update Available",
-      description: "A new version of Yumie is available with improvements and bug fixes.",
-      isForceUpdate: true,
-      releaseNotes: "• Fixed subscription pricing for international users\n• Improved loading states for in-app purchases\n• Enhanced app performance\n• Better error handling",
+      description: "A new version of Yumie is available with camera improvements and bug fixes.",
+      isForceUpdate: false, // Set to true if this is a critical update
+      releaseNotes: "• Fixed camera initialization issues\n• Improved error handling for camera permissions\n• Enhanced user feedback for camera problems\n• Added proper language support for App Store listing\n• Better app stability and performance",
       published: true // Set to false when update is not yet available in stores
     };
 
