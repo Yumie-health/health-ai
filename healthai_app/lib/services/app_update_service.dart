@@ -11,7 +11,8 @@ class AppUpdateService {
   AppUpdateService._internal();
 
   // Store URLs for both platforms
-  static const String _iosAppStoreUrl = 'https://apps.apple.com/app/yumie-calorie-tracker/id6748360245';
+  // Universal iOS App Store URL (no locale or slug to avoid storefront/name issues)
+  static const String _iosAppStoreUrl = 'https://apps.apple.com/app/id6748360245';
   static const String _androidPlayStoreUrl = 'https://play.google.com/store/apps/details?id=com.yumie.healthai';
 
   // API endpoint to check for updates
@@ -124,10 +125,25 @@ class AppUpdateService {
   /// Launch app store for update
   static Future<bool> launchAppStore() async {
     try {
-      final url = Platform.isIOS ? _iosAppStoreUrl : _androidPlayStoreUrl;
-      final uri = Uri.parse(url);
-      
-      return await launchUrl(uri, mode: LaunchMode.externalApplication);
+      if (Platform.isIOS) {
+        // Try robust sequence of iOS store URLs
+        final fallbacks = <String>[
+          // itms-apps schema is preferred for direct App Store opening
+          'itms-apps://apps.apple.com/app/id6748360245',
+          'itms-apps://itunes.apple.com/app/id6748360245',
+          _iosAppStoreUrl, // https universal
+          // Search fallback (last resort)
+          'itms-apps://apps.apple.com/search?term=Yumie%20Calorie%20Tracker'
+        ];
+        for (final u in fallbacks) {
+          final ok = await launchUrl(Uri.parse(u), mode: LaunchMode.externalApplication);
+          if (ok) return true;
+        }
+        return false;
+      } else {
+        final uri = Uri.parse(_androidPlayStoreUrl);
+        return await launchUrl(uri, mode: LaunchMode.externalApplication);
+      }
     } catch (e) {
       print('Error launching app store: $e');
       return false;

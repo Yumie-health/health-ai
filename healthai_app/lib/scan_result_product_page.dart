@@ -16,157 +16,429 @@ class ScanResultProductPage extends StatelessWidget {
 		final risk = _deriveRisk(product);
 		return Scaffold(
 			backgroundColor: const Color(0xFFF8F9FA),
-			appBar: AppBar(title: Text(product.name.isEmpty ? product.barcode : product.name)),
-			body: SingleChildScrollView(
-				padding: const EdgeInsets.all(16),
-				child: Column(
-					crossAxisAlignment: CrossAxisAlignment.start,
-					children: [
-						if (product.imageUrl.isNotEmpty)
-							Center(
-								child: Container(
-									padding: const EdgeInsets.all(6),
-									decoration: BoxDecoration(
-										borderRadius: BorderRadius.circular(22),
-										boxShadow: [
-											if (risk.isUnsafe)
-												BoxShadow(color: Colors.red.withOpacity(0.55), blurRadius: 28, spreadRadius: 1),
-											if (!risk.isUnsafe)
-												BoxShadow(color: Colors.green.withOpacity(0.45), blurRadius: 24, spreadRadius: 1),
-										],
-									),
-								child: ClipRRect(
-									borderRadius: BorderRadius.circular(16),
-									child: Image.network(product.imageUrl, height: 180, fit: BoxFit.cover),
-								),
-							),
-						),
-						if (risk.messages.isNotEmpty) ...[
-							const SizedBox(height: 10),
-							Row(
-								mainAxisAlignment: MainAxisAlignment.center,
+			appBar: AppBar(
+				title: Text(product.brand.isNotEmpty ? product.brand : 'Product'),
+				leading: IconButton(
+					icon: const Icon(Icons.arrow_back),
+					onPressed: () => Navigator.of(context).pop(),
+					tooltip: loc.cancel,
+				),
+			),
+			body: Column(
+				children: [
+					Expanded(
+						child: SingleChildScrollView(
+							padding: const EdgeInsets.all(20),
+							child: Column(
+								crossAxisAlignment: CrossAxisAlignment.start,
 								children: [
-									Icon(risk.isUnsafe ? Icons.close_rounded : Icons.check_circle_rounded,
-										color: risk.isUnsafe ? Colors.red : Colors.green,
-										size: 20),
-									const SizedBox(width: 6),
+									// Product Image with Risk Indicator
+									if (product.imageUrl.isNotEmpty)
+										Center(
+											child: Container(
+												padding: const EdgeInsets.all(8),
+												decoration: BoxDecoration(
+													borderRadius: BorderRadius.circular(24),
+													boxShadow: [
+														if (risk.isUnsafe)
+															BoxShadow(color: Colors.red.withValues(alpha: 0.15), blurRadius: 32, spreadRadius: 2),
+														if (!risk.isUnsafe)
+															BoxShadow(color: Colors.green.withValues(alpha: 0.12), blurRadius: 28, spreadRadius: 2),
+													],
+												),
+												child: ClipRRect(
+													borderRadius: BorderRadius.circular(20),
+													child: Image.network(product.imageUrl, height: 200, fit: BoxFit.cover),
+												),
+											),
+										),
+									
+									// Risk Status Banner
+									if (risk.messages.isNotEmpty) ...[
+										const SizedBox(height: 16),
+										Container(
+											padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+											decoration: BoxDecoration(
+												color: risk.isUnsafe ? Colors.red.withValues(alpha: 0.08) : Colors.green.withValues(alpha: 0.08),
+												borderRadius: BorderRadius.circular(16),
+												border: Border.all(
+													color: risk.isUnsafe ? Colors.red.withValues(alpha: 0.2) : Colors.green.withValues(alpha: 0.2),
+													width: 1,
+												),
+											),
+											child: Row(
+												mainAxisAlignment: MainAxisAlignment.center,
+												children: [
+													Icon(
+														risk.isUnsafe ? Icons.warning_rounded : Icons.check_circle_rounded,
+														color: risk.isUnsafe ? Colors.red : Colors.green,
+														size: 24,
+													),
+													const SizedBox(width: 12),
+													Expanded(
+														child: Text(
+															risk.isUnsafe
+																? _riskMessageLocalized(context, risk.messages.first)
+																: AppLocalizations.of(context)!.safetyGood,
+															style: TextStyle(
+																color: risk.isUnsafe ? Colors.red : Colors.green,
+																fontWeight: FontWeight.w600,
+																fontSize: 16,
+															),
+															textAlign: TextAlign.center,
+														),
+													),
+												],
+											),
+										),
+									],
+									
+									const SizedBox(height: 24),
+									
+									// Product Name
 									Text(
-										risk.isUnsafe
-											? _riskMessageLocalized(context, risk.messages.first)
-											: AppLocalizations.of(context)!.safetyGood,
-										style: TextStyle(
-											color: risk.isUnsafe ? Colors.red : Colors.green,
-											fontWeight: FontWeight.w700,
+										product.name.isEmpty ? product.barcode : product.name,
+										style: const TextStyle(
+											fontSize: 28,
+											fontWeight: FontWeight.w800,
+											letterSpacing: -0.5,
+											color: Color(0xFF1A1A1A),
 										),
 									),
-								],
-							),
-						],
-						const SizedBox(height: 16),
-						Text(product.name.isEmpty ? product.barcode : product.name, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800, letterSpacing: -0.2)),
-						if (product.brand.isNotEmpty) Padding(
-							padding: const EdgeInsets.only(top: 6),
-							child: Container(
-								padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-								decoration: BoxDecoration(
-									color: Colors.green.withOpacity(0.08),
-									borderRadius: BorderRadius.circular(20),
-									border: Border.all(color: Colors.green.withOpacity(0.25)),
-								),
-								child: Row(
-									mainAxisSize: MainAxisSize.min,
-									children: [
-										const Icon(Icons.local_mall, size: 14, color: Colors.green),
-										const SizedBox(width: 6),
-										Text(product.brand, style: const TextStyle(color: Colors.green, fontSize: 12, fontWeight: FontWeight.w600)),
+									
+									// Brand Tag
+									if (product.brand.isNotEmpty) ...[
+										const SizedBox(height: 12),
+										Container(
+											padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+											decoration: BoxDecoration(
+												color: Colors.green.withValues(alpha: 0.1),
+												borderRadius: BorderRadius.circular(20),
+												border: Border.all(color: Colors.green.withValues(alpha: 0.3)),
+											),
+											child: Row(
+												mainAxisSize: MainAxisSize.min,
+												children: [
+													const Icon(Icons.business, size: 16, color: Colors.green),
+													const SizedBox(width: 8),
+													Text(
+														product.brand,
+														style: const TextStyle(
+															color: Colors.green,
+															fontSize: 14,
+															fontWeight: FontWeight.w600,
+														),
+													),
+												],
+											),
+										),
 									],
-								),
-							),
-						),
-						const SizedBox(height: 16),
-						Wrap(
-							spacing: 10,
-							runSpacing: 10,
-							children: [
-								_InfoChip(label: AppLocalizations.of(context)!.serving, value: product.servingSize.isEmpty ? '—' : product.servingSize),
-								_InfoChip(label: AppLocalizations.of(context)!.kcalPer100g, value: _fmt(product.nutriments.energyKcal)),
-								_InfoChip(label: AppLocalizations.of(context)!.protein, value: _fmt(product.nutriments.proteinG, suffix: ' g')),
-								_InfoChip(label: AppLocalizations.of(context)!.carbs, value: _fmt(product.nutriments.carbsG, suffix: ' g')),
-								_InfoChip(label: AppLocalizations.of(context)!.sugar, value: _fmt(product.nutriments.sugarsG, suffix: ' g')),
-								_InfoChip(label: AppLocalizations.of(context)!.fat, value: _fmt(product.nutriments.fatG, suffix: ' g')),
-								_InfoChip(label: AppLocalizations.of(context)!.satFat, value: _fmt(product.nutriments.satFatG, suffix: ' g')),
-								_InfoChip(label: AppLocalizations.of(context)!.salt, value: _fmt(product.nutriments.saltG, suffix: ' g')),
-							],
-						),
-						const SizedBox(height: 12),
-						// Badges: Nutri-Score and NOVA
-						Row(
-							children: [
-								_GradeBadge(label: AppLocalizations.of(context)!.badgeNutriScore, grade: product.nutriScoreGrade),
-								const SizedBox(width: 10),
-								_NovaBadge(label: AppLocalizations.of(context)!.badgeNova, group: product.novaGroup),
-							],
-						),
-						const SizedBox(height: 20),
-						if (product.ingredients.isNotEmpty) ...[
-							Row(
-								children: [
-									const Icon(Icons.shopping_basket, color: Colors.green, size: 20),
-									const SizedBox(width: 6),
-									Text(AppLocalizations.of(context)!.ingredientsTitle, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: Colors.green)),
+									
+									const SizedBox(height: 24),
+									
+									// Nutrition Information Card
+									Container(
+										padding: const EdgeInsets.all(20),
+										decoration: BoxDecoration(
+											color: Colors.white,
+											borderRadius: BorderRadius.circular(20),
+											boxShadow: [
+												BoxShadow(
+													color: Colors.black.withValues(alpha: 0.05),
+													blurRadius: 20,
+													offset: const Offset(0, 8),
+												),
+											],
+										),
+										child: Column(
+											crossAxisAlignment: CrossAxisAlignment.start,
+											children: [
+												Row(
+													children: [
+														Icon(Icons.monitor_heart, color: Colors.green[600], size: 24),
+														const SizedBox(width: 12),
+														Text(
+															'Nutrition Information',
+															style: const TextStyle(
+																fontSize: 20,
+																fontWeight: FontWeight.w700,
+																color: Color(0xFF1A1A1A),
+															),
+														),
+													],
+												),
+												const SizedBox(height: 20),
+												Wrap(
+													spacing: 12,
+													runSpacing: 12,
+													children: [
+														_NutritionChip(
+															label: AppLocalizations.of(context)!.serving,
+															value: product.servingSize.isEmpty ? '—' : product.servingSize,
+															icon: Icons.restaurant,
+														),
+														_NutritionChip(
+															label: AppLocalizations.of(context)!.kcalPer100g,
+															value: _fmt(product.nutriments.energyKcal),
+															icon: Icons.local_fire_department,
+														),
+														_NutritionChip(
+															label: AppLocalizations.of(context)!.protein,
+															value: _fmt(product.nutriments.proteinG, suffix: ' g'),
+															icon: Icons.fitness_center,
+														),
+														_NutritionChip(
+															label: AppLocalizations.of(context)!.carbs,
+															value: _fmt(product.nutriments.carbsG, suffix: ' g'),
+															icon: Icons.grain,
+														),
+														_NutritionChip(
+															label: AppLocalizations.of(context)!.sugar,
+															value: _fmt(product.nutriments.sugarsG, suffix: ' g'),
+															icon: Icons.cake,
+														),
+														_NutritionChip(
+															label: AppLocalizations.of(context)!.fat,
+															value: _fmt(product.nutriments.fatG, suffix: ' g'),
+															icon: Icons.opacity,
+														),
+														_NutritionChip(
+															label: AppLocalizations.of(context)!.satFat,
+															value: _fmt(product.nutriments.satFatG, suffix: ' g'),
+															icon: Icons.water_drop,
+														),
+														_NutritionChip(
+															label: AppLocalizations.of(context)!.salt,
+															value: _fmt(product.nutriments.saltG, suffix: ' g'),
+															icon: Icons.water_drop,
+														),
+													],
+												),
+											],
+										),
+									),
+									
+									const SizedBox(height: 20),
+									
+									// Health Score Badges
+									Row(
+										children: [
+											Expanded(
+												child: _HealthScoreBadge(
+													label: AppLocalizations.of(context)!.badgeNutriScore,
+													grade: product.nutriScoreGrade,
+													icon: Icons.health_and_safety,
+												),
+											),
+											const SizedBox(width: 12),
+											Expanded(
+												child: _HealthScoreBadge(
+													label: AppLocalizations.of(context)!.badgeNova,
+													grade: 'NOVA ${product.novaGroup ?? 0}',
+													icon: Icons.science,
+													isNova: true,
+													novaGroup: product.novaGroup ?? 0,
+												),
+											),
+										],
+									),
+									
+									const SizedBox(height: 24),
+									
+									// Ingredients Section
+									if (product.ingredients.isNotEmpty) ...[
+										Container(
+											padding: const EdgeInsets.all(20),
+											decoration: BoxDecoration(
+												color: Colors.white,
+												borderRadius: BorderRadius.circular(20),
+												boxShadow: [
+													BoxShadow(
+														color: Colors.black.withValues(alpha: 0.05),
+														blurRadius: 20,
+														offset: const Offset(0, 8),
+													),
+												],
+											),
+											child: Column(
+												crossAxisAlignment: CrossAxisAlignment.start,
+												children: [
+													Row(
+														children: [
+															Icon(Icons.shopping_basket, color: Colors.green[600], size: 24),
+															const SizedBox(width: 12),
+															Text(
+																AppLocalizations.of(context)!.ingredientsTitle,
+																style: const TextStyle(
+																	fontSize: 20,
+																	fontWeight: FontWeight.w700,
+																	color: Color(0xFF1A1A1A),
+																),
+															),
+														],
+													),
+													const SizedBox(height: 16),
+													// Note: Ingredients come from product database and cannot be translated
+													// as they represent the actual ingredients listed on the product packaging
+													_ModernIngredientsList(ingredients: product.ingredients),
+												],
+											),
+										),
+										const SizedBox(height: 20),
+									],
+									
+									// Allergens Section
+									Container(
+										padding: const EdgeInsets.all(20),
+										decoration: BoxDecoration(
+											color: Colors.white,
+											borderRadius: BorderRadius.circular(20),
+											boxShadow: [
+												BoxShadow(
+													color: Colors.black.withValues(alpha: 0.05),
+													blurRadius: 20,
+													offset: const Offset(0, 8),
+												),
+											],
+										),
+										child: Column(
+											crossAxisAlignment: CrossAxisAlignment.start,
+											children: [
+												Row(
+													children: [
+														Icon(
+															Icons.warning_amber_rounded,
+															color: risk.isUnsafe ? Colors.red : Colors.orange[600],
+															size: 24,
+														),
+														const SizedBox(width: 12),
+														Text(
+															AppLocalizations.of(context)!.allergensTitle,
+															style: const TextStyle(
+																fontSize: 20,
+																fontWeight: FontWeight.w700,
+																color: Color(0xFF1A1A1A),
+															),
+														),
+													],
+												),
+												const SizedBox(height: 16),
+												Builder(
+													builder: (_) {
+														final allergens = _humanizeTags(product.allergensTags);
+														final traces = product.traces.trim();
+														final items = [
+															...allergens.map((a) => '${AppLocalizations.of(context)!.contains} $a'),
+															if (traces.isNotEmpty) '${AppLocalizations.of(context)!.contains} $traces'
+														];
+														if (items.isEmpty) {
+															return Container(
+																padding: const EdgeInsets.all(16),
+																decoration: BoxDecoration(
+																	color: Colors.green.withValues(alpha: 0.08),
+																	borderRadius: BorderRadius.circular(12),
+																	border: Border.all(color: Colors.green.withValues(alpha: 0.2)),
+																),
+																child: Row(
+																	children: [
+																		Icon(Icons.check_circle, color: Colors.green, size: 20),
+																		const SizedBox(width: 12),
+																		Text(
+																			AppLocalizations.of(context)!.allergensNone,
+																			style: TextStyle(
+																				color: Colors.green[700],
+																				fontWeight: FontWeight.w600,
+																			),
+																		),
+																	],
+																),
+															);
+														}
+														return Column(
+															crossAxisAlignment: CrossAxisAlignment.start,
+															children: items.map((t) => Padding(
+																padding: const EdgeInsets.symmetric(vertical: 6),
+																child: Row(
+																	crossAxisAlignment: CrossAxisAlignment.start,
+																	children: [
+																		Icon(Icons.fiber_manual_record, color: Colors.red, size: 8),
+																		const SizedBox(width: 12),
+																		Expanded(child: Text(t, style: const TextStyle(fontSize: 15))),
+																	],
+																),
+															)).toList(),
+														);
+													},
+												),
+											],
+										),
+									),
+									
+									const SizedBox(height: 20),
 								],
 							),
-							const SizedBox(height: 8),
-							_ExpandableIngredients(ingredients: product.ingredients),
-						],
-						const SizedBox(height: 16),
-						// Allergens section
-						Row(
-							children: [
-								Icon(Icons.warning_amber_rounded, color: risk.isUnsafe ? Colors.red : Colors.orange[700], size: 20),
-								const SizedBox(width: 6),
-								Text(AppLocalizations.of(context)!.allergensTitle, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
+						),
+					),
+					// Fixed bottom buttons with safe area
+					Container(
+						padding: EdgeInsets.only(
+							left: 20,
+							right: 20,
+							top: 20,
+							bottom: MediaQuery.of(context).padding.bottom + 20,
+						),
+						decoration: BoxDecoration(
+							color: const Color(0xFFF8F9FA),
+							boxShadow: [
+								BoxShadow(
+									color: Colors.black.withValues(alpha: 0.1),
+									blurRadius: 20,
+									offset: const Offset(0, -4),
+								),
 							],
 						),
-						const SizedBox(height: 8),
-						Container(
-							padding: const EdgeInsets.all(12),
-							decoration: BoxDecoration(
-								color: Colors.white,
-								borderRadius: BorderRadius.circular(12),
-								boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4))],
-							),
-							child: Builder(
-								builder: (_) {
-									final allergens = _humanizeTags(product.allergensTags);
-									final traces = product.traces.trim();
-									final items = [
-										...allergens.map((a) => '${AppLocalizations.of(context)!.contains} $a'),
-										if (traces.isNotEmpty) '${AppLocalizations.of(context)!.contains} $traces'
-									];
-									if (items.isEmpty) {
-										return Text(AppLocalizations.of(context)!.allergensNone, style: const TextStyle(color: Colors.black54));
-									}
-									return Column(
-										crossAxisAlignment: CrossAxisAlignment.start,
-										children: items.map((t) => Padding(padding: const EdgeInsets.symmetric(vertical: 4), child: Text(t))).toList(),
-									);
-								},
-							),
+						child: Row(
+							children: [
+								Expanded(
+									child: ElevatedButton(
+										onPressed: () => Navigator.of(context).pop(),
+										style: ElevatedButton.styleFrom(
+											backgroundColor: Colors.red,
+											foregroundColor: Colors.white,
+											padding: const EdgeInsets.symmetric(vertical: 16),
+											shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+											elevation: 0,
+										),
+										child: Text(
+											loc.cancel,
+											style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+										),
+									),
+								),
+								const SizedBox(width: 16),
+								Expanded(
+									child: ElevatedButton.icon(
+										icon: const Icon(Icons.check, size: 20),
+										label: Text(
+											loc.log,
+											style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+										),
+										onPressed: () async {
+											await _handleLog(context);
+										},
+										style: ElevatedButton.styleFrom(
+											backgroundColor: Colors.green,
+											foregroundColor: Colors.white,
+											padding: const EdgeInsets.symmetric(vertical: 16),
+											shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+											elevation: 0,
+										),
+									),
+								),
+							],
 						),
-						const SizedBox(height: 20),
-						SizedBox(
-							width: double.infinity,
-							child: ElevatedButton.icon(
-								icon: const Icon(Icons.check),
-								label: Text(loc.logMeal),
-								onPressed: () async {
-									await _handleLog(context);
-								},
-							),
-						),
-					],
-				),
+					),
+				],
 			),
 		);
 	}
@@ -176,7 +448,6 @@ class ScanResultProductPage extends StatelessWidget {
 		final inferred = _inferFoodTypeAndQuantity(product);
 		final foodType = inferred['foodType'] as String?;
 		if (foodType == 'meal' || foodType == 'ingredient') {
-			final loc = AppLocalizations.of(context)!;
 			final nutr = product.nutriments;
 			final result = await showDialog<Map<String, dynamic>>(
 				context: context,
@@ -252,141 +523,264 @@ class ScanResultProductPage extends StatelessWidget {
 	}
 }
 
-class _InfoChip extends StatelessWidget {
+class _NutritionChip extends StatelessWidget {
   final String label;
   final String value;
-  const _InfoChip({required this.label, required this.value});
+  final IconData icon;
+  
+  const _NutritionChip({
+    required this.label,
+    required this.value,
+    required this.icon,
+  });
+  
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        color: Colors.green.withOpacity(0.06),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.green.withOpacity(0.2)),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 6, offset: const Offset(0, 2))],
+        color: Colors.green.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.green.withValues(alpha: 0.2)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(label, style: const TextStyle(color: Colors.black54, fontSize: 12)),
-          const SizedBox(width: 6),
-          Text(value, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13, color: Colors.green)),
+          Icon(icon, color: Colors.green[600], size: 18),
+          const SizedBox(width: 8),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                label,
+                style: TextStyle(
+                  color: Colors.grey[600],
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              Text(
+                value,
+                style: TextStyle(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 14,
+                  color: Colors.green[700],
+                ),
+              ),
+            ],
+          ),
         ],
       ),
     );
   }
 }
 
-String _fmt(double? v, {String suffix = ''}) {
-  if (v == null) return '—';
-  return v.toStringAsFixed(1) + suffix;
+class _HealthScoreBadge extends StatelessWidget {
+  final String label;
+  final String grade;
+  final IconData icon;
+  final bool isNova;
+  final int novaGroup;
+  
+  const _HealthScoreBadge({
+    required this.label,
+    required this.grade,
+    required this.icon,
+    this.isNova = false,
+    this.novaGroup = 0,
+  });
+  
+  @override
+  Widget build(BuildContext context) {
+    final isUnknown = grade.isEmpty || grade == 'unknown' || grade.contains('UNKNOWN');
+    Color badgeColor;
+    
+    if (isNova) {
+      badgeColor = novaGroup == 4 ? Colors.red : 
+                   novaGroup == 3 ? Colors.orange : 
+                   novaGroup == 2 ? Colors.yellow[700]! : Colors.green;
+    } else {
+      badgeColor = isUnknown ? Colors.grey : Colors.green;
+    }
+    
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: badgeColor.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: badgeColor.withValues(alpha: 0.3)),
+      ),
+      child: Column(
+        children: [
+          Icon(icon, color: badgeColor, size: 24),
+          const SizedBox(height: 8),
+          Text(
+            label,
+            style: TextStyle(
+              color: badgeColor,
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 4),
+          Text(
+            isUnknown ? 'UNKNOWN' : grade.toUpperCase(),
+            style: TextStyle(
+              fontWeight: FontWeight.w800,
+              fontSize: 16,
+              color: badgeColor,
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
+    );
+  }
 }
 
-class _RiskSummary {
-  final bool isUnsafe;
-  final List<String> messages;
-  const _RiskSummary(this.isUnsafe, this.messages);
+class _ModernIngredientsList extends StatefulWidget {
+  final List<String> ingredients;
+  const _ModernIngredientsList({required this.ingredients});
+  
+  @override
+  State<_ModernIngredientsList> createState() => _ModernIngredientsListState();
 }
 
-_RiskSummary _deriveRisk(Product p) {
-  // Heuristic: unsafe if allergens present or NOVA=4 or additives high
-  final hasAllergens = p.allergensTags.isNotEmpty || (p.traces.trim().isNotEmpty);
-  final ultraProcessed = (p.novaGroup ?? 0) >= 4;
-  final manyAdditives = (p.additivesN ?? 0) >= 5;
-  final poorNutri = ['d', 'e'].contains(p.nutriScoreGrade.toLowerCase());
+class _ModernIngredientsListState extends State<_ModernIngredientsList> {
+  bool _expanded = false;
+  static const int _previewCount = 6;
+  
+  @override
+  Widget build(BuildContext context) {
+    final total = widget.ingredients.length;
+    final preview = widget.ingredients.take(_previewCount).toList();
+    final displayIngredients = _expanded ? widget.ingredients : preview;
+    
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: displayIngredients.map((ingredient) => Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            decoration: BoxDecoration(
+              color: Colors.grey[50],
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.grey[200]!),
+            ),
+            child: Text(
+              ingredient,
+              style: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+                color: Color(0xFF2D3748),
+              ),
+            ),
+          )).toList(),
+        ),
+        if (total > _previewCount) ...[
+          const SizedBox(height: 16),
+          Center(
+            child: TextButton.icon(
+              onPressed: () => setState(() => _expanded = !_expanded),
+              icon: Icon(_expanded ? Icons.expand_less : Icons.expand_more),
+              label: Text(
+                _expanded 
+                  ? AppLocalizations.of(context)!.hideIngredients 
+                  : AppLocalizations.of(context)!.showIngredients,
+                style: const TextStyle(fontWeight: FontWeight.w600),
+              ),
+              style: TextButton.styleFrom(
+                foregroundColor: Colors.green[600],
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              ),
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+}
 
-  final warnings = <String>[];
-  if (hasAllergens) warnings.add('allergenRisk');
-  if (ultraProcessed) warnings.add('ultraProcessed');
-  if (manyAdditives) warnings.add('highAdditives');
-  if (poorNutri) warnings.add('lowNutriScore');
-
-  if (warnings.isNotEmpty) return _RiskSummary(true, warnings);
-
-  final positives = <String>[];
-  if (p.ingredientsAnalysisTags.any((t) => t.contains('vegan'))) positives.add('veganFriendly');
-  if (p.ingredientsAnalysisTags.any((t) => t.contains('vegetarian'))) positives.add('vegetarian');
-  if (positives.isNotEmpty) return _RiskSummary(false, positives);
-  return const _RiskSummary(false, ['looksGood']);
+// Helper functions
+String _fmt(dynamic value, {String? suffix}) {
+  if (value == null || value == 0) return '—';
+  final str = value.toString();
+  if (str.contains('.')) {
+    final parts = str.split('.');
+    if (parts[1].length > 1) {
+      return '${parts[0]}.${parts[1].substring(0, 1)}${suffix ?? ''}';
+    }
+  }
+  return '$str${suffix ?? ''}';
 }
 
 List<String> _humanizeTags(List<String> tags) {
-  return tags
-      .map((t) => t.split(':').last.replaceAll('-', ' '))
-      .map((s) => s.isEmpty ? s : s[0].toUpperCase() + s.substring(1))
-      .toList();
+  return tags.map((tag) {
+    final parts = tag.split(':');
+    if (parts.length > 1) {
+      return parts[1].replaceAll('-', ' ').split(' ').map((word) => word.isNotEmpty ? '${word[0].toUpperCase()}${word.substring(1)}' : '').join(' ');
+    }
+    return tag.replaceAll('-', ' ').split(' ').map((word) => word.isNotEmpty ? '${word[0].toUpperCase()}${word.substring(1)}' : '').join(' ');
+  }).toList();
 }
 
-class _GradeBadge extends StatelessWidget {
-  final String label;
-  final String grade; // a-e
-  const _GradeBadge({required this.label, required this.grade});
-  @override
-  Widget build(BuildContext context) {
-    final g = grade.isEmpty ? '?' : grade.toUpperCase();
-    final color = {
-      'A': Colors.green,
-      'B': Colors.lightGreen,
-      'C': Colors.orange,
-      'D': Colors.deepOrange,
-      'E': Colors.red,
-    }[g] ?? Colors.grey;
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.12),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withOpacity(0.5)),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(label, style: TextStyle(fontSize: 12, color: color)),
-          const SizedBox(width: 6),
-          Text(g, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: color)),
-        ],
-      ),
-    );
+class _RiskAssessment {
+  final bool isUnsafe;
+  final List<String> messages;
+  const _RiskAssessment({required this.isUnsafe, required this.messages});
+}
+
+_RiskAssessment _deriveRisk(Product product) {
+  final messages = <String>[];
+  bool isUnsafe = false;
+  
+  // Check for allergens
+  if (product.allergensTags.isNotEmpty) {
+    messages.add('allergen');
+    isUnsafe = true;
   }
-}
-
-class _NovaBadge extends StatelessWidget {
-  final String label;
-  final int? group; // 1-4
-  const _NovaBadge({required this.label, required this.group});
-  @override
-  Widget build(BuildContext context) {
-    final g = group ?? 0;
-    final color = {
-      1: Colors.green,
-      2: Colors.lightGreen,
-      3: Colors.orange,
-      4: Colors.red,
-    }[g] ?? Colors.grey;
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.12),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withOpacity(0.5)),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(label, style: TextStyle(fontSize: 12, color: color)),
-          const SizedBox(width: 6),
-          Text(g == 0 ? '?' : g.toString(), style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: color)),
-        ],
-      ),
-    );
+  
+  // Check for ultra-processed (NOVA 4)
+  if (product.novaGroup == 4) {
+    messages.add('ultraProcessed');
+    isUnsafe = true;
   }
+  
+  // Check for high additives
+  if ((product.additivesN ?? 0) > 5) {
+    messages.add('highAdditives');
+    isUnsafe = true;
+  }
+  
+  // Check for low Nutri-Score
+  if (product.nutriScoreGrade.isNotEmpty && ['d', 'e'].contains(product.nutriScoreGrade.toLowerCase())) {
+    messages.add('lowNutriScore');
+    isUnsafe = true;
+  }
+  
+  // Check for vegan/vegetarian preferences
+  if (product.ingredients.any((i) => i.toLowerCase().contains('milk') || i.toLowerCase().contains('egg') || i.toLowerCase().contains('meat'))) {
+    messages.add('veganFriendly');
+  }
+  
+  if (product.ingredients.any((i) => i.toLowerCase().contains('meat'))) {
+    messages.add('vegetarian');
+  }
+  
+  if (messages.isEmpty) {
+    messages.add('looksGood');
+  }
+  
+  return _RiskAssessment(isUnsafe: isUnsafe, messages: messages);
 }
 
-String _riskMessageLocalized(BuildContext context, String code) {
+String _riskMessageLocalized(BuildContext context, String risk) {
   final loc = AppLocalizations.of(context)!;
-  switch (code) {
-    case 'allergenRisk':
+  switch (risk) {
+    case 'allergen':
       return loc.riskAllergen;
     case 'ultraProcessed':
       return loc.riskUltraProcessed;
@@ -430,59 +824,4 @@ Map<String, Object?> _inferFoodTypeAndQuantity(Product p) {
     return {'foodType': 'meal', 'quantity': 1, 'unit': 'servings'};
   }
   return {'foodType': 'ingredient', 'quantity': 1, 'unit': 'count'};
-}
-
-class _ExpandableIngredients extends StatefulWidget {
-  final List<String> ingredients;
-  const _ExpandableIngredients({required this.ingredients});
-  @override
-  State<_ExpandableIngredients> createState() => _ExpandableIngredientsState();
-}
-
-class _ExpandableIngredientsState extends State<_ExpandableIngredients> {
-  bool _expanded = false;
-  static const int _previewCount = 8;
-  @override
-  Widget build(BuildContext context) {
-    final total = widget.ingredients.length;
-    final preview = widget.ingredients.take(_previewCount).toList();
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4))],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: (_expanded ? widget.ingredients : preview)
-                .map((i) => Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                      decoration: BoxDecoration(
-                        border: Border.all(color: Colors.black12),
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Text(i, style: const TextStyle(fontSize: 13)),
-                    ))
-                .toList(),
-          ),
-          if (total > _previewCount) ...[
-            const SizedBox(height: 12),
-            Align(
-              alignment: Alignment.centerLeft,
-              child: TextButton.icon(
-                onPressed: () => setState(() => _expanded = !_expanded),
-                icon: Icon(_expanded ? Icons.expand_less : Icons.expand_more),
-                label: Text(_expanded ? AppLocalizations.of(context)!.hideIngredients : AppLocalizations.of(context)!.showIngredients),
-              ),
-            ),
-          ],
-        ],
-      ),
-    );
-  }
 }

@@ -342,8 +342,8 @@ class _ScanResultFridgePageState extends State<ScanResultFridgePage> {
   Future<void> _runAIFridgeScan() async {
     setState(() { _isLoadingAI = true; });
     final aiService = AIService();
-    final prefs = Provider.of<PreferencesProvider>(context, listen: false);
-    final language = prefs.language;
+    // Use UI locale to avoid stale stored language
+    final language = Localizations.localeOf(context).languageCode;
     final result = await aiService.analyzeFridgeImage(File(widget.imagePath), language: language);
     if (result != null && result.isNotEmpty) {
       setState(() {
@@ -381,8 +381,8 @@ class _ScanResultFridgePageState extends State<ScanResultFridgePage> {
       'goal': 'maintenance',
       // Add more fields as needed
     };
-    final prefs = Provider.of<PreferencesProvider>(context, listen: false);
-    final language = prefs.language;
+    // Use UI locale to avoid stale stored language
+    final language = Localizations.localeOf(context).languageCode;
     final result = await aiService.generateMealFromFridge(fridgeItems: _ingredients, userProfile: userProfile, language: language);
     setState(() {
       _generatedMeal = result;

@@ -25,7 +25,7 @@ import 'services/connectivity_service.dart';
 // Searchable meal input with dropdown suggestions
 class SearchableMealInput extends StatefulWidget {
   final TextEditingController controller;
-  final Function(String name, int calories, int protein, int carbs, int fat, String? foodType, int? quantity, String? quantityUnit)? onMealSelected;
+  final Function(String name, int calories, int protein, int carbs, int fat, String? foodType, int? quantity, String? quantityUnit, List<String> ingredients)? onMealSelected;
   final String hintText;
   final String selectedFoodType; // ingredient, meal, drink
 
@@ -313,8 +313,9 @@ class _SearchableMealInputState extends State<SearchableMealInput> {
     });
 
     try {
-      final prefs = Provider.of<PreferencesProvider>(context, listen: false);
-      final results = await _aiService.searchFoodItemsFast(query, foodType: widget.selectedFoodType, language: prefs.language);
+      // Use UI locale to avoid stale stored language
+      final uiLang = Localizations.localeOf(context).languageCode;
+      final results = await _aiService.searchFoodItemsFast(query, foodType: null, language: uiLang);
       
       if (mounted) {
         setState(() {
@@ -350,8 +351,8 @@ class _SearchableMealInputState extends State<SearchableMealInput> {
   }
 
   void _showQuantityDialog(Map<String, dynamic> meal) {
-    // Use the selected food type from the widget instead of determining from name
-    String foodType = widget.selectedFoodType;
+    // Prefer AI-provided food_type; fall back to local heuristic
+    String foodType = (meal['food_type'] as String?) ?? _determineFoodType(meal['name'] ?? '');
     
     showDialog(
       context: context,
@@ -366,6 +367,12 @@ class _SearchableMealInputState extends State<SearchableMealInput> {
       ),
     ).then((result) {
       if (result != null) {
+        // Get ingredients from the meal data
+        List<String> ingredients = [];
+        if (meal['ingredients'] != null && meal['ingredients'] is List) {
+          ingredients = (meal['ingredients'] as List).cast<String>();
+        }
+        
         // Update the meal with calculated values
         widget.onMealSelected?.call(
           meal['name'],
@@ -376,6 +383,7 @@ class _SearchableMealInputState extends State<SearchableMealInput> {
           foodType,
           result['quantity'],
           result['unit'],
+          ingredients,
         );
       }
     });
@@ -613,9 +621,24 @@ class _SearchableMealInputState extends State<SearchableMealInput> {
                                     meal['name'],
                                     style: TextStyle(fontWeight: FontWeight.w600),
                                   ),
-                                  subtitle: Text(
-                                    '${meal['calories']} cal • ${meal['protein']}g protein • ${meal['carbs']}g carbs • ${meal['fat']}g fat',
-                                    style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                                  subtitle: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        '${meal['calories']} cal • ${meal['protein']}g protein • ${meal['carbs']}g carbs • ${meal['fat']}g fat',
+                                        style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                                      ),
+                                      if (meal['ingredients'] != null && (meal['ingredients'] as List).isNotEmpty)
+                                        Padding(
+                                          padding: EdgeInsets.only(top: 4),
+                                          child: Text(
+                                            'Ingredients: ${(meal['ingredients'] as List).join(', ')}',
+                                            style: TextStyle(fontSize: 11, color: Colors.grey[500], fontStyle: FontStyle.italic),
+                                            maxLines: 2,
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                        ),
+                                    ],
                                   ),
                                   leading: CircleAvatar(
                                     backgroundColor: kPrimaryGreen.withOpacity(0.1),
@@ -1912,7 +1935,7 @@ class _LogMealPageState extends State<LogMealPage> with TickerProviderStateMixin
                       controller: _foodNameController,
                       hintText: AppLocalizations.of(context)!.searchOrEnterFoodName,
                       selectedFoodType: _selectedFoodType,
-                      onMealSelected: (name, calories, protein, carbs, fat, foodType, quantity, quantityUnit) {
+                      onMealSelected: (name, calories, protein, carbs, fat, foodType, quantity, quantityUnit, ingredients) {
                         setState(() {
                           _foodNameController.text = name;
                           _caloriesController.text = calories.toString();
@@ -1920,8 +1943,14 @@ class _LogMealPageState extends State<LogMealPage> with TickerProviderStateMixin
                           _carbsController.text = carbs.toString();
                           _fatController.text = fat.toString();
                           _foodType = foodType;
+                          _selectedFoodType = foodType ?? 'meal'; // Auto-select the food type
                           _quantity = quantity;
                           _quantityUnit = quantityUnit;
+                          // Add ingredients from AI search results to the ingredients list
+                          if (ingredients != null && ingredients.isNotEmpty) {
+                            _ingredients.clear(); // Clear existing ingredients
+                            _ingredients.addAll(ingredients); // Add new ingredients from AI
+                          }
                         });
                       },
                     ),

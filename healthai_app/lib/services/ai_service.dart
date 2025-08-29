@@ -21,12 +21,7 @@ class AIService {
     try {
       log.info('Sending AI message', {'model': model, 'message_length': message.length, 'language': language});
       
-      String languageInstruction = '';
-      if (language == 'ar') {
-        languageInstruction = ' Respond in Modern Standard Arabic.';
-      } else if (language == 'es') {
-        languageInstruction = ' Respond in Spanish.';
-      }
+      String languageInstruction = _getLanguageInstruction(language);
       
       final url = 'https://openaiproxycallable-jlkcfxcyrq-uc.a.run.app';
       final response = await http.post(
@@ -59,6 +54,38 @@ class AIService {
       stopwatch.stop();
       log.error('AI message request error', e);
       return null;
+    }
+  }
+
+  // Helper method to get language instruction for all supported languages
+  String _getLanguageInstruction(String language) {
+    switch (language) {
+      case 'ar':
+        return ' Respond in Modern Standard Arabic.';
+      case 'es':
+        return ' Respond in Spanish.';
+      case 'hi':
+        return ' Respond in Hindi.';
+      case 'de':
+        return ' Respond in German.';
+      case 'fr':
+        return ' Respond in French.';
+      case 'it':
+        return ' Respond in Italian.';
+      case 'ja':
+        return ' Respond in Japanese.';
+      case 'ko':
+        return ' Respond in Korean.';
+      case 'nl':
+        return ' Respond in Dutch.';
+      case 'pt':
+        return ' Respond in Portuguese.';
+      case 'ru':
+        return ' Respond in Russian.';
+      case 'tr':
+        return ' Respond in Turkish.';
+      default:
+        return ''; // English is default
     }
   }
 
@@ -187,12 +214,7 @@ class AIService {
     final startingWeightLb = (startingWeight * 2.20462).round();
     final targetWeightLb = (targetWeight * 2.20462).round();
     
-    String languageInstruction = '';
-    if (language == 'ar') {
-      languageInstruction = '\nRespond in Modern Standard Arabic.';
-    } else if (language == 'es') {
-      languageInstruction = '\nRespond in Spanish.';
-    }
+    String languageInstruction = _getLanguageInstruction(language);
     
     // Calculate weight progress
     final weightLost = startingWeight - weightKg;
@@ -444,26 +466,39 @@ Personalized Nutrition Plan:
     try {
       log.info('Getting nutrition for food', {'food_name': foodName, 'language': language});
 
-      String languageInstruction = '';
-      if (language == 'ar') {
-        languageInstruction = '\nRespond in Modern Standard Arabic.';
-      } else if (language == 'es') {
-        languageInstruction = '\nRespond in Spanish.';
-      }
+      String languageInstruction = _getLanguageInstruction(language);
 
       final prompt = '''
-Provide nutritional information for "$foodName" per 100g serving.
+Provide nutritional information for "$foodName" for ONE typical serving. Choose a realistic serving size automatically (do not assume 100g unless that is the standard). If the query includes a count (e.g., "7 blueberries"), IGNORE the count and normalize to one typical serving.
 
-Return ONLY a JSON object with this exact structure:
+Language rule: The value of "name" MUST be in the SAME language as the query string "$foodName" (do not translate). This rule overrides any other localization instruction.
+
+Include a serving descriptor in parentheses after the food name, for example: "Apple (1 whole)", "Watermelon (1 slice)", "Bread (1 slice)", "Rice (1 cup cooked)", "Almonds (1 oz)".
+
+Spelling and casing rules:
+- If the query contains obvious typos or misspellings (e.g., "appl"), correct them to the canonical food name while keeping the same language.
+- Never return abbreviated or truncated names.
+- For English names, use Title Case for the food name portion (e.g., "Apple", "Apple Pie").
+
+Return ONLY a JSON object with this exact structure (values are per one serving):
 {
-  "name": "$foodName",
+  "name": "<food name in query language> (<serving descriptor>)",
   "calories": <number>,
   "protein": <number>,
   "carbs": <number>,
-  "fat": <number>
+  "fat": <number>,
+  "ingredients": ["<ingredient1>", "<ingredient2>", ...]
 }
 
-Use standard nutritional databases. Only return the JSON, no additional text or explanations.$languageInstruction
+For ingredients field:
+- For single ingredients: List the main ingredient itself and any common additives/preservatives if applicable
+- For prepared foods: List the main ingredients that make up the dish
+- For drinks: List the main ingredients
+- Keep ingredients simple and in the same language as the query
+- Limit to 3-8 most important ingredients
+
+Use credible nutrition databases and realistic portions.
+STRICT NUTRITION RULES: Ensure CALORIES ≈ 4*protein + 4*carbs + 9*fat (within ±10%). If inconsistent, adjust calories to match macros. Use realistic ranges (fresh fruits/vegetables per serving typically 20–150 kcal; nuts/seeds 150–220 kcal per 1 oz; plain cooked meats 100–300 kcal). Only return the JSON, no additional text or explanations.$languageInstruction
 ''';
 
       final response = await sendMessage(prompt, model: 'gpt-4o-mini', language: language);
@@ -475,7 +510,7 @@ Use standard nutritional databases. Only return the JSON, no additional text or 
         try {
           final data = jsonDecode(response);
           log.info('Food nutrition lookup successful', {'food_name': foodName});
-          return Map<String, dynamic>.from(data);
+          return _fixNutritionEntry(Map<String, dynamic>.from(data));
         } catch (e) {
           log.error('Failed to parse food nutrition JSON', e);
           return null;
@@ -498,28 +533,61 @@ Use standard nutritional databases. Only return the JSON, no additional text or 
     try {
       log.info('Searching for food items', {'query': query, 'language': language});
 
-      String languageInstruction = '';
-      if (language == 'ar') {
-        languageInstruction = '\nRespond in Modern Standard Arabic.';
-      } else if (language == 'es') {
-        languageInstruction = '\nRespond in Spanish.';
-      }
+      String languageInstruction = _getLanguageInstruction(language);
 
       final prompt = '''
 Search for food items that match "$query". Return a list of 5-10 relevant food items.
 
-Return ONLY a JSON array with this exact structure:
+Rules:
+- Language rule: Names MUST be in the SAME language as "$query" (do not translate). This overrides any localization instruction.
+- Normalize queries that contain counts (e.g., "7 blueberries") to one typical serving; nutrition values must be per one serving.
+- Auto-correct obvious typos/misspellings in "$query" and use the corrected canonical food name.
+- The FIRST item must be the exact intended match for "$query" after correction (in the same language as the query).
+- Remaining items must be CLOSELY RELATED to "$query":
+  • If "$query" is an INGREDIENT, list the same item and very close variants (synonyms, forms, species, raw/cooked notes). Avoid unrelated dishes like pizza.
+  • If "$query" implies a MEAL, list meals that include "$query" as the main ingredient or in the meal name (e.g., "Blueberry Pancakes", "Blueberry Oatmeal").
+  • If "$query" implies a DRINK, list drink variants featuring "$query" (e.g., juices/smoothies with the ingredient in the name).
+  • Prefer results whose names contain "$query" (after correction) or a direct synonym in the same language.
+- Append a serving descriptor in parentheses to every name. Choose a realistic default:
+  • fruits/vegetables: "1 whole" or "1 cup" as appropriate
+  • bread/cake/pizza: "1 slice"
+  • nuts/seeds: "1 oz"
+  • cooked grains/pasta: "1 cup cooked"
+  • drinks: "8 fl oz" or "250 ml" (pick one consistently per item)
+
+Name formatting:
+- Never return abbreviated or truncated names.
+- For English, use Title Case for the name portion before the parentheses (e.g., "Apple", "Apple Pie").
+
+Food type classification:
+- For EACH item, infer and include a field "food_type" with one of: "ingredient" (single raw item like apple, egg, rice), "meal" (prepared dishes or multi-ingredient foods like pizza, salad, sandwich), or "drink" (beverages like juice, coffee, milk, smoothies).
+
+STRICT NUTRITION RULES:
+- Provide values PER ONE TYPICAL SERVING only
+- Ensure CALORIES ≈ 4*protein + 4*carbs + 9*fat (within ±10%). If inconsistent, adjust calories to match macros.
+- Use realistic ranges. For fresh fruits/vegetables per serving typically 20–150 kcal; for nuts/seeds 150–220 kcal per 1 oz; for plain cooked meats 100–300 kcal per serving; for desserts can be higher.
+
+Return ONLY a JSON array with this exact structure (values per one serving):
 [
   {
-    "name": "<food name>",
-    "calories": <number per 100g>,
-    "protein": <number per 100g>,
-    "carbs": <number per 100g>,
-    "fat": <number per 100g>
+    "name": "<food name in query language> (<serving descriptor>)",
+    "calories": <number>,
+    "protein": <number>,
+    "carbs": <number>,
+    "fat": <number>,
+    "food_type": "ingredient" | "meal" | "drink",
+    "ingredients": ["<ingredient1>", "<ingredient2>", ...]
   }
 ]
 
-Include common variations and similar foods. Only return the JSON array, no additional text.$languageInstruction
+For ingredients field:
+- For "ingredient" food_type: List the main ingredient itself and any common additives/preservatives if applicable
+- For "meal" food_type: List the main ingredients that make up the dish (e.g., ["chicken", "rice", "vegetables", "soy sauce"])
+- For "drink" food_type: List the main ingredients (e.g., ["coffee", "milk", "sugar"] or ["orange juice"])
+- Keep ingredients simple and in the same language as the query
+- Limit to 3-8 most important ingredients per item
+
+Do not add explanations or markdown. Only return the JSON array.$languageInstruction
 ''';
 
       final response = await sendMessage(prompt, model: 'gpt-4o-mini', language: language);
@@ -532,7 +600,8 @@ Include common variations and similar foods. Only return the JSON array, no addi
           final data = jsonDecode(response);
           final List<dynamic> results = data;
           log.info('Food search successful', {'query': query, 'results_count': results.length});
-          return results.map((item) => Map<String, dynamic>.from(item)).toList();
+          final mapped = results.map((item) => Map<String, dynamic>.from(item)).toList();
+          return _fixNutritionCalorieConsistency(mapped);
         } catch (e) {
           log.error('Failed to parse food search JSON', e);
           return [];
@@ -555,12 +624,7 @@ Include common variations and similar foods. Only return the JSON array, no addi
 
       log.info('Fast searching for food items', {'query': query, 'food_type': foodType, 'language': language});
 
-      String languageInstruction = '';
-      if (language == 'ar') {
-        languageInstruction = '\nRespond in Modern Standard Arabic.';
-      } else if (language == 'es') {
-        languageInstruction = '\nRespond in Spanish.';
-      }
+      String languageInstruction = _getLanguageInstruction(language);
       
       String foodTypeInstruction = '';
       if (foodType != null) {
@@ -609,25 +673,26 @@ IMPORTANT: You are searching for BEVERAGES/DRINKS only. Focus on:
 Search for "$query" and return exactly 5 results.$foodTypeInstruction
 
 CRITICAL RULES:
-1. The first result MUST be the exact food "$query" if it exists
-2. Follow the food type category strictly - do not mix categories
-3. For each result, provide accurate nutritional info per 100g
-4. Return ONLY a valid JSON array, no text, no explanations
-5. Use REALISTIC and ACCURATE nutritional values for each specific food item
-6. Do NOT copy example values - calculate actual nutrition for each food
-7. Research and provide accurate nutrition data for each specific food item
-8. Calories should be realistic for the food type (e.g., fruits 30-80 cal, meats 100-300 cal, drinks 0-200 cal)
+1. Auto-correct obvious typos/misspellings in "$query" (e.g., "appl" -> "apple") while keeping the same language. The FIRST item MUST be the exact intended match after correction (use the same language as the query). If the user typed a plural (e.g., blueberries), keep the natural singular/plural form for that language.
+2. Normalize queries to a standard serving. If the query contains counts (e.g., "7 blueberries"), IGNORE the count and use one typical serving.
+3. Follow the requested food type STRICTLY for items 2-5. The first exact-match item is REQUIRED even if it belongs to a different category (e.g., an ingredient while the UI is set to meals).
+4. Provide nutrition per ONE typical serving (not per 100g unless that is the common serving for the item)
+5. Names MUST be in the SAME language as the query and include a serving descriptor in parentheses (e.g., "Apple (1 whole)", "Pizza (1 slice)", "Rice (1 cup cooked)", "Almonds (1 oz)"). For English, use Title Case for the name portion; never return abbreviated or truncated names.
+6. For EACH item, include a field "food_type" with one of: "ingredient", "meal", or "drink".
+7. The remaining items (2-5) must be CLOSELY RELATED to "$query" as defined above. Avoid unrelated foods (e.g., do not include pizza for a berry query).
+8. Return ONLY a valid JSON array, no text, no explanations
+9. Use realistic values from credible sources
 
-Example format (use realistic values for each specific food):
+Example format (values per one serving):
 [
-  {"name": "$query", "calories": [realistic_value], "protein": [realistic_value], "carbs": [realistic_value], "fat": [realistic_value]},
-  {"name": "Similar Item 1", "calories": [realistic_value], "protein": [realistic_value], "carbs": [realistic_value], "fat": [realistic_value]},
-  {"name": "Similar Item 2", "calories": [realistic_value], "protein": [realistic_value], "carbs": [realistic_value], "fat": [realistic_value]},
-  {"name": "Similar Item 3", "calories": [realistic_value], "protein": [realistic_value], "carbs": [realistic_value], "fat": [realistic_value]},
-  {"name": "Similar Item 4", "calories": [realistic_value], "protein": [realistic_value], "carbs": [realistic_value], "fat": [realistic_value]}
+  {"name": "$query (1 typical serving)", "calories": [value], "protein": [value], "carbs": [value], "fat": [value], "food_type": "ingredient", "ingredients": ["main ingredient", "additive1"]},
+  {"name": "Similar Item 1 (serving)", "calories": [value], "protein": [value], "carbs": [value], "fat": [value], "food_type": "meal", "ingredients": ["ingredient1", "ingredient2", "ingredient3"]},
+  {"name": "Similar Item 2 (serving)", "calories": [value], "protein": [value], "carbs": [value], "fat": [value], "food_type": "drink", "ingredients": ["ingredient1", "ingredient2"]},
+  {"name": "Similar Item 3 (serving)", "calories": [value], "protein": [value], "carbs": [value], "fat": [value], "food_type": "ingredient", "ingredients": ["main ingredient"]},
+  {"name": "Similar Item 4 (serving)", "calories": [value], "protein": [value], "carbs": [value], "fat": [value], "food_type": "meal", "ingredients": ["ingredient1", "ingredient2", "ingredient3", "ingredient4"]}
 ]$languageInstruction
 ''';
-      String? response = await sendMessage(prompt, model: 'gpt-4o-mini');
+      String? response = await sendMessage(prompt, model: 'gpt-4o-mini', language: language);
       stopwatch.stop();
       log.logPerformance('Fast food search', stopwatch.elapsed);
       List<Map<String, dynamic>>? parsedResults;
@@ -636,13 +701,13 @@ Example format (use realistic values for each specific food):
         if (parsedResults == null) {
           // Retry with even stricter prompt
           String retryPrompt = '''
-List 5 foods similar to "$query".$foodTypeInstruction For each, give name, calories, protein, carbs, fat per 100g. Use REALISTIC and ACCURATE nutritional values for each specific food item. Respond ONLY with a valid JSON array, no explanation, no text, no code block, just the array. DO NOT SAY ANYTHING ELSE. DO NOT USE MARKDOWN. JUST THE ARRAY.''';
+List 5 foods similar to "$query".$foodTypeInstruction Correct any obvious misspelling in "$query" while keeping the same language. For each, give name (same language as the query, Title Case for English, include a serving descriptor in parentheses, never abbreviated), calories, protein, carbs, fat per ONE typical serving, food_type, and ingredients array. Use REALISTIC and ACCURATE nutritional values for each specific food item. Respond ONLY with a valid JSON array, no explanation, no text, no code block, just the array. DO NOT SAY ANYTHING ELSE. DO NOT USE MARKDOWN. JUST THE ARRAY.''';
           response = await sendMessage(retryPrompt, model: 'gpt-4o-mini', language: language);
           parsedResults = response != null ? _tryParseFoodJson(response) : null;
         }
         if (parsedResults != null) {
           log.info('Fast food search successful', {'query': query, 'results_count': parsedResults.length});
-          return parsedResults;
+          return _fixNutritionCalorieConsistency(parsedResults);
         } else {
           log.error('Failed to parse fast food search JSON after retry', response);
           return [];
@@ -693,6 +758,44 @@ List 5 foods similar to "$query".$foodTypeInstruction For each, give name, calor
     return null;
   }
 
+  // Fix obviously inconsistent nutrition by aligning calories with macros when wildly off
+  List<Map<String, dynamic>> _fixNutritionCalorieConsistency(List<Map<String, dynamic>> items) {
+    const double tolerance = 0.10; // 10%
+    List<Map<String, dynamic>> fixed = [];
+    for (final item in items) {
+      final name = (item['name'] ?? '').toString();
+      double? cal = _toNum(item['calories']);
+      final double? p = _toNum(item['protein']);
+      final double? c = _toNum(item['carbs']);
+      final double? f = _toNum(item['fat']);
+      if (p != null && c != null && f != null) {
+        final double kcalFromMacros = 4 * p + 4 * c + 9 * f;
+        if (cal == null || (cal > 0 && (cal - kcalFromMacros).abs() / cal > tolerance)) {
+          // Adjust calories to macro-derived value rounded sensibly
+          cal = double.parse(kcalFromMacros.toStringAsFixed(0));
+        }
+      }
+      fixed.add({
+        ...item,
+        if (cal != null) 'calories': cal,
+        'name': name,
+      });
+    }
+    return fixed;
+  }
+
+  Map<String, dynamic> _fixNutritionEntry(Map<String, dynamic> item) {
+    final list = _fixNutritionCalorieConsistency([item]);
+    return list.isNotEmpty ? list.first : item;
+  }
+
+  double? _toNum(dynamic v) {
+    if (v == null) return null;
+    if (v is num) return v.toDouble();
+    final s = v.toString().trim();
+    return double.tryParse(s);
+  }
+
   String _extractJson(String response) {
     final codeBlockRegex = RegExp(r'```(?:json)?\s*([\s\S]*?)\s*```', multiLine: true, caseSensitive: false);
     final match = codeBlockRegex.firstMatch(response);
@@ -704,23 +807,19 @@ List 5 foods similar to "$query".$foodTypeInstruction For each, give name, calor
 
   /// Analyze a meal image and return food name, macros, and ingredients.
   Future<Map<String, dynamic>?> analyzeMealImage(File imageFile, {String language = 'en'}) async {
-    final url = 'https://openaiproxycallable-jlkcfxcyrq-uc.a.run.app';
-    final bytes = await imageFile.readAsBytes();
-    final base64Image = base64Encode(bytes);
-    final dataUrl = 'data:image/jpeg;base64,$base64Image';
-    String languageInstruction = '';
-    if (language == 'ar') {
-      languageInstruction = '\nRespond in Modern Standard Arabic.';
-    } else if (language == 'es') {
-      languageInstruction = '\nRespond in Spanish.';
-    }
-    final prompt = '''
+    try {
+      final url = 'https://openaiproxycallable-jlkcfxcyrq-uc.a.run.app';
+      final bytes = await imageFile.readAsBytes();
+      final base64Image = base64Encode(bytes);
+      final dataUrl = 'data:image/jpeg;base64,$base64Image';
+      String languageInstruction = _getLanguageInstruction(language);
+      final prompt = '''
 You are a nutrition AI expert with EXTREME attention to detail. Analyze this food/drink image with meticulous care and return a JSON object with:
 - food_name: string (be extremely specific and descriptive, include brand names if visible)
-- calories: integer (per 100g for ingredients/meals, per 8 fl oz for drinks)
-- protein: integer (grams per 100g for ingredients/meals, per 8 fl oz for drinks)
-- carbs: integer (grams per 100g for ingredients/meals, per 8 fl oz for drinks)
-- fat: integer (grams per 100g for ingredients/meals, per 8 fl oz for drinks)
+- calories: integer (PER ONE TYPICAL SERVING for ingredients/meals, per 8 fl oz for drinks). If serving size is unclear, infer a realistic serving.
+- protein: integer (grams per serving; for drinks per 8 fl oz)
+- carbs: integer (grams per serving; for drinks per 8 fl oz)
+- fat: integer (grams per serving; for drinks per 8 fl oz)
 - ingredients: array of strings (main ingredients only)
 - food_type: string (must be one of: "ingredient", "meal", "drink")
 
@@ -740,10 +839,10 @@ CRITICAL ANALYSIS RULES:
    - If nutrition info is visible, use those exact numbers
 
 3. For INGREDIENTS (fruits, vegetables, nuts, single items):
-   - Count multiple items accurately (e.g., "3 bananas" not "1 banana")
+   - If the context shows counts (e.g., multiple berries), DO NOT multiply by count; normalize to a standard serving size (e.g., 1 cup of blueberries) unless a package label indicates otherwise
    - Look for packaging labels with nutrition info
-   - Use realistic calorie ranges: fruits 30-80 cal, vegetables 10-50 cal, nuts 500-700 cal
-   - Be specific about quantity in food_name
+   - Use realistic calorie ranges for a serving: fruits typically 50-120 cal per serving, vegetables 15-80 cal per serving, nuts ~160-220 cal per 1 oz serving
+   - Be specific about serving in food_name when possible (e.g., "Blueberries (1 cup)")
 
 4. For MEALS (prepared dishes, cooked food):
    - Look for restaurant packaging, nutrition labels
@@ -758,7 +857,10 @@ CRITICAL ANALYSIS RULES:
    - Consider portion sizes and preparation methods
    - If nutrition info is unclear, provide realistic estimates based on similar products
 
-6. EXTREME ATTENTION TO DETAIL:
+6. CONSISTENCY RULE:
+   - Ensure CALORIES ≈ 4*protein + 4*carbs + 9*fat (within ±10%). If inconsistent and no label is visible, adjust calories to match macros.
+
+7. EXTREME ATTENTION TO DETAIL:
    - Read every visible word, number, and label
    - Look for serving size information
    - Check for brand names and product names
@@ -767,32 +869,39 @@ CRITICAL ANALYSIS RULES:
 
 Respond ONLY with valid JSON.$languageInstruction
 ''';
-    final response = await http.post(
-      Uri.parse(url),
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({
-        'model': 'gpt-4o-mini',
-        'messages': [
-          {'role': 'system', 'content': prompt},
-          {
-            'role': 'user',
-            'content': [
-              {'type': 'text', 'text': prompt},
-              {'type': 'image_url', 'image_url': {'url': dataUrl}},
-            ]
-          },
-        ],
-        'max_tokens': 512,
-        'temperature': 0.3,
-      }),
-    );
-    if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);
-      final content = data['choices'][0]['message']['content'];
-      final jsonString = _extractJson(content);
-      final result = jsonDecode(jsonString);
-      return result as Map<String, dynamic>;
-    } else {
+      final response = await http
+          .post(
+            Uri.parse(url),
+            headers: {'Content-Type': 'application/json'},
+            body: jsonEncode({
+              'model': 'gpt-4o-mini',
+              'messages': [
+                {'role': 'system', 'content': prompt},
+                {
+                  'role': 'user',
+                  'content': [
+                    {'type': 'text', 'text': prompt},
+                    {'type': 'image_url', 'image_url': {'url': dataUrl}},
+                  ]
+                },
+              ],
+              'max_tokens': 512,
+              'temperature': 0.3,
+            }),
+          )
+          .timeout(const Duration(seconds: 35));
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        final content = data['choices'][0]['message']['content'];
+        final jsonString = _extractJson(content);
+        final result = jsonDecode(jsonString);
+        return result as Map<String, dynamic>;
+      } else {
+        log.error('analyzeMealImage failed', 'HTTP ${response.statusCode}: ${response.body}');
+        return null;
+      }
+    } catch (e) {
+      log.error('analyzeMealImage error', e);
       return null;
     }
   }
@@ -803,14 +912,9 @@ Respond ONLY with valid JSON.$languageInstruction
     final bytes = await imageFile.readAsBytes();
     final base64Image = base64Encode(bytes);
     final dataUrl = 'data:image/jpeg;base64,$base64Image';
-    String languageInstruction = '';
-    if (language == 'ar') {
-      languageInstruction = '\nRespond in Modern Standard Arabic.';
-    } else if (language == 'es') {
-      languageInstruction = '\nRespond in Spanish.';
-    }
+    String languageInstruction = _getLanguageInstruction(language);
     final prompt = '''
-You are a kitchen assistant AI. Given this photo of a fridge, return a JSON array of all visible food items (ingredients). Respond ONLY with a JSON array of strings.$languageInstruction
+You are a kitchen assistant AI. Given this photo of a fridge, return a JSON array of all visible food items (ingredients). Use generic ingredient names. Do NOT infer quantities or servings here. Respond ONLY with a JSON array of strings.$languageInstruction
 ''';
     final response = await http.post(
       Uri.parse(url),
@@ -853,22 +957,22 @@ You are a kitchen assistant AI. Given this photo of a fridge, return a JSON arra
     String language = 'en',
   }) async {
     final url = 'https://openaiproxycallable-jlkcfxcyrq-uc.a.run.app';
-    String languageInstruction = '';
-    if (language == 'ar') {
-      languageInstruction = '\nRespond in Modern Standard Arabic.';
-    } else if (language == 'es') {
-      languageInstruction = '\nRespond in Spanish.';
-    }
+    String languageInstruction = _getLanguageInstruction(language);
     final prompt = '''
 You are a nutrition AI. Given this user profile: ${jsonEncode(userProfile)} and these fridge items: ${jsonEncode(fridgeItems)}, suggest a healthy meal the user can make, including:
-- meal_name: string (max 18 characters)
-- ingredients: array of strings (all ingredients needed for the meal)
-- recipe: array of steps (strings)
-- calories: integer
-- protein: integer
-- carbs: integer
-- fat: integer
-Respond ONLY with valid JSON.$languageInstruction
+- meal_name: string formatted as "<localized meal name> (<serving descriptor>)". Examples: "Chicken Salad (1 bowl)", "Veggie Wrap (1 wrap)", "Tomato Soup (1 cup)", "Stir Fry (1 plate)". Keep it under 18 characters excluding the parentheses where possible.
+- ingredients: array of strings with realistic quantities and units for EACH item (e.g., "6 oz chicken breast", "2 cups lettuce", "1 cup cooked rice", "1 tbsp olive oil") in user's language.
+- recipe: array of steps (strings in user's language)
+- calories: integer (per one serving)
+- protein: integer (per serving in grams)
+- carbs: integer (per serving in grams)
+- fat: integer (per serving in grams)
+
+Rules:
+- Names and ingredient text MUST be in the user's language.
+- Choose a realistic default serving descriptor: bowl/plate/wrap/sandwich/cup/slice as appropriate.
+- Use credible sources or typical values for nutrition; portions must be realistic.
+CONSISTENCY RULE: Ensure CALORIES ≈ 4*protein + 4*carbs + 9*fat (within ±10%). Adjust calories if inconsistent. Respond ONLY with valid JSON.$languageInstruction
 ''';
     final response = await http.post(
       Uri.parse(url),
@@ -921,12 +1025,7 @@ Respond ONLY with valid JSON.$languageInstruction
 
     // Fetch new data if no valid cache
     final url = 'https://openaiproxycallable-jlkcfxcyrq-uc.a.run.app';
-    String languageInstruction = '';
-    if (language == 'ar') {
-      languageInstruction = '\nRespond in Modern Standard Arabic.';
-    } else if (language == 'es') {
-      languageInstruction = '\nRespond in Spanish.';
-    }
+    String languageInstruction = _getLanguageInstruction(language);
     final prompt = '''
 You are a nutrition AI. Suggest 3 healthy $mealPeriod meals with maximum diversity and variety. Each meal should be completely different from the others in terms of:
 - Cuisine type (e.g., Mediterranean, Asian, Mexican, Italian, American, etc.)
@@ -934,18 +1033,22 @@ You are a nutrition AI. Suggest 3 healthy $mealPeriod meals with maximum diversi
 - Cooking methods (baked, grilled, sautéed, raw, etc.)
 - Flavor profiles (sweet, savory, spicy, tangy, etc.)
 
-For each meal, provide:
-- meal_name: string (max 18 characters)
-- time: string (e.g. "10 mins")
-- benefits: array of 2 short strings (e.g. ["High Protein", "Low Sugar"])
-- calories: integer
-- protein: integer
-- fat: integer
-- carbs: integer
-- ingredients: array of strings
-- recipe: array of steps (strings)
+Language rule: ALL text fields (meal_name, ingredients, recipe steps, benefits, time) MUST be in the SAME language as the user's chosen language. This rule overrides any other localization instruction.
 
-Ensure each meal is unique and offers different nutritional benefits. Respond ONLY with a JSON array of 3 objects, no extra text, no explanations, no markdown.$languageInstruction
+Include a serving descriptor in parentheses after the meal name, for example: "Chicken Stir Fry (1 bowl)", "Greek Salad (1 plate)", "Vegetable Soup (1 cup)", "Turkey Sandwich (1 sandwich)", "Fruit Smoothie (8 fl oz)".
+
+For each meal, provide values PER ONE SERVING:
+- meal_name: string (max 18 characters, including serving descriptor in parentheses)
+- time: string (e.g. "10 mins" in user's language)
+- benefits: array of 2 short strings (e.g. ["High Protein", "Low Sugar"] in user's language)
+- calories: integer (per serving)
+- protein: integer (per serving in grams)
+- fat: integer (per serving in grams)
+- carbs: integer (per serving in grams)
+- ingredients: array of strings (in user's language with quantities)
+- recipe: array of steps (strings in user's language)
+
+Ensure each meal is unique and offers different nutritional benefits. Use realistic serving sizes and nutrition values from credible sources. Respond ONLY with a JSON array of 3 objects, no extra text, no explanations, no markdown.$languageInstruction
 ''';
     final response = await http.post(
       Uri.parse(url),
@@ -969,10 +1072,14 @@ Ensure each meal is unique and offers different nutritional benefits. Respond ON
         final jsonString = match != null ? match.group(1)!.trim() : content.trim();
         final meals = jsonDecode(jsonString);
         if (meals is List) {
+          // Fix nutrition consistency for each meal before caching
+          final fixedMeals = (meals as List)
+              .map((m) => _fixNutritionEntry(Map<String, dynamic>.from(m)))
+              .toList();
           // Save to cache
-          await prefs.setString(cacheKey, jsonEncode(meals));
+          await prefs.setString(cacheKey, jsonEncode(fixedMeals));
           await prefs.setString(cacheTimeKey, now.toIso8601String());
-          return meals.cast<Map<String, dynamic>>();
+          return fixedMeals.cast<Map<String, dynamic>>();
         }
         return null;
       } catch (e) {

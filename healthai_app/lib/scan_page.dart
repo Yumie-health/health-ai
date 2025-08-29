@@ -361,6 +361,48 @@ class _ScanPageState extends State<ScanPage> {
       await _onBarcodeDetected(code);
       return;
     }
+    // Mirror camera flow: enforce paywall after first scan of the day
+    final bool showPaywall = await _shouldShowPaywall();
+    if (showPaywall) {
+      // Ensure ad is preloaded
+      if (!_isRewardedAdLoaded || _rewardedAd == null) {
+        await Future.delayed(const Duration(milliseconds: 500));
+      }
+      if (!mounted) return;
+      await Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) => ScanPaywallPage(
+            onUpgrade: () {
+              Navigator.of(context).pop();
+            },
+            onWatchAd: (paywallContext) async {
+              await _showRewardedAd(paywallContext, () async {
+                await _incrementScanCount();
+                if (_isFridgeMode) {
+                  Navigator.of(paywallContext).pushReplacement(
+                    MaterialPageRoute(
+                      builder: (_) => ScanResultFridgePage(imagePath: picked.path),
+                    ),
+                  );
+                } else {
+                  Navigator.of(paywallContext).pushReplacement(
+                    MaterialPageRoute(
+                      builder: (_) => ScanResultPage(imagePath: picked.path),
+                    ),
+                  );
+                }
+              });
+            },
+            onDiscard: () {
+              Navigator.of(context).popUntil((route) => route.isFirst);
+            },
+          ),
+        ),
+      );
+      return;
+    }
+
+    await _incrementScanCount();
     if (_isFridgeMode) {
       Navigator.of(context).push(
         MaterialPageRoute(

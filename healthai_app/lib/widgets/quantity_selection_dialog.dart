@@ -132,7 +132,8 @@ class _QuantitySelectionDialogState extends State<QuantitySelectionDialog>
   String _getQuantityLabel() {
     switch (widget.foodType) {
       case 'ingredient':
-        return AppLocalizations.of(context)!.count;
+        // Use servings for ingredients to avoid per-item confusion
+        return AppLocalizations.of(context)!.servings;
       case 'meal':
         return AppLocalizations.of(context)!.servings;
       case 'drink':
@@ -148,7 +149,7 @@ class _QuantitySelectionDialogState extends State<QuantitySelectionDialog>
   String _getQuantityUnit() {
     switch (widget.foodType) {
       case 'ingredient':
-        return '';
+        return AppLocalizations.of(context)!.servings;
       case 'meal':
         return AppLocalizations.of(context)!.servings;
       case 'drink':
@@ -164,7 +165,7 @@ class _QuantitySelectionDialogState extends State<QuantitySelectionDialog>
   String _getQuantityHint() {
     switch (widget.foodType) {
       case 'ingredient':
-        return 'e.g., 4';
+        return 'e.g., 1';
       case 'meal':
         return 'e.g., 2';
       case 'drink':
@@ -228,7 +229,7 @@ class _QuantitySelectionDialogState extends State<QuantitySelectionDialog>
                 Text(
                   widget.foodType == 'drink' 
                     ? '${_getFoodTypeLabel()} • ${widget.baseCalories} cal (per 8 fl oz)'
-                    : '${_getFoodTypeLabel()} • ${widget.baseCalories} cal',
+                    : '${_getFoodTypeLabel()} • ${widget.baseCalories} cal (per serving)',
                   style: TextStyle(
                     color: Colors.grey[600],
                     fontSize: 14,

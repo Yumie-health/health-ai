@@ -30,6 +30,16 @@ class LanguageService {
       final deviceLocale = Platform.localeName;
       if (deviceLocale.startsWith('ar')) return 'ar';
       if (deviceLocale.startsWith('es')) return 'es';
+      if (deviceLocale.startsWith('hi')) return 'hi';
+      if (deviceLocale.startsWith('de')) return 'de';
+      if (deviceLocale.startsWith('fr')) return 'fr';
+      if (deviceLocale.startsWith('it')) return 'it';
+      if (deviceLocale.startsWith('ja')) return 'ja';
+      if (deviceLocale.startsWith('ko')) return 'ko';
+      if (deviceLocale.startsWith('nl')) return 'nl';
+      if (deviceLocale.startsWith('pt')) return 'pt';
+      if (deviceLocale.startsWith('ru')) return 'ru';
+      if (deviceLocale.startsWith('tr')) return 'tr';
       return 'en'; // Default to English
     } catch (e) {
       return 'en';

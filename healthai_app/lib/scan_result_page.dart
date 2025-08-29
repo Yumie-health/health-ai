@@ -103,6 +103,7 @@ class ScanResultPage extends StatefulWidget {
 }
 
 class _ScanResultPageState extends State<ScanResultPage> {
+  bool _scanStarted = false;
   
   String _getLocalizedUnit(String unit) {
     final localizations = AppLocalizations.of(context)!;
@@ -154,7 +155,14 @@ class _ScanResultPageState extends State<ScanResultPage> {
       _fatController.text = p['fat']?.toString() ?? '';
       _ingredients = (p['ingredients'] as List?)?.map((e) => e.toString()).toList() ?? [];
       _isLoadingAI = false;
-    } else {
+    }
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_scanStarted && widget.prefill == null) {
+      _scanStarted = true;
       _runAIMealScan();
     }
   }
@@ -402,32 +410,39 @@ class _ScanResultPageState extends State<ScanResultPage> {
   }
 
   Future<void> _runAIMealScan() async {
-    setState(() { _isLoadingAI = true; });
+    setState(() { _isLoadingAI = true; _error = null; });
     final aiService = AIService();
-    final prefs = Provider.of<PreferencesProvider>(context, listen: false);
-    final language = prefs.language;
-    final result = await aiService.analyzeMealImage(File(widget.imagePath), language: language);
+    // Use UI locale to avoid stale stored language
+    final language = Localizations.localeOf(context).languageCode;
+    Map<String, dynamic>? result;
+    try {
+      result = await aiService.analyzeMealImage(File(widget.imagePath), language: language);
+    } catch (e) {
+      setState(() { _isLoadingAI = false; _error = 'Scan failed. Please try again.'; });
+      return;
+    }
 
     if (result != null &&
         (result['food_name']?.toString().trim().isNotEmpty ?? false) &&
         result['food_name'].toString().toLowerCase() != 'unknown' &&
         result['food_name'].toString().toLowerCase() != 'n/a') {
+      final r = result; // promote to non-null for use inside setState
       setState(() {
-        _foodNameController.text = result['food_name']?.toString() ?? '';
-        _caloriesController.text = result['calories']?.toString() ?? '';
-        _proteinController.text = result['protein']?.toString() ?? '';
-        _carbsController.text = result['carbs']?.toString() ?? '';
-        _fatController.text = result['fat']?.toString() ?? '';
-        _ingredients = (result['ingredients'] as List?)?.map((e) => e.toString()).toList() ?? [];
+        _foodNameController.text = r!['food_name']?.toString() ?? '';
+        _caloriesController.text = r['calories']?.toString() ?? '';
+        _proteinController.text = r['protein']?.toString() ?? '';
+        _carbsController.text = r['carbs']?.toString() ?? '';
+        _fatController.text = r['fat']?.toString() ?? '';
+        _ingredients = (r['ingredients'] as List?)?.map((e) => e.toString()).toList() ?? [];
         
         // Store food type from AI analysis and update UI
-        _foodType = result['food_type']?.toString();
+        _foodType = r['food_type']?.toString();
         if (_foodType != null) {
           // Update the selected food type in UI based on AI analysis
           _selectedFoodType = _foodType!;
           
           // Extract quantity from food name (e.g., "3 ripe bananas" -> quantity = 3)
-          String foodName = result['food_name']?.toString() ?? '';
+          String foodName = r['food_name']?.toString() ?? '';
           int extractedQuantity = _extractQuantityFromName(foodName);
           
           // Set quantity and unit based on food type
@@ -462,7 +477,7 @@ class _ScanResultPageState extends State<ScanResultPage> {
       });
     } else {
       if (!mounted) return;
-      Navigator.of(context).pop();
+      setState(() { _isLoadingAI = false; });
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(AppLocalizations.of(context)!.nothingFoundInScan),

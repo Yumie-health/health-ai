@@ -3398,7 +3398,6 @@ class FoodLogForm extends StatefulWidget {
   @override
   _FoodLogFormState createState() => _FoodLogFormState();
 }
-
 class _FoodLogFormState extends State<FoodLogForm> {
   final TextEditingController foodController = TextEditingController();
   final TextEditingController caloriesController = TextEditingController();
@@ -5565,8 +5564,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
 Track your calories, scan food with AI, and get personalized nutrition insights to achieve your health goals!
 
 📱 Download Yumie™ now:
-� iOS: https://apps.apple.com/us/app/yumie-ai/id6748360245
-� Android: https://play.google.com/store/apps/details?id=com.yumie.healthai
+� iOS: https://apps.apple.com/app/id6748360245
+ Android: https://play.google.com/store/apps/details?id=com.yumie.healthai
 
 #Yumie™ #Nutrition #Fitness #HealthyLiving
       ''';
@@ -6525,7 +6524,7 @@ Track your calories, scan food with AI, and get personalized nutrition insights 
                             onTap: () async {
                               try {
                                 final uri = Platform.isIOS
-                                    ? Uri.parse('https://apps.apple.com/us/app/yumie-ai/id6748360245')
+                                    ? Uri.parse('https://apps.apple.com/app/id6748360245')
                                     : Uri.parse('https://play.google.com/store/apps/details?id=com.yumie.healthai');
                                 if (await canLaunchUrl(uri)) {
                                   await launchUrl(uri, mode: LaunchMode.externalApplication);
@@ -9829,7 +9828,6 @@ class _HealthAwarenessPageState extends State<HealthAwarenessPage> {
     );
   }
 }
-
 // Weight Log Dialog
 class _WeightLogDialog extends StatefulWidget {
   @override
@@ -10590,7 +10588,6 @@ class _PasswordResetRedirectScreen extends StatefulWidget {
   @override
   State<_PasswordResetRedirectScreen> createState() => _PasswordResetRedirectScreenState();
 }
-
 class _PasswordResetRedirectScreenState extends State<_PasswordResetRedirectScreen> {
   @override
   void initState() {

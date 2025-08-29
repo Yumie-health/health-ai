@@ -505,6 +505,7 @@ class _GoalChangeFlowState extends State<GoalChangeFlow> {
         
         // Get AI recommendation
         final aiService = AIService();
+        final prefs = Provider.of<PreferencesProvider>(context, listen: false);
         final aiPlan = await aiService.getNutritionPlanRecommendation(
           age: age,
           heightCm: height.round(),
@@ -515,6 +516,7 @@ class _GoalChangeFlowState extends State<GoalChangeFlow> {
           fatGoal: fatGoal,
           bloodType: bloodType,
           isDiabetic: isDiabetic,
+          language: prefs.language,
         );
         
         // Save current plan as previous plan before updating

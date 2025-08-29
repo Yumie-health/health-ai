@@ -719,6 +719,7 @@ class _OnboardingFlowPageState extends State<OnboardingFlowPage> with SingleTick
       int fatGoal = (calorieGoal * 0.25 / 9).round(); // 25% of calories from fat
       int carbsGoal = ((calorieGoal - (proteinGoal * 4) - (fatGoal * 9)) / 4).round(); // Remaining calories from carbs
       
+      final prefsProvider = Provider.of<PreferencesProvider>(context, listen: false);
       final plan = await aiService.getNutritionPlanRecommendation(
         age: age,
         heightCm: heightCm,
@@ -729,6 +730,7 @@ class _OnboardingFlowPageState extends State<OnboardingFlowPage> with SingleTick
         fatGoal: fatGoal,
         bloodType: 'O+', // Default blood type since we removed the step
         isDiabetic: diabetic,
+        language: prefsProvider.language,
       );
 
       if (plan == null) throw Exception("AI did not return a plan");

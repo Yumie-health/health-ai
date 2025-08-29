@@ -136,16 +136,17 @@ class _AppUpdateDialogState extends State<AppUpdateDialog> with TickerProviderSt
                       Icon(
                         Icons.system_update,
                         color: Colors.blue[600],
-                        size: 24,
+                        size: 20,
                       ),
                       SizedBox(width: 8),
-                                             Text(
-                         AppLocalizations.of(context)!.updateAvailable,
-                         style: theme.textTheme.headlineSmall?.copyWith(
-                           fontWeight: FontWeight.w700,
-                           color: Colors.blue[700],
-                         ),
-                       ),
+                      Text(
+                        AppLocalizations.of(context)!.updateAvailable,
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w700,
+                          color: Colors.blue[700],
+                          fontSize: 18,
+                        ),
+                      ),
                     ],
                   ),
                 ),
