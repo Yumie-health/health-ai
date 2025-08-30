@@ -57,34 +57,36 @@ export const checkAppUpdate = functions.https.onRequest(async (req, res) => {
     let updateInfo;
     
     if (platform === 'ios') {
+      // Force update to at least 1.0.8 (51)
       updateInfo = {
-        latestVersion: updateData?.iosLatestVersion || updateData?.latestVersion || "1.0.4",
-        latestBuildNumber: updateData?.iosLatestBuildNumber || updateData?.latestBuildNumber || 34,
+        latestVersion: "1.0.8",
+        latestBuildNumber: 51,
         title: updateData?.iosTitle || updateData?.title || "Update Available",
         description: updateData?.iosDescription || updateData?.description || "A new version of Yumie is available with bug fixes and improvements.",
-        isForceUpdate: updateData?.iosIsForceUpdate ?? updateData?.isForceUpdate ?? false,
-        published: updateData?.iosPublished ?? updateData?.published ?? false,
+        isForceUpdate: true,
+        published: true,
         platform: 'ios'
       };
     } else if (platform === 'android') {
+      // Force update to at least 1.0.8 (51)
       updateInfo = {
-        latestVersion: updateData?.androidLatestVersion || updateData?.latestVersion || "1.0.4",
-        latestBuildNumber: updateData?.androidLatestBuildNumber || updateData?.latestBuildNumber || 34,
+        latestVersion: "1.0.8",
+        latestBuildNumber: 51,
         title: updateData?.androidTitle || updateData?.title || "Update Available",
         description: updateData?.androidDescription || updateData?.description || "A new version of Yumie is available with bug fixes and improvements.",
-        isForceUpdate: updateData?.androidIsForceUpdate ?? updateData?.isForceUpdate ?? false,
-        published: updateData?.androidPublished ?? updateData?.published ?? false,
+        isForceUpdate: true,
+        published: true,
         platform: 'android'
       };
     } else {
       // Default/fallback for both platforms
       updateInfo = {
-        latestVersion: updateData?.latestVersion || "1.0.4",
-        latestBuildNumber: updateData?.latestBuildNumber || 34,
+        latestVersion: "1.0.8",
+        latestBuildNumber: 51,
         title: updateData?.title || "Update Available",
         description: updateData?.description || "A new version of Yumie is available with bug fixes and improvements.",
-        isForceUpdate: updateData?.isForceUpdate || false,
-        published: updateData?.published || false,
+        isForceUpdate: true,
+        published: true,
         platform: 'both'
       };
     }
