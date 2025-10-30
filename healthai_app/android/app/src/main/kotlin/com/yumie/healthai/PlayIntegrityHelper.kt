@@ -33,6 +33,7 @@ class PlayIntegrityHelper(private val context: Context) {
         try {
             val request = IntegrityTokenRequest.builder()
                 .setNonce(generateNonce()) // Generate secure nonce of 24 bytes before base64 encoding
+                .setCloudProjectNumber(390325467547L) // Firebase project number for yumie-maivenx02
                 .build()
             
             val response: IntegrityTokenResponse = integrityManager.requestIntegrityToken(request).await()

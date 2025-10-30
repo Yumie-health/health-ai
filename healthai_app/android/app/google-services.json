@@ -1,20 +1,20 @@
 {
   "project_info": {
-    "project_number": "389852437815",
-    "project_id": "healthai-0001",
-    "storage_bucket": "healthai-0001.firebasestorage.app"
+    "project_number": "390325467547",
+    "project_id": "yumie-maivenx02",
+    "storage_bucket": "yumie-maivenx02.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:389852437815:android:1bacbb39ab081b47e54eb2",
+        "mobilesdk_app_id": "1:390325467547:android:72705c092fafbceddcc93e",
         "android_client_info": {
           "package_name": "com.yumie.healthai"
         }
       },
       "oauth_client": [
         {
-          "client_id": "389852437815-2j9njr98dqs0h79kfco08sp1m37nec24.apps.googleusercontent.com",
+          "client_id": "390325467547-h1h9oob6p9man7vlea7r4838p4uqo23h.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
             "package_name": "com.yumie.healthai",
@@ -22,15 +22,7 @@
           }
         },
         {
-          "client_id": "389852437815-7av4120a4k302s6bu5ds93prp5phpe6p.apps.googleusercontent.com",
-          "client_type": 1,
-          "android_info": {
-            "package_name": "com.yumie.healthai",
-            "certificate_hash": "f4d573a5a08846d60feec35e12cf61922b8d7be4"
-          }
-        },
-        {
-          "client_id": "389852437815-gpq4l0qjevsdd562e8o2k1862eiqs388.apps.googleusercontent.com",
+          "client_id": "390325467547-rcoppts4olk9bbrghm5o9r9opv43ob0p.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
             "package_name": "com.yumie.healthai",
@@ -38,27 +30,28 @@
           }
         },
         {
-          "client_id": "389852437815-3e026b99jvv3g0n0bjlmvo33vfp085vi.apps.googleusercontent.com",
+          "client_id": "390325467547-0m6994rd0tm7l0jfle9aojtg6gda93i0.apps.googleusercontent.com",
           "client_type": 3
         }
       ],
       "api_key": [
         {
-          "current_key": "AIzaSyAruFGOQ5D8HF_0bMOSS4ajw0Cicc7MBAI"
+          "current_key": "AIzaSyAryZk0vpeZSRV29c7TdIz5yOlTvKqWShQ"
         }
       ],
       "services": {
         "appinvite_service": {
           "other_platform_oauth_client": [
             {
-              "client_id": "389852437815-3e026b99jvv3g0n0bjlmvo33vfp085vi.apps.googleusercontent.com",
+              "client_id": "390325467547-0m6994rd0tm7l0jfle9aojtg6gda93i0.apps.googleusercontent.com",
               "client_type": 3
             },
             {
-              "client_id": "389852437815-c2q4pgj30ubamsdho567bkfdnlvkvls4.apps.googleusercontent.com",
+              "client_id": "390325467547-1csrrvomt6f662qd3uvs5itbi0r2aruf.apps.googleusercontent.com",
               "client_type": 2,
               "ios_info": {
-                "bundle_id": "com.example.healthaiapp"
+                "bundle_id": "com.yumie.healthai",
+                "app_store_id": "6748360245"
               }
             }
           ]

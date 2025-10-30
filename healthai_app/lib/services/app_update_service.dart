@@ -16,7 +16,7 @@ class AppUpdateService {
   static const String _androidPlayStoreUrl = 'https://play.google.com/store/apps/details?id=com.yumie.healthai';
 
   // API endpoint to check for updates
-  static const String _updateCheckUrl = 'https://us-central1-healthai-0001.cloudfunctions.net/checkAppUpdate';
+  static const String _updateCheckUrl = 'https://us-central1-yumie-maivenx02.cloudfunctions.net/checkAppUpdate';
   
   // For testing, you can use a GitHub raw URL:
   // static const String _updateCheckUrl = 'https://raw.githubusercontent.com/your-username/your-repo/main/app-updates.json';

@@ -9,7 +9,7 @@ buildscript {
         mavenCentral()
     }
     dependencies {
-        classpath("com.android.tools.build:gradle:8.12.1")
+        classpath("com.android.tools.build:gradle:8.13.0")
         classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:2.1.21")
     }
 
@@ -41,16 +41,36 @@ allprojects {
     }
 }
 
+// Legacy ext properties for older plugins expecting rootProject.ext values
+extra.apply {
+    set("compileSdkVersion", 36)
+    set("targetSdkVersion", 36)
+    set("minSdkVersion", 23)
+}
+
 val newBuildDir: Directory = rootProject.layout.buildDirectory.dir("../../build").get()
 rootProject.layout.buildDirectory.value(newBuildDir)
 
 subprojects {
     val newSubprojectBuildDir: Directory = newBuildDir.dir(project.name)
     project.layout.buildDirectory.value(newSubprojectBuildDir)
+    
+    // Enforce compile/target SDK for all Android library subprojects (plugins like :app_settings)
+    afterEvaluate {
+        extensions.findByType<com.android.build.gradle.LibraryExtension>()?.apply {
+            compileSdk = 36
+            defaultConfig {
+                targetSdk = 36
+            }
+        }
+    }
 }
+
 subprojects {
     project.evaluationDependsOn(":app")
 }
+
+// Remove global overrides; rely on gradle.properties defaults and updated plugins
 
 tasks.register<Delete>("clean") {
     delete(rootProject.layout.buildDirectory)

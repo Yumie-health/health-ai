@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_app_check/firebase_app_check.dart';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
@@ -373,6 +374,17 @@ void main() async {
 
   // Initialize Firebase - Android will use google-services.json, iOS will use the options
   await Firebase.initializeApp();
+  
+  // Initialize Firebase App Check for production security
+  try {
+    await FirebaseAppCheck.instance.activate(
+      androidProvider: AndroidProvider.playIntegrity,
+      appleProvider: AppleProvider.appAttest,
+    );
+    print('Firebase App Check activated');
+  } catch (e) {
+    print('Error activating Firebase App Check: $e');
+  }
   
   // Configure Firebase Auth persistence to prevent logout on app updates
   try {

@@ -16,7 +16,9 @@ admin.initializeApp();
 
 // Define secrets
 const openaiKey = defineSecret("OPENAI_KEY");
-const pexelsKey = defineSecret("PEXELS_KEY");
+const appleSharedSecret = defineSecret("APPLE_SHARED_SECRET");
+// Pexels key is optional - comment out if not needed
+// const pexelsKey = defineSecret("PEXELS_KEY");
 
 // Start writing functions
 // https://firebase.google.com/docs/functions/typescript
@@ -42,16 +44,9 @@ export const checkAppUpdate = functions.https.onRequest(async (req, res) => {
     // Get platform from query parameter
     const platform = req.query.platform || 'both';
     
-    // Get update information from Firestore
+    // Get update information from Firestore (optional - will use defaults if not found)
     const updateDoc = await admin.firestore().collection('app_config').doc('updates').get();
-    
-    if (!updateDoc.exists) {
-      // No update configuration found
-      res.status(404).json({ error: 'No update configuration found' });
-      return;
-    }
-
-    const updateData = updateDoc.data();
+    const updateData = updateDoc.exists ? updateDoc.data() : {};
     
     // Platform-specific update info
     let updateInfo;
@@ -261,7 +256,7 @@ export const openaiProxyCallable = functions.https.onRequest(
         {
           headers: {
             "Content-Type": "application/json",
-            "Authorization": `Bearer ${openaiKeyValue}`,
+            "Authorization": `Bearer ${openaiKeyValue.trim()}`,
           },
           timeout: 30000, // 30 second timeout
         }
@@ -298,7 +293,9 @@ export const openaiProxyCallable = functions.https.onRequest(
   }
 );
 
-// Pexels API proxy
+// Pexels API proxy - DISABLED (not needed for now)
+// Uncomment and set PEXELS_KEY secret if you need this function
+/*
 export const pexelsProxyCallable = functions.https.onRequest(
   {
     secrets: [pexelsKey],
@@ -334,6 +331,7 @@ export const pexelsProxyCallable = functions.https.onRequest(
     }
   }
 );
+*/
 
 // Play Integrity verification - Updated
 export const verifyPlayIntegrityCallable = functions.https.onCall(async (data: any, context) => {
@@ -390,13 +388,18 @@ export const verifyPlayIntegrityCallable = functions.https.onCall(async (data: a
 });
 
 // iOS Receipt Validation - Updated with Sandbox support
-export const validateIOSReceipt = functions.https.onCall(async (data: any, context) => {
+export const validateIOSReceipt = functions.https.onCall({
+  secrets: [appleSharedSecret]
+}, async (data: any, context) => {
   try {
     const { receiptData, productId, transactionId } = data;
     
     if (!receiptData || !productId || !transactionId) {
       throw new functions.https.HttpsError('invalid-argument', 'Receipt data, product ID, and transaction ID are required');
     }
+
+    // Get the Apple Shared Secret from environment
+    const sharedSecret = appleSharedSecret.value();
 
     // First try production server
     let response;
@@ -407,7 +410,7 @@ export const validateIOSReceipt = functions.https.onCall(async (data: any, conte
         'https://buy.itunes.apple.com/verifyReceipt',
         {
           'receipt-data': receiptData,
-          'password': functions.config().apple?.shared_secret || 'your_shared_secret_here',
+          'password': sharedSecret,
           'exclude-old-transactions': true
         }
       );
@@ -423,7 +426,7 @@ export const validateIOSReceipt = functions.https.onCall(async (data: any, conte
         'https://sandbox.itunes.apple.com/verifyReceipt',
         {
           'receipt-data': receiptData,
-          'password': functions.config().apple?.shared_secret || 'your_shared_secret_here',
+          'password': sharedSecret,
           'exclude-old-transactions': true
         }
       );

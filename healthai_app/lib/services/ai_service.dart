@@ -23,7 +23,7 @@ class AIService {
       
       String languageInstruction = _getLanguageInstruction(language);
       
-      final url = 'https://openaiproxycallable-jlkcfxcyrq-uc.a.run.app';
+      final url = 'https://us-central1-yumie-maivenx02.cloudfunctions.net/openaiProxyCallable';
       final response = await http.post(
         Uri.parse(url),
         headers: {'Content-Type': 'application/json'},
@@ -152,7 +152,7 @@ class AIService {
         ...chatHistory,
       ];
 
-      final url = 'https://openaiproxycallable-jlkcfxcyrq-uc.a.run.app';
+      final url = 'https://us-central1-yumie-maivenx02.cloudfunctions.net/openaiProxyCallable';
       final response = await http.post(
         Uri.parse(url),
         headers: {'Content-Type': 'application/json'},
@@ -808,7 +808,7 @@ List 5 foods similar to "$query".$foodTypeInstruction Correct any obvious misspe
   /// Analyze a meal image and return food name, macros, and ingredients.
   Future<Map<String, dynamic>?> analyzeMealImage(File imageFile, {String language = 'en'}) async {
     try {
-      final url = 'https://openaiproxycallable-jlkcfxcyrq-uc.a.run.app';
+      final url = 'https://us-central1-yumie-maivenx02.cloudfunctions.net/openaiProxyCallable';
       final bytes = await imageFile.readAsBytes();
       final base64Image = base64Encode(bytes);
       final dataUrl = 'data:image/jpeg;base64,$base64Image';
