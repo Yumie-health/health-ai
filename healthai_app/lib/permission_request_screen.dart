@@ -4,6 +4,8 @@ import 'package:permission_handler/permission_handler.dart' as ph;
 import 'services/permission_service.dart';
 import 'utils/constants.dart';
 import 'l10n/app_localizations.dart';
+import 'dart:io' show Platform;
+import 'package:device_info_plus/device_info_plus.dart';
 
 class PermissionRequestScreen extends StatefulWidget {
   final VoidCallback onPermissionsComplete;
@@ -27,11 +29,8 @@ class _PermissionRequestScreenState extends State<PermissionRequestScreen>
   bool _isRequesting = false;
   int _currentStep = 0;
   
-  final List<ph.Permission> _permissions = [
-    ph.Permission.camera,
-    ph.Permission.photos,
-    ph.Permission.notification,
-  ];
+  List<ph.Permission> _permissions = [];
+  bool _isAndroid13Plus = false;
 
   @override
   void initState() {
@@ -49,7 +48,30 @@ class _PermissionRequestScreenState extends State<PermissionRequestScreen>
     ).animate(CurvedAnimation(parent: _animationController, curve: Curves.easeOut));
     
     _animationController.forward();
-    _loadPermissionStatuses();
+    _initializePermissions();
+  }
+  
+  Future<void> _initializePermissions() async {
+    // Check Android version
+    if (Platform.isAndroid) {
+      final deviceInfo = DeviceInfoPlugin();
+      final androidInfo = await deviceInfo.androidInfo;
+      _isAndroid13Plus = androidInfo.version.sdkInt >= 33;
+    }
+    
+    // Build permissions list based on platform
+    _permissions = [
+      ph.Permission.camera,
+      ph.Permission.notification,
+    ];
+    
+    // Only add photos permission on iOS or Android 12 and below
+    if (!_isAndroid13Plus) {
+      _permissions.insert(1, ph.Permission.photos);
+    }
+    
+    // Load permission statuses after determining which permissions to check
+    await _loadPermissionStatuses();
   }
 
   @override

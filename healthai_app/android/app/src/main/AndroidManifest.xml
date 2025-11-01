@@ -5,9 +5,10 @@
     <!-- Camera permission for scanning food items -->
     <uses-permission android:name="android.permission.CAMERA" />
     
-    <!-- Photos permission for saving and selecting images -->
-    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <!-- READ_EXTERNAL_STORAGE limited to Android 12 and below for legacy support -->
+    <!-- Android 13+ will use the Android photo picker automatically (no permission needed) -->
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" 
+        android:maxSdkVersion="32" />
     
     <!-- Legacy storage permission for older Android versions -->
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" 

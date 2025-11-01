@@ -4,11 +4,21 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'dart:io' show Platform;
+import 'package:device_info_plus/device_info_plus.dart';
 import '../l10n/app_localizations.dart';
 
 class PermissionService {
   static final FlutterLocalNotificationsPlugin _notificationsPlugin = 
       FlutterLocalNotificationsPlugin();
+  
+  // Check if device is Android 13+ (API 33+)
+  // On Android 13+, photo picker doesn't need READ_MEDIA_IMAGES permission
+  static Future<bool> _isAndroid13OrHigher() async {
+    if (!Platform.isAndroid) return false;
+    final deviceInfo = DeviceInfoPlugin();
+    final androidInfo = await deviceInfo.androidInfo;
+    return androidInfo.version.sdkInt >= 33;
+  }
 
   // Check if this is the first time the app has been launched
   static Future<bool> _isFirstTimeLaunch() async {
@@ -36,16 +46,26 @@ class PermissionService {
 
   // Get current permission status for all permissions
   static Future<Map<ph.Permission, ph.PermissionStatus>> getPermissionStatuses() async {
-    return {
+    final isAndroid13Plus = await _isAndroid13OrHigher();
+    final statuses = {
       ph.Permission.camera: await ph.Permission.camera.status,
-      ph.Permission.photos: await ph.Permission.photos.status,
       ph.Permission.notification: await ph.Permission.notification.status,
     };
+    
+    // Only check photos permission on iOS or Android 12 and below
+    // Android 13+ uses photo picker which doesn't need permission
+    if (!isAndroid13Plus) {
+      statuses[ph.Permission.photos] = await ph.Permission.photos.status;
+    }
+    
+    return statuses;
   }
 
   // Request all permissions at once
   static Future<Map<ph.Permission, ph.PermissionStatus>> requestAllPermissions() async {
     print('🔐 Requesting all permissions...');
+    
+    final isAndroid13Plus = await _isAndroid13OrHigher();
     
     // Request permissions in order of importance
     final results = <ph.Permission, ph.PermissionStatus>{};
@@ -55,8 +75,13 @@ class PermissionService {
     results[ph.Permission.camera] = await ph.Permission.camera.request();
     
     // 2. Photos (for saving scanned images)
-    print('🖼️ Requesting photos permission...');
-    results[ph.Permission.photos] = await ph.Permission.photos.request();
+    // Skip on Android 13+ as photo picker doesn't need permission
+    if (!isAndroid13Plus) {
+      print('🖼️ Requesting photos permission...');
+      results[ph.Permission.photos] = await ph.Permission.photos.request();
+    } else {
+      print('🖼️ Skipping photos permission on Android 13+ (uses photo picker)');
+    }
     
     // 3. Notifications (for reminders)
     print('🔔 Requesting notification permission...');
@@ -95,10 +120,17 @@ class PermissionService {
       return false;
     }
     
+    final isAndroid13Plus = await _isAndroid13OrHigher();
+    
     // Check if permissions have already been granted
     final cameraGranted = await isPermissionGranted(ph.Permission.camera);
-    final photosGranted = await isPermissionGranted(ph.Permission.photos);
     final notificationsGranted = await isPermissionGranted(ph.Permission.notification);
+    
+    // Only check photos permission on iOS or Android 12 and below
+    bool photosGranted = true; // Default to true for Android 13+ (no permission needed)
+    if (!isAndroid13Plus) {
+      photosGranted = await isPermissionGranted(ph.Permission.photos);
+    }
     
     // If all permissions are already granted, don't show permissions page
     if (cameraGranted && photosGranted && notificationsGranted) {
@@ -159,6 +191,7 @@ class PermissionService {
     BuildContext context,
   ) async {
     final results = <ph.Permission, ph.PermissionStatus>{};
+    final isAndroid13Plus = await _isAndroid13OrHigher();
     
     // Camera Permission
     if (!await isPermissionGranted(ph.Permission.camera)) {
@@ -178,18 +211,20 @@ class PermissionService {
       results[ph.Permission.camera] = ph.PermissionStatus.granted;
     }
 
-    // Photos Permission - Always request this one
-    final shouldRequestPhotos = await showPermissionDialog(
-      context,
-      title: AppLocalizations.of(context)!.photoLibraryAccess,
-      message: AppLocalizations.of(context)!.photoLibraryAccessMessage,
-      permissionName: AppLocalizations.of(context)!.photoLibrary,
-    );
-    
-    if (shouldRequestPhotos) {
-      results[ph.Permission.photos] = await requestPermission(ph.Permission.photos);
-    } else {
-      results[ph.Permission.photos] = ph.PermissionStatus.denied;
+    // Photos Permission - Skip on Android 13+ (uses photo picker)
+    if (!isAndroid13Plus) {
+      final shouldRequestPhotos = await showPermissionDialog(
+        context,
+        title: AppLocalizations.of(context)!.photoLibraryAccess,
+        message: AppLocalizations.of(context)!.photoLibraryAccessMessage,
+        permissionName: AppLocalizations.of(context)!.photoLibrary,
+      );
+      
+      if (shouldRequestPhotos) {
+        results[ph.Permission.photos] = await requestPermission(ph.Permission.photos);
+      } else {
+        results[ph.Permission.photos] = ph.PermissionStatus.denied;
+      }
     }
 
     // Notifications Permission
