@@ -39,7 +39,8 @@ class AppLocalizationsTr extends AppLocalizations {
   String get mealLoggingPrompts => 'Yemek Kaydetme Hatırlatıcıları';
 
   @override
-  String get mealLoggingPromptsSubtitle => 'Yemeklerinizi kaydetmek için hatırlatıcı alın';
+  String get mealLoggingPromptsSubtitle =>
+      'Yemeklerinizi kaydetmek için hatırlatıcı alın';
 
   @override
   String get waterIntakeReminders => 'Su İçme Hatırlatıcıları';
@@ -51,13 +52,15 @@ class AppLocalizationsTr extends AppLocalizations {
   String get mindfulWalksReminders => 'Bilinçli Yürüyüş Hatırlatıcıları';
 
   @override
-  String get mindfulWalksRemindersSubtitle => 'Bilinçli yürüyüş için hatırlatıcı alın';
+  String get mindfulWalksRemindersSubtitle =>
+      'Bilinçli yürüyüş için hatırlatıcı alın';
 
   @override
   String get momentOfCalmAfterMeals => 'Yemeklerden Sonra Sakinlik Anı';
 
   @override
-  String get momentOfCalmAfterMealsSubtitle => 'Yemek kaydettikten sonra sakinleştirici popup göster';
+  String get momentOfCalmAfterMealsSubtitle =>
+      'Yemek kaydettikten sonra sakinleştirici popup göster';
 
   @override
   String get welcomeBack => 'Tekrar hoş geldiniz!';
@@ -66,31 +69,36 @@ class AppLocalizationsTr extends AppLocalizations {
   String get trackNutritionToday => 'Bugün beslenmenizi takip edelim';
 
   @override
-  String get subtitleAfternoon => 'Öğle yemeğini kaydetmek ve dengede kalmak için harika zaman.';
+  String get subtitleAfternoon =>
+      'Öğle yemeğini kaydetmek ve dengede kalmak için harika zaman.';
 
   @override
   String get subtitleEvening => 'Bu akşam yolda kal — öğünlerini kaydet.';
 
   @override
-  String get subtitleNight => 'Günü kapat — bugünkü öğünleri kaydetmeyi unutma.';
+  String get subtitleNight =>
+      'Günü kapat — bugünkü öğünleri kaydetmeyi unutma.';
 
   @override
   String get streakNearEndingTitle => 'Serini koru 🔥';
 
   @override
-  String get streakNearEndingBody => 'Serin bitmek üzere. Bugün bir öğün kaydederek sürdür!';
+  String get streakNearEndingBody =>
+      'Serin bitmek üzere. Bugün bir öğün kaydederek sürdür!';
 
   @override
   String get streakNearEndingTitle2 => 'Neredeyse bitti! 🔥';
 
   @override
-  String get streakNearEndingBody2 => 'Sadece birkaç saat kaldı. Serini kurtarmak için bir öğün kaydet!';
+  String get streakNearEndingBody2 =>
+      'Sadece birkaç saat kaldı. Serini kurtarmak için bir öğün kaydet!';
 
   @override
   String get streakEndedTitle => 'Seri bitti';
 
   @override
-  String get streakEndedBody => 'Serin sona erdi. Yeniden başlatmak ve güçlendirmek için bir öğün kaydet!';
+  String get streakEndedBody =>
+      'Serin sona erdi. Yeniden başlatmak ve güçlendirmek için bir öğün kaydet!';
 
   @override
   String get streakActive => 'Seri aktif';
@@ -111,13 +119,15 @@ class AppLocalizationsTr extends AppLocalizations {
   String get startedOn => 'Başlangıç tarihi';
 
   @override
-  String get logMealToStartStreak => 'Serini başlatmak için bugün bir öğün kaydet';
+  String get logMealToStartStreak =>
+      'Serini başlatmak için bugün bir öğün kaydet';
 
   @override
   String get nutritionSummary => 'Beslenme Özeti';
 
   @override
-  String get setCalorieAndMacroGoals => 'Kalori ve makro hedeflerinizi Beslenme Planı sayfasında ayarlayın.';
+  String get setCalorieAndMacroGoals =>
+      'Kalori ve makro hedeflerinizi Beslenme Planı sayfasında ayarlayın.';
 
   @override
   String get protein => 'Protein';
@@ -198,7 +208,8 @@ class AppLocalizationsTr extends AppLocalizations {
   String get sinceStart => 'başlangıçtan beri';
 
   @override
-  String get expectationsDisclaimer => 'Bu beklentiler son eğiliminize dayalıdır ve yeni kilolar kaydettikçe değişebilir.';
+  String get expectationsDisclaimer =>
+      'Bu beklentiler son eğiliminize dayalıdır ve yeni kilolar kaydettikçe değişebilir.';
 
   @override
   String get loseVerb => 'kaybetmek';
@@ -207,7 +218,13 @@ class AppLocalizationsTr extends AppLocalizations {
   String get gainVerb => 'almak';
 
   @override
-  String expectationBlurb(Object direction, Object eta, Object rate, Object remaining, Object unit) {
+  String expectationBlurb(
+    Object direction,
+    Object eta,
+    Object rate,
+    Object remaining,
+    Object unit,
+  ) {
     return 'Son eğiliminize göre haftada yaklaşık $rate $unit $direction yolundasınız. Bu hızla hedefinize ulaşmanız yaklaşık $eta sürecek. Kalan $remaining $unit var.';
   }
 
@@ -230,13 +247,15 @@ class AppLocalizationsTr extends AppLocalizations {
   String get comingSoon => 'Yakında Gelecek!';
 
   @override
-  String get ratingOnGoogleAvailableAfterRelease => 'Google\'da değerlendirme yayınlandıktan sonra kullanılabilir olacak.';
+  String get ratingOnGoogleAvailableAfterRelease =>
+      'Google\'da değerlendirme yayınlandıktan sonra kullanılabilir olacak.';
 
   @override
   String get shareWithFriends => 'Arkadaşlarla Paylaş';
 
   @override
-  String get sharingAvailableAfterRelease => 'Paylaşım yayınlandıktan sonra kullanılabilir olacak.';
+  String get sharingAvailableAfterRelease =>
+      'Paylaşım yayınlandıktan sonra kullanılabilir olacak.';
 
   @override
   String get resetPassword => 'Şifre Sıfırla';
@@ -269,7 +288,8 @@ class AppLocalizationsTr extends AppLocalizations {
   String get apiDocumentation => 'API Dokümantasyonu';
 
   @override
-  String get needAssistanceContactSupport => 'Yardıma mı ihtiyacınız var? Destek ekibimizle iletişime geçin:';
+  String get needAssistanceContactSupport =>
+      'Yardıma mı ihtiyacınız var? Destek ekibimizle iletişime geçin:';
 
   @override
   String get testWebURL => 'Test Web URL';
@@ -281,7 +301,8 @@ class AppLocalizationsTr extends AppLocalizations {
   String get logOut => 'Çıkış Yap';
 
   @override
-  String get areYouSureYouWantToLogOut => 'Çıkış yapmak istediğinizden emin misiniz?';
+  String get areYouSureYouWantToLogOut =>
+      'Çıkış yapmak istediğinizden emin misiniz?';
 
   @override
   String get no => 'Hayır';
@@ -296,13 +317,15 @@ class AppLocalizationsTr extends AppLocalizations {
   String get momentOfCalm => 'Sakinlik Anı';
 
   @override
-  String get practiceMindfulEating => 'Yemeğinizi takdir etmek ve bilinçli yeme pratiği yapmak için bir an ayırın.';
+  String get practiceMindfulEating =>
+      'Yemeğinizi takdir etmek ve bilinçli yeme pratiği yapmak için bir an ayırın.';
 
   @override
   String get howOldAreYou => 'Kaç yaşındasınız?';
 
   @override
-  String get personalizeExperience => 'Bu deneyiminizi kişiselleştirmemize yardımcı olur';
+  String get personalizeExperience =>
+      'Bu deneyiminizi kişiselleştirmemize yardımcı olur';
 
   @override
   String get failedToOpenStore => 'Failed to open app store';
@@ -329,25 +352,29 @@ class AppLocalizationsTr extends AppLocalizations {
   String get yourGoalWeight => 'Hedef kilonuz';
 
   @override
-  String get setRealisticGoal => 'Yolculuğunuz için gerçekçi bir hedef belirleyin';
+  String get setRealisticGoal =>
+      'Yolculuğunuz için gerçekçi bir hedef belirleyin';
 
   @override
   String get allSet => 'Hazırsınız! 🎉';
 
   @override
-  String get personalizedNutritionPlan => 'İşte kişiselleştirilmiş beslenme planınız. Yumie ile sağlık yolculuğunuza hoş geldiniz!';
+  String get personalizedNutritionPlan =>
+      'İşte kişiselleştirilmiş beslenme planınız. Yumie ile sağlık yolculuğunuza hoş geldiniz!';
 
   @override
   String get whatIsYourBloodType => 'Kan grubunuz nedir?';
 
   @override
-  String get personalizeHealthInsights => 'Bu sağlık içgörülerinizi kişiselleştirmemize yardımcı olur.';
+  String get personalizeHealthInsights =>
+      'Bu sağlık içgörülerinizi kişiselleştirmemize yardımcı olur.';
 
   @override
   String get whatIsYourSex => 'Cinsiyetiniz nedir?';
 
   @override
-  String get personalizeNutritionPlan => 'Bu beslenme planınızı kişiselleştirmemize yardımcı olur.';
+  String get personalizeNutritionPlan =>
+      'Bu beslenme planınızı kişiselleştirmemize yardımcı olur.';
 
   @override
   String get home => 'Ana Sayfa';
@@ -401,7 +428,8 @@ class AppLocalizationsTr extends AppLocalizations {
   String get clearChat => 'Sohbeti Temizle';
 
   @override
-  String get coachWelcome => 'Merhaba! Ben Yumie, beslenme koçunuz. Bugün size nasıl yardımcı olabilirim?\n\nSağlıklı tarifler, yemek planları veya beslenme ipuçları hakkında Yumie\'ye sorun!';
+  String get coachWelcome =>
+      'Merhaba! Ben Yumie, beslenme koçunuz. Bugün size nasıl yardımcı olabilirim?\n\nSağlıklı tarifler, yemek planları veya beslenme ipuçları hakkında Yumie\'ye sorun!';
 
   @override
   String get refreshInsight => 'İçgörüyü Yenile';
@@ -503,7 +531,8 @@ class AppLocalizationsTr extends AppLocalizations {
   String get bloodType => 'Kan grubu';
 
   @override
-  String get bloodTypeOptional => 'Kan grubu isteğe bağlıdır ve kalori takibi veya önerileri etkilemez.';
+  String get bloodTypeOptional =>
+      'Kan grubu isteğe bağlıdır ve kalori takibi veya önerileri etkilemez.';
 
   @override
   String get areYouDiabetic => 'Diyabetik misiniz?';
@@ -512,7 +541,8 @@ class AppLocalizationsTr extends AppLocalizations {
   String get healthAwarenessUpdated => 'Sağlık farkındalığı güncellendi!';
 
   @override
-  String get takeMomentToAppreciate => 'Yemeğinizi takdir etmek ve bilinçli yeme pratiği yapmak için bir an ayırın.';
+  String get takeMomentToAppreciate =>
+      'Yemeğinizi takdir etmek ve bilinçli yeme pratiği yapmak için bir an ayırın.';
 
   @override
   String get continueButton => 'Devam Et';
@@ -820,10 +850,12 @@ class AppLocalizationsTr extends AppLocalizations {
   String get unlockPremiumFeatures => 'Premium Özellikleri Açın';
 
   @override
-  String get getMostOutOfHealthJourney => 'Sınırsız erişimle sağlık yolculuğunuzdan en iyi şekilde yararlanın!';
+  String get getMostOutOfHealthJourney =>
+      'Sınırsız erişimle sağlık yolculuğunuzdan en iyi şekilde yararlanın!';
 
   @override
-  String get unlimitedScansAICoaching => 'Sınırsız tarama, AI koçluk ve kişiselleştirilmiş yemek planlarını açın!';
+  String get unlimitedScansAICoaching =>
+      'Sınırsız tarama, AI koçluk ve kişiselleştirilmiş yemek planlarını açın!';
 
   @override
   String get subscribe => 'Abone Ol';
@@ -835,13 +867,15 @@ class AppLocalizationsTr extends AppLocalizations {
   String get managePermissions => 'İzinleri Yönet';
 
   @override
-  String get cameraNotificationsAndMore => 'Kamera, bildirimler ve daha fazlası';
+  String get cameraNotificationsAndMore =>
+      'Kamera, bildirimler ve daha fazlası';
 
   @override
   String get deleteMeal => 'Yemeği sil';
 
   @override
-  String get areYouSureDeleteMeal => 'Bu yemeği silmek istediğinizden emin misiniz?';
+  String get areYouSureDeleteMeal =>
+      'Bu yemeği silmek istediğinizden emin misiniz?';
 
   @override
   String get unknown => 'Bilinmeyen';
@@ -904,7 +938,8 @@ class AppLocalizationsTr extends AppLocalizations {
   String get addLog => 'Kayıt Ekle';
 
   @override
-  String get unableToShareAtThisTime => 'Şu anda paylaşılamıyor. Lütfen tekrar deneyin.';
+  String get unableToShareAtThisTime =>
+      'Şu anda paylaşılamıyor. Lütfen tekrar deneyin.';
 
   @override
   String get failedToUpdatePhoto => 'Fotoğraf güncelleme başarısız';
@@ -958,31 +993,36 @@ class AppLocalizationsTr extends AppLocalizations {
   String get permissionStatus => 'İzin Durumu';
 
   @override
-  String get manageAppPermissions => 'Tüm özelliklerin düzgün çalışması için uygulama izinlerini yönetin';
+  String get manageAppPermissions =>
+      'Tüm özelliklerin düzgün çalışması için uygulama izinlerini yönetin';
 
   @override
   String get camera => 'Kamera';
 
   @override
-  String get scanFoodItems => 'Yemek öğelerini tarayın ve yemek fotoğrafları çekin';
+  String get scanFoodItems =>
+      'Yemek öğelerini tarayın ve yemek fotoğrafları çekin';
 
   @override
   String get photoLibrary => 'Fotoğraflar';
 
   @override
-  String get saveScannedImages => 'Taranan görüntüleri kaydedin ve fotoğraf seçin';
+  String get saveScannedImages =>
+      'Taranan görüntüleri kaydedin ve fotoğraf seçin';
 
   @override
   String get notifications => 'Bildirimler';
 
   @override
-  String get sendMealReminders => 'Yemek hatırlatıcıları ve sağlık uyarıları gönderin';
+  String get sendMealReminders =>
+      'Yemek hatırlatıcıları ve sağlık uyarıları gönderin';
 
   @override
   String get needHelp => 'Yardıma mı ihtiyacınız var?';
 
   @override
-  String get permanentlyDeniedHelp => 'İzinler kalıcı olarak reddedilirse, cihaz ayarlarınızda etkinleştirebilirsiniz';
+  String get permanentlyDeniedHelp =>
+      'İzinler kalıcı olarak reddedilirse, cihaz ayarlarınızda etkinleştirebilirsiniz';
 
   @override
   String get openDeviceSettings => 'Cihaz Ayarlarını Aç';
@@ -1048,10 +1088,12 @@ class AppLocalizationsTr extends AppLocalizations {
   String get subscribeForDailyInsights => 'Günlük İçgörüler için Abone Olun';
 
   @override
-  String get getPersonalizedHealthInsights => 'Tam profilinize dayalı kişiselleştirilmiş sağlık içgörüleri alın';
+  String get getPersonalizedHealthInsights =>
+      'Tam profilinize dayalı kişiselleştirilmiş sağlık içgörüleri alın';
 
   @override
-  String get upgradeDescription => 'Sınırsız tarama, arama ve AI destekli içgörüler alın';
+  String get upgradeDescription =>
+      'Sınırsız tarama, arama ve AI destekli içgörüler alın';
 
   @override
   String get unlimitedFoodScans => 'Sınırsız Yemek Taraması';
@@ -1084,19 +1126,23 @@ class AppLocalizationsTr extends AppLocalizations {
   String get water => 'Su';
 
   @override
-  String get resetPasswordDescription => 'Şifre sıfırlama bağlantısı e-postanıza gönderilecek';
+  String get resetPasswordDescription =>
+      'Şifre sıfırlama bağlantısı e-postanıza gönderilecek';
 
   @override
   String get deleteAccount => 'Hesabı Sil';
 
   @override
-  String get deleteAccountDescription => 'Hesabınızı ve tüm verilerinizi kalıcı olarak silin';
+  String get deleteAccountDescription =>
+      'Hesabınızı ve tüm verilerinizi kalıcı olarak silin';
 
   @override
-  String get confirmDeleteAccount => 'Hesabınızı silmek istediğinizden emin misiniz?';
+  String get confirmDeleteAccount =>
+      'Hesabınızı silmek istediğinizden emin misiniz?';
 
   @override
-  String get deleteAccountWarning => 'Bu işlem geri alınamaz. Yemekler, ilerleme ve ayarlar dahil tüm verileriniz kalıcı olarak silinecektir.';
+  String get deleteAccountWarning =>
+      'Bu işlem geri alınamaz. Yemekler, ilerleme ve ayarlar dahil tüm verileriniz kalıcı olarak silinecektir.';
 
   @override
   String get typeDeleteToConfirm => 'Onaylamak için \"SİL\" yazın';
@@ -1114,7 +1160,8 @@ class AppLocalizationsTr extends AppLocalizations {
   String get totalNutrition => 'Toplam Beslenme';
 
   @override
-  String get unlockUnlimitedScans => 'Sınırsız tarama, AI koçluk ve\nkişiselleştirilmiş yemek planlarını açın';
+  String get unlockUnlimitedScans =>
+      'Sınırsız tarama, AI koçluk ve\nkişiselleştirilmiş yemek planlarını açın';
 
   @override
   String get unlimitedFoodScanning => 'Sınırsız yemek tarama';
@@ -1154,13 +1201,15 @@ class AppLocalizationsTr extends AppLocalizations {
   String get noPurchasesFound => 'Önceki satın alım bulunamadı';
 
   @override
-  String get restoreFailed => 'Satın alımları geri yükleme başarısız. Lütfen tekrar deneyin.';
+  String get restoreFailed =>
+      'Satın alımları geri yükleme başarısız. Lütfen tekrar deneyin.';
 
   @override
   String get restoreInProgress => 'Satın alımlar geri yükleniyor...';
 
   @override
-  String get bySubscribing => 'Abone olarak Hizmet Şartlarımızı ve Gizlilik Politikamızı kabul etmiş olursunuz. Abonelikler iptal edilmediği sürece otomatik olarak yenilenir';
+  String get bySubscribing =>
+      'Abone olarak Hizmet Şartlarımızı ve Gizlilik Politikamızı kabul etmiş olursunuz. Abonelikler iptal edilmediği sürece otomatik olarak yenilenir';
 
   @override
   String get permissionsComplete => 'İzinler Tamamlandı!';
@@ -1169,10 +1218,12 @@ class AppLocalizationsTr extends AppLocalizations {
   String get whyWeAskForPermissions => 'Neden izin istiyoruz';
 
   @override
-  String get permissionsWhyBody => 'Kamerayı yiyecekleri ve barkodları taramak için, görseller yüklediğinizde fotoğraflara erişmek ve yemek kaydı ile su içmeyi hatırlatmak için bildirimler göndermek amacıyla kullanıyoruz.';
+  String get permissionsWhyBody =>
+      'Kamerayı yiyecekleri ve barkodları taramak için, görseller yüklediğinizde fotoğraflara erişmek ve yemek kaydı ile su içmeyi hatırlatmak için bildirimler göndermek amacıyla kullanıyoruz.';
 
   @override
-  String get permissionsNextScreen => 'Bir sonraki ekranda erişim vermek için sistem istemlerini göreceksiniz. Bunu istediğiniz zaman Ayarlar\'dan değiştirebilirsiniz.';
+  String get permissionsNextScreen =>
+      'Bir sonraki ekranda erişim vermek için sistem istemlerini göreceksiniz. Bunu istediğiniz zaman Ayarlar\'dan değiştirebilirsiniz.';
 
   @override
   String get references => 'Kaynaklar:';
@@ -1196,7 +1247,8 @@ class AppLocalizationsTr extends AppLocalizations {
   String get selectLanguageTitle => 'Dil Seçin';
 
   @override
-  String get chooseYourPreferredLanguage => 'Uygulama için tercih ettiğiniz dili seçin';
+  String get chooseYourPreferredLanguage =>
+      'Uygulama için tercih ettiğiniz dili seçin';
 
   @override
   String get languageChangedTo => 'Dil değiştirildi';
@@ -1253,19 +1305,23 @@ class AppLocalizationsTr extends AppLocalizations {
   String get requiresAtLeast8Characters => 'En az 8 karakter gerektirir';
 
   @override
-  String get tooManySignInAttempts => 'Çok fazla giriş denemesi. Lütfen daha sonra tekrar deneyin.';
+  String get tooManySignInAttempts =>
+      'Çok fazla giriş denemesi. Lütfen daha sonra tekrar deneyin.';
 
   @override
-  String get tooManySignUpAttempts => 'Çok fazla kayıt denemesi. Lütfen daha sonra tekrar deneyin.';
+  String get tooManySignUpAttempts =>
+      'Çok fazla kayıt denemesi. Lütfen daha sonra tekrar deneyin.';
 
   @override
-  String get tooManyPasswordResetRequests => 'Çok fazla şifre sıfırlama isteği. Lütfen daha sonra tekrar deneyin.';
+  String get tooManyPasswordResetRequests =>
+      'Çok fazla şifre sıfırlama isteği. Lütfen daha sonra tekrar deneyin.';
 
   @override
   String get multipleFailedSignInAttempts => 'Çoklu Başarısız Giriş Denemeleri';
 
   @override
-  String get excessivePasswordResetRequests => 'Aşırı Şifre Sıfırlama İstekleri';
+  String get excessivePasswordResetRequests =>
+      'Aşırı Şifre Sıfırlama İstekleri';
 
   @override
   String get suspiciousActivityDetected => 'Şüpheli Aktivite Tespit Edildi';
@@ -1280,7 +1336,8 @@ class AppLocalizationsTr extends AppLocalizations {
   String get welcomeToYumiePermissions => 'Yumie\'ye Hoş Geldiniz';
 
   @override
-  String get provideBestExperience => 'Size en iyi deneyimi sunmak için birkaç izne ihtiyacımız var';
+  String get provideBestExperience =>
+      'Size en iyi deneyimi sunmak için birkaç izne ihtiyacımız var';
 
   @override
   String get grantPermissions => 'İzinleri Ver';
@@ -1310,7 +1367,8 @@ class AppLocalizationsTr extends AppLocalizations {
   String get password => 'Şifre';
 
   @override
-  String get agreeToTerms => 've Hizmet Şartları Gizlilik Politikasını kabul ediyorum';
+  String get agreeToTerms =>
+      've Hizmet Şartları Gizlilik Politikasını kabul ediyorum';
 
   @override
   String get alreadyHaveAccount => 'Zaten hesabınız var mı?';
@@ -1346,7 +1404,8 @@ class AppLocalizationsTr extends AppLocalizations {
   String get resetPasswordTitle => 'Şifre Sıfırla';
 
   @override
-  String get enterEmailForReset => 'Şifre sıfırlama bağlantısı almak için e-posta adresinizi girin';
+  String get enterEmailForReset =>
+      'Şifre sıfırlama bağlantısı almak için e-posta adresinizi girin';
 
   @override
   String get emailAddress => 'E-posta Adresi';
@@ -1361,10 +1420,12 @@ class AppLocalizationsTr extends AppLocalizations {
   String get deleteAccountWarningTitle => 'Bu işlem kalıcıdır ve geri alınamaz';
 
   @override
-  String get deleteAccountDataList => 'Hesabınızı sildiğinizde, kalıcı olarak kaldıracağımız şeyler:';
+  String get deleteAccountDataList =>
+      'Hesabınızı sildiğinizde, kalıcı olarak kaldıracağımız şeyler:';
 
   @override
-  String get allMealLogsAndNutrition => 'Tüm yemek kayıtlarınız ve beslenme verileriniz';
+  String get allMealLogsAndNutrition =>
+      'Tüm yemek kayıtlarınız ve beslenme verileriniz';
 
   @override
   String get profileAndPersonalInfo => 'Profiliniz ve kişisel bilgileriniz';
@@ -1382,10 +1443,12 @@ class AppLocalizationsTr extends AppLocalizations {
   String get activeSessionsAllDevices => 'Tüm cihazlardaki aktif oturumlar';
 
   @override
-  String get exportDataWarning => 'Devam etmeden önce saklamak istediğiniz verileri dışa aktardığınızdan emin olun';
+  String get exportDataWarning =>
+      'Devam etmeden önce saklamak istediğiniz verileri dışa aktardığınızdan emin olun';
 
   @override
-  String get understandActionPermanent => 'Bu işlemin kalıcı olduğunu anlıyorum';
+  String get understandActionPermanent =>
+      'Bu işlemin kalıcı olduğunu anlıyorum';
 
   @override
   String get typeDeleteHere => 'Buraya SİL yazın';
@@ -1397,10 +1460,12 @@ class AppLocalizationsTr extends AppLocalizations {
   String get noSecurityAlertsFound => 'Güvenlik uyarısı yok';
 
   @override
-  String get yourAccountLooksGood => 'Hesabınız iyi görünüyor! Şüpheli aktivite tespit edilmedi.';
+  String get yourAccountLooksGood =>
+      'Hesabınız iyi görünüyor! Şüpheli aktivite tespit edilmedi.';
 
   @override
-  String get manageActiveSessionsAcrossDevices => 'Farklı cihazlardaki aktif oturumlarınızı yönetin';
+  String get manageActiveSessionsAcrossDevices =>
+      'Farklı cihazlardaki aktif oturumlarınızı yönetin';
 
   @override
   String get noActiveSessionsFound => 'Aktif oturum bulunamadı';
@@ -1444,7 +1509,12 @@ class AppLocalizationsTr extends AppLocalizations {
   }
 
   @override
-  String weightTrendHealthyRate(Object eta, Object rate, Object remaining, Object unit) {
+  String weightTrendHealthyRate(
+    Object eta,
+    Object rate,
+    Object remaining,
+    Object unit,
+  ) {
     return 'Sağlıklı hız: $rate$unit/hafta';
   }
 
@@ -1452,13 +1522,15 @@ class AppLocalizationsTr extends AppLocalizations {
   String get accountSuccessfullyDeleted => 'Hesap Başarıyla Silindi';
 
   @override
-  String get pleaseCloseAndRestartApp => 'Devam etmek için lütfen uygulamayı kapatın ve yeniden başlatın.';
+  String get pleaseCloseAndRestartApp =>
+      'Devam etmek için lütfen uygulamayı kapatın ve yeniden başlatın.';
 
   @override
   String get exportData => 'Veri Dışa Aktar';
 
   @override
-  String get exportDataDescription => 'Tüm verilerinizi PDF dosyası olarak dışa aktarın';
+  String get exportDataDescription =>
+      'Tüm verilerinizi PDF dosyası olarak dışa aktarın';
 
   @override
   String get exportComplete => 'Dışa Aktarma Tamamlandı';
@@ -1467,7 +1539,8 @@ class AppLocalizationsTr extends AppLocalizations {
   String get exportCompleteMessage => 'Verileriniz başarıyla dışa aktarıldı!';
 
   @override
-  String get exportCompleteDescription => 'PDF dosyası cihazınıza kaydedildi ve paylaşılabilir veya görüntülenebilir.';
+  String get exportCompleteDescription =>
+      'PDF dosyası cihazınıza kaydedildi ve paylaşılabilir veya görüntülenebilir.';
 
   @override
   String get exportFailed => 'Dışa Aktarma Başarısız';
@@ -1485,19 +1558,22 @@ class AppLocalizationsTr extends AppLocalizations {
   String get cameraAccess => 'Kamera Erişimi';
 
   @override
-  String get cameraAccessMessage => 'Yumie, yemek öğelerini taramak ve yemeklerinizi doğru bir şekilde kaydetmenize yardımcı olmak için kamera erişimine ihtiyaç duyar.';
+  String get cameraAccessMessage =>
+      'Yumie, yemek öğelerini taramak ve yemeklerinizi doğru bir şekilde kaydetmenize yardımcı olmak için kamera erişimine ihtiyaç duyar.';
 
   @override
   String get photoLibraryAccess => 'Fotoğraf Kütüphanesi Erişimi';
 
   @override
-  String get photoLibraryAccessMessage => 'Yumie, taranan görüntüleri kaydetmek ve yemek kaydı için fotoğraf seçmek için fotoğraf kütüphanenize erişime ihtiyaç duyar.';
+  String get photoLibraryAccessMessage =>
+      'Yumie, taranan görüntüleri kaydetmek ve yemek kaydı için fotoğraf seçmek için fotoğraf kütüphanenize erişime ihtiyaç duyar.';
 
   @override
   String get notificationAccess => 'Bildirim Erişimi';
 
   @override
-  String get notificationAccessMessage => 'Yumie, size yemek hatırlatıcıları, su alımı uyarıları ve bilinçli yürüyüş hatırlatıcıları göndermek için bildirim erişimine ihtiyaç duyar.';
+  String get notificationAccessMessage =>
+      'Yumie, size yemek hatırlatıcıları, su alımı uyarıları ve bilinçli yürüyüş hatırlatıcıları göndermek için bildirim erişimine ihtiyaç duyar.';
 
   @override
   String get notNow => 'Şimdi Değil';
@@ -1506,13 +1582,15 @@ class AppLocalizationsTr extends AppLocalizations {
   String get permissionsCompleted => 'İzinler Tamamlandı!';
 
   @override
-  String get allPermissionsGranted => 'Tüm izinler verildi! Yumie\'yi kullanmaya hazırsınız.';
+  String get allPermissionsGranted =>
+      'Tüm izinler verildi! Yumie\'yi kullanmaya hazırsınız.';
 
   @override
   String get whatIsYourMainGoal => 'Ana hedefiniz nedir?';
 
   @override
-  String get chooseGoalDescription => 'Yolculuğunuzla en iyi şekilde uyum sağlayan hedefi seçin';
+  String get chooseGoalDescription =>
+      'Yolculuğunuzla en iyi şekilde uyum sağlayan hedefi seçin';
 
   @override
   String get loseBodyWeight => 'Vücut ağırlığını kaybet';
@@ -1530,10 +1608,12 @@ class AppLocalizationsTr extends AppLocalizations {
   String get maintainBodyWeight => 'Vücut ağırlığını koru';
 
   @override
-  String get setRealisticGoalForJourney => 'Yolculuğunuz için gerçekçi bir hedef belirleyin';
+  String get setRealisticGoalForJourney =>
+      'Yolculuğunuz için gerçekçi bir hedef belirleyin';
 
   @override
-  String get targetWeightSetToCurrent => 'Hedef kilonuz mevcut kilonuz olarak ayarlandı';
+  String get targetWeightSetToCurrent =>
+      'Hedef kilonuz mevcut kilonuz olarak ayarlandı';
 
   @override
   String get iAcceptThe => 'Kabul ediyorum';
@@ -1548,13 +1628,15 @@ class AppLocalizationsTr extends AppLocalizations {
   String get yourEmailExample => 'sizin.e-posta@ornek.com';
 
   @override
-  String get byContinuingYouAgreeToOur => 'Devam ederek bizimle anlaşmış olursunuz';
+  String get byContinuingYouAgreeToOur =>
+      'Devam ederek bizimle anlaşmış olursunuz';
 
   @override
   String get whatMotivatesYou => 'Sizi ne motive ediyor?';
 
   @override
-  String get chooseWhatDrivesYou => 'Hedeflerinize ulaşmak için sizi neyin harekete geçirdiğini seçin';
+  String get chooseWhatDrivesYou =>
+      'Hedeflerinize ulaşmak için sizi neyin harekete geçirdiğini seçin';
 
   @override
   String get feelEnergeticEveryDay => 'Her gün enerjik hisset';
@@ -1575,7 +1657,8 @@ class AppLocalizationsTr extends AppLocalizations {
   String get caloriesLeft => 'kalan kalori';
 
   @override
-  String get thisHelpsUsPersonalizeNutrition => 'Bu beslenme planınızı kişiselleştirmemize yardımcı olur';
+  String get thisHelpsUsPersonalizeNutrition =>
+      'Bu beslenme planınızı kişiselleştirmemize yardımcı olur';
 
   @override
   String get male => 'Erkek';
@@ -1587,7 +1670,8 @@ class AppLocalizationsTr extends AppLocalizations {
   String get other => 'Diğer';
 
   @override
-  String get thisHelpsUsPersonalizeExperience => 'Bu deneyiminizi kişiselleştirmemize yardımcı olur';
+  String get thisHelpsUsPersonalizeExperience =>
+      'Bu deneyiminizi kişiselleştirmemize yardımcı olur';
 
   @override
   String get older => 'Daha yaşlı';
@@ -1626,7 +1710,8 @@ class AppLocalizationsTr extends AppLocalizations {
   String get remindersWouldYouLike => 'Hangi hatırlatıcıları almak istersiniz?';
 
   @override
-  String get yumieIsCookingUp => 'Yumie kişiselleştirilmiş beslenme planınızı hazırlıyor...';
+  String get yumieIsCookingUp =>
+      'Yumie kişiselleştirilmiş beslenme planınızı hazırlıyor...';
 
   @override
   String get yourAllSet => 'Hazırsınız!';
@@ -1839,7 +1924,8 @@ class AppLocalizationsTr extends AppLocalizations {
   String get internetConnectionRequired => 'İnternet bağlantısı gerekli';
 
   @override
-  String get pleaseCheckConnection => 'Lütfen internet bağlantınızı kontrol edin';
+  String get pleaseCheckConnection =>
+      'Lütfen internet bağlantınızı kontrol edin';
 
   @override
   String get restartOnboarding => 'Onboarding\'i Yeniden Başlat';
@@ -1905,13 +1991,16 @@ class AppLocalizationsTr extends AppLocalizations {
   String get openSettings => 'Ayarları Aç';
 
   @override
-  String get notificationsForMealLogging => 'Yemek kaydı hatırlatıcıları için bildirimler';
+  String get notificationsForMealLogging =>
+      'Yemek kaydı hatırlatıcıları için bildirimler';
 
   @override
-  String get notificationsForWaterIntake => 'Su alımı hatırlatıcıları için bildirimler';
+  String get notificationsForWaterIntake =>
+      'Su alımı hatırlatıcıları için bildirimler';
 
   @override
-  String get notificationsForMindfulWalk => 'Bilinçli yürüyüş hatırlatıcıları için bildirimler';
+  String get notificationsForMindfulWalk =>
+      'Bilinçli yürüyüş hatırlatıcıları için bildirimler';
 
   @override
   String get increment => 'Artır';
@@ -1926,22 +2015,28 @@ class AppLocalizationsTr extends AppLocalizations {
   String get readOurTermsOfService => 'Hizmet şartlarımızı okuyun';
 
   @override
-  String get helpUsCalculateYourHealthGoals => 'Sağlık hedeflerinizi hesaplamamıza yardım edin';
+  String get helpUsCalculateYourHealthGoals =>
+      'Sağlık hedeflerinizi hesaplamamıza yardım edin';
 
   @override
-  String get thisHelpsUsTrackYourProgress => 'Bu ilerlemenizi takip etmemize yardımcı olur';
+  String get thisHelpsUsTrackYourProgress =>
+      'Bu ilerlemenizi takip etmemize yardımcı olur';
 
   @override
-  String get setARealisticGoalForYourJourney => 'Yolculuğunuz için gerçekçi bir hedef belirleyin';
+  String get setARealisticGoalForYourJourney =>
+      'Yolculuğunuz için gerçekçi bir hedef belirleyin';
 
   @override
-  String get thisHelpsUsPersonalizeYourPlan => 'Bu planınızı kişiselleştirmemize yardımcı olur';
+  String get thisHelpsUsPersonalizeYourPlan =>
+      'Bu planınızı kişiselleştirmemize yardımcı olur';
 
   @override
-  String get stayingHydratedIsKeyToYourHealth => 'Hidrate kalmak sağlığınızın anahtarıdır';
+  String get stayingHydratedIsKeyToYourHealth =>
+      'Hidrate kalmak sağlığınızın anahtarıdır';
 
   @override
-  String get yourFitnessProfileDueToYourAnswers => 'Cevaplarınız nedeniyle fitness profiliniz';
+  String get yourFitnessProfileDueToYourAnswers =>
+      'Cevaplarınız nedeniyle fitness profiliniz';
 
   @override
   String get currentBMI => 'Mevcut VKİ';
@@ -1962,7 +2057,8 @@ class AppLocalizationsTr extends AppLocalizations {
   String get waterIntakeLabel => 'Su Alımı';
 
   @override
-  String get heresYourPersonalizedNutritionPlan => 'İşte kişiselleştirilmiş beslenme planınız. Yumie ile sağlık yolculuğunuza hoş geldiniz';
+  String get heresYourPersonalizedNutritionPlan =>
+      'İşte kişiselleştirilmiş beslenme planınız. Yumie ile sağlık yolculuğunuza hoş geldiniz';
 
   @override
   String get caloriesGoal => 'Kalori Hedefi';
@@ -1995,13 +2091,16 @@ class AppLocalizationsTr extends AppLocalizations {
   String get chickenKatsuRiceBowl => 'Tavuk Katsu Pirinç Kasesi';
 
   @override
-  String get yourTargetWeightIsSetToCurrent => 'Hedef kilonuz mevcut kilonuz olarak ayarlandı';
+  String get yourTargetWeightIsSetToCurrent =>
+      'Hedef kilonuz mevcut kilonuz olarak ayarlandı';
 
   @override
-  String get couldNotGenerateYourPlan => 'Planınız oluşturulamadı. Lütfen tekrar deneyin.';
+  String get couldNotGenerateYourPlan =>
+      'Planınız oluşturulamadı. Lütfen tekrar deneyin.';
 
   @override
-  String get somethingWentWrongRestart => 'Bir şeyler yanlış gitti. Lütfen onboarding sürecini yeniden başlatın.';
+  String get somethingWentWrongRestart =>
+      'Bir şeyler yanlış gitti. Lütfen onboarding sürecini yeniden başlatın.';
 
   @override
   String get yourBMI => 'VKİ\'niz:';
@@ -2019,7 +2118,8 @@ class AppLocalizationsTr extends AppLocalizations {
   String get aiDetectingFoodItems => 'AI gıda maddelerini tespit ediyor';
 
   @override
-  String get tryClearerPhoto => 'Buzdolabınızın daha net bir fotoğrafını çekmeyi deneyin';
+  String get tryClearerPhoto =>
+      'Buzdolabınızın daha net bir fotoğrafını çekmeyi deneyin';
 
   @override
   String get generating => 'Oluşturuluyor...';
@@ -2046,7 +2146,8 @@ class AppLocalizationsTr extends AppLocalizations {
   String get reviewAdPreferences => 'Reklam tercihlerinizi gözden geçirin';
 
   @override
-  String get privacyOptionsNotAvailable => 'Gizlilik seçenekleri bölgenizde mevcut değil.';
+  String get privacyOptionsNotAvailable =>
+      'Gizlilik seçenekleri bölgenizde mevcut değil.';
 
   @override
   String get consentFlowCompleted => 'Onay akışı tamamlandı!';
@@ -2091,7 +2192,8 @@ class AppLocalizationsTr extends AppLocalizations {
   String get youReachedGoalWeight => 'Hedef kilonuza ulaştınız!';
 
   @override
-  String get switchToMaintenancePlan => 'Şimdi kilonuzu korumak için bakım planına geçelim!';
+  String get switchToMaintenancePlan =>
+      'Şimdi kilonuzu korumak için bakım planına geçelim!';
 
   @override
   String get letsDoIt => 'HADİ YAPALIM!';
@@ -2103,10 +2205,12 @@ class AppLocalizationsTr extends AppLocalizations {
   String get generatingMaintenancePlan => 'Bakım planınız oluşturuluyor...';
 
   @override
-  String get maintenancePlanUpdated => '🎉 Beslenme planınız bakım için güncellendi!';
+  String get maintenancePlanUpdated =>
+      '🎉 Beslenme planınız bakım için güncellendi!';
 
   @override
-  String get failedToGenerateMaintenancePlan => 'Bakım planı oluşturulamadı. Lütfen tekrar deneyin.';
+  String get failedToGenerateMaintenancePlan =>
+      'Bakım planı oluşturulamadı. Lütfen tekrar deneyin.';
 
   @override
   String get heresYourMaintenancePlan => 'İşte yeni bakım planınız!';
@@ -2124,7 +2228,8 @@ class AppLocalizationsTr extends AppLocalizations {
   String get whatsYourNewTargetWeight => 'Yeni hedef kilonuz nedir?';
 
   @override
-  String get yumieGeneratingNewPlan => 'Yumie yeni kişisel planınızı oluşturuyor...';
+  String get yumieGeneratingNewPlan =>
+      'Yumie yeni kişisel planınızı oluşturuyor...';
 
   @override
   String get yourNewPlanReady => 'Yeni planınız hazır!';
@@ -2136,7 +2241,8 @@ class AppLocalizationsTr extends AppLocalizations {
   String get generateNewPlan => 'Yeni Plan Oluştur';
 
   @override
-  String get planGenerationLimitReached => 'Bu dönem için 2 plan oluşturma hakkınızı kullandınız.';
+  String get planGenerationLimitReached =>
+      'Bu dönem için 2 plan oluşturma hakkınızı kullandınız.';
 
   @override
   String get waterGoal => 'Su Hedefi';
@@ -2161,7 +2267,8 @@ class AppLocalizationsTr extends AppLocalizations {
   String get planDeclined => 'Plan reddedildi';
 
   @override
-  String get accountDeletionWarning => 'Hesabınız 48 saat içinde silinecek. Eğer 48 saat içinde bu hesaba tekrar giriş yaparsanız, hesabınız yeniden etkinleştirilecek ve silme işlemi iptal edilecek.';
+  String get accountDeletionWarning =>
+      'Hesabınız 48 saat içinde silinecek. Eğer 48 saat içinde bu hesaba tekrar giriş yaparsanız, hesabınız yeniden etkinleştirilecek ve silme işlemi iptal edilecek.';
 
   @override
   String get accountScheduledForDeletion => 'Hesap Silme Planlandı';
@@ -2170,7 +2277,8 @@ class AppLocalizationsTr extends AppLocalizations {
   String get reactivateAccount => 'Hesabı Yeniden Etkinleştir';
 
   @override
-  String get accountReactivated => 'Tekrar hoş geldiniz! Hesabınız yeniden etkinleştirildi.';
+  String get accountReactivated =>
+      'Tekrar hoş geldiniz! Hesabınız yeniden etkinleştirildi.';
 
   @override
   String get accountDeletionCancelled => 'Hesap silme işlemi iptal edildi.';
@@ -2179,28 +2287,33 @@ class AppLocalizationsTr extends AppLocalizations {
   String get emailVerificationRequired => 'E-posta Doğrulaması Gerekli';
 
   @override
-  String get pleaseVerifyEmail => 'Devam etmek için lütfen e-posta adresinizi doğrulayın';
+  String get pleaseVerifyEmail =>
+      'Devam etmek için lütfen e-posta adresinizi doğrulayın';
 
   @override
-  String get verificationEmailSent => 'E-posta adresinize bir doğrulama bağlantısı gönderdik. Lütfen gelen kutunuzu kontrol edin ve hesabınızı doğrulamak için bağlantıya tıklayın.';
+  String get verificationEmailSent =>
+      'E-posta adresinize bir doğrulama bağlantısı gönderdik. Lütfen gelen kutunuzu kontrol edin ve hesabınızı doğrulamak için bağlantıya tıklayın.';
 
   @override
   String get waitingForVerification => 'E-posta doğrulaması bekleniyor...';
 
   @override
-  String get checkYourEmail => 'E-postanızı kontrol edin ve doğrulama bağlantısına tıklayın';
+  String get checkYourEmail =>
+      'E-postanızı kontrol edin ve doğrulama bağlantısına tıklayın';
 
   @override
   String get resendVerificationEmail => 'Doğrulama E-postasını Tekrar Gönder';
 
   @override
-  String get verificationLinkAlreadySent => 'Bu e-posta adresine zaten bir doğrulama bağlantısı gönderildi. Lütfen gelen kutunuzu kontrol edin veya yeni bir tane istemeden önce birkaç dakika bekleyin.';
+  String get verificationLinkAlreadySent =>
+      'Bu e-posta adresine zaten bir doğrulama bağlantısı gönderildi. Lütfen gelen kutunuzu kontrol edin veya yeni bir tane istemeden önce birkaç dakika bekleyin.';
 
   @override
   String get emailVerified => 'E-posta başarıyla doğrulandı!';
 
   @override
-  String get emailNotVerified => 'E-posta henüz doğrulanmadı. Lütfen gelen kutunuzu kontrol edin.';
+  String get emailNotVerified =>
+      'E-posta henüz doğrulanmadı. Lütfen gelen kutunuzu kontrol edin.';
 
   @override
   String get changeEmail => 'E-posta Değiştir';
@@ -2209,16 +2322,19 @@ class AppLocalizationsTr extends AppLocalizations {
   String get continueToApp => 'Uygulamaya Devam Et';
 
   @override
-  String get failedToSendVerificationEmail => 'Doğrulama e-postası gönderilirken hata';
+  String get failedToSendVerificationEmail =>
+      'Doğrulama e-postası gönderilirken hata';
 
   @override
-  String get failedToResendVerificationEmail => 'Doğrulama e-postası tekrar gönderilirken hata';
+  String get failedToResendVerificationEmail =>
+      'Doğrulama e-postası tekrar gönderilirken hata';
 
   @override
   String get errorCheckingVerification => 'Doğrulama kontrolü hatası';
 
   @override
-  String get helloIAmYumie => 'Merhaba, ben Yumie! Bugün serinizi başlatmak için bir öğün kaydedin!';
+  String get helloIAmYumie =>
+      'Merhaba, ben Yumie! Bugün serinizi başlatmak için bir öğün kaydedin!';
 
   @override
   String get happyBirthday => '🎉 Doğum Günün Kutlu Olsun!';
@@ -2238,16 +2354,20 @@ class AppLocalizationsTr extends AppLocalizations {
   String get accountAlreadyExists => 'Hesap zaten mevcut';
 
   @override
-  String get accountExistsMessage => 'Bu e-posta adresiyle bir hesap zaten mevcut. Bunun yerine giriş yapmak ister misiniz?';
+  String get accountExistsMessage =>
+      'Bu e-posta adresiyle bir hesap zaten mevcut. Bunun yerine giriş yapmak ister misiniz?';
 
   @override
-  String get accountUsesDifferentSignIn => 'Hesap farklı giriş yöntemi kullanıyor';
+  String get accountUsesDifferentSignIn =>
+      'Hesap farklı giriş yöntemi kullanıyor';
 
   @override
-  String get emailSignedUpWithGoogle => 'Bu e-posta zaten Google ile kayıtlı. Lütfen bunun yerine \"Google ile Giriş Yap\" kullanın.';
+  String get emailSignedUpWithGoogle =>
+      'Bu e-posta zaten Google ile kayıtlı. Lütfen bunun yerine \"Google ile Giriş Yap\" kullanın.';
 
   @override
-  String get emailSignedUpWithPassword => 'Bu e-posta zaten e-posta ve şifre ile kayıtlı. Lütfen şifrenizi kullanarak giriş yapın.';
+  String get emailSignedUpWithPassword =>
+      'Bu e-posta zaten e-posta ve şifre ile kayıtlı. Lütfen şifrenizi kullanarak giriş yapın.';
 
   @override
   String get useGoogleSignIn => 'Google Girişini Kullan';
@@ -2318,13 +2438,15 @@ class AppLocalizationsTr extends AppLocalizations {
   String get yourWeightJourney => 'Kilo Yolculuğunuz';
 
   @override
-  String get trackProgressThroughGoals => 'Farklı hedefler boyunca ilerlemenizi takip edin';
+  String get trackProgressThroughGoals =>
+      'Farklı hedefler boyunca ilerlemenizi takip edin';
 
   @override
   String get noPreviousPlans => 'Önceki Plan Yok';
 
   @override
-  String get previousPlansWillAppear => 'Hedefleri değiştirdiğinizde önceki planlarınız burada görünecektir.';
+  String get previousPlansWillAppear =>
+      'Hedefleri değiştirdiğinizde önceki planlarınız burada görünecektir.';
 
   @override
   String get completed => 'Tamamlandı';
@@ -2339,7 +2461,8 @@ class AppLocalizationsTr extends AppLocalizations {
   String get weightEntries => 'Kilo Girişleri';
 
   @override
-  String get noWeightEntriesRecorded => 'Bu dönem boyunca kilo girişi kaydedilmedi';
+  String get noWeightEntriesRecorded =>
+      'Bu dönem boyunca kilo girişi kaydedilmedi';
 
   @override
   String get months => 'ay';
@@ -2348,10 +2471,12 @@ class AppLocalizationsTr extends AppLocalizations {
   String get unknownGoal => 'Bilinmeyen Hedef';
 
   @override
-  String get failedToSavePlan => 'Plan kaydetme başarısız. Lütfen tekrar deneyin.';
+  String get failedToSavePlan =>
+      'Plan kaydetme başarısız. Lütfen tekrar deneyin.';
 
   @override
-  String get failedToGeneratePlan => 'Plan oluşturma başarısız. Lütfen tekrar deneyin.';
+  String get failedToGeneratePlan =>
+      'Plan oluşturma başarısız. Lütfen tekrar deneyin.';
 
   @override
   String get updateTargetAndRecalculate => 'Hedefi Güncelle ve Yeniden Hesapla';
@@ -2363,22 +2488,28 @@ class AppLocalizationsTr extends AppLocalizations {
   String get saveAndRecalculate => 'Kaydet ve Yeniden Hesapla';
 
   @override
-  String get targetUpdatedAndPlanRecalculated => 'Hedef güncellendi ve plan yeniden hesaplandı';
+  String get targetUpdatedAndPlanRecalculated =>
+      'Hedef güncellendi ve plan yeniden hesaplandı';
 
   @override
-  String get recalculateNote => 'Bu yeni hedef için kalori ve makroları yeniden hesaplayacağız. Daha sonra hala yepyeni bir AI planı oluşturabilirsiniz.';
+  String get recalculateNote =>
+      'Bu yeni hedef için kalori ve makroları yeniden hesaplayacağız. Daha sonra hala yepyeni bir AI planı oluşturabilirsiniz.';
 
   @override
-  String get startLoggingWeight => 'İlerleme eğilimlerinizi görmek için kilonuzu kaydetmeye başlayın.';
+  String get startLoggingWeight =>
+      'İlerleme eğilimlerinizi görmek için kilonuzu kaydetmeye başlayın.';
 
   @override
-  String get logMoreWeights => 'Eğiliminizi görmek için daha fazla kilo kaydedin.';
+  String get logMoreWeights =>
+      'Eğiliminizi görmek için daha fazla kilo kaydedin.';
 
   @override
-  String get weightTrendFlat => 'Kilo eğiliminiz şu anda düz. İlerleme eğiliminizi görmek için daha fazla kilo girişi kaydedin.';
+  String get weightTrendFlat =>
+      'Kilo eğiliminiz şu anda düz. İlerleme eğiliminizi görmek için daha fazla kilo girişi kaydedin.';
 
   @override
-  String get maintenanceRangeDrifted => 'Kilonuz bakım aralığından saptı. Kilonuza geri dönme süresini tahmin etmek için daha fazla giriş kaydedin.';
+  String get maintenanceRangeDrifted =>
+      'Kilonuz bakım aralığından saptı. Kilonuza geri dönme süresini tahmin etmek için daha fazla giriş kaydedin.';
 
   @override
   String trendingBackMaintenance(String eta) {
@@ -2386,7 +2517,8 @@ class AppLocalizationsTr extends AppLocalizations {
   }
 
   @override
-  String get stayConsistentHealthy => 'Sağlıklı seçimlerle tutarlı kalın; daha fazla veri geldikçe sağlıklı aralığınıza geri dönme süresini tahmin edeceğiz.';
+  String get stayConsistentHealthy =>
+      'Sağlıklı seçimlerle tutarlı kalın; daha fazla veri geldikçe sağlıklı aralığınıza geri dönme süresini tahmin edeceğiz.';
 
   @override
   String trendingBackOnTrack(String eta) {
@@ -2394,7 +2526,8 @@ class AppLocalizationsTr extends AppLocalizations {
   }
 
   @override
-  String get strengthPhaseActive => 'Güç fazı aktif. Protein ve antrenmanı tutarlı tutun; veriler büyüdükçe zaman çizelgesi görünecektir.';
+  String get strengthPhaseActive =>
+      'Güç fazı aktif. Protein ve antrenmanı tutarlı tutun; veriler büyüdükçe zaman çizelgesi görünecektir.';
 
   @override
   String trendingTowardBuildGoal(String eta) {
@@ -2414,5 +2547,6 @@ class AppLocalizationsTr extends AppLocalizations {
   String get planToGoal => 'Hedefe Plan';
 
   @override
-  String get cameraInitializationError => 'Kamera başlatılamadı. Lütfen kamera izinlerini kontrol edin.';
+  String get cameraInitializationError =>
+      'Kamera başlatılamadı. Lütfen kamera izinlerini kontrol edin.';
 }

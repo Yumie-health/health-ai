@@ -51,13 +51,15 @@ class AppLocalizationsNl extends AppLocalizations {
   String get mindfulWalksReminders => 'Mindful Walks Reminders';
 
   @override
-  String get mindfulWalksRemindersSubtitle => 'Get reminders to take a mindful walk';
+  String get mindfulWalksRemindersSubtitle =>
+      'Get reminders to take a mindful walk';
 
   @override
   String get momentOfCalmAfterMeals => 'Moment of Calm After Meals';
 
   @override
-  String get momentOfCalmAfterMealsSubtitle => 'Show a calming popup after logging a meal';
+  String get momentOfCalmAfterMealsSubtitle =>
+      'Show a calming popup after logging a meal';
 
   @override
   String get welcomeBack => 'Welcome back!';
@@ -78,19 +80,22 @@ class AppLocalizationsNl extends AppLocalizations {
   String get streakNearEndingTitle => 'Je reeks eindigt bijna';
 
   @override
-  String get streakNearEndingBody => 'Log vandaag nog een maaltijd om je streak te behouden.';
+  String get streakNearEndingBody =>
+      'Log vandaag nog een maaltijd om je streak te behouden.';
 
   @override
   String get streakNearEndingTitle2 => 'Bijna klaar!';
 
   @override
-  String get streakNearEndingBody2 => 'Nog één logboek om de reeks te behouden.';
+  String get streakNearEndingBody2 =>
+      'Nog één logboek om de reeks te behouden.';
 
   @override
   String get streakEndedTitle => 'Reeks beëindigd';
 
   @override
-  String get streakEndedBody => 'Begin vandaag opnieuw en pak je momentum terug.';
+  String get streakEndedBody =>
+      'Begin vandaag opnieuw en pak je momentum terug.';
 
   @override
   String get streakActive => 'Actief';
@@ -117,7 +122,8 @@ class AppLocalizationsNl extends AppLocalizations {
   String get nutritionSummary => 'Nutrition Summary';
 
   @override
-  String get setCalorieAndMacroGoals => 'Set your calorie and macro goals in the Nutrition Plan page.';
+  String get setCalorieAndMacroGoals =>
+      'Set your calorie and macro goals in the Nutrition Plan page.';
 
   @override
   String get protein => 'Eiwit';
@@ -198,7 +204,8 @@ class AppLocalizationsNl extends AppLocalizations {
   String get sinceStart => 'sinds begin';
 
   @override
-  String get expectationsDisclaimer => 'Deze verwachtingen zijn gebaseerd op je recente trend en kunnen veranderen naarmate je nieuwe gewichten logt.';
+  String get expectationsDisclaimer =>
+      'Deze verwachtingen zijn gebaseerd op je recente trend en kunnen veranderen naarmate je nieuwe gewichten logt.';
 
   @override
   String get loseVerb => 'afvallen';
@@ -207,7 +214,13 @@ class AppLocalizationsNl extends AppLocalizations {
   String get gainVerb => 'aankomen';
 
   @override
-  String expectationBlurb(Object direction, Object eta, Object rate, Object remaining, Object unit) {
+  String expectationBlurb(
+    Object direction,
+    Object eta,
+    Object rate,
+    Object remaining,
+    Object unit,
+  ) {
     return 'Op basis van je recente trend ben je op schema om ongeveer $rate $unit per week te $direction. In dit tempo duurt het ongeveer $eta om je doel te bereiken. Je hebt nog $remaining $unit te gaan.';
   }
 
@@ -230,13 +243,15 @@ class AppLocalizationsNl extends AppLocalizations {
   String get comingSoon => 'Coming Soon!';
 
   @override
-  String get ratingOnGoogleAvailableAfterRelease => 'Rating on Google will be available after release.';
+  String get ratingOnGoogleAvailableAfterRelease =>
+      'Rating on Google will be available after release.';
 
   @override
   String get shareWithFriends => 'Share with Friends';
 
   @override
-  String get sharingAvailableAfterRelease => 'Sharing will be available after release.';
+  String get sharingAvailableAfterRelease =>
+      'Sharing will be available after release.';
 
   @override
   String get resetPassword => 'Wachtwoord resetten';
@@ -269,7 +284,8 @@ class AppLocalizationsNl extends AppLocalizations {
   String get apiDocumentation => 'API Documentation';
 
   @override
-  String get needAssistanceContactSupport => 'Need assistance? Contact our support team:';
+  String get needAssistanceContactSupport =>
+      'Need assistance? Contact our support team:';
 
   @override
   String get testWebURL => 'Test Web URL';
@@ -296,13 +312,15 @@ class AppLocalizationsNl extends AppLocalizations {
   String get momentOfCalm => 'Moment of Calm';
 
   @override
-  String get practiceMindfulEating => 'Take a moment to appreciate your meal and practice mindful eating.';
+  String get practiceMindfulEating =>
+      'Take a moment to appreciate your meal and practice mindful eating.';
 
   @override
   String get howOldAreYou => 'Hoe oud ben je?';
 
   @override
-  String get personalizeExperience => 'This helps us personalize your experience';
+  String get personalizeExperience =>
+      'This helps us personalize your experience';
 
   @override
   String get failedToOpenStore => 'Failed to open app store';
@@ -311,7 +329,8 @@ class AppLocalizationsNl extends AppLocalizations {
   String get updateAvailable => 'Update Beschikbaar';
 
   @override
-  String get newVersionAvailable => 'Er is een nieuwe versie van Yumie beschikbaar.';
+  String get newVersionAvailable =>
+      'Er is een nieuwe versie van Yumie beschikbaar.';
 
   @override
   String get updateNow => 'Nu Bijwerken';
@@ -335,19 +354,22 @@ class AppLocalizationsNl extends AppLocalizations {
   String get allSet => 'You\'re all set! 🎉';
 
   @override
-  String get personalizedNutritionPlan => 'Here\'s your personalized nutrition plan. Welcome to your health journey with Yumie!';
+  String get personalizedNutritionPlan =>
+      'Here\'s your personalized nutrition plan. Welcome to your health journey with Yumie!';
 
   @override
   String get whatIsYourBloodType => 'Wat is je bloedgroep?';
 
   @override
-  String get personalizeHealthInsights => 'This helps us personalize your health insights.';
+  String get personalizeHealthInsights =>
+      'This helps us personalize your health insights.';
 
   @override
   String get whatIsYourSex => 'Wat is je geslacht?';
 
   @override
-  String get personalizeNutritionPlan => 'This helps us personalize your nutrition plan.';
+  String get personalizeNutritionPlan =>
+      'This helps us personalize your nutrition plan.';
 
   @override
   String get home => 'Home';
@@ -401,7 +423,8 @@ class AppLocalizationsNl extends AppLocalizations {
   String get clearChat => 'Clear Chat';
 
   @override
-  String get coachWelcome => 'Hello! I\'m Yumie, your nutrition coach. How can I help you today?\n\nAsk Yumie about healthy recipes, meal plans, or nutrition tips!';
+  String get coachWelcome =>
+      'Hello! I\'m Yumie, your nutrition coach. How can I help you today?\n\nAsk Yumie about healthy recipes, meal plans, or nutrition tips!';
 
   @override
   String get refreshInsight => 'Refresh Insight';
@@ -503,7 +526,8 @@ class AppLocalizationsNl extends AppLocalizations {
   String get bloodType => 'Bloedgroep';
 
   @override
-  String get bloodTypeOptional => 'Bloedgroep is optioneel en heeft geen invloed op calorieën bijhouden of aanbevelingen.';
+  String get bloodTypeOptional =>
+      'Bloedgroep is optioneel en heeft geen invloed op calorieën bijhouden of aanbevelingen.';
 
   @override
   String get areYouDiabetic => 'Heb je diabetes?';
@@ -512,7 +536,8 @@ class AppLocalizationsNl extends AppLocalizations {
   String get healthAwarenessUpdated => 'Gezondheidsbewustzijn bijgewerkt!';
 
   @override
-  String get takeMomentToAppreciate => 'Neem een moment om je maaltijd te waarderen en bewust eten te beoefenen.';
+  String get takeMomentToAppreciate =>
+      'Neem een moment om je maaltijd te waarderen en bewust eten te beoefenen.';
 
   @override
   String get continueButton => 'Doorgaan';
@@ -542,7 +567,8 @@ class AppLocalizationsNl extends AppLocalizations {
   String get myFoods => 'Mijn Voedingsmiddelen';
 
   @override
-  String get noCustomFoods => 'Je hebt nog geen aangepaste voedingsmiddelen opgeslagen';
+  String get noCustomFoods =>
+      'Je hebt nog geen aangepaste voedingsmiddelen opgeslagen';
 
   @override
   String get addCustomFood => 'Aangepast Voedingsmiddel Toevoegen';
@@ -820,10 +846,12 @@ class AppLocalizationsNl extends AppLocalizations {
   String get unlockPremiumFeatures => 'Ontgrendel Premium Functies';
 
   @override
-  String get getMostOutOfHealthJourney => 'Haal het meeste uit je gezondheidsreis met onbeperkte toegang!';
+  String get getMostOutOfHealthJourney =>
+      'Haal het meeste uit je gezondheidsreis met onbeperkte toegang!';
 
   @override
-  String get unlimitedScansAICoaching => 'Ontgrendel onbeperkte scans, AI coaching en gepersonaliseerde maaltijdplannen!';
+  String get unlimitedScansAICoaching =>
+      'Ontgrendel onbeperkte scans, AI coaching en gepersonaliseerde maaltijdplannen!';
 
   @override
   String get subscribe => 'Abonneren';
@@ -841,7 +869,8 @@ class AppLocalizationsNl extends AppLocalizations {
   String get deleteMeal => 'Maaltijd verwijderen';
 
   @override
-  String get areYouSureDeleteMeal => 'Weet je zeker dat je deze maaltijd wilt verwijderen?';
+  String get areYouSureDeleteMeal =>
+      'Weet je zeker dat je deze maaltijd wilt verwijderen?';
 
   @override
   String get unknown => 'Onbekend';
@@ -877,7 +906,8 @@ class AppLocalizationsNl extends AppLocalizations {
   String get googleSignInHelp => 'Google Inlog Help';
 
   @override
-  String get couldNotOpenTermsOfService => 'Kon Algemene Voorwaarden niet openen';
+  String get couldNotOpenTermsOfService =>
+      'Kon Algemene Voorwaarden niet openen';
 
   @override
   String get couldNotOpenPrivacyPolicy => 'Kon Privacybeleid niet openen';
@@ -904,7 +934,8 @@ class AppLocalizationsNl extends AppLocalizations {
   String get addLog => 'Log toevoegen';
 
   @override
-  String get unableToShareAtThisTime => 'Kan op dit moment niet delen. Probeer het opnieuw.';
+  String get unableToShareAtThisTime =>
+      'Kan op dit moment niet delen. Probeer het opnieuw.';
 
   @override
   String get failedToUpdatePhoto => 'Foto bijwerken mislukt';
@@ -958,31 +989,36 @@ class AppLocalizationsNl extends AppLocalizations {
   String get permissionStatus => 'Toestemmingsstatus';
 
   @override
-  String get manageAppPermissions => 'Beheer app toestemmingen om ervoor te zorgen dat alle functies correct werken';
+  String get manageAppPermissions =>
+      'Beheer app toestemmingen om ervoor te zorgen dat alle functies correct werken';
 
   @override
   String get camera => 'Camera';
 
   @override
-  String get scanFoodItems => 'Scan voedingsitems en maak foto\'s van maaltijden';
+  String get scanFoodItems =>
+      'Scan voedingsitems en maak foto\'s van maaltijden';
 
   @override
   String get photoLibrary => 'Foto\'s';
 
   @override
-  String get saveScannedImages => 'Sla gescande afbeeldingen op en selecteer foto\'s';
+  String get saveScannedImages =>
+      'Sla gescande afbeeldingen op en selecteer foto\'s';
 
   @override
   String get notifications => 'Meldingen';
 
   @override
-  String get sendMealReminders => 'Stuur maaltijdherinneringen en gezondheidswaarschuwingen';
+  String get sendMealReminders =>
+      'Stuur maaltijdherinneringen en gezondheidswaarschuwingen';
 
   @override
   String get needHelp => 'Hulp nodig?';
 
   @override
-  String get permanentlyDeniedHelp => 'Als toestemmingen permanent worden geweigerd, kun je ze inschakelen in je apparaatinstellingen';
+  String get permanentlyDeniedHelp =>
+      'Als toestemmingen permanent worden geweigerd, kun je ze inschakelen in je apparaatinstellingen';
 
   @override
   String get openDeviceSettings => 'Apparaatinstellingen openen';
@@ -1048,10 +1084,12 @@ class AppLocalizationsNl extends AppLocalizations {
   String get subscribeForDailyInsights => 'Abonneer voor dagelijkse inzichten';
 
   @override
-  String get getPersonalizedHealthInsights => 'Krijg gepersonaliseerde gezondheidsinzichten gebaseerd op je volledige profiel';
+  String get getPersonalizedHealthInsights =>
+      'Krijg gepersonaliseerde gezondheidsinzichten gebaseerd op je volledige profiel';
 
   @override
-  String get upgradeDescription => 'Krijg onbeperkte scans, zoekopdrachten en AI-aangedreven inzichten';
+  String get upgradeDescription =>
+      'Krijg onbeperkte scans, zoekopdrachten en AI-aangedreven inzichten';
 
   @override
   String get unlimitedFoodScans => 'Onbeperkte Voedingsscans';
@@ -1084,19 +1122,23 @@ class AppLocalizationsNl extends AppLocalizations {
   String get water => 'Water';
 
   @override
-  String get resetPasswordDescription => 'Een wachtwoord reset link wordt naar je e-mail gestuurd';
+  String get resetPasswordDescription =>
+      'Een wachtwoord reset link wordt naar je e-mail gestuurd';
 
   @override
   String get deleteAccount => 'Account verwijderen';
 
   @override
-  String get deleteAccountDescription => 'Permanent je account en alle gegevens verwijderen';
+  String get deleteAccountDescription =>
+      'Permanent je account en alle gegevens verwijderen';
 
   @override
-  String get confirmDeleteAccount => 'Weet je zeker dat je je account wilt verwijderen?';
+  String get confirmDeleteAccount =>
+      'Weet je zeker dat je je account wilt verwijderen?';
 
   @override
-  String get deleteAccountWarning => 'Deze actie kan niet ongedaan worden gemaakt. Alle gegevens inclusief maaltijden, voortgang en instellingen worden permanent verwijderd.';
+  String get deleteAccountWarning =>
+      'Deze actie kan niet ongedaan worden gemaakt. Alle gegevens inclusief maaltijden, voortgang en instellingen worden permanent verwijderd.';
 
   @override
   String get typeDeleteToConfirm => 'Type \"VERWIJDEREN\" om te bevestigen';
@@ -1114,7 +1156,8 @@ class AppLocalizationsNl extends AppLocalizations {
   String get totalNutrition => 'Totale Voeding';
 
   @override
-  String get unlockUnlimitedScans => 'Ontgrendel onbeperkte scans, AI coaching en\ngepersonaliseerde maaltijdplannen';
+  String get unlockUnlimitedScans =>
+      'Ontgrendel onbeperkte scans, AI coaching en\ngepersonaliseerde maaltijdplannen';
 
   @override
   String get unlimitedFoodScanning => 'Onbeperkte voedingsscanning';
@@ -1154,13 +1197,15 @@ class AppLocalizationsNl extends AppLocalizations {
   String get noPurchasesFound => 'Geen eerdere aankopen gevonden';
 
   @override
-  String get restoreFailed => 'Herstellen van aankopen mislukt. Probeer het opnieuw.';
+  String get restoreFailed =>
+      'Herstellen van aankopen mislukt. Probeer het opnieuw.';
 
   @override
   String get restoreInProgress => 'Aankopen herstellen...';
 
   @override
-  String get bySubscribing => 'Door je te abonneren ga je akkoord met onze Algemene Voorwaarden en Privacybeleid. Abonnementen verlengen automatisch tenzij geannuleerd';
+  String get bySubscribing =>
+      'Door je te abonneren ga je akkoord met onze Algemene Voorwaarden en Privacybeleid. Abonnementen verlengen automatisch tenzij geannuleerd';
 
   @override
   String get permissionsComplete => 'Toestemmingen voltooid!';
@@ -1169,10 +1214,12 @@ class AppLocalizationsNl extends AppLocalizations {
   String get whyWeAskForPermissions => 'Waarom we om toestemming vragen';
 
   @override
-  String get permissionsWhyBody => 'We gebruiken je camera om voedsel en barcodes te scannen, hebben toegang tot foto\'s wanneer je afbeeldingen uploadt en sturen meldingen om je te herinneren maaltijden te loggen en te hydrateren.';
+  String get permissionsWhyBody =>
+      'We gebruiken je camera om voedsel en barcodes te scannen, hebben toegang tot foto\'s wanneer je afbeeldingen uploadt en sturen meldingen om je te herinneren maaltijden te loggen en te hydrateren.';
 
   @override
-  String get permissionsNextScreen => 'Op het volgende scherm zie je systeemprompts om toegang te verlenen. Je kunt dit later altijd wijzigen in Instellingen.';
+  String get permissionsNextScreen =>
+      'Op het volgende scherm zie je systeemprompts om toegang te verlenen. Je kunt dit later altijd wijzigen in Instellingen.';
 
   @override
   String get references => 'Referenties';
@@ -1253,19 +1300,23 @@ class AppLocalizationsNl extends AppLocalizations {
   String get requiresAtLeast8Characters => 'Vereist minimaal 8 tekens';
 
   @override
-  String get tooManySignInAttempts => 'Te veel inlogpogingen. Probeer het later opnieuw.';
+  String get tooManySignInAttempts =>
+      'Te veel inlogpogingen. Probeer het later opnieuw.';
 
   @override
-  String get tooManySignUpAttempts => 'Te veel registratiepogingen. Probeer het later opnieuw.';
+  String get tooManySignUpAttempts =>
+      'Te veel registratiepogingen. Probeer het later opnieuw.';
 
   @override
-  String get tooManyPasswordResetRequests => 'Te veel wachtwoord reset verzoeken. Probeer het later opnieuw.';
+  String get tooManyPasswordResetRequests =>
+      'Te veel wachtwoord reset verzoeken. Probeer het later opnieuw.';
 
   @override
   String get multipleFailedSignInAttempts => 'Meerdere Mislukte Inlogpogingen';
 
   @override
-  String get excessivePasswordResetRequests => 'Overmatige Wachtwoord Reset Verzoeken';
+  String get excessivePasswordResetRequests =>
+      'Overmatige Wachtwoord Reset Verzoeken';
 
   @override
   String get suspiciousActivityDetected => 'Verdachte Activiteit Gedetecteerd';
@@ -1280,7 +1331,8 @@ class AppLocalizationsNl extends AppLocalizations {
   String get welcomeToYumiePermissions => 'Welkom bij Yumie';
 
   @override
-  String get provideBestExperience => 'Om je de beste ervaring te bieden, hebben we een paar toestemmingen nodig';
+  String get provideBestExperience =>
+      'Om je de beste ervaring te bieden, hebben we een paar toestemmingen nodig';
 
   @override
   String get grantPermissions => 'Toestemmingen verlenen';
@@ -1310,7 +1362,8 @@ class AppLocalizationsNl extends AppLocalizations {
   String get password => 'Wachtwoord';
 
   @override
-  String get agreeToTerms => 'en Algemene Voorwaarden Ik accepteer het Privacybeleid';
+  String get agreeToTerms =>
+      'en Algemene Voorwaarden Ik accepteer het Privacybeleid';
 
   @override
   String get alreadyHaveAccount => 'Heb je al een account?';
@@ -1322,7 +1375,8 @@ class AppLocalizationsNl extends AppLocalizations {
   String get signUp => 'Registreren';
 
   @override
-  String get signInToAccessAccount => 'Log in om toegang te krijgen tot je account';
+  String get signInToAccessAccount =>
+      'Log in om toegang te krijgen tot je account';
 
   @override
   String get forgotPassword => 'Wachtwoord vergeten?';
@@ -1346,7 +1400,8 @@ class AppLocalizationsNl extends AppLocalizations {
   String get resetPasswordTitle => 'Wachtwoord resetten';
 
   @override
-  String get enterEmailForReset => 'Voer je e-mailadres in om een wachtwoord reset link te ontvangen';
+  String get enterEmailForReset =>
+      'Voer je e-mailadres in om een wachtwoord reset link te ontvangen';
 
   @override
   String get emailAddress => 'E-mailadres';
@@ -1358,10 +1413,12 @@ class AppLocalizationsNl extends AppLocalizations {
   String get deleteAccountTitle => 'Account verwijderen';
 
   @override
-  String get deleteAccountWarningTitle => 'Deze actie is permanent en kan niet ongedaan worden gemaakt';
+  String get deleteAccountWarningTitle =>
+      'Deze actie is permanent en kan niet ongedaan worden gemaakt';
 
   @override
-  String get deleteAccountDataList => 'Wanneer je je account verwijdert, zullen we permanent verwijderen:';
+  String get deleteAccountDataList =>
+      'Wanneer je je account verwijdert, zullen we permanent verwijderen:';
 
   @override
   String get allMealLogsAndNutrition => 'Alle maaltijdlogs en voedingsgegevens';
@@ -1382,10 +1439,12 @@ class AppLocalizationsNl extends AppLocalizations {
   String get activeSessionsAllDevices => 'Actieve sessies op alle apparaten';
 
   @override
-  String get exportDataWarning => 'Zorg ervoor dat je alle gegevens exporteert die je wilt behouden voordat je doorgaat';
+  String get exportDataWarning =>
+      'Zorg ervoor dat je alle gegevens exporteert die je wilt behouden voordat je doorgaat';
 
   @override
-  String get understandActionPermanent => 'Ik begrijp dat deze actie permanent is';
+  String get understandActionPermanent =>
+      'Ik begrijp dat deze actie permanent is';
 
   @override
   String get typeDeleteHere => 'Type VERWIJDEREN hier';
@@ -1397,10 +1456,12 @@ class AppLocalizationsNl extends AppLocalizations {
   String get noSecurityAlertsFound => 'Geen beveiligingswaarschuwingen';
 
   @override
-  String get yourAccountLooksGood => 'Je account ziet er goed uit! Geen verdachte activiteit gedetecteerd.';
+  String get yourAccountLooksGood =>
+      'Je account ziet er goed uit! Geen verdachte activiteit gedetecteerd.';
 
   @override
-  String get manageActiveSessionsAcrossDevices => 'Beheer je actieve sessies op verschillende apparaten';
+  String get manageActiveSessionsAcrossDevices =>
+      'Beheer je actieve sessies op verschillende apparaten';
 
   @override
   String get noActiveSessionsFound => 'Geen actieve sessies gevonden';
@@ -1444,7 +1505,12 @@ class AppLocalizationsNl extends AppLocalizations {
   }
 
   @override
-  String weightTrendHealthyRate(Object eta, Object rate, Object remaining, Object unit) {
+  String weightTrendHealthyRate(
+    Object eta,
+    Object rate,
+    Object remaining,
+    Object unit,
+  ) {
     return 'Gezond tempo: $rate$unit/week';
   }
 
@@ -1452,22 +1518,26 @@ class AppLocalizationsNl extends AppLocalizations {
   String get accountSuccessfullyDeleted => 'Account succesvol verwijderd';
 
   @override
-  String get pleaseCloseAndRestartApp => 'Sluit en herstart de app om door te gaan.';
+  String get pleaseCloseAndRestartApp =>
+      'Sluit en herstart de app om door te gaan.';
 
   @override
   String get exportData => 'Gegevens Exporteren';
 
   @override
-  String get exportDataDescription => 'Exporteer al je gegevens als PDF-bestand';
+  String get exportDataDescription =>
+      'Exporteer al je gegevens als PDF-bestand';
 
   @override
   String get exportComplete => 'Export Voltooid';
 
   @override
-  String get exportCompleteMessage => 'Je gegevens zijn succesvol geëxporteerd!';
+  String get exportCompleteMessage =>
+      'Je gegevens zijn succesvol geëxporteerd!';
 
   @override
-  String get exportCompleteDescription => 'Het PDF-bestand is opgeslagen op je apparaat en kan worden gedeeld of bekeken.';
+  String get exportCompleteDescription =>
+      'Het PDF-bestand is opgeslagen op je apparaat en kan worden gedeeld of bekeken.';
 
   @override
   String get exportFailed => 'Export Mislukt';
@@ -1485,19 +1555,22 @@ class AppLocalizationsNl extends AppLocalizations {
   String get cameraAccess => 'Camera toegang';
 
   @override
-  String get cameraAccessMessage => 'Yumie heeft camera toegang nodig om voedingsitems te scannen en je te helpen je maaltijden nauwkeurig te loggen.';
+  String get cameraAccessMessage =>
+      'Yumie heeft camera toegang nodig om voedingsitems te scannen en je te helpen je maaltijden nauwkeurig te loggen.';
 
   @override
   String get photoLibraryAccess => 'Fotobibliotheek toegang';
 
   @override
-  String get photoLibraryAccessMessage => 'Yumie heeft toegang tot je fotobibliotheek nodig om gescande afbeeldingen op te slaan en foto\'s te selecteren voor maaltijdlogging.';
+  String get photoLibraryAccessMessage =>
+      'Yumie heeft toegang tot je fotobibliotheek nodig om gescande afbeeldingen op te slaan en foto\'s te selecteren voor maaltijdlogging.';
 
   @override
   String get notificationAccess => 'Meldingen toegang';
 
   @override
-  String get notificationAccessMessage => 'Yumie heeft meldingen toegang nodig om je maaltijdherinneringen, waterinname waarschuwingen en bewuste wandeling prompts te sturen.';
+  String get notificationAccessMessage =>
+      'Yumie heeft meldingen toegang nodig om je maaltijdherinneringen, waterinname waarschuwingen en bewuste wandeling prompts te sturen.';
 
   @override
   String get notNow => 'Niet nu';
@@ -1506,13 +1579,15 @@ class AppLocalizationsNl extends AppLocalizations {
   String get permissionsCompleted => 'Toestemmingen voltooid!';
 
   @override
-  String get allPermissionsGranted => 'Alle toestemmingen verleend! Je bent klaar om Yumie te gebruiken.';
+  String get allPermissionsGranted =>
+      'Alle toestemmingen verleend! Je bent klaar om Yumie te gebruiken.';
 
   @override
   String get whatIsYourMainGoal => 'Wat is je hoofddoel?';
 
   @override
-  String get chooseGoalDescription => 'Kies het doel dat het beste aansluit bij je reis';
+  String get chooseGoalDescription =>
+      'Kies het doel dat het beste aansluit bij je reis';
 
   @override
   String get loseBodyWeight => 'Lichaamsgewicht verliezen';
@@ -1530,10 +1605,12 @@ class AppLocalizationsNl extends AppLocalizations {
   String get maintainBodyWeight => 'Lichaamsgewicht behouden';
 
   @override
-  String get setRealisticGoalForJourney => 'Stel een realistisch doel in voor je reis';
+  String get setRealisticGoalForJourney =>
+      'Stel een realistisch doel in voor je reis';
 
   @override
-  String get targetWeightSetToCurrent => 'Je doelgewicht is ingesteld op je huidige gewicht';
+  String get targetWeightSetToCurrent =>
+      'Je doelgewicht is ingesteld op je huidige gewicht';
 
   @override
   String get iAcceptThe => 'Ik accepteer de';
@@ -1548,13 +1625,15 @@ class AppLocalizationsNl extends AppLocalizations {
   String get yourEmailExample => 'jouw.email@voorbeeld.com';
 
   @override
-  String get byContinuingYouAgreeToOur => 'Door door te gaan ga je akkoord met onze';
+  String get byContinuingYouAgreeToOur =>
+      'Door door te gaan ga je akkoord met onze';
 
   @override
   String get whatMotivatesYou => 'Wat motiveert je?';
 
   @override
-  String get chooseWhatDrivesYou => 'Kies wat je drijft om je doelen te bereiken';
+  String get chooseWhatDrivesYou =>
+      'Kies wat je drijft om je doelen te bereiken';
 
   @override
   String get feelEnergeticEveryDay => 'Elke dag energiek voelen';
@@ -1575,7 +1654,8 @@ class AppLocalizationsNl extends AppLocalizations {
   String get caloriesLeft => 'calorieën over';
 
   @override
-  String get thisHelpsUsPersonalizeNutrition => 'Dit helpt ons je voedingsplan te personaliseren';
+  String get thisHelpsUsPersonalizeNutrition =>
+      'Dit helpt ons je voedingsplan te personaliseren';
 
   @override
   String get male => 'Man';
@@ -1587,7 +1667,8 @@ class AppLocalizationsNl extends AppLocalizations {
   String get other => 'Anders';
 
   @override
-  String get thisHelpsUsPersonalizeExperience => 'Dit helpt ons je ervaring te personaliseren';
+  String get thisHelpsUsPersonalizeExperience =>
+      'Dit helpt ons je ervaring te personaliseren';
 
   @override
   String get older => 'Ouder';
@@ -1623,10 +1704,12 @@ class AppLocalizationsNl extends AppLocalizations {
   String get dueToCurrentAnswers => 'Vanwege huidige antwoorden';
 
   @override
-  String get remindersWouldYouLike => 'Welke herinneringen zou je willen ontvangen?';
+  String get remindersWouldYouLike =>
+      'Welke herinneringen zou je willen ontvangen?';
 
   @override
-  String get yumieIsCookingUp => 'Yumie bereidt je gepersonaliseerde voedingsplan voor...';
+  String get yumieIsCookingUp =>
+      'Yumie bereidt je gepersonaliseerde voedingsplan voor...';
 
   @override
   String get yourAllSet => 'Je bent klaar!';
@@ -1905,13 +1988,16 @@ class AppLocalizationsNl extends AppLocalizations {
   String get openSettings => 'Instellingen openen';
 
   @override
-  String get notificationsForMealLogging => 'Meldingen voor maaltijdlogging herinneringen';
+  String get notificationsForMealLogging =>
+      'Meldingen voor maaltijdlogging herinneringen';
 
   @override
-  String get notificationsForWaterIntake => 'Meldingen voor waterinname herinneringen';
+  String get notificationsForWaterIntake =>
+      'Meldingen voor waterinname herinneringen';
 
   @override
-  String get notificationsForMindfulWalk => 'Meldingen voor bewuste wandeling herinneringen';
+  String get notificationsForMindfulWalk =>
+      'Meldingen voor bewuste wandeling herinneringen';
 
   @override
   String get increment => 'Verhogen';
@@ -1926,22 +2012,28 @@ class AppLocalizationsNl extends AppLocalizations {
   String get readOurTermsOfService => 'Lees onze algemene voorwaarden';
 
   @override
-  String get helpUsCalculateYourHealthGoals => 'Help ons je gezondheidsdoelen te berekenen';
+  String get helpUsCalculateYourHealthGoals =>
+      'Help ons je gezondheidsdoelen te berekenen';
 
   @override
-  String get thisHelpsUsTrackYourProgress => 'Dit helpt ons je voortgang bij te houden';
+  String get thisHelpsUsTrackYourProgress =>
+      'Dit helpt ons je voortgang bij te houden';
 
   @override
-  String get setARealisticGoalForYourJourney => 'Stel een realistisch doel in voor je reis';
+  String get setARealisticGoalForYourJourney =>
+      'Stel een realistisch doel in voor je reis';
 
   @override
-  String get thisHelpsUsPersonalizeYourPlan => 'Dit helpt ons je plan te personaliseren';
+  String get thisHelpsUsPersonalizeYourPlan =>
+      'Dit helpt ons je plan te personaliseren';
 
   @override
-  String get stayingHydratedIsKeyToYourHealth => 'Gehydrateerd blijven is de sleutel tot je gezondheid';
+  String get stayingHydratedIsKeyToYourHealth =>
+      'Gehydrateerd blijven is de sleutel tot je gezondheid';
 
   @override
-  String get yourFitnessProfileDueToYourAnswers => 'Je fitness profiel vanwege je antwoorden';
+  String get yourFitnessProfileDueToYourAnswers =>
+      'Je fitness profiel vanwege je antwoorden';
 
   @override
   String get currentBMI => 'Huidige BMI';
@@ -1962,7 +2054,8 @@ class AppLocalizationsNl extends AppLocalizations {
   String get waterIntakeLabel => 'Waterinname';
 
   @override
-  String get heresYourPersonalizedNutritionPlan => 'Hier is je gepersonaliseerde voedingsplan. Welkom bij je gezondheidsreis met Yumie';
+  String get heresYourPersonalizedNutritionPlan =>
+      'Hier is je gepersonaliseerde voedingsplan. Welkom bij je gezondheidsreis met Yumie';
 
   @override
   String get caloriesGoal => 'Calorie Doel';
@@ -1995,13 +2088,16 @@ class AppLocalizationsNl extends AppLocalizations {
   String get chickenKatsuRiceBowl => 'Kip Katsu Rijst Kom';
 
   @override
-  String get yourTargetWeightIsSetToCurrent => 'Je doelgewicht is ingesteld op je huidige gewicht';
+  String get yourTargetWeightIsSetToCurrent =>
+      'Je doelgewicht is ingesteld op je huidige gewicht';
 
   @override
-  String get couldNotGenerateYourPlan => 'Kon je plan niet genereren. Probeer het opnieuw.';
+  String get couldNotGenerateYourPlan =>
+      'Kon je plan niet genereren. Probeer het opnieuw.';
 
   @override
-  String get somethingWentWrongRestart => 'Er is iets misgegaan. Start het onboarding proces opnieuw.';
+  String get somethingWentWrongRestart =>
+      'Er is iets misgegaan. Start het onboarding proces opnieuw.';
 
   @override
   String get yourBMI => 'Je BMI:';
@@ -2019,7 +2115,8 @@ class AppLocalizationsNl extends AppLocalizations {
   String get aiDetectingFoodItems => 'AI detecteert voedingsmiddelen';
 
   @override
-  String get tryClearerPhoto => 'Probeer een duidelijkere foto van je koelkast te maken';
+  String get tryClearerPhoto =>
+      'Probeer een duidelijkere foto van je koelkast te maken';
 
   @override
   String get generating => 'Genereren...';
@@ -2046,7 +2143,8 @@ class AppLocalizationsNl extends AppLocalizations {
   String get reviewAdPreferences => 'Bekijk je advertentievoorkeuren';
 
   @override
-  String get privacyOptionsNotAvailable => 'Privacy-opties zijn niet beschikbaar in je regio.';
+  String get privacyOptionsNotAvailable =>
+      'Privacy-opties zijn niet beschikbaar in je regio.';
 
   @override
   String get consentFlowCompleted => 'Toestemmingsproces voltooid!';
@@ -2061,7 +2159,8 @@ class AppLocalizationsNl extends AppLocalizations {
   String get adNotLoadedYet => 'Advertentie nog niet geladen';
 
   @override
-  String get errorRequestingPermissions => 'Fout bij het aanvragen van machtigingen';
+  String get errorRequestingPermissions =>
+      'Fout bij het aanvragen van machtigingen';
 
   @override
   String get showMore => 'Meer weergeven';
@@ -2070,7 +2169,8 @@ class AppLocalizationsNl extends AppLocalizations {
   String get showLess => 'Minder weergeven';
 
   @override
-  String get noSavedCustomMeals => 'Je hebt geen opgeslagen aangepaste maaltijden.';
+  String get noSavedCustomMeals =>
+      'Je hebt geen opgeslagen aangepaste maaltijden.';
 
   @override
   String get savedCustomMealsPlus => 'Opgeslagen aangepaste maaltijden +';
@@ -2091,7 +2191,8 @@ class AppLocalizationsNl extends AppLocalizations {
   String get youReachedGoalWeight => 'Je hebt je streefgewicht bereikt!';
 
   @override
-  String get switchToMaintenancePlan => 'Laten we nu overschakelen naar een onderhoudsplan!';
+  String get switchToMaintenancePlan =>
+      'Laten we nu overschakelen naar een onderhoudsplan!';
 
   @override
   String get letsDoIt => 'Laten we het doen!';
@@ -2103,10 +2204,12 @@ class AppLocalizationsNl extends AppLocalizations {
   String get generatingMaintenancePlan => 'Onderhoudsplan genereren...';
 
   @override
-  String get maintenancePlanUpdated => '🎉 Je voedingsplan is bijgewerkt voor onderhoud!';
+  String get maintenancePlanUpdated =>
+      '🎉 Je voedingsplan is bijgewerkt voor onderhoud!';
 
   @override
-  String get failedToGenerateMaintenancePlan => 'Het genereren van het onderhoudsplan is mislukt. Probeer het opnieuw.';
+  String get failedToGenerateMaintenancePlan =>
+      'Het genereren van het onderhoudsplan is mislukt. Probeer het opnieuw.';
 
   @override
   String get heresYourMaintenancePlan => 'Hier is je nieuwe onderhoudsplan!';
@@ -2124,7 +2227,8 @@ class AppLocalizationsNl extends AppLocalizations {
   String get whatsYourNewTargetWeight => 'Wat is je nieuwe streefgewicht?';
 
   @override
-  String get yumieGeneratingNewPlan => 'Yumie genereert je nieuwe persoonlijke plan...';
+  String get yumieGeneratingNewPlan =>
+      'Yumie genereert je nieuwe persoonlijke plan...';
 
   @override
   String get yourNewPlanReady => 'Je nieuwe plan is klaar!';
@@ -2136,7 +2240,8 @@ class AppLocalizationsNl extends AppLocalizations {
   String get generateNewPlan => 'Nieuw Plan Genereren';
 
   @override
-  String get planGenerationLimitReached => 'Je hebt je 2 plan-generaties voor deze periode gebruikt.';
+  String get planGenerationLimitReached =>
+      'Je hebt je 2 plan-generaties voor deze periode gebruikt.';
 
   @override
   String get waterGoal => 'Waterdoel';
@@ -2161,7 +2266,8 @@ class AppLocalizationsNl extends AppLocalizations {
   String get planDeclined => 'Plan geweigerd';
 
   @override
-  String get accountDeletionWarning => 'Je account wordt over 48 uur verwijderd. Als je binnen 48 uur opnieuw inlogt op dit account, wordt het gereactiveerd en wordt de verwijdering geannuleerd.';
+  String get accountDeletionWarning =>
+      'Je account wordt over 48 uur verwijderd. Als je binnen 48 uur opnieuw inlogt op dit account, wordt het gereactiveerd en wordt de verwijdering geannuleerd.';
 
   @override
   String get accountScheduledForDeletion => 'Account Gepland voor Verwijdering';
@@ -2182,25 +2288,29 @@ class AppLocalizationsNl extends AppLocalizations {
   String get pleaseVerifyEmail => 'Verifieer je e-mailadres om door te gaan';
 
   @override
-  String get verificationEmailSent => 'We hebben een verificatielink naar je e-mail gestuurd. Controleer je inbox en klik op de link om je account te verifiëren.';
+  String get verificationEmailSent =>
+      'We hebben een verificatielink naar je e-mail gestuurd. Controleer je inbox en klik op de link om je account te verifiëren.';
 
   @override
   String get waitingForVerification => 'Wachten op e-mailverificatie...';
 
   @override
-  String get checkYourEmail => 'Controleer je e-mail en klik op de verificatielink';
+  String get checkYourEmail =>
+      'Controleer je e-mail en klik op de verificatielink';
 
   @override
   String get resendVerificationEmail => 'Verificatie-e-mail Opnieuw Verzenden';
 
   @override
-  String get verificationLinkAlreadySent => 'Er is al een verificatielink naar dit e-mailadres verzonden. Controleer je inbox of wacht een paar minuten voordat je een nieuwe aanvraagt.';
+  String get verificationLinkAlreadySent =>
+      'Er is al een verificatielink naar dit e-mailadres verzonden. Controleer je inbox of wacht een paar minuten voordat je een nieuwe aanvraagt.';
 
   @override
   String get emailVerified => 'E-mail succesvol geverifieerd!';
 
   @override
-  String get emailNotVerified => 'E-mail nog niet geverifieerd. Controleer je inbox.';
+  String get emailNotVerified =>
+      'E-mail nog niet geverifieerd. Controleer je inbox.';
 
   @override
   String get changeEmail => 'E-mail Wijzigen';
@@ -2209,16 +2319,19 @@ class AppLocalizationsNl extends AppLocalizations {
   String get continueToApp => 'Doorgaan naar App';
 
   @override
-  String get failedToSendVerificationEmail => 'Fout bij verzenden verificatie-e-mail';
+  String get failedToSendVerificationEmail =>
+      'Fout bij verzenden verificatie-e-mail';
 
   @override
-  String get failedToResendVerificationEmail => 'Fout bij opnieuw verzenden verificatie-e-mail';
+  String get failedToResendVerificationEmail =>
+      'Fout bij opnieuw verzenden verificatie-e-mail';
 
   @override
   String get errorCheckingVerification => 'Fout bij controleren verificatie';
 
   @override
-  String get helloIAmYumie => 'Hallo, ik ben Yumie! Log een maaltijd om vandaag je streak te beginnen!';
+  String get helloIAmYumie =>
+      'Hallo, ik ben Yumie! Log een maaltijd om vandaag je streak te beginnen!';
 
   @override
   String get happyBirthday => '🎉 Gelukkige Verjaardag!';
@@ -2238,16 +2351,20 @@ class AppLocalizationsNl extends AppLocalizations {
   String get accountAlreadyExists => 'Account bestaat al';
 
   @override
-  String get accountExistsMessage => 'Een account met dit e-mailadres bestaat al. Wil je in plaats daarvan inloggen?';
+  String get accountExistsMessage =>
+      'Een account met dit e-mailadres bestaat al. Wil je in plaats daarvan inloggen?';
 
   @override
-  String get accountUsesDifferentSignIn => 'Account gebruikt andere aanmeldingsmethode';
+  String get accountUsesDifferentSignIn =>
+      'Account gebruikt andere aanmeldingsmethode';
 
   @override
-  String get emailSignedUpWithGoogle => 'Deze e-mail is al geregistreerd met Google. Gebruik in plaats daarvan \"Inloggen met Google\".';
+  String get emailSignedUpWithGoogle =>
+      'Deze e-mail is al geregistreerd met Google. Gebruik in plaats daarvan \"Inloggen met Google\".';
 
   @override
-  String get emailSignedUpWithPassword => 'Deze e-mail is al geregistreerd met e-mail en wachtwoord. Log in met je wachtwoord.';
+  String get emailSignedUpWithPassword =>
+      'Deze e-mail is al geregistreerd met e-mail en wachtwoord. Log in met je wachtwoord.';
 
   @override
   String get useGoogleSignIn => 'Google-aanmelding gebruiken';
@@ -2318,13 +2435,15 @@ class AppLocalizationsNl extends AppLocalizations {
   String get yourWeightJourney => 'Jouw Gewichtsreis';
 
   @override
-  String get trackProgressThroughGoals => 'Volg je voortgang door verschillende doelen';
+  String get trackProgressThroughGoals =>
+      'Volg je voortgang door verschillende doelen';
 
   @override
   String get noPreviousPlans => 'Geen Vorige Plannen';
 
   @override
-  String get previousPlansWillAppear => 'Je vorige plannen verschijnen hier wanneer je doelen wijzigt.';
+  String get previousPlansWillAppear =>
+      'Je vorige plannen verschijnen hier wanneer je doelen wijzigt.';
 
   @override
   String get completed => 'Voltooid';
@@ -2339,7 +2458,8 @@ class AppLocalizationsNl extends AppLocalizations {
   String get weightEntries => 'Gewichtsinvoer';
 
   @override
-  String get noWeightEntriesRecorded => 'Geen gewichtsinvoer opgenomen tijdens deze periode';
+  String get noWeightEntriesRecorded =>
+      'Geen gewichtsinvoer opgenomen tijdens deze periode';
 
   @override
   String get months => 'maanden';
@@ -2363,22 +2483,27 @@ class AppLocalizationsNl extends AppLocalizations {
   String get saveAndRecalculate => 'Opslaan & Herberekenen';
 
   @override
-  String get targetUpdatedAndPlanRecalculated => 'Doel bijgewerkt en plan herberekend';
+  String get targetUpdatedAndPlanRecalculated =>
+      'Doel bijgewerkt en plan herberekend';
 
   @override
-  String get recalculateNote => 'We herberekenen calorieën en macro\'s voor dit nieuwe doel. Je kunt later nog steeds een gloednieuw AI-plan genereren.';
+  String get recalculateNote =>
+      'We herberekenen calorieën en macro\'s voor dit nieuwe doel. Je kunt later nog steeds een gloednieuw AI-plan genereren.';
 
   @override
-  String get startLoggingWeight => 'Begin met het loggen van je gewicht om je voortgangstrends te zien.';
+  String get startLoggingWeight =>
+      'Begin met het loggen van je gewicht om je voortgangstrends te zien.';
 
   @override
   String get logMoreWeights => 'Log meer gewichten om je trend te zien.';
 
   @override
-  String get weightTrendFlat => 'Je gewichtstrend is momenteel vlak. Log meer gewichtsinvoer om je voortgangstrend te zien.';
+  String get weightTrendFlat =>
+      'Je gewichtstrend is momenteel vlak. Log meer gewichtsinvoer om je voortgangstrend te zien.';
 
   @override
-  String get maintenanceRangeDrifted => 'Je gewicht is afgeweken van je onderhoudsbereik. Log meer invoer om de tijd terug naar je gewicht in te schatten.';
+  String get maintenanceRangeDrifted =>
+      'Je gewicht is afgeweken van je onderhoudsbereik. Log meer invoer om de tijd terug naar je gewicht in te schatten.';
 
   @override
   String trendingBackMaintenance(String eta) {
@@ -2386,7 +2511,8 @@ class AppLocalizationsNl extends AppLocalizations {
   }
 
   @override
-  String get stayConsistentHealthy => 'Blijf consistent met gezonde keuzes; naarmate er meer gegevens binnenkomen schatten we de tijd terug naar je gezonde bereik in.';
+  String get stayConsistentHealthy =>
+      'Blijf consistent met gezonde keuzes; naarmate er meer gegevens binnenkomen schatten we de tijd terug naar je gezonde bereik in.';
 
   @override
   String trendingBackOnTrack(String eta) {
@@ -2394,7 +2520,8 @@ class AppLocalizationsNl extends AppLocalizations {
   }
 
   @override
-  String get strengthPhaseActive => 'Krachtfase actief. Houd eiwitten en training consistent; tijdlijn verschijnt naarmate gegevens groeien.';
+  String get strengthPhaseActive =>
+      'Krachtfase actief. Houd eiwitten en training consistent; tijdlijn verschijnt naarmate gegevens groeien.';
 
   @override
   String trendingTowardBuildGoal(String eta) {
@@ -2414,5 +2541,6 @@ class AppLocalizationsNl extends AppLocalizations {
   String get planToGoal => 'Plan naar Doel';
 
   @override
-  String get cameraInitializationError => 'Camera-initialisatie mislukt. Controleer de cameratoestemmingen.';
+  String get cameraInitializationError =>
+      'Camera-initialisatie mislukt. Controleer de cameratoestemmingen.';
 }

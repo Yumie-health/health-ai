@@ -49,17 +49,21 @@ class _ImprovedGoalWeightStepState extends State<ImprovedGoalWeightStep>
     _bounceAnimation = Tween<double>(begin: 1.0, end: 1.02).animate(
       CurvedAnimation(parent: _bounceController, curve: Curves.easeInOut),
     );
-    
+
     // Auto-set goal weight for build muscle and eat healthier, and ensure it's within bounds
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (widget.selectedGoal == 'Build muscle' || widget.selectedGoal == 'Eat healthier') {
+      if (widget.selectedGoal == 'Build muscle' ||
+          widget.selectedGoal == 'Eat healthier') {
         widget.onGoalWeightChanged(widget.currentWeightKg);
       } else {
         // Ensure the current goal weight is within the slider bounds
-        final currentDisplay = widget.useMetric ? widget.goalWeightKg : widget.goalWeightKg * 2.20462;
+        final currentDisplay =
+            widget.useMetric
+                ? widget.goalWeightKg
+                : widget.goalWeightKg * 2.20462;
         final minVal = _getMinValue();
         final maxVal = _getMaxValue();
-        
+
         if (currentDisplay < minVal || currentDisplay > maxVal) {
           // Reset to current weight if out of bounds
           widget.onGoalWeightChanged(widget.currentWeightKg);
@@ -78,20 +82,22 @@ class _ImprovedGoalWeightStepState extends State<ImprovedGoalWeightStep>
   void _changeWeight(double delta) {
     HapticFeedback.selectionClick();
     _bounceController.forward().then((_) => _bounceController.reverse());
-    
+
     // Apply delta in kg (always work in kg internally)
     final deltaKg = widget.useMetric ? delta : delta / 2.20462;
     final newWeightKg = widget.goalWeightKg + deltaKg;
-    
+
     // Convert to display units for bounds checking
-    final newWeightDisplay = widget.useMetric ? newWeightKg : newWeightKg * 2.20462;
+    final newWeightDisplay =
+        widget.useMetric ? newWeightKg : newWeightKg * 2.20462;
     final minVal = _getMinValue();
     final maxVal = _getMaxValue();
-    
+
     // Clamp in display units, then convert back to kg
     final clampedDisplay = newWeightDisplay.clamp(minVal, maxVal);
-    final clampedWeightKg = widget.useMetric ? clampedDisplay : clampedDisplay / 2.20462;
-    
+    final clampedWeightKg =
+        widget.useMetric ? clampedDisplay : clampedDisplay / 2.20462;
+
     widget.onGoalWeightChanged(clampedWeightKg);
   }
 
@@ -108,28 +114,33 @@ class _ImprovedGoalWeightStepState extends State<ImprovedGoalWeightStep>
   void _onSliderChanged(double value) {
     HapticFeedback.selectionClick();
     _bounceController.forward().then((_) => _bounceController.reverse());
-    
+
     final goalKg = widget.useMetric ? value : value / 2.20462;
     widget.onGoalWeightChanged(goalKg);
   }
 
   double _getCurrentSliderValue() {
-    final sliderValue = widget.useMetric ? widget.goalWeightKg : widget.goalWeightKg * 2.20462;
+    final sliderValue =
+        widget.useMetric ? widget.goalWeightKg : widget.goalWeightKg * 2.20462;
     final minVal = _getMinValue();
     final maxVal = _getMaxValue();
-    
+
     // Clamp the value to ensure it's within the slider bounds
     return sliderValue.clamp(minVal, maxVal);
   }
 
   double _getMinValue() {
-    final currentDisplay = widget.useMetric ? widget.currentWeightKg : widget.currentWeightKg * 2.20462;
-    
+    final currentDisplay =
+        widget.useMetric
+            ? widget.currentWeightKg
+            : widget.currentWeightKg * 2.20462;
+
     if (widget.selectedGoal == 'Lose body weight') {
       return widget.useMetric ? 30.0 : 66.0;
     } else if (widget.selectedGoal == 'Gain weight') {
       return currentDisplay;
-    } else if (widget.selectedGoal == 'Build muscle' || widget.selectedGoal == 'Eat healthier') {
+    } else if (widget.selectedGoal == 'Build muscle' ||
+        widget.selectedGoal == 'Eat healthier') {
       return currentDisplay;
     } else {
       return widget.useMetric ? 30.0 : 66.0;
@@ -137,13 +148,17 @@ class _ImprovedGoalWeightStepState extends State<ImprovedGoalWeightStep>
   }
 
   double _getMaxValue() {
-    final currentDisplay = widget.useMetric ? widget.currentWeightKg : widget.currentWeightKg * 2.20462;
-    
+    final currentDisplay =
+        widget.useMetric
+            ? widget.currentWeightKg
+            : widget.currentWeightKg * 2.20462;
+
     if (widget.selectedGoal == 'Lose body weight') {
       return currentDisplay;
     } else if (widget.selectedGoal == 'Gain weight') {
       return widget.useMetric ? 200.0 : 440.0;
-    } else if (widget.selectedGoal == 'Build muscle' || widget.selectedGoal == 'Eat healthier') {
+    } else if (widget.selectedGoal == 'Build muscle' ||
+        widget.selectedGoal == 'Eat healthier') {
       return currentDisplay;
     } else {
       return widget.useMetric ? 200.0 : 440.0;
@@ -151,19 +166,22 @@ class _ImprovedGoalWeightStepState extends State<ImprovedGoalWeightStep>
   }
 
   String _getDisplayWeight() {
-    final weight = widget.useMetric ? widget.goalWeightKg : widget.goalWeightKg * 2.20462;
+    final weight =
+        widget.useMetric ? widget.goalWeightKg : widget.goalWeightKg * 2.20462;
     return "${weight.toStringAsFixed(1)}";
   }
 
   String _getSubtitle() {
-    if (widget.selectedGoal == 'Build muscle' || widget.selectedGoal == 'Eat healthier') {
+    if (widget.selectedGoal == 'Build muscle' ||
+        widget.selectedGoal == 'Eat healthier') {
       return AppLocalizations.of(context)!.yourTargetWeightIsSetToCurrent;
     }
     return AppLocalizations.of(context)!.setARealisticGoalForYourJourney;
   }
 
   bool _shouldShowSlider() {
-    return widget.selectedGoal != 'Build muscle' && widget.selectedGoal != 'Eat healthier';
+    return widget.selectedGoal != 'Build muscle' &&
+        widget.selectedGoal != 'Eat healthier';
   }
 
   @override
@@ -173,7 +191,7 @@ class _ImprovedGoalWeightStepState extends State<ImprovedGoalWeightStep>
     final screenHeight = MediaQuery.of(context).size.height;
     final screenWidth = MediaQuery.of(context).size.width;
     final isSmallScreen = screenHeight < 700 || screenWidth < 400;
-    
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
@@ -200,9 +218,9 @@ class _ImprovedGoalWeightStepState extends State<ImprovedGoalWeightStep>
             ),
           ),
         ),
-        
+
         SizedBox(height: isSmallScreen ? 16 : 32),
-        
+
         // Title with animation
         FadeTransition(
           opacity: widget.fadeAnimation,
@@ -232,9 +250,9 @@ class _ImprovedGoalWeightStepState extends State<ImprovedGoalWeightStep>
             ),
           ),
         ),
-        
+
         SizedBox(height: isSmallScreen ? 20 : 40),
-        
+
         // Beautiful weight display
         FadeTransition(
           opacity: widget.fadeAnimation,
@@ -300,9 +318,9 @@ class _ImprovedGoalWeightStepState extends State<ImprovedGoalWeightStep>
             ),
           ),
         ),
-        
+
         SizedBox(height: isSmallScreen ? 20 : 40),
-        
+
         // Slider controls (only show if not build muscle or eat healthier)
         if (_shouldShowSlider())
           FadeTransition(
@@ -317,8 +335,12 @@ class _ImprovedGoalWeightStepState extends State<ImprovedGoalWeightStep>
                     SliderTheme(
                       data: SliderTheme.of(context).copyWith(
                         trackHeight: 8.0,
-                        thumbShape: CustomSliderThumbShape(isSmallScreen: isSmallScreen),
-                        overlayShape: RoundSliderOverlayShape(overlayRadius: isSmallScreen ? 24.0 : 20.0),
+                        thumbShape: CustomSliderThumbShape(
+                          isSmallScreen: isSmallScreen,
+                        ),
+                        overlayShape: RoundSliderOverlayShape(
+                          overlayRadius: isSmallScreen ? 24.0 : 20.0,
+                        ),
                         activeTrackColor: theme.primaryColor,
                         inactiveTrackColor: theme.primaryColor.withOpacity(0.2),
                         thumbColor: theme.primaryColor,
@@ -332,9 +354,9 @@ class _ImprovedGoalWeightStepState extends State<ImprovedGoalWeightStep>
                         onChanged: _onSliderChanged,
                       ),
                     ),
-                    
+
                     SizedBox(height: 20),
-                    
+
                     // Buttons below slider
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -369,7 +391,7 @@ class _ImprovedGoalWeightStepState extends State<ImprovedGoalWeightStep>
                             ),
                           ),
                         ),
-                        
+
                         // Increase button
                         GestureDetector(
                           onTap: () => _changeWeight(0.5),
@@ -402,9 +424,9 @@ class _ImprovedGoalWeightStepState extends State<ImprovedGoalWeightStep>
                         ),
                       ],
                     ),
-                    
+
                     SizedBox(height: 20),
-                    
+
                     // Increment labels
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -432,9 +454,9 @@ class _ImprovedGoalWeightStepState extends State<ImprovedGoalWeightStep>
               ),
             ),
           ),
-        
+
         Spacer(flex: isSmallScreen ? 1 : 2),
-        
+
         // Continue button
         SizedBox(
           width: double.infinity,
@@ -444,9 +466,14 @@ class _ImprovedGoalWeightStepState extends State<ImprovedGoalWeightStep>
               backgroundColor: theme.primaryColor,
               foregroundColor: Colors.white,
               padding: EdgeInsets.symmetric(vertical: isSmallScreen ? 16 : 20),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
               elevation: 0,
-              textStyle: TextStyle(fontSize: isSmallScreen ? 16 : 18, fontWeight: FontWeight.bold),
+              textStyle: TextStyle(
+                fontSize: isSmallScreen ? 16 : 18,
+                fontWeight: FontWeight.bold,
+              ),
             ),
             child: Text(AppLocalizations.of(context)!.continueButton),
           ),
@@ -482,28 +509,31 @@ class CustomSliderThumbShape extends SliderComponentShape {
     required Size sizeWithOverflow,
   }) {
     final Canvas canvas = context.canvas;
-    
+
     // Draw outer circle (white with shadow)
-    final Paint outerPaint = Paint()
-      ..color = Colors.white
-      ..style = PaintingStyle.fill;
-    
-    final Paint shadowPaint = Paint()
-      ..color = Colors.black.withOpacity(0.1)
-      ..style = PaintingStyle.fill
-      ..maskFilter = MaskFilter.blur(BlurStyle.normal, 3);
-    
+    final Paint outerPaint =
+        Paint()
+          ..color = Colors.white
+          ..style = PaintingStyle.fill;
+
+    final Paint shadowPaint =
+        Paint()
+          ..color = Colors.black.withOpacity(0.1)
+          ..style = PaintingStyle.fill
+          ..maskFilter = MaskFilter.blur(BlurStyle.normal, 3);
+
     // Draw shadow
     canvas.drawCircle(center + Offset(0, 2), 14.0, shadowPaint);
-    
+
     // Draw outer white circle
     canvas.drawCircle(center, 14.0, outerPaint);
-    
+
     // Draw inner colored circle
-    final Paint innerPaint = Paint()
-      ..color = sliderTheme.thumbColor!
-      ..style = PaintingStyle.fill;
-    
+    final Paint innerPaint =
+        Paint()
+          ..color = sliderTheme.thumbColor!
+          ..style = PaintingStyle.fill;
+
     canvas.drawCircle(center, 10.0, innerPaint);
   }
 }

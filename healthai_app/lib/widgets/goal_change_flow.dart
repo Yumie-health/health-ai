@@ -63,7 +63,10 @@ class _GoalChangeFlowState extends State<GoalChangeFlow> {
             },
           ),
         ),
-        body: isGenerating ? _buildGeneratingView(isSmallScreen) : _buildStepView(isSmallScreen),
+        body:
+            isGenerating
+                ? _buildGeneratingView(isSmallScreen)
+                : _buildStepView(isSmallScreen),
       ),
     );
   }
@@ -96,9 +99,9 @@ class _GoalChangeFlowState extends State<GoalChangeFlow> {
                   ),
                   textAlign: TextAlign.center,
                 ),
-                
+
                 SizedBox(height: isSmallScreen ? 8 : 12),
-                
+
                 // Subtitle
                 Text(
                   AppLocalizations.of(context)!.chooseGoalDescription,
@@ -108,22 +111,24 @@ class _GoalChangeFlowState extends State<GoalChangeFlow> {
                   ),
                   textAlign: TextAlign.center,
                 ),
-                
+
                 SizedBox(height: isSmallScreen ? 32 : 40),
-                
+
                 // Goal options
-                ...(
-                  (widget.onBackToMaintenancePlan != null
-                    ? goals.where((g)=> g['id'] != 'Maintain body weight')
-                    : goals)
-                ).map((goal) => Padding(
-                  padding: EdgeInsets.only(bottom: 12),
-                  child: _buildGoalOption(goal, isSmallScreen),
-                )).toList(),
+                ...((widget.onBackToMaintenancePlan != null
+                        ? goals.where((g) => g['id'] != 'Maintain body weight')
+                        : goals))
+                    .map(
+                      (goal) => Padding(
+                        padding: EdgeInsets.only(bottom: 12),
+                        child: _buildGoalOption(goal, isSmallScreen),
+                      ),
+                    )
+                    .toList(),
               ],
             ),
           ),
-          
+
           // Continue button
           SizedBox(
             width: double.infinity,
@@ -155,7 +160,7 @@ class _GoalChangeFlowState extends State<GoalChangeFlow> {
   Widget _buildGoalOption(Map<String, dynamic> goal, bool isSmallScreen) {
     final isSelected = selectedGoal == goal['id'];
     String goalText;
-    
+
     switch (goal['id']) {
       case 'Lose body weight':
         goalText = AppLocalizations.of(context)!.loseBodyWeight;
@@ -254,9 +259,9 @@ class _GoalChangeFlowState extends State<GoalChangeFlow> {
                   ),
                   textAlign: TextAlign.center,
                 ),
-                
+
                 SizedBox(height: isSmallScreen ? 8 : 12),
-                
+
                 // Subtitle
                 Text(
                   AppLocalizations.of(context)!.setRealisticGoalForJourney,
@@ -266,30 +271,55 @@ class _GoalChangeFlowState extends State<GoalChangeFlow> {
                   ),
                   textAlign: TextAlign.center,
                 ),
-                
+
                 SizedBox(height: isSmallScreen ? 40 : 48),
-                
+
                 // Weight slider input (bound based on goal)
                 FutureBuilder<Map<String, dynamic>?>(
-                  future: FirebaseFirestore.instance.collection('users').doc(FirebaseAuth.instance.currentUser!.uid).get().then((d)=>d.data()),
+                  future: FirebaseFirestore.instance
+                      .collection('users')
+                      .doc(FirebaseAuth.instance.currentUser!.uid)
+                      .get()
+                      .then((d) => d.data()),
                   builder: (context, snap) {
-                    final double currentWeightKg = (snap.data?['weightKg'] ?? snap.data?['weight'] ?? 70.0).toDouble();
-                    final bool useMetric = Provider.of<PreferencesProvider>(context).useMetric;
+                    final double currentWeightKg =
+                        (snap.data?['weightKg'] ?? snap.data?['weight'] ?? 70.0)
+                            .toDouble();
+                    final bool useMetric =
+                        Provider.of<PreferencesProvider>(context).useMetric;
                     final bool isLose = (selectedGoal == 'Lose body weight');
-                    
+
                     // Convert to display units
-                    final double currentWeightDisplay = useMetric ? currentWeightKg : (currentWeightKg * 2.20462);
-                    final String weightUnit = useMetric ? AppLocalizations.of(context)!.kg : AppLocalizations.of(context)!.poundsUnit;
-                    
+                    final double currentWeightDisplay =
+                        useMetric
+                            ? currentWeightKg
+                            : (currentWeightKg * 2.20462);
+                    final String weightUnit =
+                        useMetric
+                            ? AppLocalizations.of(context)!.kg
+                            : AppLocalizations.of(context)!.poundsUnit;
+
                     // Set bounds in display units
-                    final double minDisplay = isLose ? (useMetric ? 30.0 : 66.0) : currentWeightDisplay;
-                    final double maxDisplay = isLose ? currentWeightDisplay : (useMetric ? 300.0 : 660.0);
-                    
+                    final double minDisplay =
+                        isLose
+                            ? (useMetric ? 30.0 : 66.0)
+                            : currentWeightDisplay;
+                    final double maxDisplay =
+                        isLose
+                            ? currentWeightDisplay
+                            : (useMetric ? 300.0 : 660.0);
+
                     // Initialize target weight in display units
-                    final double initialDisplay = targetWeight != null 
-                        ? (useMetric ? targetWeight! : (targetWeight! * 2.20462))
-                        : currentWeightDisplay;
-                    final double targetWeightDisplay = initialDisplay.clamp(minDisplay, maxDisplay);
+                    final double initialDisplay =
+                        targetWeight != null
+                            ? (useMetric
+                                ? targetWeight!
+                                : (targetWeight! * 2.20462))
+                            : currentWeightDisplay;
+                    final double targetWeightDisplay = initialDisplay.clamp(
+                      minDisplay,
+                      maxDisplay,
+                    );
 
                     return Container(
                       padding: EdgeInsets.all(isSmallScreen ? 20 : 24),
@@ -317,10 +347,16 @@ class _GoalChangeFlowState extends State<GoalChangeFlow> {
                             ),
                           ),
                           Slider(
-                            value: targetWeightDisplay.clamp(minDisplay, maxDisplay),
+                            value: targetWeightDisplay.clamp(
+                              minDisplay,
+                              maxDisplay,
+                            ),
                             min: minDisplay,
                             max: maxDisplay,
-                            divisions: ((maxDisplay - minDisplay) * (useMetric ? 2 : 1)).round(), // 0.5 kg or 1 lb steps
+                            divisions:
+                                ((maxDisplay - minDisplay) *
+                                        (useMetric ? 2 : 1))
+                                    .round(), // 0.5 kg or 1 lb steps
                             activeColor: kPrimaryGreen,
                             label: targetWeightDisplay.toStringAsFixed(1),
                             onChanged: (v) {
@@ -338,13 +374,16 @@ class _GoalChangeFlowState extends State<GoalChangeFlow> {
               ],
             ),
           ),
-          
+
           // Continue button
           SizedBox(
             width: double.infinity,
             height: isSmallScreen ? 48 : 56,
             child: ElevatedButton(
-              onPressed: targetWeight != null && targetWeight! > 0 ? _generateNewPlan : null,
+              onPressed:
+                  targetWeight != null && targetWeight! > 0
+                      ? _generateNewPlan
+                      : null,
               style: ElevatedButton.styleFrom(
                 backgroundColor: kPrimaryGreen,
                 foregroundColor: Colors.white,
@@ -383,9 +422,9 @@ class _GoalChangeFlowState extends State<GoalChangeFlow> {
                 strokeWidth: 4,
               ),
             ),
-            
+
             SizedBox(height: isSmallScreen ? 24 : 32),
-            
+
             // Loading text
             Text(
               AppLocalizations.of(context)!.yumieGeneratingNewPlan,
@@ -396,9 +435,9 @@ class _GoalChangeFlowState extends State<GoalChangeFlow> {
               ),
               textAlign: TextAlign.center,
             ),
-            
+
             SizedBox(height: isSmallScreen ? 8 : 12),
-            
+
             Text(
               AppLocalizations.of(context)!.pleaseWait,
               style: TextStyle(
@@ -433,21 +472,28 @@ class _GoalChangeFlowState extends State<GoalChangeFlow> {
       // Get current user data from Firestore
       final user = FirebaseAuth.instance.currentUser;
       if (user != null) {
-        final doc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
+        final doc =
+            await FirebaseFirestore.instance
+                .collection('users')
+                .doc(user.uid)
+                .get();
         final data = doc.data() ?? {};
-        
+
         // Get user data - handle both old and new field names
         final int age = data['age'] ?? 25;
-        final double height = (data['heightCm'] ?? data['height'] ?? 170.0).toDouble();
-        final double currentWeight = (data['weightKg'] ?? data['weight'] ?? 70.0).toDouble();
-        final String activityLevel = data['activityLevel'] ?? 'Moderately Active';
+        final double height =
+            (data['heightCm'] ?? data['height'] ?? 170.0).toDouble();
+        final double currentWeight =
+            (data['weightKg'] ?? data['weight'] ?? 70.0).toDouble();
+        final String activityLevel =
+            data['activityLevel'] ?? 'Moderately Active';
         final String bloodType = data['bloodType'] ?? 'O+';
         final bool isDiabetic = data['isDiabetic'] ?? false;
         final String sex = data['sex'] ?? 'Other';
-        
+
         // Use target weight if provided, otherwise current weight
         final double planWeight = targetWeight ?? currentWeight;
-        
+
         // Calculate BMR using Mifflin-St Jeor equation
         double bmr;
         if (sex.toLowerCase() == 'male') {
@@ -455,7 +501,7 @@ class _GoalChangeFlowState extends State<GoalChangeFlow> {
         } else {
           bmr = 10 * planWeight + 6.25 * height - 5 * age - 161;
         }
-        
+
         // Apply activity multiplier
         double tdee = bmr;
         switch (activityLevel.toLowerCase()) {
@@ -475,7 +521,7 @@ class _GoalChangeFlowState extends State<GoalChangeFlow> {
             tdee = bmr * 1.9;
             break;
         }
-        
+
         // Adjust calories based on goal
         int calorieGoal;
         switch (selectedGoal?.toLowerCase()) {
@@ -491,18 +537,22 @@ class _GoalChangeFlowState extends State<GoalChangeFlow> {
           default: // maintain or eat healthier
             calorieGoal = tdee.round();
         }
-        
+
         // Calculate macro goals
         int proteinGoal;
         if (selectedGoal?.toLowerCase() == 'build muscle') {
-          proteinGoal = (planWeight * 2.2).round(); // Higher protein for muscle building
+          proteinGoal =
+              (planWeight * 2.2).round(); // Higher protein for muscle building
         } else {
           proteinGoal = (planWeight * 1.6).round(); // Standard protein
         }
-        
-        int fatGoal = (calorieGoal * 0.25 / 9).round(); // 25% of calories from fat
-        int carbsGoal = ((calorieGoal - (proteinGoal * 4) - (fatGoal * 9)) / 4).round(); // Remaining calories from carbs
-        
+
+        int fatGoal =
+            (calorieGoal * 0.25 / 9).round(); // 25% of calories from fat
+        int carbsGoal =
+            ((calorieGoal - (proteinGoal * 4) - (fatGoal * 9)) / 4)
+                .round(); // Remaining calories from carbs
+
         // Get AI recommendation
         final aiService = AIService();
         final prefs = Provider.of<PreferencesProvider>(context, listen: false);
@@ -518,15 +568,17 @@ class _GoalChangeFlowState extends State<GoalChangeFlow> {
           isDiabetic: isDiabetic,
           language: prefs.language,
         );
-        
+
         // Save current plan as previous plan before updating
         final currentPlanData = {
-          'startDate': data['lastUpdated'] is Timestamp
-              ? data['lastUpdated']
-              : Timestamp.now(),
+          'startDate':
+              data['lastUpdated'] is Timestamp
+                  ? data['lastUpdated']
+                  : Timestamp.now(),
           'endDate': Timestamp.now(),
           'startingWeight': data['startingWeight'] ?? currentWeight,
-          'targetWeight': data['targetWeightKg'] ?? data['targetWeight'] ?? currentWeight,
+          'targetWeight':
+              data['targetWeightKg'] ?? data['targetWeight'] ?? currentWeight,
           'goal': data['goal'] ?? 'Maintain body weight',
           'dailyCalorieGoal': data['dailyCalorieGoal'],
           'proteinGoal': data['proteinGoal'],
@@ -536,17 +588,24 @@ class _GoalChangeFlowState extends State<GoalChangeFlow> {
         };
 
         // Add to previous plans array
-        final previousPlans = List<Map<String, dynamic>>.from(data['previousPlans'] ?? []);
+        final previousPlans = List<Map<String, dynamic>>.from(
+          data['previousPlans'] ?? [],
+        );
         // Deduplicate entries to avoid both changed & completed duplicates
-        final double swNew = (currentPlanData['startingWeight'] as num?)?.toDouble() ?? 0.0;
-        final double twNew = (currentPlanData['targetWeight'] as num?)?.toDouble() ?? 0.0;
+        final double swNew =
+            (currentPlanData['startingWeight'] as num?)?.toDouble() ?? 0.0;
+        final double twNew =
+            (currentPlanData['targetWeight'] as num?)?.toDouble() ?? 0.0;
         final String goalNew = currentPlanData['goal'] ?? '';
         final bool alreadyExists = previousPlans.any((p) {
           final double sw = (p['startingWeight'] as num?)?.toDouble() ?? -9999;
           final double tw = (p['targetWeight'] as num?)?.toDouble() ?? -9999;
           final String g = p['goal'] ?? '';
           final String st = p['status'] ?? '';
-          return st == 'changed' && g == goalNew && (sw - swNew).abs() < 0.001 && (tw - twNew).abs() < 0.001;
+          return st == 'changed' &&
+              g == goalNew &&
+              (sw - swNew).abs() < 0.001 &&
+              (tw - twNew).abs() < 0.001;
         });
         if (!alreadyExists) {
           previousPlans.add(currentPlanData);
@@ -554,12 +613,12 @@ class _GoalChangeFlowState extends State<GoalChangeFlow> {
 
         // For build muscle, eat healthier, or maintain weight, set target weight to current weight
         double finalTargetWeight = targetWeight ?? currentWeight;
-        if (selectedGoal?.toLowerCase() == 'build muscle' || 
-            selectedGoal?.toLowerCase() == 'eat healthier' || 
+        if (selectedGoal?.toLowerCase() == 'build muscle' ||
+            selectedGoal?.toLowerCase() == 'eat healthier' ||
             selectedGoal?.toLowerCase() == 'maintain body weight') {
           finalTargetWeight = currentWeight;
         }
-        
+
         // Prepare plan data
         final planData = {
           'calories': calorieGoal,
@@ -569,19 +628,20 @@ class _GoalChangeFlowState extends State<GoalChangeFlow> {
           'goal': selectedGoal,
           'targetWeight': finalTargetWeight,
           'ai_plan': aiPlan?['ai_plan'],
-          'previousPlans': previousPlans, // Include previous plans in the new plan data
+          'previousPlans':
+              previousPlans, // Include previous plans in the new plan data
         };
-        
+
         // Ensure minimum loading time for better UX
         await Future.delayed(Duration(seconds: 3));
-        
+
         widget.onPlanGenerated(planData);
       }
     } catch (e) {
       setState(() {
         isGenerating = false;
       });
-      
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(AppLocalizations.of(context)!.failedToGeneratePlan),

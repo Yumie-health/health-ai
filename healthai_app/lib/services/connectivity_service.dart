@@ -7,5 +7,3 @@ class ConnectivityService {
   // App-wide online status. true = online, false = offline
   final ValueNotifier<bool> online = ValueNotifier<bool>(true);
 }
-
-

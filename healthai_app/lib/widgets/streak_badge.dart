@@ -6,7 +6,8 @@ class StreakBadge extends StatelessWidget {
   final Stream<StreakInfo> streakStream;
   final VoidCallback? onTap;
 
-  const StreakBadge({Key? key, required this.streakStream, this.onTap}) : super(key: key);
+  const StreakBadge({Key? key, required this.streakStream, this.onTap})
+    : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -24,12 +25,24 @@ class StreakBadge extends StatelessWidget {
             curve: Curves.easeOut,
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
             decoration: BoxDecoration(
-              color: active ? Colors.orange.withOpacity(0.12) : Colors.grey.withOpacity(0.12),
+              color:
+                  active
+                      ? Colors.orange.withOpacity(0.12)
+                      : Colors.grey.withOpacity(0.12),
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: active ? Colors.orange : const Color(0xFFE5E7EB)),
-              boxShadow: active
-                  ? [BoxShadow(color: Colors.orange.withOpacity(0.2), blurRadius: 8, offset: const Offset(0, 2))]
-                  : [],
+              border: Border.all(
+                color: active ? Colors.orange : const Color(0xFFE5E7EB),
+              ),
+              boxShadow:
+                  active
+                      ? [
+                        BoxShadow(
+                          color: Colors.orange.withOpacity(0.2),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
+                      ]
+                      : [],
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
@@ -51,5 +64,3 @@ class StreakBadge extends StatelessWidget {
     );
   }
 }
-
-

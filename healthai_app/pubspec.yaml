@@ -60,7 +60,6 @@ dependencies:
   sqflite: ^2.3.2
   uuid: ^4.3.3
   logger: ^2.0.2+1
-  flutter_launcher_icons: ^0.14.3
   flutter_native_splash: ^2.4.6
   table_calendar: ^3.0.9 
   firebase_analytics: ^11.5.2

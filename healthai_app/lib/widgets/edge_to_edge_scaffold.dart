@@ -142,12 +142,14 @@ class EdgeToEdgeContainer extends StatelessWidget {
     final mediaQuery = MediaQuery.of(context);
     final bottomPadding = mediaQuery.padding.bottom;
     final topPadding = mediaQuery.padding.top;
-    
+
     return Container(
-      padding: padding ?? EdgeInsets.only(
-        top: topPadding > 0 ? topPadding : 0,
-        bottom: bottomPadding > 0 ? bottomPadding : 0,
-      ),
+      padding:
+          padding ??
+          EdgeInsets.only(
+            top: topPadding > 0 ? topPadding : 0,
+            bottom: bottomPadding > 0 ? bottomPadding : 0,
+          ),
       margin: margin,
       color: color,
       decoration: decoration,

@@ -70,7 +70,7 @@ class _ImprovedAgeSelectorState extends State<ImprovedAgeSelector>
   @override
   Widget build(BuildContext context) {
     final currentAge = widget.selectedAge ?? 25;
-    
+
     return Column(
       children: [
         // Quick decade selector
@@ -107,9 +107,9 @@ class _ImprovedAgeSelectorState extends State<ImprovedAgeSelector>
             ],
           ),
         ),
-        
+
         SizedBox(height: 40),
-        
+
         // Main age display and controls
         Container(
           height: 200,
@@ -131,10 +131,14 @@ class _ImprovedAgeSelectorState extends State<ImprovedAgeSelector>
                         child: Container(
                           height: double.infinity,
                           decoration: BoxDecoration(
-                            color: Theme.of(context).primaryColor.withOpacity(0.1),
+                            color: Theme.of(
+                              context,
+                            ).primaryColor.withOpacity(0.1),
                             borderRadius: BorderRadius.circular(20),
                             border: Border.all(
-                              color: Theme.of(context).primaryColor.withOpacity(0.3),
+                              color: Theme.of(
+                                context,
+                              ).primaryColor.withOpacity(0.3),
                               width: 2,
                             ),
                           ),
@@ -162,9 +166,9 @@ class _ImprovedAgeSelectorState extends State<ImprovedAgeSelector>
                   ),
                 ),
               ),
-              
+
               SizedBox(width: 20),
-              
+
               // Age display
               Expanded(
                 flex: 3,
@@ -186,12 +190,16 @@ class _ImprovedAgeSelectorState extends State<ImprovedAgeSelector>
                           ),
                           borderRadius: BorderRadius.circular(25),
                           border: Border.all(
-                            color: Theme.of(context).primaryColor.withOpacity(0.4),
+                            color: Theme.of(
+                              context,
+                            ).primaryColor.withOpacity(0.4),
                             width: 3,
                           ),
                           boxShadow: [
                             BoxShadow(
-                              color: Theme.of(context).primaryColor.withOpacity(0.2),
+                              color: Theme.of(
+                                context,
+                              ).primaryColor.withOpacity(0.2),
                               blurRadius: 10,
                               offset: Offset(0, 5),
                             ),
@@ -214,7 +222,9 @@ class _ImprovedAgeSelectorState extends State<ImprovedAgeSelector>
                               AppLocalizations.of(context)!.yearsOld,
                               baseFontSize: 16,
                               fontWeight: FontWeight.w600,
-                              color: Theme.of(context).primaryColor.withOpacity(0.8),
+                              color: Theme.of(
+                                context,
+                              ).primaryColor.withOpacity(0.8),
                             ),
                           ],
                         ),
@@ -223,9 +233,9 @@ class _ImprovedAgeSelectorState extends State<ImprovedAgeSelector>
                   },
                 ),
               ),
-              
+
               SizedBox(width: 20),
-              
+
               // Increase button
               Expanded(
                 flex: 2,
@@ -242,10 +252,14 @@ class _ImprovedAgeSelectorState extends State<ImprovedAgeSelector>
                         child: Container(
                           height: double.infinity,
                           decoration: BoxDecoration(
-                            color: Theme.of(context).primaryColor.withOpacity(0.1),
+                            color: Theme.of(
+                              context,
+                            ).primaryColor.withOpacity(0.1),
                             borderRadius: BorderRadius.circular(20),
                             border: Border.all(
-                              color: Theme.of(context).primaryColor.withOpacity(0.3),
+                              color: Theme.of(
+                                context,
+                              ).primaryColor.withOpacity(0.3),
                               width: 2,
                             ),
                           ),
@@ -276,8 +290,6 @@ class _ImprovedAgeSelectorState extends State<ImprovedAgeSelector>
             ],
           ),
         ),
-        
-
       ],
     );
   }
@@ -302,9 +314,10 @@ class _DecadeButton extends StatelessWidget {
         duration: Duration(milliseconds: 200),
         padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         decoration: BoxDecoration(
-          color: isActive
-              ? Theme.of(context).primaryColor
-              : Theme.of(context).primaryColor.withOpacity(0.1),
+          color:
+              isActive
+                  ? Theme.of(context).primaryColor
+                  : Theme.of(context).primaryColor.withOpacity(0.1),
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
             color: Theme.of(context).primaryColor.withOpacity(0.3),
@@ -316,9 +329,7 @@ class _DecadeButton extends StatelessWidget {
           label,
           baseFontSize: 12,
           fontWeight: FontWeight.w600,
-          color: isActive
-              ? Colors.white
-              : Theme.of(context).primaryColor,
+          color: isActive ? Colors.white : Theme.of(context).primaryColor,
         ),
       ),
     );

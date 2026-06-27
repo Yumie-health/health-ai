@@ -13,7 +13,7 @@ class SubscriptionService {
   static final SubscriptionService _instance = SubscriptionService._internal();
   factory SubscriptionService() => _instance;
   SubscriptionService._internal();
-  
+
   Timer? _subscriptionCheckTimer;
   final ValueNotifier<bool> premium = ValueNotifier<bool>(false);
 
@@ -38,27 +38,29 @@ class SubscriptionService {
       if (Platform.isAndroid) {
         await NativeBillingService.initializeBilling();
       }
-      
+
       // Initialize Google Play Validation Service (Android only)
       if (Platform.isAndroid) {
         await GooglePlayValidationService.initialize();
       }
-      
+
       // Start periodic subscription checking (every 24 hours)
       _startPeriodicSubscriptionCheck();
     } catch (e) {
       print('Error initializing billing: $e');
     }
   }
-  
+
   // Start periodic subscription status checking
   void _startPeriodicSubscriptionCheck() {
     _subscriptionCheckTimer?.cancel();
-    _subscriptionCheckTimer = Timer.periodic(Duration(hours: 24), (timer) async {
+    _subscriptionCheckTimer = Timer.periodic(Duration(hours: 24), (
+      timer,
+    ) async {
       await refreshSubscriptionStatus();
     });
   }
-  
+
   // Start real-time subscription monitoring (checks every 6 hours)
   void startRealTimeMonitoring() {
     _subscriptionCheckTimer?.cancel();
@@ -66,12 +68,12 @@ class SubscriptionService {
       await refreshSubscriptionStatus();
     });
   }
-  
+
   // Force immediate subscription check
   Future<void> forceSubscriptionCheck() async {
     await refreshSubscriptionStatus();
   }
-  
+
   // Force refresh subscription status and return current status
   Future<bool> forceRefreshAndCheck() async {
     try {
@@ -96,7 +98,9 @@ class SubscriptionService {
       final prefs = await SharedPreferences.getInstance();
       final cachedUserId = prefs.getString('cachedUserId');
       if (cachedUserId != null && cachedUserId != user.uid) {
-        print('User changed from $cachedUserId to ${user.uid} - clearing subscription data');
+        print(
+          'User changed from $cachedUserId to ${user.uid} - clearing subscription data',
+        );
         await clearLocalSubscriptionData();
         await prefs.setString('cachedUserId', user.uid);
       } else if (cachedUserId == null) {
@@ -105,20 +109,29 @@ class SubscriptionService {
 
       // 1) Check Firestore first for user-specific premium status
       try {
-        final doc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
+        final doc =
+            await FirebaseFirestore.instance
+                .collection('users')
+                .doc(user.uid)
+                .get();
         if (doc.exists) {
           final userData = doc.data() as Map<String, dynamic>? ?? {};
           final firestoreIsPremium = userData['isPremium'] ?? false;
           final firestoreSubscriptionType = userData['subscriptionType'];
           final firestorePurchaseDate = userData['purchaseDate'];
-          
-          print('Firestore premium status for ${user.email}: $firestoreIsPremium, type: $firestoreSubscriptionType');
-          
+
+          print(
+            'Firestore premium status for ${user.email}: $firestoreIsPremium, type: $firestoreSubscriptionType',
+          );
+
           if (firestoreIsPremium && firestoreSubscriptionType != null) {
             // User has premium in Firestore - this is the source of truth
             // Sync to local storage for offline access
             await prefs.setBool('isPremium', true);
-            await prefs.setString('subscriptionType', firestoreSubscriptionType);
+            await prefs.setString(
+              'subscriptionType',
+              firestoreSubscriptionType,
+            );
             if (firestorePurchaseDate != null) {
               await prefs.setString('purchaseDate', firestorePurchaseDate);
             }
@@ -141,7 +154,8 @@ class SubscriptionService {
       }
 
       // 3) If no premium in Firestore, perform integrity check
-      final isIntegrityValid = await ProductionIntegrityService.checkBeforePremiumAccess();
+      final isIntegrityValid =
+          await ProductionIntegrityService.checkBeforePremiumAccess();
       if (!isIntegrityValid) {
         print('Integrity check failed and no Firestore premium present');
         return false;
@@ -155,10 +169,6 @@ class SubscriptionService {
       return false;
     }
   }
-
-
-
-
 
   Future<String?> getSubscriptionType() async {
     try {
@@ -184,28 +194,29 @@ class SubscriptionService {
     }
   }
 
-
-
   Future<void> clearSubscription() async {
     try {
       final user = FirebaseAuth.instance.currentUser;
-      
+
       // 1) Clear from Firestore
       if (user != null) {
-        await FirebaseFirestore.instance.collection('users').doc(user.uid).update({
-          'isPremium': false,
-          'subscriptionType': null,
-          'purchaseDate': null,
-          'lastUpdated': FieldValue.serverTimestamp(),
-        });
+        await FirebaseFirestore.instance
+            .collection('users')
+            .doc(user.uid)
+            .update({
+              'isPremium': false,
+              'subscriptionType': null,
+              'purchaseDate': null,
+              'lastUpdated': FieldValue.serverTimestamp(),
+            });
       }
-      
+
       // 2) Clear from local storage
       final prefs = await SharedPreferences.getInstance();
       await prefs.remove('isPremium');
       await prefs.remove('subscriptionType');
       await prefs.remove('purchaseDate');
-      
+
       print('Subscription data cleared for user: ${user?.uid ?? 'unknown'}');
       premium.value = false;
     } catch (e) {
@@ -224,15 +235,13 @@ class SubscriptionService {
       await prefs.remove('purchaseToken');
       await prefs.remove('orderId');
       await prefs.remove('cachedUserId');
-      
+
       print('Local subscription data cleared');
       premium.value = false;
     } catch (e) {
       print('Error clearing local subscription data: $e');
     }
   }
-
-
 
   Future<void> setSubscription(String productId) async {
     try {
@@ -243,16 +252,19 @@ class SubscriptionService {
       }
 
       final purchaseDate = DateTime.now().toIso8601String();
-      
-      // 1) Save to Firestore (user-specific, source of truth)
-      await FirebaseFirestore.instance.collection('users').doc(user.uid).update({
-        'isPremium': true,
-        'subscriptionType': productId,
-        'purchaseDate': purchaseDate,
 
-        'lastUpdated': FieldValue.serverTimestamp(),
-      });
-      
+      // 1) Save to Firestore (user-specific, source of truth)
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .update({
+            'isPremium': true,
+            'subscriptionType': productId,
+            'purchaseDate': purchaseDate,
+
+            'lastUpdated': FieldValue.serverTimestamp(),
+          });
+
       // 2) Save to local storage (for immediate UX)
       final prefs = await SharedPreferences.getInstance();
       await prefs.setBool('isPremium', true);
@@ -260,20 +272,20 @@ class SubscriptionService {
       await prefs.setString('purchaseDate', purchaseDate);
       await prefs.setBool('hadPremiumEver', true);
 
-      
       print('Subscription set: $productId for user: ${user.uid}');
       premium.value = true;
-      
+
       // Track subscription event in Firebase Analytics
       await FirebaseAnalytics.instance.logEvent(
         name: 'subscription_start',
         parameters: {
           'product_id': productId,
-          'subscription_type': productId.contains('yearly') ? 'yearly' : 'monthly',
+          'subscription_type':
+              productId.contains('yearly') ? 'yearly' : 'monthly',
           'platform': Platform.isAndroid ? 'android' : 'ios',
         },
       );
-      
+
       // Do not invalidate immediately; reflect premium now and validate later
     } catch (e) {
       print('Error setting subscription: $e');
@@ -300,15 +312,16 @@ class SubscriptionService {
     try {
       final prefs = await SharedPreferences.getInstance();
       final isPremium = prefs.getBool('isPremium') ?? false;
-      
+
       if (isPremium) {
         final purchaseToken = prefs.getString('purchaseToken');
         final subscriptionType = prefs.getString('subscriptionType');
-        
+
         // Only validate if we have complete purchase data
         if (purchaseToken != null && subscriptionType != null) {
           if (Platform.isAndroid) {
-            final details = await GooglePlayValidationService.checkSubscriptionDetails();
+            final details =
+                await GooglePlayValidationService.checkSubscriptionDetails();
             final isActive = details['isActive'] as bool? ?? false;
             if (!isActive) {
               await clearSubscription();
@@ -319,7 +332,9 @@ class SubscriptionService {
             // Periodic background checks are not required here, so skip.
           }
         } else {
-          print('Subscription validation skipped - missing purchase data (purchaseToken: ${purchaseToken != null}, subscriptionType: ${subscriptionType != null})');
+          print(
+            'Subscription validation skipped - missing purchase data (purchaseToken: ${purchaseToken != null}, subscriptionType: ${subscriptionType != null})',
+          );
         }
       }
     } catch (e) {
@@ -333,21 +348,21 @@ class SubscriptionService {
       final prefs = await SharedPreferences.getInstance();
       final purchaseDate = prefs.getString('purchaseDate');
       final subscriptionType = prefs.getString('subscriptionType');
-      
+
       if (purchaseDate == null || subscriptionType == null) {
         return false;
       }
-      
+
       final purchaseDateTime = DateTime.parse(purchaseDate);
       final now = DateTime.now();
       final daysSincePurchase = now.difference(purchaseDateTime).inDays;
-      
+
       if (subscriptionType == 'premium_monthly') {
         return daysSincePurchase >= 23; // Warn 7 days before expiry
       } else if (subscriptionType == 'premium_yearly') {
         return daysSincePurchase >= 358; // Warn 7 days before expiry
       }
-      
+
       return false;
     } catch (e) {
       print('Error checking if subscription is expiring soon: $e');
@@ -355,8 +370,7 @@ class SubscriptionService {
     }
   }
 
-
   void dispose() {
     _subscriptionCheckTimer?.cancel();
   }
-} 
+}

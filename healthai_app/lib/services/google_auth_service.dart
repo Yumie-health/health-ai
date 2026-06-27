@@ -2,8 +2,9 @@ import 'package:http/http.dart' as http;
 import 'package:googleapis_auth/auth_io.dart';
 
 class GoogleAuthService {
-  static const String _scope = 'https://www.googleapis.com/auth/androidpublisher';
-  
+  static const String _scope =
+      'https://www.googleapis.com/auth/androidpublisher';
+
   static const String _serviceAccountJson = '''
 {
   "type": "service_account",
@@ -18,18 +19,18 @@ class GoogleAuthService {
   "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/play-validation-service%40yumie-maivenx02.iam.gserviceaccount.com",
   "universe_domain": "googleapis.com"
 }''';
-  
+
   static Future<String> getAccessToken() async {
     final credentials = ServiceAccountCredentials.fromJson(_serviceAccountJson);
     final client = http.Client();
-    
+
     try {
       final accessCredentials = await obtainAccessCredentialsViaServiceAccount(
         credentials,
         [_scope],
         client,
       );
-      
+
       return accessCredentials.accessToken.data;
     } finally {
       client.close();

@@ -13,7 +13,7 @@ class ErrorHandler {
   // Handle Firebase Auth errors
   String handleAuthError(dynamic error) {
     log.error('Authentication error occurred', error);
-    
+
     if (error is FirebaseAuthException) {
       switch (error.code) {
         case 'user-not-found':
@@ -43,14 +43,14 @@ class ErrorHandler {
           return 'Authentication failed: ${error.message ?? 'Unknown error'}';
       }
     }
-    
+
     return 'An unexpected error occurred. Please try again.';
   }
 
   // Handle Firestore errors
   String handleFirestoreError(dynamic error) {
     log.error('Firestore error occurred', error);
-    
+
     if (error is FirebaseException) {
       switch (error.code) {
         case 'permission-denied':
@@ -83,14 +83,14 @@ class ErrorHandler {
           return 'Database error occurred. Please try again.';
       }
     }
-    
+
     return 'An unexpected error occurred. Please try again.';
   }
 
   // Handle Firebase Storage errors
   String handleStorageError(dynamic error) {
     log.error('Firebase Storage error occurred', error);
-    
+
     if (error is FirebaseException) {
       switch (error.code) {
         case 'object-not-found':
@@ -121,80 +121,83 @@ class ErrorHandler {
           return 'File upload failed. Please try again.';
       }
     }
-    
+
     return 'File operation failed. Please try again.';
   }
 
   // Handle network errors
   String handleNetworkError(dynamic error) {
     log.error('Network error occurred', error);
-    
+
     if (error.toString().contains('SocketException')) {
       return 'No internet connection. Please check your network.';
     }
-    
+
     if (error.toString().contains('TimeoutException')) {
       return 'Request timed out. Please try again.';
     }
-    
+
     if (error.toString().contains('HandshakeException')) {
       return 'Secure connection failed. Please try again.';
     }
-    
+
     return 'Network error. Please check your connection and try again.';
   }
 
   // Handle API errors
   String handleApiError(dynamic error, {String? endpoint}) {
     log.error('API error occurred', error);
-    
+
     if (endpoint != null) {
       log.logApiCall(endpoint, error: error.toString());
     }
-    
+
     if (error.toString().contains('401')) {
       return 'Authentication required. Please sign in again.';
     }
-    
+
     if (error.toString().contains('403')) {
       return 'Access denied. You do not have permission for this action.';
     }
-    
+
     if (error.toString().contains('404')) {
       return 'Requested resource not found.';
     }
-    
+
     if (error.toString().contains('500')) {
       return 'Server error. Please try again later.';
     }
-    
+
     if (error.toString().contains('503')) {
       return 'Service temporarily unavailable. Please try again later.';
     }
-    
+
     return 'API request failed. Please try again.';
   }
 
   // Handle general errors
   String handleGeneralError(dynamic error, {String? context}) {
-    log.error('General error occurred${context != null ? ' in $context' : ''}', error);
-    
+    log.error(
+      'General error occurred${context != null ? ' in $context' : ''}',
+      error,
+    );
+
     if (error is TypeError) {
       return 'Data format error. Please try again.';
     }
-    
+
     if (error is FormatException) {
       return 'Invalid data format. Please try again.';
     }
-    
+
     if (error is RangeError) {
       return 'Value out of range. Please check your input.';
     }
-    
+
     if (error is ArgumentError) {
       return 'Invalid argument provided. Please try again.';
     }
-    
+
     return 'An unexpected error occurred. Please try again.';
   }
 
@@ -224,9 +227,7 @@ class ErrorHandler {
         content: Text(message),
         backgroundColor: Colors.red,
         behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         action: SnackBarAction(
           label: AppLocalizations.of(context)!.dismiss,
           textColor: Colors.white,
@@ -245,25 +246,27 @@ class ErrorHandler {
     Duration delay = const Duration(seconds: 1),
   }) async {
     int attempts = 0;
-    
+
     while (attempts < maxRetries) {
       try {
         return await operation();
       } catch (error) {
         attempts++;
-        log.warning('Operation failed, attempt $attempts of $maxRetries', {'error': error.toString()});
-        
+        log.warning('Operation failed, attempt $attempts of $maxRetries', {
+          'error': error.toString(),
+        });
+
         if (attempts >= maxRetries) {
           rethrow;
         }
-        
+
         await Future.delayed(delay * attempts);
       }
     }
-    
+
     throw Exception('Operation failed after $maxRetries attempts');
   }
 }
 
 // Global error handler instance
-final errorHandler = ErrorHandler(); 
+final errorHandler = ErrorHandler();

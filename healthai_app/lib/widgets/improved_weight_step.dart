@@ -30,15 +30,13 @@ class ImprovedWeightStep extends StatelessWidget {
     required this.isSmallScreen,
   }) : super(key: key);
 
-
-
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final screenHeight = MediaQuery.of(context).size.height;
     final screenWidth = MediaQuery.of(context).size.width;
     final isSmallScreen = screenHeight < 700 || screenWidth < 400;
-    
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
@@ -65,9 +63,9 @@ class ImprovedWeightStep extends StatelessWidget {
             ),
           ),
         ),
-        
+
         SizedBox(height: isSmallScreen ? 16 : 32),
-        
+
         // Title with animation
         FadeTransition(
           opacity: fadeAnimation,
@@ -97,9 +95,9 @@ class ImprovedWeightStep extends StatelessWidget {
             ),
           ),
         ),
-        
+
         SizedBox(height: isSmallScreen ? 20 : 40),
-        
+
         // Weight selector with animation
         FadeTransition(
           opacity: fadeAnimation,
@@ -115,9 +113,9 @@ class ImprovedWeightStep extends StatelessWidget {
             ),
           ),
         ),
-        
+
         Spacer(flex: isSmallScreen ? 1 : 2),
-        
+
         // Continue button
         SizedBox(
           width: double.infinity,
@@ -127,9 +125,14 @@ class ImprovedWeightStep extends StatelessWidget {
               backgroundColor: theme.primaryColor,
               foregroundColor: Colors.white,
               padding: EdgeInsets.symmetric(vertical: isSmallScreen ? 16 : 20),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
               elevation: 0,
-              textStyle: TextStyle(fontSize: isSmallScreen ? 16 : 18, fontWeight: FontWeight.bold),
+              textStyle: TextStyle(
+                fontSize: isSmallScreen ? 16 : 18,
+                fontWeight: FontWeight.bold,
+              ),
             ),
             child: Text(AppLocalizations.of(context)!.continueButton),
           ),

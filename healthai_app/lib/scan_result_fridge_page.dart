@@ -16,7 +16,8 @@ import 'widgets/quantity_selection_dialog.dart';
 
 class ScanResultFridgePage extends StatefulWidget {
   final String imagePath;
-  const ScanResultFridgePage({Key? key, required this.imagePath}) : super(key: key);
+  const ScanResultFridgePage({Key? key, required this.imagePath})
+    : super(key: key);
 
   @override
   State<ScanResultFridgePage> createState() => _ScanResultFridgePageState();
@@ -58,9 +59,17 @@ class _ScanResultFridgePageState extends State<ScanResultFridgePage> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
       children: [
-        _buildFoodTypeButton('ingredient', '🥕', AppLocalizations.of(context)!.ingredient),
+        _buildFoodTypeButton(
+          'ingredient',
+          '🥕',
+          AppLocalizations.of(context)!.ingredient,
+        ),
         _buildFoodTypeButton('meal', '🍽️', AppLocalizations.of(context)!.meal),
-        _buildFoodTypeButton('drink', '🥤', AppLocalizations.of(context)!.drink),
+        _buildFoodTypeButton(
+          'drink',
+          '🥤',
+          AppLocalizations.of(context)!.drink,
+        ),
       ],
     );
   }
@@ -69,7 +78,7 @@ class _ScanResultFridgePageState extends State<ScanResultFridgePage> {
     final selected = _selectedFoodType == type;
     final color = selected ? kPrimaryGreen : Colors.grey[200];
     final textColor = selected ? Colors.white : Colors.grey[600];
-    
+
     return Expanded(
       child: GestureDetector(
         onTap: () => setState(() => _selectedFoodType = type),
@@ -80,9 +89,16 @@ class _ScanResultFridgePageState extends State<ScanResultFridgePage> {
           decoration: BoxDecoration(
             color: color,
             borderRadius: BorderRadius.circular(16),
-            boxShadow: selected
-                ? [BoxShadow(color: kPrimaryGreen.withOpacity(0.08), blurRadius: 8, offset: Offset(0, 2))]
-                : [],
+            boxShadow:
+                selected
+                    ? [
+                      BoxShadow(
+                        color: kPrimaryGreen.withOpacity(0.08),
+                        blurRadius: 8,
+                        offset: Offset(0, 2),
+                      ),
+                    ]
+                    : [],
           ),
           child: Column(
             children: [
@@ -115,7 +131,7 @@ class _ScanResultFridgePageState extends State<ScanResultFridgePage> {
   void _autoSelectMealType() {
     final now = DateTime.now();
     final hour = now.hour;
-    
+
     if (hour >= 5 && hour < 11) {
       _selectedMealType = 'breakfast';
     } else if (hour >= 11 && hour < 16) {
@@ -157,14 +173,15 @@ class _ScanResultFridgePageState extends State<ScanResultFridgePage> {
   Future<void> _showQuantityDialog() async {
     final result = await showDialog<Map<String, dynamic>>(
       context: context,
-      builder: (context) => QuantitySelectionDialog(
-        foodName: 'Fridge Item',
-        foodType: _selectedFoodType,
-        baseCalories: 0,
-        baseProtein: 0,
-        baseCarbs: 0,
-        baseFat: 0,
-      ),
+      builder:
+          (context) => QuantitySelectionDialog(
+            foodName: 'Fridge Item',
+            foodType: _selectedFoodType,
+            baseCalories: 0,
+            baseProtein: 0,
+            baseCarbs: 0,
+            baseFat: 0,
+          ),
     );
 
     if (result != null) {
@@ -195,97 +212,100 @@ class _ScanResultFridgePageState extends State<ScanResultFridgePage> {
       await showDialog(
         context: context,
         barrierDismissible: false,
-        builder: (context) => Dialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
-          child: Container(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  Color(0xFFE8F5E9),
-                  Color(0xFFF1F8E9),
-                ],
+        builder:
+            (context) => Dialog(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(28),
               ),
-              borderRadius: BorderRadius.circular(28),
-            ),
-            child: Padding(
-              padding: EdgeInsets.symmetric(horizontal: 28, vertical: 32),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  TweenAnimationBuilder<double>(
-                    tween: Tween(begin: 0.85, end: 1.15),
-                    duration: Duration(seconds: 3),
-                    curve: Curves.easeInOut,
-                    builder: (context, value, child) {
-                      return Transform.scale(
-                        scale: value,
-                        child: Container(
-                          width: 90,
-                          height: 90,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: kPrimaryGreen.withOpacity(0.13),
-                          ),
-                          child: Center(
-                            child: Text(
-                              '🧘‍♀️',
-                              style: TextStyle(fontSize: 48),
+              child: Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [Color(0xFFE8F5E9), Color(0xFFF1F8E9)],
+                  ),
+                  borderRadius: BorderRadius.circular(28),
+                ),
+                child: Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 28, vertical: 32),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      TweenAnimationBuilder<double>(
+                        tween: Tween(begin: 0.85, end: 1.15),
+                        duration: Duration(seconds: 3),
+                        curve: Curves.easeInOut,
+                        builder: (context, value, child) {
+                          return Transform.scale(
+                            scale: value,
+                            child: Container(
+                              width: 90,
+                              height: 90,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: kPrimaryGreen.withOpacity(0.13),
+                              ),
+                              child: Center(
+                                child: Text(
+                                  '🧘‍♀️',
+                                  style: TextStyle(fontSize: 48),
+                                ),
+                              ),
+                            ),
+                          );
+                        },
+                        onEnd: () {
+                          (context as Element).markNeedsBuild();
+                        },
+                      ),
+                      SizedBox(height: 24),
+                      Text(
+                        AppLocalizations.of(context)!.momentOfCalm,
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: kPrimaryGreen,
+                          fontSize: 26,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 0.2,
+                        ),
+                      ),
+                      SizedBox(height: 18),
+                      Text(
+                        AppLocalizations.of(context)!.practiceMindfulEating,
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: 17,
+                          color: Colors.black87,
+                          height: 1.5,
+                        ),
+                      ),
+                      SizedBox(height: 32),
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton(
+                          onPressed: () => Navigator.of(context).pop(),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: kPrimaryGreen,
+                            foregroundColor: Colors.white,
+                            padding: EdgeInsets.symmetric(vertical: 16),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            elevation: 0,
+                            textStyle: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w600,
                             ),
                           ),
+                          child: Text('Continue'),
                         ),
-                      );
-                    },
-                    onEnd: () {
-                      (context as Element).markNeedsBuild();
-                    },
-                  ),
-                  SizedBox(height: 24),
-                  Text(
-                    AppLocalizations.of(context)!.momentOfCalm,
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: kPrimaryGreen,
-                      fontSize: 26,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 0.2,
-                    ),
-                  ),
-                  SizedBox(height: 18),
-                  Text(
-                    AppLocalizations.of(context)!.practiceMindfulEating,
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 17,
-                      color: Colors.black87,
-                      height: 1.5,
-                    ),
-                  ),
-                  SizedBox(height: 32),
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: () => Navigator.of(context).pop(),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: kPrimaryGreen,
-                        foregroundColor: Colors.white,
-                        padding: EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        elevation: 0,
-                        textStyle: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
                       ),
-                      child: Text('Continue'),
-                    ),
+                    ],
                   ),
-                ],
+                ),
               ),
             ),
-          ),
-        ),
       );
     }
     onContinue();
@@ -302,7 +322,9 @@ class _ScanResultFridgePageState extends State<ScanResultFridgePage> {
       String? imageUrl;
       final file = File(widget.imagePath);
       final fileName = 'meal_${DateTime.now().millisecondsSinceEpoch}.jpg';
-      final ref = FirebaseStorage.instance.ref().child('meal_images/${user.uid}/$fileName');
+      final ref = FirebaseStorage.instance.ref().child(
+        'meal_images/${user.uid}/$fileName',
+      );
       final uploadTask = await ref.putFile(file);
       if (uploadTask.state == TaskState.success) {
         imageUrl = await ref.getDownloadURL();
@@ -323,13 +345,15 @@ class _ScanResultFridgePageState extends State<ScanResultFridgePage> {
         imageUrl: imageUrl,
       );
       await MealService().addMeal(meal);
-      setState(() { _ingredients.clear(); });
+      setState(() {
+        _ingredients.clear();
+      });
       if (mounted) {
         await _showCalmPopupIfNeeded(() {
-        Navigator.of(context).popUntil((route) => route.isFirst);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(AppLocalizations.of(context)!.mealSaved)),
-        );
+          Navigator.of(context).popUntil((route) => route.isFirst);
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(AppLocalizations.of(context)!.mealSaved)),
+          );
         });
       }
     } catch (e) {
@@ -340,11 +364,16 @@ class _ScanResultFridgePageState extends State<ScanResultFridgePage> {
   }
 
   Future<void> _runAIFridgeScan() async {
-    setState(() { _isLoadingAI = true; });
+    setState(() {
+      _isLoadingAI = true;
+    });
     final aiService = AIService();
     // Use UI locale to avoid stale stored language
     final language = Localizations.localeOf(context).languageCode;
-    final result = await aiService.analyzeFridgeImage(File(widget.imagePath), language: language);
+    final result = await aiService.analyzeFridgeImage(
+      File(widget.imagePath),
+      language: language,
+    );
     if (result != null && result.isNotEmpty) {
       setState(() {
         _ingredients = result;
@@ -357,7 +386,9 @@ class _ScanResultFridgePageState extends State<ScanResultFridgePage> {
       });
     } else {
       if (!mounted) return;
-      setState(() { _isLoadingAI = false; });
+      setState(() {
+        _isLoadingAI = false;
+      });
       Navigator.of(context).pop();
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -370,7 +401,9 @@ class _ScanResultFridgePageState extends State<ScanResultFridgePage> {
   }
 
   Future<void> _generateMealFromFridge() async {
-    setState(() { _isGeneratingMeal = true; });
+    setState(() {
+      _isGeneratingMeal = true;
+    });
     final aiService = AIService();
     // Example user profile, replace with actual user data if available
     final userProfile = {
@@ -383,7 +416,11 @@ class _ScanResultFridgePageState extends State<ScanResultFridgePage> {
     };
     // Use UI locale to avoid stale stored language
     final language = Localizations.localeOf(context).languageCode;
-    final result = await aiService.generateMealFromFridge(fridgeItems: _ingredients, userProfile: userProfile, language: language);
+    final result = await aiService.generateMealFromFridge(
+      fridgeItems: _ingredients,
+      userProfile: userProfile,
+      language: language,
+    );
     setState(() {
       _generatedMeal = result;
       _isGeneratingMeal = false;
@@ -426,11 +463,17 @@ class _ScanResultFridgePageState extends State<ScanResultFridgePage> {
                 borderRadius: BorderRadius.circular(20),
                 onTap: () => Navigator.of(context).pop(),
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 8,
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.green.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: Colors.green.withOpacity(0.3), width: 1),
+                    border: Border.all(
+                      color: Colors.green.withOpacity(0.3),
+                      width: 1,
+                    ),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
@@ -453,399 +496,466 @@ class _ScanResultFridgePageState extends State<ScanResultFridgePage> {
           ),
         ],
       ),
-      body: _isLoadingAI
-        ? Container(
-            width: double.infinity,
-            height: double.infinity,
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [Colors.white, const Color(0xFFF8F9FA)],
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-              ),
-            ),
-            child: Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Lottie.asset(
-                    'assets/animations/AI Loading spinner..json',
-                    width: 120,
-                    height: 120,
+      body:
+          _isLoadingAI
+              ? Container(
+                width: double.infinity,
+                height: double.infinity,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Colors.white, const Color(0xFFF8F9FA)],
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
                   ),
-                  const SizedBox(height: 24),
-                  Text(
-                    AppLocalizations.of(context)!.analyzingFridge,
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.black87,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    AppLocalizations.of(context)!.aiDetectingFoodItems,
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.grey[600],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          )
-        : SingleChildScrollView(
-            child: Column(
-              children: [
-                // Enhanced image preview section
-                Container(
-                  width: double.infinity,
-                  height: 280,
-                  margin: const EdgeInsets.all(20),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(24),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.1),
-                        blurRadius: 20,
-                        offset: const Offset(0, 8),
+                ),
+                child: Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Lottie.asset(
+                        'assets/animations/AI Loading spinner..json',
+                        width: 120,
+                        height: 120,
+                      ),
+                      const SizedBox(height: 24),
+                      Text(
+                        AppLocalizations.of(context)!.analyzingFridge,
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.black87,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        AppLocalizations.of(context)!.aiDetectingFoodItems,
+                        style: TextStyle(fontSize: 14, color: Colors.grey[600]),
                       ),
                     ],
                   ),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(24),
-                    child: Stack(
-                      children: [
-                        Positioned.fill(
-                          child: Image.file(
-                            File(widget.imagePath),
-                            fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) => Container(
-                              color: Colors.grey[300],
-                              child: Center(
-                                child: Column(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Icon(Icons.error_outline, size: 48, color: Colors.grey[600]),
-                                    const SizedBox(height: 8),
-                                    Text(
-                                      'Failed to load image',
-                                      style: TextStyle(color: Colors.grey[600]),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
+                ),
+              )
+              : SingleChildScrollView(
+                child: Column(
+                  children: [
+                    // Enhanced image preview section
+                    Container(
+                      width: double.infinity,
+                      height: 280,
+                      margin: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(24),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.1),
+                            blurRadius: 20,
+                            offset: const Offset(0, 8),
                           ),
-                        ),
-                        // Gradient overlay for better text visibility
-                        Positioned.fill(
-                          child: Container(
-                            decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                begin: Alignment.topCenter,
-                                end: Alignment.bottomCenter,
-                                colors: [
-                                  Colors.transparent,
-                                  Colors.black.withOpacity(0.3),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
-                        // Preview button
-                        Positioned(
-                          bottom: 20,
-                          left: 20,
-                          right: 20,
-                          child: Material(
-                            color: Colors.transparent,
-                            child: InkWell(
-                              borderRadius: BorderRadius.circular(16),
-                              onTap: () {
-                                showDialog(
-                                  context: context,
-                                  builder: (_) => Dialog(
-                                    backgroundColor: Colors.black,
-                                    child: InteractiveViewer(
-                                      child: Image.file(File(widget.imagePath)),
-                                    ),
-                                  ),
-                                );
-                              },
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                                decoration: BoxDecoration(
-                                  color: Colors.white.withOpacity(0.95),
-                                  borderRadius: BorderRadius.circular(16),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: Colors.black.withOpacity(0.1),
-                                      blurRadius: 10,
-                                      offset: const Offset(0, 4),
-                                    ),
-                                  ],
-                                ),
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Icon(Icons.fullscreen, color: Colors.black87, size: 20),
-                                    const SizedBox(width: 8),
-                                    Text(
-                                      AppLocalizations.of(context)!.previewFullImage,
-                                      style: TextStyle(
-                                        fontWeight: FontWeight.w600,
-                                        color: Colors.black87,
-                                        fontSize: 16,
+                        ],
+                      ),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(24),
+                        child: Stack(
+                          children: [
+                            Positioned.fill(
+                              child: Image.file(
+                                File(widget.imagePath),
+                                fit: BoxFit.cover,
+                                errorBuilder:
+                                    (context, error, stackTrace) => Container(
+                                      color: Colors.grey[300],
+                                      child: Center(
+                                        child: Column(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.center,
+                                          children: [
+                                            Icon(
+                                              Icons.error_outline,
+                                              size: 48,
+                                              color: Colors.grey[600],
+                                            ),
+                                            const SizedBox(height: 8),
+                                            Text(
+                                              'Failed to load image',
+                                              style: TextStyle(
+                                                color: Colors.grey[600],
+                                              ),
+                                            ),
+                                          ],
+                                        ),
                                       ),
                                     ),
-                                  ],
+                              ),
+                            ),
+                            // Gradient overlay for better text visibility
+                            Positioned.fill(
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  gradient: LinearGradient(
+                                    begin: Alignment.topCenter,
+                                    end: Alignment.bottomCenter,
+                                    colors: [
+                                      Colors.transparent,
+                                      Colors.black.withOpacity(0.3),
+                                    ],
+                                  ),
                                 ),
                               ),
                             ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-
-                // Enhanced Generate Meal button
-                Container(
-                  margin: const EdgeInsets.symmetric(horizontal: 20),
-                  child: Material(
-                    color: Colors.transparent,
-                    child: InkWell(
-                      borderRadius: BorderRadius.circular(20),
-                      onTap: _ingredients.isEmpty || _isGeneratingMeal ? null : _generateMealFromFridge,
-                      child: Container(
-                        width: double.infinity,
-                        height: 64,
-                        decoration: BoxDecoration(
-                          gradient: _ingredients.isEmpty || _isGeneratingMeal
-                              ? LinearGradient(colors: [Colors.grey[300]!, Colors.grey[400]!])
-                              : LinearGradient(
-                                  colors: [Colors.green[600]!, Colors.green[700]!],
-                                  begin: Alignment.topLeft,
-                                  end: Alignment.bottomRight,
-                                ),
-                          borderRadius: BorderRadius.circular(20),
-                          boxShadow: _ingredients.isEmpty || _isGeneratingMeal
-                              ? []
-                              : [
-                                  BoxShadow(
-                                    color: Colors.green.withOpacity(0.3),
-                                    blurRadius: 12,
-                                    offset: const Offset(0, 6),
-                                  ),
-                                ],
-                        ),
-                        child: Center(
-                          child: _isGeneratingMeal
-                            ? Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  SizedBox(
-                                    width: 24,
-                                    height: 24,
-                                    child: CircularProgressIndicator(
-                                      color: Colors.white,
-                                      strokeWidth: 2.5,
+                            // Preview button
+                            Positioned(
+                              bottom: 20,
+                              left: 20,
+                              right: 20,
+                              child: Material(
+                                color: Colors.transparent,
+                                child: InkWell(
+                                  borderRadius: BorderRadius.circular(16),
+                                  onTap: () {
+                                    showDialog(
+                                      context: context,
+                                      builder:
+                                          (_) => Dialog(
+                                            backgroundColor: Colors.black,
+                                            child: InteractiveViewer(
+                                              child: Image.file(
+                                                File(widget.imagePath),
+                                              ),
+                                            ),
+                                          ),
+                                    );
+                                  },
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 20,
+                                      vertical: 12,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: Colors.white.withOpacity(0.95),
+                                      borderRadius: BorderRadius.circular(16),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: Colors.black.withOpacity(0.1),
+                                          blurRadius: 10,
+                                          offset: const Offset(0, 4),
+                                        ),
+                                      ],
+                                    ),
+                                    child: Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: [
+                                        Icon(
+                                          Icons.fullscreen,
+                                          color: Colors.black87,
+                                          size: 20,
+                                        ),
+                                        const SizedBox(width: 8),
+                                        Text(
+                                          AppLocalizations.of(
+                                            context,
+                                          )!.previewFullImage,
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.w600,
+                                            color: Colors.black87,
+                                            fontSize: 16,
+                                          ),
+                                        ),
+                                      ],
                                     ),
                                   ),
-                                  const SizedBox(width: 12),
-                                                                     Text(
-                                     AppLocalizations.of(context)!.generating,
-                                     style: TextStyle(
-                                       color: Colors.white,
-                                       fontSize: 18,
-                                       fontWeight: FontWeight.w600,
-                                     ),
-                                   ),
-                                ],
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+
+                    // Enhanced Generate Meal button
+                    Container(
+                      margin: const EdgeInsets.symmetric(horizontal: 20),
+                      child: Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(20),
+                          onTap:
+                              _ingredients.isEmpty || _isGeneratingMeal
+                                  ? null
+                                  : _generateMealFromFridge,
+                          child: Container(
+                            width: double.infinity,
+                            height: 64,
+                            decoration: BoxDecoration(
+                              gradient:
+                                  _ingredients.isEmpty || _isGeneratingMeal
+                                      ? LinearGradient(
+                                        colors: [
+                                          Colors.grey[300]!,
+                                          Colors.grey[400]!,
+                                        ],
+                                      )
+                                      : LinearGradient(
+                                        colors: [
+                                          Colors.green[600]!,
+                                          Colors.green[700]!,
+                                        ],
+                                        begin: Alignment.topLeft,
+                                        end: Alignment.bottomRight,
+                                      ),
+                              borderRadius: BorderRadius.circular(20),
+                              boxShadow:
+                                  _ingredients.isEmpty || _isGeneratingMeal
+                                      ? []
+                                      : [
+                                        BoxShadow(
+                                          color: Colors.green.withOpacity(0.3),
+                                          blurRadius: 12,
+                                          offset: const Offset(0, 6),
+                                        ),
+                                      ],
+                            ),
+                            child: Center(
+                              child:
+                                  _isGeneratingMeal
+                                      ? Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        children: [
+                                          SizedBox(
+                                            width: 24,
+                                            height: 24,
+                                            child: CircularProgressIndicator(
+                                              color: Colors.white,
+                                              strokeWidth: 2.5,
+                                            ),
+                                          ),
+                                          const SizedBox(width: 12),
+                                          Text(
+                                            AppLocalizations.of(
+                                              context,
+                                            )!.generating,
+                                            style: TextStyle(
+                                              color: Colors.white,
+                                              fontSize: 18,
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                          ),
+                                        ],
+                                      )
+                                      : Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        children: [
+                                          Icon(
+                                            Icons.auto_awesome,
+                                            color: Colors.white,
+                                            size: 24,
+                                          ),
+                                          const SizedBox(width: 12),
+                                          Text(
+                                            AppLocalizations.of(
+                                              context,
+                                            )!.generateMeal,
+                                            style: TextStyle(
+                                              color: Colors.white,
+                                              fontSize: 18,
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 24),
+
+                    // Enhanced Fridge items card
+                    Container(
+                      margin: const EdgeInsets.symmetric(horizontal: 20),
+                      padding: const EdgeInsets.all(24),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(20),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.05),
+                            blurRadius: 10,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                  color: Colors.green.withOpacity(0.1),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Icon(
+                                  Icons.kitchen,
+                                  color: Colors.green[700],
+                                  size: 24,
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Text(
+                                  AppLocalizations.of(
+                                    context,
+                                  )!.detectedFridgeItems,
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 16,
+                                    color: Colors.black87,
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 16),
+                          _ingredients.isEmpty
+                              ? Container(
+                                padding: const EdgeInsets.all(20),
+                                decoration: BoxDecoration(
+                                  color: Colors.grey[50],
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(
+                                    color: Colors.grey[200]!,
+                                    width: 1,
+                                  ),
+                                ),
+                                child: Column(
+                                  children: [
+                                    Icon(
+                                      Icons.search_off,
+                                      size: 48,
+                                      color: Colors.grey[400],
+                                    ),
+                                    const SizedBox(height: 12),
+                                    Text(
+                                      AppLocalizations.of(
+                                        context,
+                                      )!.noFridgeItemsDetected,
+                                      style: TextStyle(
+                                        color: Colors.grey[600],
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 8),
+                                    Text(
+                                      AppLocalizations.of(
+                                        context,
+                                      )!.tryClearerPhoto,
+                                      style: TextStyle(
+                                        color: Colors.grey[500],
+                                        fontSize: 14,
+                                      ),
+                                      textAlign: TextAlign.center,
+                                    ),
+                                  ],
+                                ),
                               )
-                            : Row(
+                              : Wrap(
+                                spacing: 8,
+                                runSpacing: 8,
+                                children:
+                                    _ingredients
+                                        .map(
+                                          (item) => Container(
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: 12,
+                                              vertical: 8,
+                                            ),
+                                            decoration: BoxDecoration(
+                                              color: Colors.green.withOpacity(
+                                                0.1,
+                                              ),
+                                              borderRadius:
+                                                  BorderRadius.circular(12),
+                                              border: Border.all(
+                                                color: Colors.green.withOpacity(
+                                                  0.3,
+                                                ),
+                                                width: 1,
+                                              ),
+                                            ),
+                                            child: Text(
+                                              item,
+                                              style: TextStyle(
+                                                color: Colors.green[700],
+                                                fontWeight: FontWeight.w500,
+                                                fontSize: 14,
+                                              ),
+                                            ),
+                                          ),
+                                        )
+                                        .toList(),
+                              ),
+                        ],
+                      ),
+                    ),
+
+                    const SizedBox(height: 32),
+
+                    // Enhanced Discard button
+                    Container(
+                      margin: const EdgeInsets.symmetric(horizontal: 20),
+                      child: Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(20),
+                          onTap: _discard,
+                          child: Container(
+                            width: double.infinity,
+                            height: 64,
+                            decoration: BoxDecoration(
+                              color: Colors.red[50],
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(
+                                color: Colors.red[200]!,
+                                width: 2,
+                              ),
+                            ),
+                            child: Center(
+                              child: Row(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
                                   Icon(
-                                    Icons.auto_awesome,
-                                    color: Colors.white,
+                                    Icons.close,
+                                    color: Colors.red[700],
                                     size: 24,
                                   ),
                                   const SizedBox(width: 12),
                                   Text(
-                                    AppLocalizations.of(context)!.generateMeal,
+                                    AppLocalizations.of(context)!.discard,
                                     style: TextStyle(
-                                      color: Colors.white,
+                                      color: Colors.red[700],
                                       fontSize: 18,
                                       fontWeight: FontWeight.w600,
                                     ),
                                   ),
                                 ],
                               ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-
-                const SizedBox(height: 24),
-
-                // Enhanced Fridge items card
-                Container(
-                  margin: const EdgeInsets.symmetric(horizontal: 20),
-                  padding: const EdgeInsets.all(24),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(20),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.05),
-                        blurRadius: 10,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(8),
-                            decoration: BoxDecoration(
-                              color: Colors.green.withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(12),
                             ),
-                            child: Icon(
-                              Icons.kitchen,
-                              color: Colors.green[700],
-                              size: 24,
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Text(
-                              AppLocalizations.of(context)!.detectedFridgeItems,
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 16,
-                                color: Colors.black87,
-                              ),
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 16),
-                      _ingredients.isEmpty
-                        ? Container(
-                            padding: const EdgeInsets.all(20),
-                            decoration: BoxDecoration(
-                              color: Colors.grey[50],
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(color: Colors.grey[200]!, width: 1),
-                            ),
-                            child: Column(
-                              children: [
-                                Icon(
-                                  Icons.search_off,
-                                  size: 48,
-                                  color: Colors.grey[400],
-                                ),
-                                const SizedBox(height: 12),
-                                Text(
-                                  AppLocalizations.of(context)!.noFridgeItemsDetected,
-                                  style: TextStyle(
-                                    color: Colors.grey[600],
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                                const SizedBox(height: 8),
-                                                                 Text(
-                                   AppLocalizations.of(context)!.tryClearerPhoto,
-                                   style: TextStyle(
-                                     color: Colors.grey[500],
-                                     fontSize: 14,
-                                   ),
-                                   textAlign: TextAlign.center,
-                                 ),
-                              ],
-                            ),
-                          )
-                        : Wrap(
-                            spacing: 8,
-                            runSpacing: 8,
-                            children: _ingredients.map((item) => Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                              decoration: BoxDecoration(
-                                color: Colors.green.withOpacity(0.1),
-                                borderRadius: BorderRadius.circular(12),
-                                border: Border.all(color: Colors.green.withOpacity(0.3), width: 1),
-                              ),
-                              child: Text(
-                                item,
-                                style: TextStyle(
-                                  color: Colors.green[700],
-                                  fontWeight: FontWeight.w500,
-                                  fontSize: 14,
-                                ),
-                              ),
-                            )).toList(),
-                          ),
-                    ],
-                  ),
-                ),
-
-                const SizedBox(height: 32),
-
-                // Enhanced Discard button
-                Container(
-                  margin: const EdgeInsets.symmetric(horizontal: 20),
-                  child: Material(
-                    color: Colors.transparent,
-                    child: InkWell(
-                      borderRadius: BorderRadius.circular(20),
-                      onTap: _discard,
-                      child: Container(
-                        width: double.infinity,
-                        height: 64,
-                        decoration: BoxDecoration(
-                          color: Colors.red[50],
-                          borderRadius: BorderRadius.circular(20),
-                          border: Border.all(color: Colors.red[200]!, width: 2),
-                        ),
-                        child: Center(
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(
-                                Icons.close,
-                                color: Colors.red[700],
-                                size: 24,
-                              ),
-                              const SizedBox(width: 12),
-                              Text(
-                                AppLocalizations.of(context)!.discard,
-                                style: TextStyle(
-                                  color: Colors.red[700],
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ],
                           ),
                         ),
                       ),
                     ),
-                  ),
-                ),
 
-                const SizedBox(height: 32),
-              ],
-            ),
-          ),
+                    const SizedBox(height: 32),
+                  ],
+                ),
+              ),
     );
   }
-} 
+}

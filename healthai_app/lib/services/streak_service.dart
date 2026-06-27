@@ -31,8 +31,11 @@ class StreakService {
     if (user == null) return Stream.value(StreakInfo.zero);
 
     final now = DateTime.now();
-    final start = DateTime(now.year, now.month, now.day)
-        .subtract(Duration(days: lookbackDays));
+    final start = DateTime(
+      now.year,
+      now.month,
+      now.day,
+    ).subtract(Duration(days: lookbackDays));
 
     return _firestore
         .collection('meals')
@@ -43,7 +46,9 @@ class StreakService {
         .orderBy('timestamp', descending: true)
         .snapshots()
         .map((snapshot) {
-          final docs = snapshot.docs.where((d) => (d.data()['isDeleted'] ?? false) == false);
+          final docs = snapshot.docs.where(
+            (d) => (d.data()['isDeleted'] ?? false) == false,
+          );
 
           // Count entries per local day
           final Map<DateTime, int> entriesPerDay = {};
@@ -93,5 +98,3 @@ class StreakService {
         });
   }
 }
-
-

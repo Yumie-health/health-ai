@@ -27,8 +27,8 @@ class RateLimitResult {
   RateLimitResult._({required this.allowed, this.message, this.waitTime});
 
   factory RateLimitResult.allowed() => RateLimitResult._(allowed: true);
-  
-  factory RateLimitResult.denied(String message, Duration waitTime) => 
+
+  factory RateLimitResult.denied(String message, Duration waitTime) =>
       RateLimitResult._(allowed: false, message: message, waitTime: waitTime);
 }
 
@@ -64,11 +64,14 @@ class RateLimitingService {
   };
 
   // Check if action is allowed
-  Future<RateLimitResult> checkRateLimit(String action, {String? identifier}) async {
+  Future<RateLimitResult> checkRateLimit(
+    String action, {
+    String? identifier,
+  }) async {
     try {
       final key = _getRateLimitKey(action, identifier);
       final config = _rateLimits[action];
-      
+
       if (config == null) {
         // No rate limit configured for this action
         return RateLimitResult.allowed();
@@ -84,7 +87,9 @@ class RateLimitingService {
       // Check if we're in a cooldown period
       final lastCooldownTime = await _getLastCooldownTime(key);
       if (lastCooldownTime != null) {
-        final cooldownEnd = lastCooldownTime.add(Duration(minutes: cooldownMinutes));
+        final cooldownEnd = lastCooldownTime.add(
+          Duration(minutes: cooldownMinutes),
+        );
         if (now.isBefore(cooldownEnd)) {
           final remainingTime = cooldownEnd.difference(now);
           return RateLimitResult.denied(
@@ -102,7 +107,7 @@ class RateLimitingService {
         // Rate limit exceeded, start cooldown
         await _setCooldown(key, now);
         final cooldownDuration = Duration(minutes: cooldownMinutes);
-        
+
         _log.warning('Rate limit exceeded', {
           'action': action,
           'identifier': identifier,
@@ -118,7 +123,6 @@ class RateLimitingService {
       }
 
       return RateLimitResult.allowed();
-
     } catch (e) {
       _log.error('Error checking rate limit', e);
       // If there's an error, allow the action to prevent blocking legitimate users
@@ -131,15 +135,14 @@ class RateLimitingService {
     try {
       final key = _getRateLimitKey(action, identifier);
       final entry = RateLimitEntry(timestamp: DateTime.now(), action: action);
-      
+
       await _addAttempt(key, entry);
-      
+
       _log.info('Rate limit attempt recorded', {
         'action': action,
         'identifier': identifier,
         'timestamp': entry.timestamp.toIso8601String(),
       });
-
     } catch (e) {
       _log.error('Error recording rate limit attempt', e);
     }
@@ -151,17 +154,23 @@ class RateLimitingService {
   }
 
   // Get recent attempts within the time window
-  Future<List<RateLimitEntry>> _getRecentAttempts(String key, int windowMinutes) async {
+  Future<List<RateLimitEntry>> _getRecentAttempts(
+    String key,
+    int windowMinutes,
+  ) async {
     try {
       final prefs = await SharedPreferences.getInstance();
       final attemptsJson = prefs.getStringList('${key}_attempts') ?? [];
-      
-      final cutoffTime = DateTime.now().subtract(Duration(minutes: windowMinutes));
-      
-      final attempts = attemptsJson
-          .map((json) => RateLimitEntry.fromJson(jsonDecode(json)))
-          .where((entry) => entry.timestamp.isAfter(cutoffTime))
-          .toList();
+
+      final cutoffTime = DateTime.now().subtract(
+        Duration(minutes: windowMinutes),
+      );
+
+      final attempts =
+          attemptsJson
+              .map((json) => RateLimitEntry.fromJson(jsonDecode(json)))
+              .where((entry) => entry.timestamp.isAfter(cutoffTime))
+              .toList();
 
       // Clean up old attempts
       if (attempts.length != attemptsJson.length) {
@@ -180,7 +189,7 @@ class RateLimitingService {
     try {
       final prefs = await SharedPreferences.getInstance();
       final attemptsJson = prefs.getStringList('${key}_attempts') ?? [];
-      
+
       attemptsJson.add(jsonEncode(entry.toJson()));
       await prefs.setStringList('${key}_attempts', attemptsJson);
     } catch (e) {
@@ -192,7 +201,8 @@ class RateLimitingService {
   Future<void> _saveAttempts(String key, List<RateLimitEntry> attempts) async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      final attemptsJson = attempts.map((entry) => jsonEncode(entry.toJson())).toList();
+      final attemptsJson =
+          attempts.map((entry) => jsonEncode(entry.toJson())).toList();
       await prefs.setStringList('${key}_attempts', attemptsJson);
     } catch (e) {
       _log.error('Error saving attempts', e);
@@ -252,13 +262,13 @@ class RateLimitingService {
     try {
       final prefs = await SharedPreferences.getInstance();
       final keys = prefs.getKeys();
-      
+
       for (final key in keys) {
         if (key.startsWith('rate_limit_')) {
           await prefs.remove(key);
         }
       }
-      
+
       _log.info('All rate limit data cleared');
     } catch (e) {
       _log.error('Error clearing rate limit data', e);
@@ -266,14 +276,17 @@ class RateLimitingService {
   }
 
   // Clear rate limit data for specific action (useful for testing/debugging)
-  Future<void> clearRateLimitForAction(String action, {String? identifier}) async {
+  Future<void> clearRateLimitForAction(
+    String action, {
+    String? identifier,
+  }) async {
     try {
       final key = _getRateLimitKey(action, identifier);
       final prefs = await SharedPreferences.getInstance();
-      
+
       await prefs.remove('${key}_attempts');
       await prefs.remove('${key}_cooldown');
-      
+
       _log.info('Rate limit data cleared for action', {
         'action': action,
         'identifier': identifier,
@@ -284,11 +297,14 @@ class RateLimitingService {
   }
 
   // Get rate limit status for debugging
-  Future<Map<String, dynamic>> getRateLimitStatus(String action, {String? identifier}) async {
+  Future<Map<String, dynamic>> getRateLimitStatus(
+    String action, {
+    String? identifier,
+  }) async {
     try {
       final key = _getRateLimitKey(action, identifier);
       final config = _rateLimits[action];
-      
+
       if (config == null) {
         return {'action': action, 'status': 'no_limit_configured'};
       }
@@ -296,7 +312,7 @@ class RateLimitingService {
       final windowMinutes = config['window_minutes'] as int;
       final attempts = await _getRecentAttempts(key, windowMinutes);
       final lastCooldownTime = await _getLastCooldownTime(key);
-      
+
       return {
         'action': action,
         'identifier': identifier,

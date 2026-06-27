@@ -6,30 +6,34 @@ import '../l10n/app_localizations.dart';
 import '../utils/constants.dart';
 
 class EmailVerificationService {
-  static final EmailVerificationService _instance = EmailVerificationService._internal();
+  static final EmailVerificationService _instance =
+      EmailVerificationService._internal();
   factory EmailVerificationService() => _instance;
   EmailVerificationService._internal();
 
   // Show email verification dialog and handle the verification flow
-  Future<bool> showEmailVerificationDialog(BuildContext context, User user) async {
+  Future<bool> showEmailVerificationDialog(
+    BuildContext context,
+    User user,
+  ) async {
     // Force reload user to get latest verification status
     await user.reload();
     final currentUser = FirebaseAuth.instance.currentUser;
-    
+
     // If already verified (Google accounts are often pre-verified), skip dialog
     if (currentUser != null && currentUser.emailVerified) {
       return true;
     }
-    
+
     // Check if verification email was already sent for this email
     final prefs = await SharedPreferences.getInstance();
     final lastSentKey = 'verification_sent_${user.email}';
     final lastSentTime = prefs.getInt(lastSentKey) ?? 0;
     final now = DateTime.now().millisecondsSinceEpoch;
     const fiveMinutes = 5 * 60 * 1000;
-    
+
     bool alreadySent = (now - lastSentTime) < fiveMinutes;
-    
+
     if (!alreadySent) {
       // Send verification email
       try {
@@ -43,7 +47,9 @@ class EmailVerificationService {
           try {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: Text('${AppLocalizations.of(context)!.failedToSendVerificationEmail}: $e'),
+                content: Text(
+                  '${AppLocalizations.of(context)!.failedToSendVerificationEmail}: $e',
+                ),
                 backgroundColor: Colors.red,
               ),
             );
@@ -59,10 +65,9 @@ class EmailVerificationService {
     bool? result = await showDialog<bool>(
       context: context,
       barrierDismissible: false,
-      builder: (context) => _EmailVerificationDialog(
-        user: user,
-        alreadySent: alreadySent,
-      ),
+      builder:
+          (context) =>
+              _EmailVerificationDialog(user: user, alreadySent: alreadySent),
     );
 
     return result ?? false;
@@ -74,15 +79,23 @@ class EmailVerificationService {
     if (user == null) return false;
 
     // Skip verification for review team accounts
-    final reviewAccounts = ['apple@applereview.com', 'google.develop@gmail.com'];
-    if (user.email != null && reviewAccounts.contains(user.email!.toLowerCase())) {
+    final reviewAccounts = [
+      'apple@applereview.com',
+      'google.develop@gmail.com',
+    ];
+    if (user.email != null &&
+        reviewAccounts.contains(user.email!.toLowerCase())) {
       return false; // Skip verification for review accounts
     }
 
     // Skip verification for Apple and Google sign-in (trusted providers)
     final providerData = user.providerData;
-    final isAppleUser = providerData.any((provider) => provider.providerId == 'apple.com');
-    final isGoogleUser = providerData.any((provider) => provider.providerId == 'google.com');
+    final isAppleUser = providerData.any(
+      (provider) => provider.providerId == 'apple.com',
+    );
+    final isGoogleUser = providerData.any(
+      (provider) => provider.providerId == 'google.com',
+    );
     if (isAppleUser || isGoogleUser) return false;
 
     // Check if email is verified
@@ -108,7 +121,8 @@ class _EmailVerificationDialog extends StatefulWidget {
   }) : super(key: key);
 
   @override
-  State<_EmailVerificationDialog> createState() => _EmailVerificationDialogState();
+  State<_EmailVerificationDialog> createState() =>
+      _EmailVerificationDialogState();
 }
 
 class _EmailVerificationDialogState extends State<_EmailVerificationDialog> {
@@ -145,7 +159,7 @@ class _EmailVerificationDialogState extends State<_EmailVerificationDialog> {
         // Force reload user data from Firebase
         await widget.user.reload();
         final currentUser = FirebaseAuth.instance.currentUser;
-        
+
         if (currentUser != null && currentUser.emailVerified) {
           timer.cancel();
           if (mounted) {
@@ -194,22 +208,27 @@ class _EmailVerificationDialogState extends State<_EmailVerificationDialog> {
   Future<void> _resendVerification() async {
     try {
       await widget.user.sendEmailVerification();
-      
+
       // Update SharedPreferences
       final prefs = await SharedPreferences.getInstance();
-      await prefs.setInt('verification_sent_${widget.user.email}', DateTime.now().millisecondsSinceEpoch);
-      
+      await prefs.setInt(
+        'verification_sent_${widget.user.email}',
+        DateTime.now().millisecondsSinceEpoch,
+      );
+
       setState(() {
         canResend = false;
       });
-      
+
       _startWaiting();
-      
+
       if (mounted) {
         try {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(AppLocalizations.of(context)!.verificationEmailSent),
+              content: Text(
+                AppLocalizations.of(context)!.verificationEmailSent,
+              ),
               backgroundColor: kPrimaryGreen,
             ),
           );
@@ -222,7 +241,9 @@ class _EmailVerificationDialogState extends State<_EmailVerificationDialog> {
         try {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(AppLocalizations.of(context)!.failedToResendVerificationEmail),
+              content: Text(
+                AppLocalizations.of(context)!.failedToResendVerificationEmail,
+              ),
               backgroundColor: Colors.red,
             ),
           );
@@ -243,7 +264,11 @@ class _EmailVerificationDialogState extends State<_EmailVerificationDialog> {
           children: [
             Icon(Icons.email, color: kPrimaryGreen, size: 28),
             SizedBox(width: 8),
-            Expanded(child: Text(AppLocalizations.of(context)!.emailVerificationRequired)),
+            Expanded(
+              child: Text(
+                AppLocalizations.of(context)!.emailVerificationRequired,
+              ),
+            ),
             IconButton(
               icon: Icon(Icons.close, color: Colors.grey[600]),
               onPressed: () => Navigator.of(context).pop(false),
@@ -272,7 +297,9 @@ class _EmailVerificationDialogState extends State<_EmailVerificationDialog> {
                     SizedBox(width: 8),
                     Expanded(
                       child: Text(
-                        AppLocalizations.of(context)!.verificationLinkAlreadySent,
+                        AppLocalizations.of(
+                          context,
+                        )!.verificationLinkAlreadySent,
                         style: TextStyle(
                           fontSize: 13,
                           color: Colors.orange[700],
@@ -327,12 +354,14 @@ class _EmailVerificationDialogState extends State<_EmailVerificationDialog> {
                   // Force reload and check verification
                   await widget.user.reload();
                   final currentUser = FirebaseAuth.instance.currentUser;
-                  
+
                   if (currentUser != null && currentUser.emailVerified) {
                     try {
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
-                          content: Text(AppLocalizations.of(context)!.emailVerified),
+                          content: Text(
+                            AppLocalizations.of(context)!.emailVerified,
+                          ),
                           backgroundColor: kPrimaryGreen,
                           duration: Duration(seconds: 2),
                         ),
@@ -345,7 +374,9 @@ class _EmailVerificationDialogState extends State<_EmailVerificationDialog> {
                     try {
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
-                          content: Text(AppLocalizations.of(context)!.emailNotVerified),
+                          content: Text(
+                            AppLocalizations.of(context)!.emailNotVerified,
+                          ),
                           backgroundColor: Colors.orange,
                           duration: Duration(seconds: 2),
                         ),
@@ -359,7 +390,9 @@ class _EmailVerificationDialogState extends State<_EmailVerificationDialog> {
                   try {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
-                        content: Text('${AppLocalizations.of(context)!.errorCheckingVerification}: $e'),
+                        content: Text(
+                          '${AppLocalizations.of(context)!.errorCheckingVerification}: $e',
+                        ),
                         backgroundColor: Colors.red,
                       ),
                     );

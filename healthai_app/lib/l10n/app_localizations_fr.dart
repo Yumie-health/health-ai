@@ -39,25 +39,29 @@ class AppLocalizationsFr extends AppLocalizations {
   String get mealLoggingPrompts => 'Rappels de Journalisation des Repas';
 
   @override
-  String get mealLoggingPromptsSubtitle => 'Recevoir des rappels pour enregistrer vos repas';
+  String get mealLoggingPromptsSubtitle =>
+      'Recevoir des rappels pour enregistrer vos repas';
 
   @override
   String get waterIntakeReminders => 'Rappels de Consommation d\'Eau';
 
   @override
-  String get waterIntakeRemindersSubtitle => 'Recevoir des rappels pour boire de l\'eau';
+  String get waterIntakeRemindersSubtitle =>
+      'Recevoir des rappels pour boire de l\'eau';
 
   @override
   String get mindfulWalksReminders => 'Rappels de Marches Conscientes';
 
   @override
-  String get mindfulWalksRemindersSubtitle => 'Recevoir des rappels pour faire une marche consciente';
+  String get mindfulWalksRemindersSubtitle =>
+      'Recevoir des rappels pour faire une marche consciente';
 
   @override
   String get momentOfCalmAfterMeals => 'Moment de Calme Après les Repas';
 
   @override
-  String get momentOfCalmAfterMealsSubtitle => 'Afficher une popup apaisante après avoir enregistré un repas';
+  String get momentOfCalmAfterMealsSubtitle =>
+      'Afficher une popup apaisante après avoir enregistré un repas';
 
   @override
   String get welcomeBack => 'Bon retour !';
@@ -66,31 +70,37 @@ class AppLocalizationsFr extends AppLocalizations {
   String get trackNutritionToday => 'Suivons votre nutrition aujourd\'hui';
 
   @override
-  String get subtitleAfternoon => 'Moment idéal pour enregistrer votre déjeuner et garder l\'équilibre.';
+  String get subtitleAfternoon =>
+      'Moment idéal pour enregistrer votre déjeuner et garder l\'équilibre.';
 
   @override
-  String get subtitleEvening => 'Restez sur la bonne voie ce soir — enregistrez vos repas.';
+  String get subtitleEvening =>
+      'Restez sur la bonne voie ce soir — enregistrez vos repas.';
 
   @override
-  String get subtitleNight => 'Terminez votre journée — n\'oubliez pas d\'enregistrer vos repas d\'aujourd\'hui.';
+  String get subtitleNight =>
+      'Terminez votre journée — n\'oubliez pas d\'enregistrer vos repas d\'aujourd\'hui.';
 
   @override
   String get streakNearEndingTitle => 'Gardez votre série 🔥';
 
   @override
-  String get streakNearEndingBody => 'Votre série est sur le point de se terminer. Enregistrez un repas aujourd\'hui pour la garder !';
+  String get streakNearEndingBody =>
+      'Votre série est sur le point de se terminer. Enregistrez un repas aujourd\'hui pour la garder !';
 
   @override
   String get streakNearEndingTitle2 => 'Presque là ! 🔥';
 
   @override
-  String get streakNearEndingBody2 => 'Il ne reste que quelques heures. Enregistrez un repas pour sauver votre série !';
+  String get streakNearEndingBody2 =>
+      'Il ne reste que quelques heures. Enregistrez un repas pour sauver votre série !';
 
   @override
   String get streakEndedTitle => 'Série terminée';
 
   @override
-  String get streakEndedBody => 'Votre série s\'est terminée. Enregistrez un repas pour la redémarrer et la reconstruire !';
+  String get streakEndedBody =>
+      'Votre série s\'est terminée. Enregistrez un repas pour la redémarrer et la reconstruire !';
 
   @override
   String get streakActive => 'Série active';
@@ -111,13 +121,15 @@ class AppLocalizationsFr extends AppLocalizations {
   String get startedOn => 'Commencée le';
 
   @override
-  String get logMealToStartStreak => 'Enregistrez un repas aujourd\'hui pour démarrer votre série';
+  String get logMealToStartStreak =>
+      'Enregistrez un repas aujourd\'hui pour démarrer votre série';
 
   @override
   String get nutritionSummary => 'Résumé Nutritionnel';
 
   @override
-  String get setCalorieAndMacroGoals => 'Définissez vos objectifs caloriques et macronutriments dans la page Plan Nutritionnel.';
+  String get setCalorieAndMacroGoals =>
+      'Définissez vos objectifs caloriques et macronutriments dans la page Plan Nutritionnel.';
 
   @override
   String get protein => 'Protéines';
@@ -156,7 +168,8 @@ class AppLocalizationsFr extends AppLocalizations {
   String get viewAll => 'Voir Tout';
 
   @override
-  String get noMealsLoggedForThisDay => 'Aucun repas enregistré pour cette journée.';
+  String get noMealsLoggedForThisDay =>
+      'Aucun repas enregistré pour cette journée.';
 
   @override
   String get nutritionalPlan => 'Plan Nutritionnel';
@@ -198,7 +211,8 @@ class AppLocalizationsFr extends AppLocalizations {
   String get sinceStart => 'depuis le début';
 
   @override
-  String get expectationsDisclaimer => 'Ces attentes sont basées sur votre tendance récente et peuvent changer au fur et à mesure que vous enregistrez de nouveaux poids.';
+  String get expectationsDisclaimer =>
+      'Ces attentes sont basées sur votre tendance récente et peuvent changer au fur et à mesure que vous enregistrez de nouveaux poids.';
 
   @override
   String get loseVerb => 'perdre';
@@ -207,7 +221,13 @@ class AppLocalizationsFr extends AppLocalizations {
   String get gainVerb => 'gagner';
 
   @override
-  String expectationBlurb(Object direction, Object eta, Object rate, Object remaining, Object unit) {
+  String expectationBlurb(
+    Object direction,
+    Object eta,
+    Object rate,
+    Object remaining,
+    Object unit,
+  ) {
     return 'Selon votre tendance récente, vous êtes en bonne voie pour $direction environ $rate $unit par semaine. À ce rythme, il faudra environ $eta pour atteindre votre objectif. Il vous reste $remaining $unit.';
   }
 
@@ -230,13 +250,15 @@ class AppLocalizationsFr extends AppLocalizations {
   String get comingSoon => 'Bientôt Disponible !';
 
   @override
-  String get ratingOnGoogleAvailableAfterRelease => 'L\'évaluation sur Google sera disponible après la sortie.';
+  String get ratingOnGoogleAvailableAfterRelease =>
+      'L\'évaluation sur Google sera disponible après la sortie.';
 
   @override
   String get shareWithFriends => 'Partager avec des Amis';
 
   @override
-  String get sharingAvailableAfterRelease => 'Le partage sera disponible après la sortie.';
+  String get sharingAvailableAfterRelease =>
+      'Le partage sera disponible après la sortie.';
 
   @override
   String get resetPassword => 'Réinitialiser le Mot de Passe';
@@ -269,7 +291,8 @@ class AppLocalizationsFr extends AppLocalizations {
   String get apiDocumentation => 'Documentation API';
 
   @override
-  String get needAssistanceContactSupport => 'Besoin d\'aide ? Contactez notre équipe de support :';
+  String get needAssistanceContactSupport =>
+      'Besoin d\'aide ? Contactez notre équipe de support :';
 
   @override
   String get testWebURL => 'URL Web de Test';
@@ -281,7 +304,8 @@ class AppLocalizationsFr extends AppLocalizations {
   String get logOut => 'Se Déconnecter';
 
   @override
-  String get areYouSureYouWantToLogOut => 'Êtes-vous sûr de vouloir vous déconnecter ?';
+  String get areYouSureYouWantToLogOut =>
+      'Êtes-vous sûr de vouloir vous déconnecter ?';
 
   @override
   String get no => 'No';
@@ -296,22 +320,26 @@ class AppLocalizationsFr extends AppLocalizations {
   String get momentOfCalm => 'Moment de Calme';
 
   @override
-  String get practiceMindfulEating => 'Prenez un moment pour apprécier votre repas et pratiquer l\'alimentation consciente.';
+  String get practiceMindfulEating =>
+      'Prenez un moment pour apprécier votre repas et pratiquer l\'alimentation consciente.';
 
   @override
   String get howOldAreYou => 'How old are you?';
 
   @override
-  String get personalizeExperience => 'Cela nous aide à personnaliser votre expérience';
+  String get personalizeExperience =>
+      'Cela nous aide à personnaliser votre expérience';
 
   @override
-  String get failedToOpenStore => 'Impossible d\'ouvrir le magasin d\'applications';
+  String get failedToOpenStore =>
+      'Impossible d\'ouvrir le magasin d\'applications';
 
   @override
   String get updateAvailable => 'Mise à jour disponible';
 
   @override
-  String get newVersionAvailable => 'Une nouvelle version de Yumie est disponible.';
+  String get newVersionAvailable =>
+      'Une nouvelle version de Yumie est disponible.';
 
   @override
   String get updateNow => 'Mettre à jour maintenant';
@@ -329,25 +357,29 @@ class AppLocalizationsFr extends AppLocalizations {
   String get yourGoalWeight => 'Votre poids objectif';
 
   @override
-  String get setRealisticGoal => 'Définissez un objectif réaliste pour votre parcours';
+  String get setRealisticGoal =>
+      'Définissez un objectif réaliste pour votre parcours';
 
   @override
   String get allSet => 'Vous êtes prêt ! 🎉';
 
   @override
-  String get personalizedNutritionPlan => 'Voici votre plan nutritionnel personnalisé. Bienvenue dans votre parcours de santé avec Yumie !';
+  String get personalizedNutritionPlan =>
+      'Voici votre plan nutritionnel personnalisé. Bienvenue dans votre parcours de santé avec Yumie !';
 
   @override
   String get whatIsYourBloodType => 'What is your blood type?';
 
   @override
-  String get personalizeHealthInsights => 'Cela nous aide à personnaliser vos insights de santé.';
+  String get personalizeHealthInsights =>
+      'Cela nous aide à personnaliser vos insights de santé.';
 
   @override
   String get whatIsYourSex => 'What is your sex?';
 
   @override
-  String get personalizeNutritionPlan => 'Cela nous aide à personnaliser votre plan nutritionnel.';
+  String get personalizeNutritionPlan =>
+      'Cela nous aide à personnaliser votre plan nutritionnel.';
 
   @override
   String get home => 'Accueil';
@@ -401,7 +433,8 @@ class AppLocalizationsFr extends AppLocalizations {
   String get clearChat => 'Effacer le Chat';
 
   @override
-  String get coachWelcome => 'Bonjour ! Je suis Yumie, votre coach nutritionnel. Comment puis-je vous aider aujourd\'hui ?\n\nDemandez à Yumie des recettes saines, des plans de repas ou des conseils nutritionnels !';
+  String get coachWelcome =>
+      'Bonjour ! Je suis Yumie, votre coach nutritionnel. Comment puis-je vous aider aujourd\'hui ?\n\nDemandez à Yumie des recettes saines, des plans de repas ou des conseils nutritionnels !';
 
   @override
   String get refreshInsight => 'Actualiser l\'Insight';
@@ -503,7 +536,8 @@ class AppLocalizationsFr extends AppLocalizations {
   String get bloodType => 'Blood type';
 
   @override
-  String get bloodTypeOptional => 'Le groupe sanguin est optionnel et n\'affecte pas le suivi des calories ou les recommandations.';
+  String get bloodTypeOptional =>
+      'Le groupe sanguin est optionnel et n\'affecte pas le suivi des calories ou les recommandations.';
 
   @override
   String get areYouDiabetic => 'Are you diabetic?';
@@ -512,7 +546,8 @@ class AppLocalizationsFr extends AppLocalizations {
   String get healthAwarenessUpdated => 'Conscience de la santé mise à jour !';
 
   @override
-  String get takeMomentToAppreciate => 'Prenez un moment pour apprécier votre repas et pratiquer l\'alimentation consciente.';
+  String get takeMomentToAppreciate =>
+      'Prenez un moment pour apprécier votre repas et pratiquer l\'alimentation consciente.';
 
   @override
   String get continueButton => 'Continuer';
@@ -530,7 +565,8 @@ class AppLocalizationsFr extends AppLocalizations {
   String get mealName => 'Nom du Repas';
 
   @override
-  String get searchOrEnterFoodName => 'Rechercher ou saisir le nom de l\'aliment';
+  String get searchOrEnterFoodName =>
+      'Rechercher ou saisir le nom de l\'aliment';
 
   @override
   String get ingredients => 'Ingrédients';
@@ -542,7 +578,8 @@ class AppLocalizationsFr extends AppLocalizations {
   String get myFoods => 'Mes Aliments';
 
   @override
-  String get noCustomFoods => 'Vous n\'avez pas encore sauvegardé d\'aliments personnalisés';
+  String get noCustomFoods =>
+      'Vous n\'avez pas encore sauvegardé d\'aliments personnalisés';
 
   @override
   String get addCustomFood => 'Ajouter un Aliment Personnalisé';
@@ -668,10 +705,12 @@ class AppLocalizationsFr extends AppLocalizations {
   String get upgradeToPremium => 'Passer à Premium';
 
   @override
-  String get getUnlimitedScans => 'Obtenez des scans illimités et plus encore !';
+  String get getUnlimitedScans =>
+      'Obtenez des scans illimités et plus encore !';
 
   @override
-  String get getUnlimitedSearches => 'Obtenez des recherches illimitées et plus encore !';
+  String get getUnlimitedSearches =>
+      'Obtenez des recherches illimitées et plus encore !';
 
   @override
   String get upgradePlan => 'Plan Premium';
@@ -820,10 +859,12 @@ class AppLocalizationsFr extends AppLocalizations {
   String get unlockPremiumFeatures => 'Débloquer les Fonctionnalités Premium';
 
   @override
-  String get getMostOutOfHealthJourney => 'Tirez le meilleur parti de votre parcours de santé avec un accès illimité !';
+  String get getMostOutOfHealthJourney =>
+      'Tirez le meilleur parti de votre parcours de santé avec un accès illimité !';
 
   @override
-  String get unlimitedScansAICoaching => 'Débloquez des scans illimités, un coaching IA et des plans de repas personnalisés !';
+  String get unlimitedScansAICoaching =>
+      'Débloquez des scans illimités, un coaching IA et des plans de repas personnalisés !';
 
   @override
   String get subscribe => 'S\'abonner';
@@ -841,7 +882,8 @@ class AppLocalizationsFr extends AppLocalizations {
   String get deleteMeal => 'Supprimer le repas';
 
   @override
-  String get areYouSureDeleteMeal => 'Êtes-vous sûr de vouloir supprimer ce repas ?';
+  String get areYouSureDeleteMeal =>
+      'Êtes-vous sûr de vouloir supprimer ce repas ?';
 
   @override
   String get unknown => 'Inconnu';
@@ -877,10 +919,12 @@ class AppLocalizationsFr extends AppLocalizations {
   String get googleSignInHelp => 'Aide pour la Connexion Google';
 
   @override
-  String get couldNotOpenTermsOfService => 'Impossible d\'ouvrir les Conditions d\'Utilisation';
+  String get couldNotOpenTermsOfService =>
+      'Impossible d\'ouvrir les Conditions d\'Utilisation';
 
   @override
-  String get couldNotOpenPrivacyPolicy => 'Impossible d\'ouvrir la Politique de Confidentialité';
+  String get couldNotOpenPrivacyPolicy =>
+      'Impossible d\'ouvrir la Politique de Confidentialité';
 
   @override
   String get errorSavingProfile => 'Erreur lors de la sauvegarde du profil';
@@ -904,7 +948,8 @@ class AppLocalizationsFr extends AppLocalizations {
   String get addLog => 'Ajouter un Journal';
 
   @override
-  String get unableToShareAtThisTime => 'Impossible de partager pour le moment. Veuillez réessayer.';
+  String get unableToShareAtThisTime =>
+      'Impossible de partager pour le moment. Veuillez réessayer.';
 
   @override
   String get failedToUpdatePhoto => 'Échec de la mise à jour de la photo';
@@ -928,7 +973,8 @@ class AppLocalizationsFr extends AppLocalizations {
   String get goalsUpdatedSuccessfully => 'Objectifs mis à jour avec succès';
 
   @override
-  String get errorUpdatingGoals => 'Erreur lors de la mise à jour des objectifs';
+  String get errorUpdatingGoals =>
+      'Erreur lors de la mise à jour des objectifs';
 
   @override
   String get couldNotOpenWebsite => 'Impossible d\'ouvrir le site web';
@@ -958,31 +1004,36 @@ class AppLocalizationsFr extends AppLocalizations {
   String get permissionStatus => 'Statut des Permissions';
 
   @override
-  String get manageAppPermissions => 'Gérez les permissions de l\'application pour garantir le bon fonctionnement de toutes les fonctionnalités';
+  String get manageAppPermissions =>
+      'Gérez les permissions de l\'application pour garantir le bon fonctionnement de toutes les fonctionnalités';
 
   @override
   String get camera => 'Camera';
 
   @override
-  String get scanFoodItems => 'Scanner les aliments et prendre des photos des repas';
+  String get scanFoodItems =>
+      'Scanner les aliments et prendre des photos des repas';
 
   @override
   String get photoLibrary => 'Photos';
 
   @override
-  String get saveScannedImages => 'Sauvegarder les images scannées et sélectionner des photos';
+  String get saveScannedImages =>
+      'Sauvegarder les images scannées et sélectionner des photos';
 
   @override
   String get notifications => 'Notifications';
 
   @override
-  String get sendMealReminders => 'Envoyer des rappels de repas et des alertes de santé';
+  String get sendMealReminders =>
+      'Envoyer des rappels de repas et des alertes de santé';
 
   @override
   String get needHelp => 'Besoin d\'Aide ?';
 
   @override
-  String get permanentlyDeniedHelp => 'Si les permissions sont définitivement refusées, vous pouvez les activer dans les paramètres de votre appareil';
+  String get permanentlyDeniedHelp =>
+      'Si les permissions sont définitivement refusées, vous pouvez les activer dans les paramètres de votre appareil';
 
   @override
   String get openDeviceSettings => 'Ouvrir les Paramètres de l\'Appareil';
@@ -1045,13 +1096,16 @@ class AppLocalizationsFr extends AppLocalizations {
   String get messages => 'Messages';
 
   @override
-  String get subscribeForDailyInsights => 'Abonnez-vous aux Insights Quotidiens';
+  String get subscribeForDailyInsights =>
+      'Abonnez-vous aux Insights Quotidiens';
 
   @override
-  String get getPersonalizedHealthInsights => 'Obtenez des insights de santé personnalisés basés sur votre profil complet';
+  String get getPersonalizedHealthInsights =>
+      'Obtenez des insights de santé personnalisés basés sur votre profil complet';
 
   @override
-  String get upgradeDescription => 'Obtenez des scans illimités, des recherches et des insights alimentés par l\'IA';
+  String get upgradeDescription =>
+      'Obtenez des scans illimités, des recherches et des insights alimentés par l\'IA';
 
   @override
   String get unlimitedFoodScans => 'Scans d\'Aliments Illimités';
@@ -1084,19 +1138,23 @@ class AppLocalizationsFr extends AppLocalizations {
   String get water => 'Eau';
 
   @override
-  String get resetPasswordDescription => 'Un lien de réinitialisation sera envoyé à votre email';
+  String get resetPasswordDescription =>
+      'Un lien de réinitialisation sera envoyé à votre email';
 
   @override
   String get deleteAccount => 'Supprimer le Compte';
 
   @override
-  String get deleteAccountDescription => 'Supprimer définitivement votre compte et toutes les données';
+  String get deleteAccountDescription =>
+      'Supprimer définitivement votre compte et toutes les données';
 
   @override
-  String get confirmDeleteAccount => 'Êtes-vous sûr de vouloir supprimer votre compte ?';
+  String get confirmDeleteAccount =>
+      'Êtes-vous sûr de vouloir supprimer votre compte ?';
 
   @override
-  String get deleteAccountWarning => 'Cette action ne peut pas être annulée. Toutes vos données, y compris les repas, les progrès et les paramètres, seront définitivement supprimées.';
+  String get deleteAccountWarning =>
+      'Cette action ne peut pas être annulée. Toutes vos données, y compris les repas, les progrès et les paramètres, seront définitivement supprimées.';
 
   @override
   String get typeDeleteToConfirm => 'Type \"DELETE\" to confirm';
@@ -1114,7 +1172,8 @@ class AppLocalizationsFr extends AppLocalizations {
   String get totalNutrition => 'Nutrition Totale';
 
   @override
-  String get unlockUnlimitedScans => 'Débloquez des scans illimités, un coaching IA et\ndes plans de repas personnalisés';
+  String get unlockUnlimitedScans =>
+      'Débloquez des scans illimités, un coaching IA et\ndes plans de repas personnalisés';
 
   @override
   String get unlimitedFoodScanning => 'Scan d\'aliments illimité';
@@ -1154,25 +1213,30 @@ class AppLocalizationsFr extends AppLocalizations {
   String get noPurchasesFound => 'Aucun achat précédent trouvé';
 
   @override
-  String get restoreFailed => 'Échec de la restauration des achats. Veuillez réessayer.';
+  String get restoreFailed =>
+      'Échec de la restauration des achats. Veuillez réessayer.';
 
   @override
   String get restoreInProgress => 'Restauration des achats...';
 
   @override
-  String get bySubscribing => 'En vous abonnant, vous acceptez nos Conditions d\'Utilisation et notre Politique de Confidentialité. Les abonnements se renouvellent automatiquement sauf annulation';
+  String get bySubscribing =>
+      'En vous abonnant, vous acceptez nos Conditions d\'Utilisation et notre Politique de Confidentialité. Les abonnements se renouvellent automatiquement sauf annulation';
 
   @override
   String get permissionsComplete => 'Permissions Complete!';
 
   @override
-  String get whyWeAskForPermissions => 'Pourquoi nous demandons des autorisations';
+  String get whyWeAskForPermissions =>
+      'Pourquoi nous demandons des autorisations';
 
   @override
-  String get permissionsWhyBody => 'Nous utilisons votre appareil photo pour scanner les aliments et les codes‑barres, accéder aux photos lorsque vous importez des images et envoyer des notifications pour vous rappeler d’enregistrer vos repas et de vous hydrater.';
+  String get permissionsWhyBody =>
+      'Nous utilisons votre appareil photo pour scanner les aliments et les codes‑barres, accéder aux photos lorsque vous importez des images et envoyer des notifications pour vous rappeler d’enregistrer vos repas et de vous hydrater.';
 
   @override
-  String get permissionsNextScreen => 'À l’écran suivant, vous verrez les invites système pour accorder l’accès. Vous pouvez modifier cela à tout moment dans Réglages.';
+  String get permissionsNextScreen =>
+      'À l’écran suivant, vous verrez les invites système pour accorder l’accès. Vous pouvez modifier cela à tout moment dans Réglages.';
 
   @override
   String get references => 'Références :';
@@ -1196,7 +1260,8 @@ class AppLocalizationsFr extends AppLocalizations {
   String get selectLanguageTitle => 'Sélectionner la Langue';
 
   @override
-  String get chooseYourPreferredLanguage => 'Choisissez votre langue préférée pour l\'application';
+  String get chooseYourPreferredLanguage =>
+      'Choisissez votre langue préférée pour l\'application';
 
   @override
   String get languageChangedTo => 'Langue changée vers';
@@ -1211,7 +1276,8 @@ class AppLocalizationsFr extends AppLocalizations {
   String get sessionRevoked => 'Session révoquée';
 
   @override
-  String get allOtherSessionsSignedOut => 'Toutes les autres sessions déconnectées';
+  String get allOtherSessionsSignedOut =>
+      'Toutes les autres sessions déconnectées';
 
   @override
   String get signOutAllOthers => 'Déconnecter Tous les Autres';
@@ -1244,7 +1310,8 @@ class AppLocalizationsFr extends AppLocalizations {
   String get addNumbers => 'Ajouter des chiffres';
 
   @override
-  String get addSpecialCharacters => 'Ajouter des caractères spéciaux (!@#\$%^&*)';
+  String get addSpecialCharacters =>
+      'Ajouter des caractères spéciaux (!@#\$%^&*)';
 
   @override
   String get avoidCommonPatterns => 'Éviter les motifs courants';
@@ -1253,19 +1320,24 @@ class AppLocalizationsFr extends AppLocalizations {
   String get requiresAtLeast8Characters => 'Nécessite au moins 8 caractères';
 
   @override
-  String get tooManySignInAttempts => 'Trop de tentatives de connexion. Veuillez réessayer plus tard.';
+  String get tooManySignInAttempts =>
+      'Trop de tentatives de connexion. Veuillez réessayer plus tard.';
 
   @override
-  String get tooManySignUpAttempts => 'Trop de tentatives d\'inscription. Veuillez réessayer plus tard.';
+  String get tooManySignUpAttempts =>
+      'Trop de tentatives d\'inscription. Veuillez réessayer plus tard.';
 
   @override
-  String get tooManyPasswordResetRequests => 'Trop de demandes de réinitialisation de mot de passe. Veuillez réessayer plus tard.';
+  String get tooManyPasswordResetRequests =>
+      'Trop de demandes de réinitialisation de mot de passe. Veuillez réessayer plus tard.';
 
   @override
-  String get multipleFailedSignInAttempts => 'Tentatives de Connexion Échouées Multiples';
+  String get multipleFailedSignInAttempts =>
+      'Tentatives de Connexion Échouées Multiples';
 
   @override
-  String get excessivePasswordResetRequests => 'Demandes de Réinitialisation de Mot de Passe Excessives';
+  String get excessivePasswordResetRequests =>
+      'Demandes de Réinitialisation de Mot de Passe Excessives';
 
   @override
   String get suspiciousActivityDetected => 'Activité Suspecte Détectée';
@@ -1280,7 +1352,8 @@ class AppLocalizationsFr extends AppLocalizations {
   String get welcomeToYumiePermissions => 'Bienvenue sur Yumie';
 
   @override
-  String get provideBestExperience => 'Pour vous offrir la meilleure expérience, nous avons besoin de quelques permissions';
+  String get provideBestExperience =>
+      'Pour vous offrir la meilleure expérience, nous avons besoin de quelques permissions';
 
   @override
   String get grantPermissions => 'Accorder les Permissions';
@@ -1310,7 +1383,8 @@ class AppLocalizationsFr extends AppLocalizations {
   String get password => 'Mot de Passe';
 
   @override
-  String get agreeToTerms => 'et Conditions d\'Utilisation J\'accepte la Politique de Confidentialité';
+  String get agreeToTerms =>
+      'et Conditions d\'Utilisation J\'accepte la Politique de Confidentialité';
 
   @override
   String get alreadyHaveAccount => 'Vous avez déjà un compte ?';
@@ -1322,7 +1396,8 @@ class AppLocalizationsFr extends AppLocalizations {
   String get signUp => 'S\'Inscrire';
 
   @override
-  String get signInToAccessAccount => 'Connectez-vous pour accéder à votre compte';
+  String get signInToAccessAccount =>
+      'Connectez-vous pour accéder à votre compte';
 
   @override
   String get forgotPassword => 'Mot de Passe Oublié ?';
@@ -1346,7 +1421,8 @@ class AppLocalizationsFr extends AppLocalizations {
   String get resetPasswordTitle => 'Reset Password';
 
   @override
-  String get enterEmailForReset => 'Enter your email address to receive a password reset link';
+  String get enterEmailForReset =>
+      'Enter your email address to receive a password reset link';
 
   @override
   String get emailAddress => 'Email Address';
@@ -1358,10 +1434,12 @@ class AppLocalizationsFr extends AppLocalizations {
   String get deleteAccountTitle => 'Delete Account';
 
   @override
-  String get deleteAccountWarningTitle => 'This action is permanent and cannot be undone';
+  String get deleteAccountWarningTitle =>
+      'This action is permanent and cannot be undone';
 
   @override
-  String get deleteAccountDataList => 'When you delete your account, we will permanently remove:';
+  String get deleteAccountDataList =>
+      'When you delete your account, we will permanently remove:';
 
   @override
   String get allMealLogsAndNutrition => 'All your meal logs and nutrition data';
@@ -1382,10 +1460,12 @@ class AppLocalizationsFr extends AppLocalizations {
   String get activeSessionsAllDevices => 'Active sessions on all devices';
 
   @override
-  String get exportDataWarning => 'Make sure to export any data you want to keep before proceeding';
+  String get exportDataWarning =>
+      'Make sure to export any data you want to keep before proceeding';
 
   @override
-  String get understandActionPermanent => 'I understand this action is permanent';
+  String get understandActionPermanent =>
+      'I understand this action is permanent';
 
   @override
   String get typeDeleteHere => 'Type DELETE here';
@@ -1397,10 +1477,12 @@ class AppLocalizationsFr extends AppLocalizations {
   String get noSecurityAlertsFound => 'No security alerts';
 
   @override
-  String get yourAccountLooksGood => 'Your account looks good! No suspicious activity detected.';
+  String get yourAccountLooksGood =>
+      'Your account looks good! No suspicious activity detected.';
 
   @override
-  String get manageActiveSessionsAcrossDevices => 'Manage your active sessions across different devices';
+  String get manageActiveSessionsAcrossDevices =>
+      'Manage your active sessions across different devices';
 
   @override
   String get noActiveSessionsFound => 'No active sessions found';
@@ -1444,7 +1526,12 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
-  String weightTrendHealthyRate(Object eta, Object rate, Object remaining, Object unit) {
+  String weightTrendHealthyRate(
+    Object eta,
+    Object rate,
+    Object remaining,
+    Object unit,
+  ) {
     return 'Rythme sain : $rate$unit/semaine';
   }
 
@@ -1452,22 +1539,26 @@ class AppLocalizationsFr extends AppLocalizations {
   String get accountSuccessfullyDeleted => 'Account Successfully Deleted';
 
   @override
-  String get pleaseCloseAndRestartApp => 'Please close and restart the app to continue.';
+  String get pleaseCloseAndRestartApp =>
+      'Please close and restart the app to continue.';
 
   @override
   String get exportData => 'Exporter les Données';
 
   @override
-  String get exportDataDescription => 'Exporter toutes vos données en fichier PDF';
+  String get exportDataDescription =>
+      'Exporter toutes vos données en fichier PDF';
 
   @override
   String get exportComplete => 'Export Terminé';
 
   @override
-  String get exportCompleteMessage => 'Vos données ont été exportées avec succès !';
+  String get exportCompleteMessage =>
+      'Vos données ont été exportées avec succès !';
 
   @override
-  String get exportCompleteDescription => 'Le fichier PDF a été sauvegardé sur votre appareil et peut être partagé ou visualisé.';
+  String get exportCompleteDescription =>
+      'Le fichier PDF a été sauvegardé sur votre appareil et peut être partagé ou visualisé.';
 
   @override
   String get exportFailed => 'Échec de l\'Export';
@@ -1485,19 +1576,22 @@ class AppLocalizationsFr extends AppLocalizations {
   String get cameraAccess => 'Camera Access';
 
   @override
-  String get cameraAccessMessage => 'Yumie needs camera access to scan food items and help you log your meals accurately.';
+  String get cameraAccessMessage =>
+      'Yumie needs camera access to scan food items and help you log your meals accurately.';
 
   @override
   String get photoLibraryAccess => 'Photo Library Access';
 
   @override
-  String get photoLibraryAccessMessage => 'Yumie needs access to your photo library to save scanned images and select photos for meal logging.';
+  String get photoLibraryAccessMessage =>
+      'Yumie needs access to your photo library to save scanned images and select photos for meal logging.';
 
   @override
   String get notificationAccess => 'Notification Access';
 
   @override
-  String get notificationAccessMessage => 'Yumie needs notification access to send you meal reminders, water intake alerts, and mindful walk prompts.';
+  String get notificationAccessMessage =>
+      'Yumie needs notification access to send you meal reminders, water intake alerts, and mindful walk prompts.';
 
   @override
   String get notNow => 'Not Now';
@@ -1506,13 +1600,15 @@ class AppLocalizationsFr extends AppLocalizations {
   String get permissionsCompleted => 'Permissions Complete!';
 
   @override
-  String get allPermissionsGranted => 'All permissions granted! You\'re all set to use Yumie.';
+  String get allPermissionsGranted =>
+      'All permissions granted! You\'re all set to use Yumie.';
 
   @override
   String get whatIsYourMainGoal => 'What is your main goal?';
 
   @override
-  String get chooseGoalDescription => 'Choose the goal that best aligns with your journey';
+  String get chooseGoalDescription =>
+      'Choose the goal that best aligns with your journey';
 
   @override
   String get loseBodyWeight => 'Perdre du poids';
@@ -1530,10 +1626,12 @@ class AppLocalizationsFr extends AppLocalizations {
   String get maintainBodyWeight => 'Maintenir le poids';
 
   @override
-  String get setRealisticGoalForJourney => 'Set a realistic goal for your journey';
+  String get setRealisticGoalForJourney =>
+      'Set a realistic goal for your journey';
 
   @override
-  String get targetWeightSetToCurrent => 'Your target weight is set to your current weight';
+  String get targetWeightSetToCurrent =>
+      'Your target weight is set to your current weight';
 
   @override
   String get iAcceptThe => 'I accept the';
@@ -1554,7 +1652,8 @@ class AppLocalizationsFr extends AppLocalizations {
   String get whatMotivatesYou => 'What motivates you?';
 
   @override
-  String get chooseWhatDrivesYou => 'Choose what drives you to achieve your goals';
+  String get chooseWhatDrivesYou =>
+      'Choose what drives you to achieve your goals';
 
   @override
   String get feelEnergeticEveryDay => 'Feel energetic every day';
@@ -1575,7 +1674,8 @@ class AppLocalizationsFr extends AppLocalizations {
   String get caloriesLeft => 'calories left';
 
   @override
-  String get thisHelpsUsPersonalizeNutrition => 'This helps us personalize your nutrition plan';
+  String get thisHelpsUsPersonalizeNutrition =>
+      'This helps us personalize your nutrition plan';
 
   @override
   String get male => 'Male';
@@ -1587,7 +1687,8 @@ class AppLocalizationsFr extends AppLocalizations {
   String get other => 'Other';
 
   @override
-  String get thisHelpsUsPersonalizeExperience => 'This helps us personalize your experience';
+  String get thisHelpsUsPersonalizeExperience =>
+      'This helps us personalize your experience';
 
   @override
   String get older => 'Older';
@@ -1626,7 +1727,8 @@ class AppLocalizationsFr extends AppLocalizations {
   String get remindersWouldYouLike => 'Quels rappels souhaitez-vous recevoir ?';
 
   @override
-  String get yumieIsCookingUp => 'Yumie is cooking up your personalized nutrition plan...';
+  String get yumieIsCookingUp =>
+      'Yumie is cooking up your personalized nutrition plan...';
 
   @override
   String get yourAllSet => 'You\'re all set!';
@@ -1839,7 +1941,8 @@ class AppLocalizationsFr extends AppLocalizations {
   String get internetConnectionRequired => 'Connexion Internet requise';
 
   @override
-  String get pleaseCheckConnection => 'Veuillez vérifier votre connexion Internet';
+  String get pleaseCheckConnection =>
+      'Veuillez vérifier votre connexion Internet';
 
   @override
   String get restartOnboarding => 'Redémarrer l\'Intégration';
@@ -1851,7 +1954,8 @@ class AppLocalizationsFr extends AppLocalizations {
   String get couldNotOpenPlayStore => 'Impossible d\'ouvrir le Play Store';
 
   @override
-  String get errorOpeningPlayStore => 'Erreur lors de l\'ouverture du Play Store';
+  String get errorOpeningPlayStore =>
+      'Erreur lors de l\'ouverture du Play Store';
 
   @override
   String get remove => 'Supprimer';
@@ -1905,13 +2009,16 @@ class AppLocalizationsFr extends AppLocalizations {
   String get openSettings => 'Ouvrir les Paramètres';
 
   @override
-  String get notificationsForMealLogging => 'Notifications pour les rappels de journalisation des repas';
+  String get notificationsForMealLogging =>
+      'Notifications pour les rappels de journalisation des repas';
 
   @override
-  String get notificationsForWaterIntake => 'Notifications pour les rappels de consommation d\'eau';
+  String get notificationsForWaterIntake =>
+      'Notifications pour les rappels de consommation d\'eau';
 
   @override
-  String get notificationsForMindfulWalk => 'Notifications pour les rappels de marche consciente';
+  String get notificationsForMindfulWalk =>
+      'Notifications pour les rappels de marche consciente';
 
   @override
   String get increment => 'Incrémenter';
@@ -1926,22 +2033,28 @@ class AppLocalizationsFr extends AppLocalizations {
   String get readOurTermsOfService => 'Lire nos conditions d\'utilisation';
 
   @override
-  String get helpUsCalculateYourHealthGoals => 'Aidez-nous à calculer vos objectifs de santé';
+  String get helpUsCalculateYourHealthGoals =>
+      'Aidez-nous à calculer vos objectifs de santé';
 
   @override
-  String get thisHelpsUsTrackYourProgress => 'Cela nous aide à suivre vos progrès';
+  String get thisHelpsUsTrackYourProgress =>
+      'Cela nous aide à suivre vos progrès';
 
   @override
-  String get setARealisticGoalForYourJourney => 'Définissez un objectif réaliste pour votre parcours';
+  String get setARealisticGoalForYourJourney =>
+      'Définissez un objectif réaliste pour votre parcours';
 
   @override
-  String get thisHelpsUsPersonalizeYourPlan => 'Cela nous aide à personnaliser votre plan';
+  String get thisHelpsUsPersonalizeYourPlan =>
+      'Cela nous aide à personnaliser votre plan';
 
   @override
-  String get stayingHydratedIsKeyToYourHealth => 'Rester hydraté est essentiel pour votre santé';
+  String get stayingHydratedIsKeyToYourHealth =>
+      'Rester hydraté est essentiel pour votre santé';
 
   @override
-  String get yourFitnessProfileDueToYourAnswers => 'Votre profil de forme physique basé sur vos réponses';
+  String get yourFitnessProfileDueToYourAnswers =>
+      'Votre profil de forme physique basé sur vos réponses';
 
   @override
   String get currentBMI => 'IMC Actuel';
@@ -1962,7 +2075,8 @@ class AppLocalizationsFr extends AppLocalizations {
   String get waterIntakeLabel => 'Consommation d\'Eau';
 
   @override
-  String get heresYourPersonalizedNutritionPlan => 'Voici votre plan nutritionnel personnalisé. Bienvenue dans votre parcours de santé avec Yumie';
+  String get heresYourPersonalizedNutritionPlan =>
+      'Voici votre plan nutritionnel personnalisé. Bienvenue dans votre parcours de santé avec Yumie';
 
   @override
   String get caloriesGoal => 'Objectif Calories';
@@ -1995,13 +2109,16 @@ class AppLocalizationsFr extends AppLocalizations {
   String get chickenKatsuRiceBowl => 'Bol de Riz au Poulet Katsu';
 
   @override
-  String get yourTargetWeightIsSetToCurrent => 'Votre poids objectif est défini à votre poids actuel';
+  String get yourTargetWeightIsSetToCurrent =>
+      'Votre poids objectif est défini à votre poids actuel';
 
   @override
-  String get couldNotGenerateYourPlan => 'Impossible de générer votre plan. Veuillez réessayer.';
+  String get couldNotGenerateYourPlan =>
+      'Impossible de générer votre plan. Veuillez réessayer.';
 
   @override
-  String get somethingWentWrongRestart => 'Quelque chose s\'est mal passé. Veuillez redémarrer le processus d\'intégration.';
+  String get somethingWentWrongRestart =>
+      'Quelque chose s\'est mal passé. Veuillez redémarrer le processus d\'intégration.';
 
   @override
   String get yourBMI => 'Votre IMC :';
@@ -2019,7 +2136,8 @@ class AppLocalizationsFr extends AppLocalizations {
   String get aiDetectingFoodItems => 'L\'IA détecte les aliments';
 
   @override
-  String get tryClearerPhoto => 'Essayez de prendre une photo plus claire de votre réfrigérateur';
+  String get tryClearerPhoto =>
+      'Essayez de prendre une photo plus claire de votre réfrigérateur';
 
   @override
   String get generating => 'Génération...';
@@ -2046,7 +2164,8 @@ class AppLocalizationsFr extends AppLocalizations {
   String get reviewAdPreferences => 'Examiner vos préférences publicitaires';
 
   @override
-  String get privacyOptionsNotAvailable => 'Les options de confidentialité ne sont pas disponibles dans votre région.';
+  String get privacyOptionsNotAvailable =>
+      'Les options de confidentialité ne sont pas disponibles dans votre région.';
 
   @override
   String get consentFlowCompleted => 'Flux de consentement terminé!';
@@ -2055,13 +2174,16 @@ class AppLocalizationsFr extends AppLocalizations {
   String get appleSignInFailed => 'Échec de la connexion Apple';
 
   @override
-  String get adFailedToShow => 'Échec de l\'affichage de l\'annonce. Veuillez réessayer.';
+  String get adFailedToShow =>
+      'Échec de l\'affichage de l\'annonce. Veuillez réessayer.';
 
   @override
-  String get adNotLoadedYet => 'L\'annonce n\'est pas encore chargée. Veuillez réessayer.';
+  String get adNotLoadedYet =>
+      'L\'annonce n\'est pas encore chargée. Veuillez réessayer.';
 
   @override
-  String get errorRequestingPermissions => 'Erreur lors de la demande de permissions';
+  String get errorRequestingPermissions =>
+      'Erreur lors de la demande de permissions';
 
   @override
   String get showMore => 'Voir plus';
@@ -2070,7 +2192,8 @@ class AppLocalizationsFr extends AppLocalizations {
   String get showLess => 'Voir moins';
 
   @override
-  String get noSavedCustomMeals => 'Vous n\'avez pas de repas personnalisés sauvegardés.';
+  String get noSavedCustomMeals =>
+      'Vous n\'avez pas de repas personnalisés sauvegardés.';
 
   @override
   String get savedCustomMealsPlus => 'Repas personnalisés sauvegardés +';
@@ -2091,7 +2214,8 @@ class AppLocalizationsFr extends AppLocalizations {
   String get youReachedGoalWeight => 'Vous avez atteint votre poids objectif !';
 
   @override
-  String get switchToMaintenancePlan => 'Maintenant que vous avez atteint votre poids objectif, changeons votre plan nutritionnel pour maintenir votre poids !';
+  String get switchToMaintenancePlan =>
+      'Maintenant que vous avez atteint votre poids objectif, changeons votre plan nutritionnel pour maintenir votre poids !';
 
   @override
   String get letsDoIt => 'ALLONS-Y !';
@@ -2100,16 +2224,20 @@ class AppLocalizationsFr extends AppLocalizations {
   String get keepUpGreatWork => 'Continuez votre excellent travail !';
 
   @override
-  String get generatingMaintenancePlan => 'Génération de votre plan de maintenance...';
+  String get generatingMaintenancePlan =>
+      'Génération de votre plan de maintenance...';
 
   @override
-  String get maintenancePlanUpdated => '🎉 Votre plan nutritionnel a été mis à jour pour le maintien du poids !';
+  String get maintenancePlanUpdated =>
+      '🎉 Votre plan nutritionnel a été mis à jour pour le maintien du poids !';
 
   @override
-  String get failedToGenerateMaintenancePlan => 'Échec de la génération du plan de maintenance. Veuillez réessayer.';
+  String get failedToGenerateMaintenancePlan =>
+      'Échec de la génération du plan de maintenance. Veuillez réessayer.';
 
   @override
-  String get heresYourMaintenancePlan => 'Voici votre nouveau plan de maintenance !';
+  String get heresYourMaintenancePlan =>
+      'Voici votre nouveau plan de maintenance !';
 
   @override
   String get keepThisPlan => 'Garder Ce Plan';
@@ -2121,10 +2249,12 @@ class AppLocalizationsFr extends AppLocalizations {
   String get whatsYourNewGoal => 'Quel est votre nouvel objectif ?';
 
   @override
-  String get whatsYourNewTargetWeight => 'Quel est votre nouveau poids objectif ?';
+  String get whatsYourNewTargetWeight =>
+      'Quel est votre nouveau poids objectif ?';
 
   @override
-  String get yumieGeneratingNewPlan => 'Yumie génère votre nouveau plan personnalisé...';
+  String get yumieGeneratingNewPlan =>
+      'Yumie génère votre nouveau plan personnalisé...';
 
   @override
   String get yourNewPlanReady => 'Votre nouveau plan est prêt !';
@@ -2136,7 +2266,8 @@ class AppLocalizationsFr extends AppLocalizations {
   String get generateNewPlan => 'Générer Un Nouveau Plan';
 
   @override
-  String get planGenerationLimitReached => 'Vous avez utilisé vos 2 générations de plan pour cette période.';
+  String get planGenerationLimitReached =>
+      'Vous avez utilisé vos 2 générations de plan pour cette période.';
 
   @override
   String get waterGoal => 'Objectif d\'Eau';
@@ -2161,7 +2292,8 @@ class AppLocalizationsFr extends AppLocalizations {
   String get planDeclined => 'Plan décliné';
 
   @override
-  String get accountDeletionWarning => 'Votre compte sera supprimé dans 48 heures. Si vous vous reconnectez à ce compte dans les 48 heures, cela réactivera votre compte et annulera la suppression.';
+  String get accountDeletionWarning =>
+      'Votre compte sera supprimé dans 48 heures. Si vous vous reconnectez à ce compte dans les 48 heures, cela réactivera votre compte et annulera la suppression.';
 
   @override
   String get accountScheduledForDeletion => 'Compte programmé pour suppression';
@@ -2173,34 +2305,40 @@ class AppLocalizationsFr extends AppLocalizations {
   String get accountReactivated => 'Bon retour ! Votre compte a été réactivé.';
 
   @override
-  String get accountDeletionCancelled => 'La suppression du compte a été annulée.';
+  String get accountDeletionCancelled =>
+      'La suppression du compte a été annulée.';
 
   @override
   String get emailVerificationRequired => 'Vérification Email Requise';
 
   @override
-  String get pleaseVerifyEmail => 'Veuillez vérifier votre adresse email pour continuer';
+  String get pleaseVerifyEmail =>
+      'Veuillez vérifier votre adresse email pour continuer';
 
   @override
-  String get verificationEmailSent => 'Nous avons envoyé un lien de vérification à votre email. Veuillez vérifier votre boîte de réception et cliquer sur le lien pour vérifier votre compte.';
+  String get verificationEmailSent =>
+      'Nous avons envoyé un lien de vérification à votre email. Veuillez vérifier votre boîte de réception et cliquer sur le lien pour vérifier votre compte.';
 
   @override
   String get waitingForVerification => 'En attente de vérification email...';
 
   @override
-  String get checkYourEmail => 'Vérifiez votre email et cliquez sur le lien de vérification';
+  String get checkYourEmail =>
+      'Vérifiez votre email et cliquez sur le lien de vérification';
 
   @override
   String get resendVerificationEmail => 'Renvoyer l\'Email de Vérification';
 
   @override
-  String get verificationLinkAlreadySent => 'Un lien de vérification a déjà été envoyé à cette adresse email. Veuillez vérifier votre boîte de réception ou attendre quelques minutes avant d\'en demander un nouveau.';
+  String get verificationLinkAlreadySent =>
+      'Un lien de vérification a déjà été envoyé à cette adresse email. Veuillez vérifier votre boîte de réception ou attendre quelques minutes avant d\'en demander un nouveau.';
 
   @override
   String get emailVerified => 'Email vérifié avec succès!';
 
   @override
-  String get emailNotVerified => 'Email pas encore vérifié. Veuillez vérifier votre boîte de réception.';
+  String get emailNotVerified =>
+      'Email pas encore vérifié. Veuillez vérifier votre boîte de réception.';
 
   @override
   String get changeEmail => 'Changer l\'Email';
@@ -2209,16 +2347,20 @@ class AppLocalizationsFr extends AppLocalizations {
   String get continueToApp => 'Continuer vers l\'App';
 
   @override
-  String get failedToSendVerificationEmail => 'Échec de l\'envoi de l\'email de vérification';
+  String get failedToSendVerificationEmail =>
+      'Échec de l\'envoi de l\'email de vérification';
 
   @override
-  String get failedToResendVerificationEmail => 'Échec du renvoi de l\'email de vérification';
+  String get failedToResendVerificationEmail =>
+      'Échec du renvoi de l\'email de vérification';
 
   @override
-  String get errorCheckingVerification => 'Erreur lors de la vérification du statut';
+  String get errorCheckingVerification =>
+      'Erreur lors de la vérification du statut';
 
   @override
-  String get helloIAmYumie => 'Bonjour, je suis Yumie ! Enregistrez un repas pour commencer votre série aujourd\'hui !';
+  String get helloIAmYumie =>
+      'Bonjour, je suis Yumie ! Enregistrez un repas pour commencer votre série aujourd\'hui !';
 
   @override
   String get happyBirthday => '🎉 Joyeux Anniversaire !';
@@ -2238,16 +2380,20 @@ class AppLocalizationsFr extends AppLocalizations {
   String get accountAlreadyExists => 'Le compte existe déjà';
 
   @override
-  String get accountExistsMessage => 'Un compte avec cette adresse e-mail existe déjà. Voulez-vous vous connecter à la place ?';
+  String get accountExistsMessage =>
+      'Un compte avec cette adresse e-mail existe déjà. Voulez-vous vous connecter à la place ?';
 
   @override
-  String get accountUsesDifferentSignIn => 'Le compte utilise une méthode de connexion différente';
+  String get accountUsesDifferentSignIn =>
+      'Le compte utilise une méthode de connexion différente';
 
   @override
-  String get emailSignedUpWithGoogle => 'Cet e-mail est déjà inscrit avec Google. Veuillez utiliser \"Se connecter avec Google\" à la place.';
+  String get emailSignedUpWithGoogle =>
+      'Cet e-mail est déjà inscrit avec Google. Veuillez utiliser \"Se connecter avec Google\" à la place.';
 
   @override
-  String get emailSignedUpWithPassword => 'Cet e-mail est déjà inscrit avec e-mail et mot de passe. Veuillez vous connecter en utilisant votre mot de passe.';
+  String get emailSignedUpWithPassword =>
+      'Cet e-mail est déjà inscrit avec e-mail et mot de passe. Veuillez vous connecter en utilisant votre mot de passe.';
 
   @override
   String get useGoogleSignIn => 'Utiliser la connexion Google';
@@ -2318,13 +2464,15 @@ class AppLocalizationsFr extends AppLocalizations {
   String get yourWeightJourney => 'Votre Parcours de Poids';
 
   @override
-  String get trackProgressThroughGoals => 'Suivez vos progrès à travers différents objectifs';
+  String get trackProgressThroughGoals =>
+      'Suivez vos progrès à travers différents objectifs';
 
   @override
   String get noPreviousPlans => 'Aucun Plan Précédent';
 
   @override
-  String get previousPlansWillAppear => 'Vos plans précédents apparaîtront ici une fois que vous changerez d\'objectifs.';
+  String get previousPlansWillAppear =>
+      'Vos plans précédents apparaîtront ici une fois que vous changerez d\'objectifs.';
 
   @override
   String get completed => 'Terminé';
@@ -2339,7 +2487,8 @@ class AppLocalizationsFr extends AppLocalizations {
   String get weightEntries => 'Entrées de Poids';
 
   @override
-  String get noWeightEntriesRecorded => 'Aucune entrée de poids enregistrée pendant cette période';
+  String get noWeightEntriesRecorded =>
+      'Aucune entrée de poids enregistrée pendant cette période';
 
   @override
   String get months => 'mois';
@@ -2348,13 +2497,16 @@ class AppLocalizationsFr extends AppLocalizations {
   String get unknownGoal => 'Objectif Inconnu';
 
   @override
-  String get failedToSavePlan => 'Échec de la sauvegarde du plan. Veuillez réessayer.';
+  String get failedToSavePlan =>
+      'Échec de la sauvegarde du plan. Veuillez réessayer.';
 
   @override
-  String get failedToGeneratePlan => 'Échec de la génération du plan. Veuillez réessayer.';
+  String get failedToGeneratePlan =>
+      'Échec de la génération du plan. Veuillez réessayer.';
 
   @override
-  String get updateTargetAndRecalculate => 'Mettre à jour l\'objectif et recalculer';
+  String get updateTargetAndRecalculate =>
+      'Mettre à jour l\'objectif et recalculer';
 
   @override
   String get neverMind => 'Peu importe';
@@ -2363,22 +2515,28 @@ class AppLocalizationsFr extends AppLocalizations {
   String get saveAndRecalculate => 'Sauvegarder et recalculer';
 
   @override
-  String get targetUpdatedAndPlanRecalculated => 'Objectif mis à jour et plan recalculé';
+  String get targetUpdatedAndPlanRecalculated =>
+      'Objectif mis à jour et plan recalculé';
 
   @override
-  String get recalculateNote => 'Nous recalculerons les calories et macros pour ce nouvel objectif. Vous pouvez toujours générer un nouveau plan IA plus tard.';
+  String get recalculateNote =>
+      'Nous recalculerons les calories et macros pour ce nouvel objectif. Vous pouvez toujours générer un nouveau plan IA plus tard.';
 
   @override
-  String get startLoggingWeight => 'Commencez à enregistrer votre poids pour voir vos tendances de progrès.';
+  String get startLoggingWeight =>
+      'Commencez à enregistrer votre poids pour voir vos tendances de progrès.';
 
   @override
-  String get logMoreWeights => 'Enregistrez plus de poids pour voir votre tendance.';
+  String get logMoreWeights =>
+      'Enregistrez plus de poids pour voir votre tendance.';
 
   @override
-  String get weightTrendFlat => 'Votre tendance de poids est actuellement plate. Enregistrez plus d\'entrées de poids pour voir votre tendance de progrès.';
+  String get weightTrendFlat =>
+      'Votre tendance de poids est actuellement plate. Enregistrez plus d\'entrées de poids pour voir votre tendance de progrès.';
 
   @override
-  String get maintenanceRangeDrifted => 'Votre poids s\'est éloigné de votre plage de maintenance. Enregistrez plus d\'entrées pour estimer le temps de retour à votre poids.';
+  String get maintenanceRangeDrifted =>
+      'Votre poids s\'est éloigné de votre plage de maintenance. Enregistrez plus d\'entrées pour estimer le temps de retour à votre poids.';
 
   @override
   String trendingBackMaintenance(String eta) {
@@ -2386,7 +2544,8 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
-  String get stayConsistentHealthy => 'Restez cohérent avec des choix sains ; à mesure que plus de données arrivent, nous estimerons le temps de retour à votre plage saine.';
+  String get stayConsistentHealthy =>
+      'Restez cohérent avec des choix sains ; à mesure que plus de données arrivent, nous estimerons le temps de retour à votre plage saine.';
 
   @override
   String trendingBackOnTrack(String eta) {
@@ -2394,7 +2553,8 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
-  String get strengthPhaseActive => 'Phase de force active. Gardez les protéines et l\'entraînement cohérents ; la chronologie apparaîtra à mesure que les données croissent.';
+  String get strengthPhaseActive =>
+      'Phase de force active. Gardez les protéines et l\'entraînement cohérents ; la chronologie apparaîtra à mesure que les données croissent.';
 
   @override
   String trendingTowardBuildGoal(String eta) {
@@ -2414,5 +2574,6 @@ class AppLocalizationsFr extends AppLocalizations {
   String get planToGoal => 'Plan vers l\'Objectif';
 
   @override
-  String get cameraInitializationError => 'Échec de l\'initialisation de la caméra. Veuillez vérifier les autorisations de la caméra.';
+  String get cameraInitializationError =>
+      'Échec de l\'initialisation de la caméra. Veuillez vérifier les autorisations de la caméra.';
 }

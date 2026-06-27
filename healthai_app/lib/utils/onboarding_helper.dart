@@ -13,4 +13,4 @@ bool hasCompletedOnboarding(Map<String, dynamic>? userData) {
 /// Helper to get current user
 Future<User?> getCurrentUser() async {
   return FirebaseAuth.instance.currentUser;
-} 
+}

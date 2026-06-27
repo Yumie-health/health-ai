@@ -4,7 +4,8 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/timezone.dart' as tz;
 
 class StreakNotificationService {
-  static final FlutterLocalNotificationsPlugin _notifications = FlutterLocalNotificationsPlugin();
+  static final FlutterLocalNotificationsPlugin _notifications =
+      FlutterLocalNotificationsPlugin();
   static final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   static final FirebaseAuth _auth = FirebaseAuth.instance;
 
@@ -26,7 +27,14 @@ class StreakNotificationService {
 
   static tz.TZDateTime _tomorrowAt(int hour, int minute) {
     final base = _todayAt(0, 0).add(const Duration(days: 1));
-    return tz.TZDateTime(tz.local, base.year, base.month, base.day, hour, minute);
+    return tz.TZDateTime(
+      tz.local,
+      base.year,
+      base.month,
+      base.day,
+      hour,
+      minute,
+    );
   }
 
   static Future<bool> _hasMealsToday() async {
@@ -35,14 +43,20 @@ class StreakNotificationService {
     final now = DateTime.now();
     final startOfDay = DateTime(now.year, now.month, now.day);
     final endOfDay = startOfDay.add(const Duration(days: 1));
-    final snap = await _firestore
-        .collection('meals')
-        .where('userId', isEqualTo: user.uid)
-        .where('timestamp', isGreaterThanOrEqualTo: Timestamp.fromDate(startOfDay))
-        .where('timestamp', isLessThan: Timestamp.fromDate(endOfDay))
-        .limit(1)
-        .get();
-    final docs = snap.docs.where((d) => (d.data()['isDeleted'] ?? false) == false);
+    final snap =
+        await _firestore
+            .collection('meals')
+            .where('userId', isEqualTo: user.uid)
+            .where(
+              'timestamp',
+              isGreaterThanOrEqualTo: Timestamp.fromDate(startOfDay),
+            )
+            .where('timestamp', isLessThan: Timestamp.fromDate(endOfDay))
+            .limit(1)
+            .get();
+    final docs = snap.docs.where(
+      (d) => (d.data()['isDeleted'] ?? false) == false,
+    );
     return docs.isNotEmpty;
   }
 
@@ -64,7 +78,8 @@ class StreakNotificationService {
       android: AndroidNotificationDetails(
         'streak_channel',
         'Streak Alerts',
-        channelDescription: 'Notifications to help you maintain your logging streak',
+        channelDescription:
+            'Notifications to help you maintain your logging streak',
         importance: Importance.max,
         priority: Priority.high,
         showWhen: true,
@@ -116,11 +131,13 @@ class StreakNotificationService {
   static Future<void> scheduleForToday() async {
     return scheduleForTodayLocalized(
       near6hTitle: 'Keep Your Streak 🔥',
-      near6hBody: 'Your streak is about to end. Log a meal today to keep it alive!',
+      near6hBody:
+          'Your streak is about to end. Log a meal today to keep it alive!',
       near2hTitle: 'Almost There! 🔥',
       near2hBody: 'Only a couple hours left. Log a meal to save your streak!',
       endedTitle: 'Streak Ended',
-      endedBody: 'Your streak ended. Log a meal to restart and build it back up!',
+      endedBody:
+          'Your streak ended. Log a meal to restart and build it back up!',
     );
   }
 
@@ -134,5 +151,3 @@ class StreakNotificationService {
     await cancelForToday();
   }
 }
-
-

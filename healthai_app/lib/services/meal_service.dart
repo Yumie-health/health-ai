@@ -21,21 +21,29 @@ class MealService {
     final startOfDay = DateTime(now.year, now.month, now.day);
     final endOfDay = startOfDay.add(const Duration(days: 1));
 
-    _logger.info('getTodayMeals: userId=${user.uid}, startOfDay=$startOfDay, endOfDay=$endOfDay');
+    _logger.info(
+      'getTodayMeals: userId=${user.uid}, startOfDay=$startOfDay, endOfDay=$endOfDay',
+    );
 
     return _firestore
         .collection('meals')
         .where('userId', isEqualTo: user.uid)
-        .where('timestamp', isGreaterThanOrEqualTo: Timestamp.fromDate(startOfDay))
+        .where(
+          'timestamp',
+          isGreaterThanOrEqualTo: Timestamp.fromDate(startOfDay),
+        )
         .where('timestamp', isLessThan: Timestamp.fromDate(endOfDay))
         .orderBy('timestamp', descending: true)
         .snapshots()
         .map((snapshot) {
-          _logger.info('getTodayMeals: Query returned ${snapshot.docs.length} docs');
-          final filtered = snapshot.docs.where((doc) {
-            final data = doc.data();
-            return (data['isDeleted'] ?? false) == false;
-          }).toList();
+          _logger.info(
+            'getTodayMeals: Query returned ${snapshot.docs.length} docs',
+          );
+          final filtered =
+              snapshot.docs.where((doc) {
+                final data = doc.data();
+                return (data['isDeleted'] ?? false) == false;
+              }).toList();
           for (var doc in filtered) {
             _logger.fine('Meal doc: ${doc.data()}');
           }
@@ -55,12 +63,18 @@ class MealService {
     return _firestore
         .collection('meals')
         .where('userId', isEqualTo: user.uid)
-        .where('timestamp', isGreaterThanOrEqualTo: Timestamp.fromDate(startOfDay))
+        .where(
+          'timestamp',
+          isGreaterThanOrEqualTo: Timestamp.fromDate(startOfDay),
+        )
         .where('timestamp', isLessThan: Timestamp.fromDate(endOfDay))
         .orderBy('timestamp', descending: true)
         .snapshots()
         .map((snapshot) {
-          final filtered = snapshot.docs.where((doc) => (doc.data()['isDeleted'] ?? false) == false).toList();
+          final filtered =
+              snapshot.docs
+                  .where((doc) => (doc.data()['isDeleted'] ?? false) == false)
+                  .toList();
           return filtered.map((doc) => Meal.fromFirestore(doc)).toList();
         });
   }
@@ -90,19 +104,25 @@ class MealService {
     final startOfDay = DateTime(now.year, now.month, now.day);
     final endOfDay = startOfDay.add(const Duration(days: 1));
 
-    final snapshot = await _firestore
-        .collection('meals')
-        .where('userId', isEqualTo: user.uid)
-        .where('timestamp', isGreaterThanOrEqualTo: Timestamp.fromDate(startOfDay))
-        .where('timestamp', isLessThan: Timestamp.fromDate(endOfDay))
-        .get();
+    final snapshot =
+        await _firestore
+            .collection('meals')
+            .where('userId', isEqualTo: user.uid)
+            .where(
+              'timestamp',
+              isGreaterThanOrEqualTo: Timestamp.fromDate(startOfDay),
+            )
+            .where('timestamp', isLessThan: Timestamp.fromDate(endOfDay))
+            .get();
 
     int totalCalories = 0;
     int totalProtein = 0;
     int totalCarbs = 0;
     int totalFat = 0;
 
-    for (var doc in snapshot.docs.where((d) => (d.data()['isDeleted'] ?? false) == false)) {
+    for (var doc in snapshot.docs.where(
+      (d) => (d.data()['isDeleted'] ?? false) == false,
+    )) {
       final meal = Meal.fromFirestore(doc);
       totalCalories += meal.calories;
       totalProtein += meal.protein;
@@ -129,7 +149,12 @@ class MealService {
         .collection('custom_meals')
         .where('userId', isEqualTo: user.uid)
         .snapshots()
-        .map((snapshot) => snapshot.docs.map((doc) => CustomMeal.fromFirestore(doc)).toList());
+        .map(
+          (snapshot) =>
+              snapshot.docs
+                  .map((doc) => CustomMeal.fromFirestore(doc))
+                  .toList(),
+        );
   }
 
   // Add a new custom meal
@@ -148,6 +173,9 @@ class MealService {
   Future<void> updateCustomMeal(CustomMeal meal) async {
     final user = _auth.currentUser;
     if (user == null) throw Exception('User not authenticated');
-    await _firestore.collection('custom_meals').doc(meal.id).update(meal.toMap());
+    await _firestore
+        .collection('custom_meals')
+        .doc(meal.id)
+        .update(meal.toMap());
   }
-} 
+}

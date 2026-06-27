@@ -4,9 +4,11 @@ class ValidationUtils {
   // Email validation
   static bool isValidEmail(String email) {
     if (email.isEmpty) return false;
-    
+
     // Basic email regex pattern
-    final emailRegex = RegExp(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$');
+    final emailRegex = RegExp(
+      r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$',
+    );
     return emailRegex.hasMatch(email);
   }
 
@@ -120,19 +122,19 @@ class ValidationUtils {
     if (isRequired && value.isEmpty) {
       return '$fieldName is required';
     }
-    
+
     if (minLength != null && value.length < minLength) {
       return '$fieldName must be at least $minLength characters long';
     }
-    
+
     if (maxLength != null && value.length > maxLength) {
       return '$fieldName must be less than $maxLength characters';
     }
-    
+
     if (pattern != null && !RegExp(pattern).hasMatch(value)) {
       return '$fieldName format is invalid';
     }
-    
+
     return null;
   }
 
@@ -143,9 +145,7 @@ class ValidationUtils {
         content: Text(message),
         backgroundColor: Colors.red,
         behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       ),
     );
   }
@@ -157,9 +157,7 @@ class ValidationUtils {
         content: Text(message),
         backgroundColor: Colors.green,
         behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       ),
     );
   }
@@ -174,34 +172,36 @@ class ValidationUtils {
     String? name,
   }) {
     final errors = <String, String?>{};
-    
+
     if (!isValidEmail(email)) {
       errors['email'] = 'Please enter a valid email address';
     }
-    
+
     if (!isValidAge(age)) {
       errors['age'] = 'Age must be between 16 and 120 years';
     }
-    
+
     if (!isValidWeight(weight, isMetric)) {
-      errors['weight'] = isMetric 
-          ? 'Weight must be between 30 and 300 kg'
-          : 'Weight must be between 66 and 660 lbs';
+      errors['weight'] =
+          isMetric
+              ? 'Weight must be between 30 and 300 kg'
+              : 'Weight must be between 66 and 660 lbs';
     }
-    
+
     if (!isValidHeight(height, isMetric)) {
-      errors['height'] = isMetric 
-          ? 'Height must be between 100 and 250 cm'
-          : 'Height must be between 3 and 8 feet';
+      errors['height'] =
+          isMetric
+              ? 'Height must be between 100 and 250 cm'
+              : 'Height must be between 3 and 8 feet';
     }
-    
+
     if (name != null && name.isNotEmpty) {
       final nameError = validateName(name);
       if (nameError != null) {
         errors['name'] = nameError;
       }
     }
-    
+
     return errors;
   }
-} 
+}

@@ -180,31 +180,38 @@ class _NumericTextFieldState extends State<_NumericTextField> {
       keyboardType: TextInputType.number,
       enabled: widget.enabled,
       onChanged: widget.onChanged,
-      decoration: (widget.decoration ?? InputDecoration(
-        hintText: widget.hintText,
-        contentPadding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
-        filled: true,
-        fillColor: kPrimaryGreen.withOpacity(0.07),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
-          borderSide: BorderSide.none,
-        ),
-      )).copyWith(
-        suffixIcon: _isFocused
-            ? IconButton(
-                icon: Icon(Icons.check, color: kPrimaryGreen, size: 20),
-                onPressed: _onCheckmarkTap,
-                padding: EdgeInsets.zero,
-                constraints: BoxConstraints(minWidth: 40, minHeight: 40),
-              )
-            : null,
-      ),
+      decoration: (widget.decoration ??
+              InputDecoration(
+                hintText: widget.hintText,
+                contentPadding: const EdgeInsets.symmetric(
+                  vertical: 10,
+                  horizontal: 12,
+                ),
+                filled: true,
+                fillColor: kPrimaryGreen.withOpacity(0.07),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(14),
+                  borderSide: BorderSide.none,
+                ),
+              ))
+          .copyWith(
+            suffixIcon:
+                _isFocused
+                    ? IconButton(
+                      icon: Icon(Icons.check, color: kPrimaryGreen, size: 20),
+                      onPressed: _onCheckmarkTap,
+                      padding: EdgeInsets.zero,
+                      constraints: BoxConstraints(minWidth: 40, minHeight: 40),
+                    )
+                    : null,
+          ),
     );
   }
 }
 
 // Initialize FlutterLocalNotificationsPlugin
-final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
+final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
+    FlutterLocalNotificationsPlugin();
 
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   // Handle background message
@@ -221,10 +228,10 @@ Future<void> _configureDeviceOrientation() async {
     try {
       final deviceInfo = DeviceInfoPlugin();
       final iosInfo = await deviceInfo.iosInfo;
-      
+
       // Check if device is iPad
       final isIpad = iosInfo.model.toLowerCase().contains('ipad');
-      
+
       if (isIpad) {
         // Allow all orientations on iPad
         await SystemChrome.setPreferredOrientations([
@@ -256,7 +263,7 @@ Future<void> _configureDeviceOrientation() async {
       // Get the screen size from MediaQuery (requires context, so we'll use a fallback)
       // For now, default to landscape for all Android devices
       // This can be refined later with proper screen size detection
-      
+
       // Lock to portrait on Android phones (can be refined later)
       await SystemChrome.setPreferredOrientations([
         DeviceOrientation.portraitUp,
@@ -273,15 +280,15 @@ Future<void> _configureDeviceOrientation() async {
   }
 }
 
-
-
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
+
   // Initialize timezone
   tz.initializeTimeZones();
-  tz.setLocalLocation(tz.getLocation('America/New_York')); // Set default timezone
-  
+  tz.setLocalLocation(
+    tz.getLocation('America/New_York'),
+  ); // Set default timezone
+
   // Initialize local notifications
   const AndroidInitializationSettings initializationSettingsAndroid =
       AndroidInitializationSettings('@mipmap/ic_launcher');
@@ -289,24 +296,21 @@ void main() async {
   // We'll request explicitly via PermissionService to control UX.
   const DarwinInitializationSettings initializationSettingsIOS =
       DarwinInitializationSettings(
-    requestAlertPermission: false,
-    requestBadgePermission: false,
-    requestSoundPermission: false,
-  );
+        requestAlertPermission: false,
+        requestBadgePermission: false,
+        requestSoundPermission: false,
+      );
   const InitializationSettings initializationSettings = InitializationSettings(
     android: initializationSettingsAndroid,
     iOS: initializationSettingsIOS,
   );
-  
+
   await flutterLocalNotificationsPlugin.initialize(
     initializationSettings,
     onDidReceiveNotificationResponse: (NotificationResponse response) {
       // Handle notification tap
-
     },
   );
-
-
 
   // Create Android notification channels for proper Android notifications
   const AndroidNotificationChannel mealChannel = AndroidNotificationChannel(
@@ -345,36 +349,37 @@ void main() async {
     enableVibration: true,
   );
 
-
-
-
-
-
-
   // Create the channels
   await flutterLocalNotificationsPlugin
-      .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
+      .resolvePlatformSpecificImplementation<
+        AndroidFlutterLocalNotificationsPlugin
+      >()
       ?.createNotificationChannel(mealChannel);
   await flutterLocalNotificationsPlugin
-      .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
+      .resolvePlatformSpecificImplementation<
+        AndroidFlutterLocalNotificationsPlugin
+      >()
       ?.createNotificationChannel(waterChannel);
   await flutterLocalNotificationsPlugin
-      .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
+      .resolvePlatformSpecificImplementation<
+        AndroidFlutterLocalNotificationsPlugin
+      >()
       ?.createNotificationChannel(walkChannel);
   await flutterLocalNotificationsPlugin
-      .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
+      .resolvePlatformSpecificImplementation<
+        AndroidFlutterLocalNotificationsPlugin
+      >()
       ?.createNotificationChannel(streakChannel);
-
 
   // Request notification permissions
   // For Android, permissions are handled automatically by the plugin
   // For iOS, permissions are requested during initialization via DarwinInitializationSettings
-  
+
   // Simple Android notifications - no complex initialization needed
 
   // Initialize Firebase - Android will use google-services.json, iOS will use the options
   await Firebase.initializeApp();
-  
+
   // Initialize Firebase App Check for production security
   try {
     await FirebaseAppCheck.instance.activate(
@@ -385,7 +390,7 @@ void main() async {
   } catch (e) {
     print('Error activating Firebase App Check: $e');
   }
-  
+
   // Configure Firebase Auth persistence to prevent logout on app updates
   try {
     // Firebase Auth automatically uses LOCAL persistence by default
@@ -394,12 +399,12 @@ void main() async {
   } catch (e) {
     print('Error configuring Firebase Auth persistence: $e');
   }
-  
+
   // Configure device orientation based on device type
   await _configureDeviceOrientation();
-  
+
   // Verify Firebase configuration
-      // Firebase initialization complete
+  // Firebase initialization complete
   // Enable Firestore offline persistence and set cache size
   try {
     FirebaseFirestore.instance.settings = const Settings(
@@ -407,12 +412,11 @@ void main() async {
       cacheSizeBytes: 100 * 1024 * 1024,
     );
   } catch (_) {}
-  
+
   // DEBUG: Force region for testing. Comment/uncomment as needed.
 
   // ConsentService.instance.setDebugRegion(DebugRegion.eea); // EEA/UK test (DEV ONLY)
   // ConsentService.instance.setDebugRegion(DebugRegion.usa); // US-CPRA test (DEV ONLY)
-  
 
   // Production behavior: rely on UMP geo to decide when to show consent.
   // Do not force debug regions.
@@ -420,24 +424,27 @@ void main() async {
 
   // 1) Initialize MobileAds first
   await MobileAds.instance.initialize();
-  
+
   // 2) Obtain consent (EEA/UK/US states) and configure ads
   await ConsentService.instance.initializeAndObtainConsent();
   await ConsentService.instance.configureMobileAds();
-  
+
   // 3) PRELOAD ADS IMMEDIATELY for fast scan experience
   _preloadAdsForFastScan();
-  
+
   // 3) iOS ATT prompt only when UMP indicates privacy options are applicable
-  if (ConsentService.instance.isPrivacyOptionsAvailable && !_disableConsentForScreenshots) {
+  if (ConsentService.instance.isPrivacyOptionsAvailable &&
+      !_disableConsentForScreenshots) {
     await TrackingService.instance.requestATTIfNeeded();
   }
 
   // 4) Respect analytics consent
-  await FirebaseAnalytics.instance.setAnalyticsCollectionEnabled(ConsentService.instance.analyticsAllowed);
+  await FirebaseAnalytics.instance.setAnalyticsCollectionEnabled(
+    ConsentService.instance.analyticsAllowed,
+  );
 
   log.initialize(); // THEN: Initialize logging service
-  
+
   // Force Firebase to use the correct project
   // Firebase configuration verified
   try {
@@ -450,12 +457,10 @@ void main() async {
     // Quick actions are now configured in Info.plist with proper icons
     // No need to set them programmatically to avoid duplicates
 
-
-
     // Services initialized
     final subscriptionService = SubscriptionService();
     await subscriptionService.initializeBilling();
-    
+
     // Check and refresh subscription status on app start
     await subscriptionService.refreshSubscriptionStatus();
 
@@ -465,7 +470,8 @@ void main() async {
           ChangeNotifierProvider(
             create: (_) {
               final prefs = PreferencesProvider();
-              prefs.loadPreferences(); // Load preferences when provider is created
+              prefs
+                  .loadPreferences(); // Load preferences when provider is created
               return prefs;
             },
           ),
@@ -489,7 +495,7 @@ void main() async {
 // PRELOAD ADS FOR FAST SCAN EXPERIENCE
 void _preloadAdsForFastScan() {
   print('🚀 PRELOADING ADS FOR FAST SCAN EXPERIENCE');
-  
+
   // Load rewarded ad immediately in background
   RewardedAd.load(
     adUnitId: AdConfig.rewardedAdUnitId,
@@ -512,14 +518,16 @@ void _preloadAdsForFastScan() {
               ad.dispose();
             },
             onAdFailedToLoad: (testError) {
-              print('❌ TEST REWARDED AD PRELOAD ALSO FAILED: ${testError.message}');
+              print(
+                '❌ TEST REWARDED AD PRELOAD ALSO FAILED: ${testError.message}',
+              );
             },
           ),
         );
       },
     ),
   );
-  
+
   // Also preload a second ad for even faster experience
   Future.delayed(Duration(seconds: 2), () {
     RewardedAd.load(
@@ -555,12 +563,22 @@ class ErrorScreen extends StatelessWidget {
               children: [
                 Icon(Icons.error_outline, color: Colors.red, size: 64),
                 SizedBox(height: 24),
-                Text('Startup Error', style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold)),
+                Text(
+                  'Startup Error',
+                  style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
+                ),
                 SizedBox(height: 16),
-                Text(error, style: TextStyle(fontSize: 16, color: Colors.black54), textAlign: TextAlign.center),
+                Text(
+                  error,
+                  style: TextStyle(fontSize: 16, color: Colors.black54),
+                  textAlign: TextAlign.center,
+                ),
                 SizedBox(height: 32),
-                Text('Please check your network connection or contact support.',
-                  style: TextStyle(fontSize: 16, color: Colors.black45), textAlign: TextAlign.center),
+                Text(
+                  'Please check your network connection or contact support.',
+                  style: TextStyle(fontSize: 16, color: Colors.black45),
+                  textAlign: TextAlign.center,
+                ),
               ],
             ),
           ),
@@ -585,18 +603,17 @@ class HealthAIApp extends StatelessWidget {
             // FirebaseAnalyticsObserver removed due to Kotlin conflicts
           ],
           // Localization setup
-          supportedLocales: const [
-            Locale('en'),
-            Locale('ar'),
-            Locale('es'),
-          ],
+          supportedLocales: const [Locale('en'), Locale('ar'), Locale('es')],
           localizationsDelegates: const [
             AppLocalizations.delegate,
             GlobalMaterialLocalizations.delegate,
             GlobalWidgetsLocalizations.delegate,
             GlobalCupertinoLocalizations.delegate,
           ],
-          locale: languageProvider.isInitialized ? languageProvider.currentLocale : (prefs.language.isNotEmpty ? Locale(prefs.language) : null),
+          locale:
+              languageProvider.isInitialized
+                  ? languageProvider.currentLocale
+                  : (prefs.language.isNotEmpty ? Locale(prefs.language) : null),
           localeResolutionCallback: (deviceLocale, supportedLocales) {
             if (languageProvider.isInitialized) {
               return languageProvider.currentLocale;
@@ -608,135 +625,137 @@ class HealthAIApp extends StatelessWidget {
             }
             // Otherwise, use device language if supported
             if (deviceLocale != null &&
-                supportedLocales.any((l) => l.languageCode == deviceLocale.languageCode)) {
+                supportedLocales.any(
+                  (l) => l.languageCode == deviceLocale.languageCode,
+                )) {
               return Locale(deviceLocale.languageCode!);
             }
             // Default to English
             return const Locale('en');
           },
-      theme: ThemeData(
-        colorScheme: ColorScheme(
-          brightness: Brightness.light,
-          primary: kPrimaryGreen,
-          onPrimary: Colors.white,
-          secondary: kSecondaryBlue,
-          onSecondary: Colors.white,
-          error: kWarningRed,
-          onError: Colors.white,
-          surface: kContainerGrey,
-          onSurface: Colors.black,
-        ),
-        scaffoldBackgroundColor: kBackgroundWhite,
-        appBarTheme: AppBarTheme(
-          backgroundColor: kPrimaryGreen,
-          foregroundColor: Colors.white,
-          systemOverlayStyle: SystemUiOverlayStyle.light,
-        ),
-        elevatedButtonTheme: ElevatedButtonThemeData(
-          style: ElevatedButton.styleFrom(
-            backgroundColor: kPrimaryGreen,
-            foregroundColor: Colors.white,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
+          theme: ThemeData(
+            colorScheme: ColorScheme(
+              brightness: Brightness.light,
+              primary: kPrimaryGreen,
+              onPrimary: Colors.white,
+              secondary: kSecondaryBlue,
+              onSecondary: Colors.white,
+              error: kWarningRed,
+              onError: Colors.white,
+              surface: kContainerGrey,
+              onSurface: Colors.black,
             ),
-            textStyle: TextStyle(fontWeight: FontWeight.bold),
-          ),
-        ),
-        outlinedButtonTheme: OutlinedButtonThemeData(
-          style: OutlinedButton.styleFrom(
-            foregroundColor: kSecondaryBlue,
-            side: BorderSide(color: kSecondaryBlue, width: 2),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
+            scaffoldBackgroundColor: kBackgroundWhite,
+            appBarTheme: AppBarTheme(
+              backgroundColor: kPrimaryGreen,
+              foregroundColor: Colors.white,
+              systemOverlayStyle: SystemUiOverlayStyle.light,
             ),
-            textStyle: TextStyle(fontWeight: FontWeight.bold),
-          ),
-        ),
-        inputDecorationTheme: InputDecorationTheme(
-          filled: true,
-          fillColor: kContainerGrey,
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide.none,
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide(color: kPrimaryGreen, width: 2),
-          ),
-          labelStyle: TextStyle(color: kPrimaryGreen),
-        ),
-      ),
-      darkTheme: ThemeData(
-        brightness: Brightness.dark,
-        colorScheme: ColorScheme.dark(
-          primary: kPrimaryGreen,
-          secondary: kSecondaryBlue,
-          error: kWarningRed,
-          background: Colors.black,
-          surface: Colors.black,
-          onBackground: Colors.white,
-          onSurface: Colors.white,
-        ),
-        scaffoldBackgroundColor: Colors.black,
-        cardColor: Colors.black,
-        appBarTheme: AppBarTheme(
-          backgroundColor: kPrimaryGreen, // Always green
-          foregroundColor: Colors.white,
-        ),
-        elevatedButtonTheme: ElevatedButtonThemeData(
-          style: ElevatedButton.styleFrom(
-            backgroundColor: kPrimaryGreen,
-            foregroundColor: Colors.white,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
+            elevatedButtonTheme: ElevatedButtonThemeData(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: kPrimaryGreen,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                textStyle: TextStyle(fontWeight: FontWeight.bold),
+              ),
             ),
-            textStyle: TextStyle(fontWeight: FontWeight.bold),
-          ),
-        ),
-        outlinedButtonTheme: OutlinedButtonThemeData(
-          style: OutlinedButton.styleFrom(
-            foregroundColor: kSecondaryBlue,
-            side: BorderSide(color: kSecondaryBlue, width: 2),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
+            outlinedButtonTheme: OutlinedButtonThemeData(
+              style: OutlinedButton.styleFrom(
+                foregroundColor: kSecondaryBlue,
+                side: BorderSide(color: kSecondaryBlue, width: 2),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                textStyle: TextStyle(fontWeight: FontWeight.bold),
+              ),
             ),
-            textStyle: TextStyle(fontWeight: FontWeight.bold),
+            inputDecorationTheme: InputDecorationTheme(
+              filled: true,
+              fillColor: kContainerGrey,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide.none,
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: kPrimaryGreen, width: 2),
+              ),
+              labelStyle: TextStyle(color: kPrimaryGreen),
+            ),
           ),
-        ),
-        inputDecorationTheme: InputDecorationTheme(
-          filled: true,
-          fillColor: Colors.black,
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide.none,
+          darkTheme: ThemeData(
+            brightness: Brightness.dark,
+            colorScheme: ColorScheme.dark(
+              primary: kPrimaryGreen,
+              secondary: kSecondaryBlue,
+              error: kWarningRed,
+              background: Colors.black,
+              surface: Colors.black,
+              onBackground: Colors.white,
+              onSurface: Colors.white,
+            ),
+            scaffoldBackgroundColor: Colors.black,
+            cardColor: Colors.black,
+            appBarTheme: AppBarTheme(
+              backgroundColor: kPrimaryGreen, // Always green
+              foregroundColor: Colors.white,
+            ),
+            elevatedButtonTheme: ElevatedButtonThemeData(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: kPrimaryGreen,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                textStyle: TextStyle(fontWeight: FontWeight.bold),
+              ),
+            ),
+            outlinedButtonTheme: OutlinedButtonThemeData(
+              style: OutlinedButton.styleFrom(
+                foregroundColor: kSecondaryBlue,
+                side: BorderSide(color: kSecondaryBlue, width: 2),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                textStyle: TextStyle(fontWeight: FontWeight.bold),
+              ),
+            ),
+            inputDecorationTheme: InputDecorationTheme(
+              filled: true,
+              fillColor: Colors.black,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide.none,
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: kPrimaryGreen, width: 2),
+              ),
+              labelStyle: TextStyle(color: Colors.white),
+            ),
+            textTheme: const TextTheme(
+              bodyLarge: TextStyle(color: Colors.white),
+              bodyMedium: TextStyle(color: Colors.white),
+              bodySmall: TextStyle(color: Colors.white),
+              displayLarge: TextStyle(color: Colors.white),
+              displayMedium: TextStyle(color: Colors.white),
+              displaySmall: TextStyle(color: Colors.white),
+              headlineLarge: TextStyle(color: Colors.white),
+              headlineMedium: TextStyle(color: Colors.white),
+              headlineSmall: TextStyle(color: Colors.white),
+              titleLarge: TextStyle(color: Colors.white),
+              titleMedium: TextStyle(color: Colors.white),
+              titleSmall: TextStyle(color: Colors.white),
+              labelLarge: TextStyle(color: Colors.white),
+              labelMedium: TextStyle(color: Colors.white),
+              labelSmall: TextStyle(color: Colors.white),
+            ),
+            iconTheme: const IconThemeData(color: Colors.white),
+            dividerColor: Colors.white24,
           ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide(color: kPrimaryGreen, width: 2),
-          ),
-          labelStyle: TextStyle(color: Colors.white),
-        ),
-        textTheme: const TextTheme(
-          bodyLarge: TextStyle(color: Colors.white),
-          bodyMedium: TextStyle(color: Colors.white),
-          bodySmall: TextStyle(color: Colors.white),
-          displayLarge: TextStyle(color: Colors.white),
-          displayMedium: TextStyle(color: Colors.white),
-          displaySmall: TextStyle(color: Colors.white),
-          headlineLarge: TextStyle(color: Colors.white),
-          headlineMedium: TextStyle(color: Colors.white),
-          headlineSmall: TextStyle(color: Colors.white),
-          titleLarge: TextStyle(color: Colors.white),
-          titleMedium: TextStyle(color: Colors.white),
-          titleSmall: TextStyle(color: Colors.white),
-          labelLarge: TextStyle(color: Colors.white),
-          labelMedium: TextStyle(color: Colors.white),
-          labelSmall: TextStyle(color: Colors.white),
-        ),
-        iconTheme: const IconThemeData(color: Colors.white),
-        dividerColor: Colors.white24,
-      ),
-                  themeMode: ThemeMode.light,
+          themeMode: ThemeMode.light,
           home: const SplashOrApp(),
         );
       },
@@ -749,7 +768,9 @@ class SplashOrApp extends StatefulWidget {
   @override
   State<SplashOrApp> createState() => _SplashOrAppState();
 }
-class _SplashOrAppState extends State<SplashOrApp> with SingleTickerProviderStateMixin {
+
+class _SplashOrAppState extends State<SplashOrApp>
+    with SingleTickerProviderStateMixin {
   bool _ready = false;
   bool _hasCheckedPermissions = false;
   bool _shouldShowPermissions = false;
@@ -759,7 +780,10 @@ class _SplashOrAppState extends State<SplashOrApp> with SingleTickerProviderStat
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(vsync: this, duration: const Duration(milliseconds: 350));
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 350),
+    );
     _animation = CurvedAnimation(parent: _controller, curve: Curves.easeInOut);
     _waitForAppReady();
   }
@@ -780,16 +804,21 @@ class _SplashOrAppState extends State<SplashOrApp> with SingleTickerProviderStat
         print('Auth state timeout - checking current user');
         user = FirebaseAuth.instance.currentUser;
       }
-      
+
       // Additional check for current user if auth state stream didn't work
       if (user == null) {
         user = FirebaseAuth.instance.currentUser;
-        print('Auth state stream returned null, current user: ${user?.uid ?? 'none'}');
+        print(
+          'Auth state stream returned null, current user: ${user?.uid ?? 'none'}',
+        );
       }
-      
+
       if (user != null) {
         try {
-          await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
+          await FirebaseFirestore.instance
+              .collection('users')
+              .doc(user.uid)
+              .get();
         } catch (e, stack) {
           // Firestore fetch failed
           print('Firestore fetch failed for user ${user.uid}: $e');
@@ -799,10 +828,10 @@ class _SplashOrAppState extends State<SplashOrApp> with SingleTickerProviderStat
       // Auth state error
       print('Auth state error: $e');
     }
-    
+
     // Check permissions
     final shouldRequest = await PermissionService.shouldRequestPermissions();
-    
+
     await minSplash;
     if (mounted) {
       setState(() {
@@ -839,9 +868,13 @@ class _SplashOrAppState extends State<SplashOrApp> with SingleTickerProviderStat
         final String action = pendingQuickAction!;
         pendingQuickAction = null;
         if (action == 'scan') {
-          Navigator.of(context).push(MaterialPageRoute(builder: (_) => const ScanPage()));
+          Navigator.of(
+            context,
+          ).push(MaterialPageRoute(builder: (_) => const ScanPage()));
         } else if (action == 'log') {
-          Navigator.of(context).push(MaterialPageRoute(builder: (_) => const LogMealPage()));
+          Navigator.of(
+            context,
+          ).push(MaterialPageRoute(builder: (_) => const LogMealPage()));
         }
       }
     });
@@ -860,10 +893,9 @@ class _SplashOrAppState extends State<SplashOrApp> with SingleTickerProviderStat
                 tween: Tween<double>(begin: 0.7, end: 1.0),
                 duration: Duration(milliseconds: 700),
                 curve: Curves.easeOutBack,
-                builder: (context, scale, child) => Transform.scale(
-                  scale: scale,
-                  child: child,
-                ),
+                builder:
+                    (context, scale, child) =>
+                        Transform.scale(scale: scale, child: child),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -883,7 +915,10 @@ class _SplashOrAppState extends State<SplashOrApp> with SingleTickerProviderStat
                       ),
                       child: Padding(
                         padding: const EdgeInsets.all(16.0),
-                        child: Image.asset('assets/logo.png', fit: BoxFit.contain),
+                        child: Image.asset(
+                          'assets/logo.png',
+                          fit: BoxFit.contain,
+                        ),
                       ),
                     ),
                     const SizedBox(height: 28),
@@ -891,10 +926,9 @@ class _SplashOrAppState extends State<SplashOrApp> with SingleTickerProviderStat
                       tween: Tween<double>(begin: 0, end: 1),
                       duration: Duration(milliseconds: 900),
                       curve: Curves.easeIn,
-                      builder: (context, value, child) => Opacity(
-                        opacity: value,
-                        child: child,
-                      ),
+                      builder:
+                          (context, value, child) =>
+                              Opacity(opacity: value, child: child),
                       child: Text(
                         'Yumie',
                         style: TextStyle(
@@ -924,6 +958,7 @@ class _SplashOrAppState extends State<SplashOrApp> with SingleTickerProviderStat
     );
   }
 }
+
 class MyApp extends StatefulWidget {
   const MyApp({super.key});
 
@@ -945,7 +980,9 @@ class _MyAppState extends State<MyApp> {
           final currentUserId = snapshot.data!.uid;
           if (_previousUserId != null && _previousUserId != currentUserId) {
             // User has changed, clear subscription data
-            print('User changed from $_previousUserId to $currentUserId - clearing subscription data');
+            print(
+              'User changed from $_previousUserId to $currentUserId - clearing subscription data',
+            );
             WidgetsBinding.instance.addPostFrameCallback((_) async {
               final subscriptionService = SubscriptionService();
               await subscriptionService.clearLocalSubscriptionData();
@@ -964,16 +1001,17 @@ class _MyAppState extends State<MyApp> {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return Center(child: CircularProgressIndicator());
         }
-        
+
         if (snapshot.hasData) {
           // User is logged in, first validate the account still exists
           return FutureBuilder<bool>(
             future: _validateUserAccount(snapshot.data!),
             builder: (context, accountValidation) {
-              if (accountValidation.connectionState == ConnectionState.waiting) {
+              if (accountValidation.connectionState ==
+                  ConnectionState.waiting) {
                 return Center(child: CircularProgressIndicator());
               }
-              
+
               // If account doesn't exist, sign out and redirect to auth
               if (accountValidation.data == false) {
                 return FutureBuilder(
@@ -981,60 +1019,70 @@ class _MyAppState extends State<MyApp> {
                   builder: (context, _) => AuthScreen(),
                 );
               }
-              
+
               // Check email verification for email/password accounts
               return _EmailVerificationWrapper(
                 user: snapshot.data!,
                 child: FutureBuilder<DocumentSnapshot>(
-            future: FirebaseFirestore.instance
-                .collection('users')
-                .doc(snapshot.data!.uid)
-                .get(),
-            builder: (context, userSnapshot) {
-              if (userSnapshot.connectionState == ConnectionState.waiting) {
-                return Center(child: CircularProgressIndicator());
-              }
+                  future:
+                      FirebaseFirestore.instance
+                          .collection('users')
+                          .doc(snapshot.data!.uid)
+                          .get(),
+                  builder: (context, userSnapshot) {
+                    if (userSnapshot.connectionState ==
+                        ConnectionState.waiting) {
+                      return Center(child: CircularProgressIndicator());
+                    }
 
-              if (!userSnapshot.hasData || !userSnapshot.data!.exists) {
-                return OnboardingFlowPage();
-              }
+                    if (!userSnapshot.hasData || !userSnapshot.data!.exists) {
+                      return OnboardingFlowPage();
+                    }
 
-              final userData = userSnapshot.data!.data() as Map<String, dynamic>?;
-              // Use a single boolean flag for onboarding completion
-              final onboardingCompleted = hasCompletedOnboarding(userData);
+                    final userData =
+                        userSnapshot.data!.data() as Map<String, dynamic>?;
+                    // Use a single boolean flag for onboarding completion
+                    final onboardingCompleted = hasCompletedOnboarding(
+                      userData,
+                    );
 
-              if (!onboardingCompleted) {
-                return OnboardingFlowPage();
-              }
+                    if (!onboardingCompleted) {
+                      return OnboardingFlowPage();
+                    }
 
-              // Check if we should show subscription popup for returning users (occasional)
-              return FutureBuilder<bool>(
-                future: SubscriptionPopupPage.shouldShowPopup(isPostOnboarding: false),
-                builder: (context, popupSnapshot) {
-                  if (popupSnapshot.connectionState == ConnectionState.waiting) {
-              return MainNavScreen();
-                  }
-                  
-                  if (popupSnapshot.data == true) {
-                    return SubscriptionPopupPage(
-                      onDismiss: () {
-                        Navigator.of(context).pushReplacement(
-                          MaterialPageRoute(builder: (_) => MainNavScreen()),
-                        );
+                    // Check if we should show subscription popup for returning users (occasional)
+                    return FutureBuilder<bool>(
+                      future: SubscriptionPopupPage.shouldShowPopup(
+                        isPostOnboarding: false,
+                      ),
+                      builder: (context, popupSnapshot) {
+                        if (popupSnapshot.connectionState ==
+                            ConnectionState.waiting) {
+                          return MainNavScreen();
+                        }
+
+                        if (popupSnapshot.data == true) {
+                          return SubscriptionPopupPage(
+                            onDismiss: () {
+                              Navigator.of(context).pushReplacement(
+                                MaterialPageRoute(
+                                  builder: (_) => MainNavScreen(),
+                                ),
+                              );
+                            },
+                          );
+                        }
+
+                        return MainNavScreen();
                       },
                     );
-                  }
-                  
-                  return MainNavScreen();
-                },
-              );
-                },
+                  },
                 ),
               );
             },
           );
         }
-        
+
         return AuthScreen();
       },
     );
@@ -1044,26 +1092,35 @@ class _MyAppState extends State<MyApp> {
   Future<bool> _validateUserAccount(User user) async {
     try {
       // Skip validation for review team accounts
-      final reviewAccounts = ['apple@applereview.com', 'google.develop@gmail.com'];
-      if (user.email != null && reviewAccounts.contains(user.email!.toLowerCase())) {
+      final reviewAccounts = [
+        'apple@applereview.com',
+        'google.develop@gmail.com',
+      ];
+      if (user.email != null &&
+          reviewAccounts.contains(user.email!.toLowerCase())) {
         return true; // Always consider review accounts as valid
       }
-      
+
       // For Apple and Google users, allow them to proceed even if document doesn't exist yet
       // The sign-in flow will create the document if needed
       final providerData = user.providerData;
-      final isAppleUser = providerData.any((provider) => provider.providerId == 'apple.com');
-      final isGoogleUser = providerData.any((provider) => provider.providerId == 'google.com');
-      
+      final isAppleUser = providerData.any(
+        (provider) => provider.providerId == 'apple.com',
+      );
+      final isGoogleUser = providerData.any(
+        (provider) => provider.providerId == 'google.com',
+      );
+
       if (isAppleUser || isGoogleUser) {
         return true; // Allow Apple/Google users to proceed
       }
-      
-      final doc = await FirebaseFirestore.instance
-          .collection('users')
-          .doc(user.uid)
-          .get();
-      
+
+      final doc =
+          await FirebaseFirestore.instance
+              .collection('users')
+              .doc(user.uid)
+              .get();
+
       return doc.exists;
     } catch (e) {
       print('Error validating user account: $e');
@@ -1071,21 +1128,19 @@ class _MyAppState extends State<MyApp> {
     }
   }
 
-
-
   // Sign out user and clear any local data
   Future<void> _signOutAndRedirect() async {
     try {
       // Clear subscription data before signing out
       final subscriptionService = SubscriptionService();
       await subscriptionService.clearLocalSubscriptionData();
-      
+
       await FirebaseAuth.instance.signOut();
-      
+
       // Clear any local preferences related to the deleted account
       final prefs = await SharedPreferences.getInstance();
       await prefs.clear();
-      
+
       print('User signed out due to deleted account');
     } catch (e) {
       print('Error signing out deleted account: $e');
@@ -1105,7 +1160,8 @@ class _EmailVerificationWrapper extends StatefulWidget {
   }) : super(key: key);
 
   @override
-  State<_EmailVerificationWrapper> createState() => _EmailVerificationWrapperState();
+  State<_EmailVerificationWrapper> createState() =>
+      _EmailVerificationWrapperState();
 }
 
 class _EmailVerificationWrapperState extends State<_EmailVerificationWrapper> {
@@ -1134,8 +1190,12 @@ class _EmailVerificationWrapperState extends State<_EmailVerificationWrapper> {
       }
 
       // Skip verification for review team accounts
-      final reviewAccounts = ['apple@applereview.com', 'google.develop@gmail.com'];
-      if (currentUser.email != null && reviewAccounts.contains(currentUser.email!.toLowerCase())) {
+      final reviewAccounts = [
+        'apple@applereview.com',
+        'google.develop@gmail.com',
+      ];
+      if (currentUser.email != null &&
+          reviewAccounts.contains(currentUser.email!.toLowerCase())) {
         if (mounted) {
           setState(() {
             _isCheckingVerification = false;
@@ -1147,9 +1207,13 @@ class _EmailVerificationWrapperState extends State<_EmailVerificationWrapper> {
 
       // Skip verification for Apple and Google sign-in (trusted providers)
       final providerData = currentUser.providerData;
-      final isAppleUser = providerData.any((provider) => provider.providerId == 'apple.com');
-      final isGoogleUser = providerData.any((provider) => provider.providerId == 'google.com');
-      
+      final isAppleUser = providerData.any(
+        (provider) => provider.providerId == 'apple.com',
+      );
+      final isGoogleUser = providerData.any(
+        (provider) => provider.providerId == 'google.com',
+      );
+
       if (isAppleUser || isGoogleUser) {
         if (mounted) {
           setState(() {
@@ -1163,12 +1227,13 @@ class _EmailVerificationWrapperState extends State<_EmailVerificationWrapper> {
       // Force reload user to get latest verification status
       await currentUser.reload();
       final refreshedUser = FirebaseAuth.instance.currentUser;
-      
+
       if (refreshedUser != null && !refreshedUser.emailVerified) {
         // Show verification dialog
         final emailVerificationService = EmailVerificationService();
-        final verified = await emailVerificationService.showEmailVerificationDialog(context, refreshedUser);
-        
+        final verified = await emailVerificationService
+            .showEmailVerificationDialog(context, refreshedUser);
+
         if (!verified) {
           // User closed verification dialog, sign them out
           await FirebaseAuth.instance.signOut();
@@ -1221,6 +1286,7 @@ class AuthScreen extends StatefulWidget {
   @override
   _AuthScreenState createState() => _AuthScreenState();
 }
+
 class _AuthScreenState extends State<AuthScreen> {
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
@@ -1236,7 +1302,8 @@ class _AuthScreenState extends State<AuthScreen> {
   bool _isPasswordVisible = false;
   final AuthService _authService = AuthService();
   final RateLimitingService _rateLimitingService = RateLimitingService();
-  final SecurityMonitoringService _securityService = SecurityMonitoringService();
+  final SecurityMonitoringService _securityService =
+      SecurityMonitoringService();
 
   @override
   void initState() {
@@ -1258,8 +1325,6 @@ class _AuthScreenState extends State<AuthScreen> {
       _currentPassword = passwordController.text;
     });
   }
-
-
 
   void _showAccountNotFoundDialog() {
     showDialog(
@@ -1356,9 +1421,7 @@ class _AuthScreenState extends State<AuthScreen> {
                         ),
                         child: const Text(
                           'Sign Up',
-                          style: TextStyle(
-                            fontWeight: FontWeight.w600,
-                          ),
+                          style: TextStyle(fontWeight: FontWeight.w600),
                         ),
                       ),
                     ),
@@ -1467,9 +1530,7 @@ class _AuthScreenState extends State<AuthScreen> {
                         ),
                         child: Text(
                           AppLocalizations.of(context)!.signIn,
-                          style: TextStyle(
-                            fontWeight: FontWeight.w600,
-                          ),
+                          style: TextStyle(fontWeight: FontWeight.w600),
                         ),
                       ),
                     ),
@@ -1486,37 +1547,45 @@ class _AuthScreenState extends State<AuthScreen> {
   void _showTermsRequiredDialog() {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Row(
-          children: [
-            Icon(Icons.warning_amber_rounded, color: Colors.orange, size: 24),
-            SizedBox(width: 8),
-            Text('Terms Required'),
-          ],
-        ),
-        content: Text(
-          'To continue with social sign-in, you must first accept the Terms of Service and Privacy Policy. Please check the box above and try again.',
-          style: TextStyle(fontSize: 16),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: Text('OK'),
+      builder:
+          (context) => AlertDialog(
+            title: Row(
+              children: [
+                Icon(
+                  Icons.warning_amber_rounded,
+                  color: Colors.orange,
+                  size: 24,
+                ),
+                SizedBox(width: 8),
+                Text('Terms Required'),
+              ],
+            ),
+            content: Text(
+              'To continue with social sign-in, you must first accept the Terms of Service and Privacy Policy. Please check the box above and try again.',
+              style: TextStyle(fontSize: 16),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: Text('OK'),
+              ),
+            ],
           ),
-        ],
-      ),
     );
   }
 
-  void _showProviderConflictDialog(String existingProvider, String attemptedProvider) {
+  void _showProviderConflictDialog(
+    String existingProvider,
+    String attemptedProvider,
+  ) {
     final isGoogleExisting = existingProvider.contains('google');
     final isGoogleAttempted = attemptedProvider.contains('google');
-    
+
     String title = AppLocalizations.of(context)!.accountUsesDifferentSignIn;
     String message;
     String actionText;
     VoidCallback? actionCallback;
-    
+
     if (isGoogleExisting && !isGoogleAttempted) {
       // Existing: Google, Attempted: Email
       message = AppLocalizations.of(context)!.emailSignedUpWithGoogle;
@@ -1526,7 +1595,7 @@ class _AuthScreenState extends State<AuthScreen> {
         _handleGoogleSignIn();
       };
     } else if (!isGoogleExisting && isGoogleAttempted) {
-      // Existing: Email, Attempted: Google  
+      // Existing: Email, Attempted: Google
       message = AppLocalizations.of(context)!.emailSignedUpWithPassword;
       actionText = AppLocalizations.of(context)!.signInWithEmail;
       actionCallback = () {
@@ -1535,7 +1604,8 @@ class _AuthScreenState extends State<AuthScreen> {
       };
     } else {
       // Fallback message
-      message = 'This email is already associated with a different sign-in method. Please use the original method you signed up with.';
+      message =
+          'This email is already associated with a different sign-in method. Please use the original method you signed up with.';
       actionText = 'OK';
       actionCallback = () => Navigator.of(context).pop();
     }
@@ -1631,9 +1701,7 @@ class _AuthScreenState extends State<AuthScreen> {
                         ),
                         child: Text(
                           actionText,
-                          style: const TextStyle(
-                            fontWeight: FontWeight.w600,
-                          ),
+                          style: const TextStyle(fontWeight: FontWeight.w600),
                         ),
                       ),
                     ),
@@ -1652,16 +1720,17 @@ class _AuthScreenState extends State<AuthScreen> {
     String resetMessage = '';
     bool resetLoading = false;
     bool emailSent = false;
-    
+
     // Check if we have a previously saved email
     final prefs = await SharedPreferences.getInstance();
     final savedEmail = prefs.getString('last_password_reset_email') ?? '';
     final lastResetTime = prefs.getInt('last_password_reset_time') ?? 0;
     final currentTime = DateTime.now().millisecondsSinceEpoch;
-    
+
     // If email was saved recently (within 24 hours), pre-fill it
     bool isResending = false;
-    if (savedEmail.isNotEmpty && (currentTime - lastResetTime) < (24 * 60 * 60 * 1000)) {
+    if (savedEmail.isNotEmpty &&
+        (currentTime - lastResetTime) < (24 * 60 * 60 * 1000)) {
       resetEmailController.text = savedEmail;
       isResending = true;
     }
@@ -1683,9 +1752,16 @@ class _AuthScreenState extends State<AuthScreen> {
                   children: [
                     Icon(Icons.lock_reset, size: 48, color: kPrimaryGreen),
                     SizedBox(height: 16),
-                    Text(AppLocalizations.of(context)!.resetPasswordTitle, style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+                    Text(
+                      AppLocalizations.of(context)!.resetPasswordTitle,
+                      style: TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                     SizedBox(height: 8),
-                    Text(AppLocalizations.of(context)!.enterEmailForReset,
+                    Text(
+                      AppLocalizations.of(context)!.enterEmailForReset,
                       style: TextStyle(fontSize: 16, color: Colors.grey[600]),
                       textAlign: TextAlign.center,
                     ),
@@ -1695,7 +1771,10 @@ class _AuthScreenState extends State<AuthScreen> {
                       decoration: InputDecoration(
                         labelText: AppLocalizations.of(context)!.emailAddress,
                         hintText: 'your.email@example.com',
-                        prefixIcon: Icon(Icons.email_outlined, color: kPrimaryGreen),
+                        prefixIcon: Icon(
+                          Icons.email_outlined,
+                          color: kPrimaryGreen,
+                        ),
                         filled: true,
                         fillColor: Colors.white,
                         border: OutlineInputBorder(
@@ -1708,7 +1787,10 @@ class _AuthScreenState extends State<AuthScreen> {
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide(color: kPrimaryGreen, width: 2),
+                          borderSide: BorderSide(
+                            color: kPrimaryGreen,
+                            width: 2,
+                          ),
                         ),
                       ),
                       keyboardType: TextInputType.emailAddress,
@@ -1720,7 +1802,10 @@ class _AuthScreenState extends State<AuthScreen> {
                         child: Text(
                           resetMessage,
                           style: TextStyle(
-                            color: resetMessage.startsWith('Success') ? kPrimaryGreen : kWarningRed,
+                            color:
+                                resetMessage.startsWith('Success')
+                                    ? kPrimaryGreen
+                                    : kWarningRed,
                             fontWeight: FontWeight.bold,
                           ),
                           textAlign: TextAlign.center,
@@ -1761,103 +1846,156 @@ class _AuthScreenState extends State<AuthScreen> {
                           ],
                           Expanded(
                             child: ElevatedButton(
-                            onPressed: resetLoading
-                                ? null
-                                : () async {
-                                  final email = resetEmailController.text.trim();
-                                  if (email.isEmpty) {
-                                    setDialogState(() {
-                                      resetMessage = 'Please enter your email address';
-                                    });
-                                    return;
-                                  }
-                                  
-                                  if (!ValidationUtils.isValidEmail(email)) {
-                                    setDialogState(() {
-                                      resetMessage = 'Please enter a valid email address';
-                                    });
-                                    return;
-                                  }
+                              onPressed:
+                                  resetLoading
+                                      ? null
+                                      : () async {
+                                        final email =
+                                            resetEmailController.text.trim();
+                                        if (email.isEmpty) {
+                                          setDialogState(() {
+                                            resetMessage =
+                                                'Please enter your email address';
+                                          });
+                                          return;
+                                        }
 
-                                  setDialogState(() { 
-                                    resetLoading = true; 
-                                    resetMessage = ''; 
-                                  });
-                                  
-                                  // Check rate limit for forgot password
-                                  final rateLimitResult = await _rateLimitingService.checkRateLimit('forgot_password_dialog', identifier: email);
-                                  if (!rateLimitResult.allowed) {
-                                    setDialogState(() {
-                                      resetMessage = rateLimitResult.message ?? 'Too many password reset requests. Please try again later.';
-                                      resetLoading = false;
-                                    });
-                                    return;
-                                  }
+                                        if (!ValidationUtils.isValidEmail(
+                                          email,
+                                        )) {
+                                          setDialogState(() {
+                                            resetMessage =
+                                                'Please enter a valid email address';
+                                          });
+                                          return;
+                                        }
 
-                                  try {
-                                    await FirebaseAuth.instance.sendPasswordResetEmail(email: email);
-                                    
-                                    // Only record the attempt AFTER successful email send
-                                    await _rateLimitingService.recordAttempt('forgot_password_dialog', identifier: email);
-                                    
-                                    // Save the email and timestamp for future resend attempts
-                                    final prefs = await SharedPreferences.getInstance();
-                                    await prefs.setString('last_password_reset_email', email);
-                                    await prefs.setInt('last_password_reset_time', DateTime.now().millisecondsSinceEpoch);
-                                    
-                                    // Record password reset request for security monitoring
-                                    await _securityService.recordSecurityEvent(
-                                      'password_reset_request',
-                                      email: email,
-                                      successful: true,
-                                      metadata: {'source': 'forgot_password_dialog'},
-                                    );
-                                    
-                                    setDialogState(() {
-                                      resetMessage = 'Success! Check your email for a reset link.';
-                                      resetLoading = false;
-                                      emailSent = true; // Mark email as sent to hide cancel button
-                                    });
-                                  } catch (e) {
-                                    String errorMessage = 'Error sending reset email.';
-                                    if (e is FirebaseAuthException) {
-                                      switch (e.code) {
-                                        case 'user-not-found':
-                                          errorMessage = 'No account found with this email address.';
-                                          break;
-                                        case 'invalid-email':
-                                          errorMessage = 'Please enter a valid email address.';
-                                          break;
-                                        case 'too-many-requests':
-                                          errorMessage = 'Too many requests. Please try again later.';
-                                          break;
-                                        default:
-                                          errorMessage = 'Error: ${e.message}';
-                                      }
-                                    }
-                                    setDialogState(() {
-                                      resetMessage = errorMessage;
-                                      resetLoading = false;
-                                    });
-                                  }
-                                },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: kPrimaryGreen,
-                            foregroundColor: Colors.white,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            textStyle: TextStyle(fontSize: 14),
-                          ),
-                          child: resetLoading
-                              ? SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                              : Text(
-                                  isResending ? AppLocalizations.of(context)!.resend : AppLocalizations.of(context)!.send,
-                                  style: TextStyle(fontSize: 14),
-                                  overflow: TextOverflow.ellipsis,
+                                        setDialogState(() {
+                                          resetLoading = true;
+                                          resetMessage = '';
+                                        });
+
+                                        // Check rate limit for forgot password
+                                        final rateLimitResult =
+                                            await _rateLimitingService
+                                                .checkRateLimit(
+                                                  'forgot_password_dialog',
+                                                  identifier: email,
+                                                );
+                                        if (!rateLimitResult.allowed) {
+                                          setDialogState(() {
+                                            resetMessage =
+                                                rateLimitResult.message ??
+                                                'Too many password reset requests. Please try again later.';
+                                            resetLoading = false;
+                                          });
+                                          return;
+                                        }
+
+                                        try {
+                                          await FirebaseAuth.instance
+                                              .sendPasswordResetEmail(
+                                                email: email,
+                                              );
+
+                                          // Only record the attempt AFTER successful email send
+                                          await _rateLimitingService
+                                              .recordAttempt(
+                                                'forgot_password_dialog',
+                                                identifier: email,
+                                              );
+
+                                          // Save the email and timestamp for future resend attempts
+                                          final prefs =
+                                              await SharedPreferences.getInstance();
+                                          await prefs.setString(
+                                            'last_password_reset_email',
+                                            email,
+                                          );
+                                          await prefs.setInt(
+                                            'last_password_reset_time',
+                                            DateTime.now()
+                                                .millisecondsSinceEpoch,
+                                          );
+
+                                          // Record password reset request for security monitoring
+                                          await _securityService
+                                              .recordSecurityEvent(
+                                                'password_reset_request',
+                                                email: email,
+                                                successful: true,
+                                                metadata: {
+                                                  'source':
+                                                      'forgot_password_dialog',
+                                                },
+                                              );
+
+                                          setDialogState(() {
+                                            resetMessage =
+                                                'Success! Check your email for a reset link.';
+                                            resetLoading = false;
+                                            emailSent =
+                                                true; // Mark email as sent to hide cancel button
+                                          });
+                                        } catch (e) {
+                                          String errorMessage =
+                                              'Error sending reset email.';
+                                          if (e is FirebaseAuthException) {
+                                            switch (e.code) {
+                                              case 'user-not-found':
+                                                errorMessage =
+                                                    'No account found with this email address.';
+                                                break;
+                                              case 'invalid-email':
+                                                errorMessage =
+                                                    'Please enter a valid email address.';
+                                                break;
+                                              case 'too-many-requests':
+                                                errorMessage =
+                                                    'Too many requests. Please try again later.';
+                                                break;
+                                              default:
+                                                errorMessage =
+                                                    'Error: ${e.message}';
+                                            }
+                                          }
+                                          setDialogState(() {
+                                            resetMessage = errorMessage;
+                                            resetLoading = false;
+                                          });
+                                        }
+                                      },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: kPrimaryGreen,
+                                foregroundColor: Colors.white,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
                                 ),
-                          ),
+                                textStyle: TextStyle(fontSize: 14),
+                              ),
+                              child:
+                                  resetLoading
+                                      ? SizedBox(
+                                        width: 20,
+                                        height: 20,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                          color: Colors.white,
+                                        ),
+                                      )
+                                      : Text(
+                                        isResending
+                                            ? AppLocalizations.of(
+                                              context,
+                                            )!.resend
+                                            : AppLocalizations.of(
+                                              context,
+                                            )!.send,
+                                        style: TextStyle(fontSize: 14),
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
                             ),
+                          ),
                         ],
                       ],
                     ),
@@ -1870,6 +2008,7 @@ class _AuthScreenState extends State<AuthScreen> {
       },
     );
   }
+
   Future<void> _handleGoogleSignIn() async {
     setState(() => isLoading = true);
     try {
@@ -1880,7 +2019,7 @@ class _AuthScreenState extends State<AuthScreen> {
         setState(() => isLoading = false);
         return; // User cancelled
       }
-      
+
       // Check if this email was recently deleted (within 24 hours)
       final prefs = await SharedPreferences.getInstance();
       final email = googleUser.email;
@@ -1889,7 +2028,7 @@ class _AuthScreenState extends State<AuthScreen> {
         final deletedTime = int.tryParse(deletedTimestamp) ?? 0;
         final now = DateTime.now().millisecondsSinceEpoch;
         const twentyFourHours = 24 * 60 * 60 * 1000;
-        
+
         if (now - deletedTime < twentyFourHours) {
           if (!showSignUp) {
             // Account was recently deleted and user is trying to sign in
@@ -1905,22 +2044,24 @@ class _AuthScreenState extends State<AuthScreen> {
           await prefs.remove('deleted_account_$email');
         }
       }
-      
+
       // For sign-up mode, try authentication and check if it's an existing account
       if (showSignUp) {
+      } else {}
 
-      } else {
-
-      }
-      
       // Check if this email already exists with a different provider
       final userEmail = googleUser.email;
-      final signInMethods = await FirebaseAuth.instance.fetchSignInMethodsForEmail(userEmail);
-      
+      final signInMethods = await FirebaseAuth.instance
+          .fetchSignInMethodsForEmail(userEmail);
+
       if (signInMethods.isNotEmpty) {
-        final hasEmailProvider = signInMethods.any((method) => method == 'password');
-        final hasGoogleProvider = signInMethods.any((method) => method.contains('google'));
-        
+        final hasEmailProvider = signInMethods.any(
+          (method) => method == 'password',
+        );
+        final hasGoogleProvider = signInMethods.any(
+          (method) => method.contains('google'),
+        );
+
         if (hasEmailProvider && !hasGoogleProvider) {
           // User is trying to sign in with Google but already has email/password account
           setState(() => isLoading = false);
@@ -1928,46 +2069,60 @@ class _AuthScreenState extends State<AuthScreen> {
           return;
         }
       }
-      
+
       // Proceed with Google authentication
-      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+      final GoogleSignInAuthentication googleAuth =
+          await googleUser.authentication;
       final credential = GoogleAuthProvider.credential(
         accessToken: googleAuth.accessToken,
         idToken: googleAuth.idToken,
       );
-      final userCredential = await FirebaseAuth.instance.signInWithCredential(credential);
-      
+      final userCredential = await FirebaseAuth.instance.signInWithCredential(
+        credential,
+      );
+
       // Check if this was a new user creation or existing user sign-in
       final isNewUser = userCredential.additionalUserInfo?.isNewUser ?? false;
 
-      
       // await analytics.logLogin(loginMethod: 'google');  // Removed due to Kotlin conflicts
 
       final userService = UserService();
       final user = FirebaseAuth.instance.currentUser;
       if (user != null) {
-        final doc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
-        
+        final doc =
+            await FirebaseFirestore.instance
+                .collection('users')
+                .doc(user.uid)
+                .get();
+
         // If we're in sign-up mode but the user already exists, show the popup
         if (showSignUp && doc.exists) {
           setState(() => isLoading = false);
-          await FirebaseAuth.instance.signOut(); // Sign out since we don't want to proceed
+          await FirebaseAuth.instance
+              .signOut(); // Sign out since we don't want to proceed
           _showAccountExistsDialog();
           return;
         }
-        
+
         if (!doc.exists) {
-          await userService.createInitialUserProfile(user.email ?? '', user.displayName ?? '');
+          await userService.createInitialUserProfile(
+            user.email ?? '',
+            user.displayName ?? '',
+          );
           setState(() => isLoading = false);
           if (mounted) {
-            Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => OnboardingFlowPage()));
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (_) => OnboardingFlowPage()),
+            );
           }
           return;
         }
-                // Check for scheduled account deletion and offer reactivation
+        // Check for scheduled account deletion and offer reactivation
         final accountDeletionService = AccountDeletionService();
-        final isScheduledForDeletion = await accountDeletionService.checkAndOfferReactivation(context);
-        
+        final isScheduledForDeletion = await accountDeletionService
+            .checkAndOfferReactivation(context);
+
         if (!isScheduledForDeletion) {
           // Check if onboarding is complete
           final data = doc.data() as Map<String, dynamic>?;
@@ -1975,9 +2130,15 @@ class _AuthScreenState extends State<AuthScreen> {
           setState(() => isLoading = false);
           if (mounted) {
             if (!onboardingCompleted) {
-              Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => OnboardingFlowPage()));
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (_) => OnboardingFlowPage()),
+              );
             } else {
-              Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => MainNavScreen()));
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (_) => MainNavScreen()),
+              );
             }
           }
         } else {
@@ -1988,23 +2149,26 @@ class _AuthScreenState extends State<AuthScreen> {
       if (mounted) {
         setState(() => isLoading = false);
         // await analytics.logEvent(name: 'login_failed', parameters: {'method': 'google', 'error': e.toString()});  // Removed due to Kotlin conflicts
-        
+
         String errorMessage = 'Google sign-in failed: $e';
-        
+
         // Handle specific Google authentication errors
-        if (e.toString().contains('SecurityException') || e.toString().contains('Unknown calling package')) {
-          errorMessage = 'Google Sign-In configuration error. This is typically caused by:\n'
+        if (e.toString().contains('SecurityException') ||
+            e.toString().contains('Unknown calling package')) {
+          errorMessage =
+              'Google Sign-In configuration error. This is typically caused by:\n'
               '� Debug signing certificate not added to Firebase Console\n'
               '� Package name mismatch\n'
               '� SHA1 fingerprint not configured\n\n'
               'Please check the Firebase Console configuration.';
         } else if (e.toString().contains('DEVELOPER_ERROR')) {
-          errorMessage = 'Google Sign-In setup error. Please ensure:\n'
+          errorMessage =
+              'Google Sign-In setup error. Please ensure:\n'
               '� google-services.json is properly configured\n'
               '� OAuth client is set up in Google Cloud Console\n'
               '� App signing certificate is added to Firebase';
         }
-        
+
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(errorMessage),
@@ -2015,21 +2179,22 @@ class _AuthScreenState extends State<AuthScreen> {
                 // Could show a help dialog or navigate to help page
                 showDialog(
                   context: context,
-                  builder: (context) => AlertDialog(
-                    title: Text('Google Sign-In Help'),
-                    content: Text(
-                      'For development:\n'
-                      '1. Get your debug SHA1: keytool -list -v -keystore ~/.android/debug.keystore -alias androiddebugkey -storepass android -keypass android\n\n'
-                      '2. Add the SHA1 to Firebase Console under Project Settings > Your apps > SHA certificate fingerprints\n\n'
-                      '3. Download the updated google-services.json'
-                    ),
-                    actions: [
-                      TextButton(
-                        onPressed: () => Navigator.pop(context),
-                        child: Text(AppLocalizations.of(context)!.ok),
+                  builder:
+                      (context) => AlertDialog(
+                        title: Text('Google Sign-In Help'),
+                        content: Text(
+                          'For development:\n'
+                          '1. Get your debug SHA1: keytool -list -v -keystore ~/.android/debug.keystore -alias androiddebugkey -storepass android -keypass android\n\n'
+                          '2. Add the SHA1 to Firebase Console under Project Settings > Your apps > SHA certificate fingerprints\n\n'
+                          '3. Download the updated google-services.json',
+                        ),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(context),
+                            child: Text(AppLocalizations.of(context)!.ok),
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
                 );
               },
             ),
@@ -2038,17 +2203,19 @@ class _AuthScreenState extends State<AuthScreen> {
       }
     }
   }
+
   Future<void> _handleAppleSignIn() async {
     setState(() => isLoading = true);
     try {
       if (kDebugMode) log.info('User attempting Apple sign-in');
-      
+
       // Generate a random nonce for security (matches Firebase docs)
       final nonce = _generateNonce();
       if (kDebugMode) log.info('Generated nonce: ${nonce.substring(0, 10)}...');
-      
+
       // Request Apple Sign In with SHA256 hash of nonce (matches Firebase docs)
-      if (kDebugMode) log.info('Requesting Apple ID credential with hashed nonce...');
+      if (kDebugMode)
+        log.info('Requesting Apple ID credential with hashed nonce...');
       final credential = await SignInWithApple.getAppleIDCredential(
         scopes: [
           AppleIDAuthorizationScopes.email,
@@ -2057,34 +2224,44 @@ class _AuthScreenState extends State<AuthScreen> {
         nonce: _sha256ofString(nonce), // Send SHA256 hash to Apple
       );
       if (kDebugMode) log.info('Apple ID credential received successfully');
-      
+
       // Validate the response (matches Firebase docs approach)
       if (credential.identityToken == null) {
         throw Exception('Apple Sign-In failed: No identity token received');
       }
-      
+
       if (kDebugMode) {
         log.info('Creating Firebase OAuth credential with raw nonce...');
-        log.info('Identity token length: ${credential.identityToken?.length ?? 0}');
+        log.info(
+          'Identity token length: ${credential.identityToken?.length ?? 0}',
+        );
         log.info('Raw nonce: $nonce');
         log.info('Hashed nonce sent to Apple: ${_sha256ofString(nonce)}');
       }
-      
+
       // Create OAuth credential with raw nonce (matches Firebase docs)
       final oauthCredential = OAuthProvider('apple.com').credential(
         idToken: credential.identityToken,
         accessToken: credential.authorizationCode,
         rawNonce: nonce, // Use raw nonce for Firebase validation
       );
-      
+
       // Sign in to Firebase
       if (kDebugMode) {
         log.info('Signing in to Firebase with Apple credential...');
         log.info('Firebase Auth instance: ${FirebaseAuth.instance.app.name}');
-        log.info('Firebase Auth app options: ${FirebaseAuth.instance.app.options}');
-        log.info('Firebase Auth current user: ${FirebaseAuth.instance.currentUser?.uid}');
-        log.info('Firebase project ID: ${FirebaseAuth.instance.app.options.projectId}');
-        log.info('Firebase auth domain: ${FirebaseAuth.instance.app.options.authDomain}');
+        log.info(
+          'Firebase Auth app options: ${FirebaseAuth.instance.app.options}',
+        );
+        log.info(
+          'Firebase Auth current user: ${FirebaseAuth.instance.currentUser?.uid}',
+        );
+        log.info(
+          'Firebase project ID: ${FirebaseAuth.instance.app.options.projectId}',
+        );
+        log.info(
+          'Firebase auth domain: ${FirebaseAuth.instance.app.options.authDomain}',
+        );
 
         // Additional debugging info
         log.info('OAuth provider: apple');
@@ -2104,30 +2281,38 @@ class _AuthScreenState extends State<AuthScreen> {
               final normalized = base64Url.normalize(parts[1]);
               final decoded = utf8.decode(base64Url.decode(normalized));
               // This payload includes aud, iss, nonce, sub, etc.
-              log.info('Apple ID token decoded payload (truncated): ' + decoded.substring(0, decoded.length.clamp(0, 400)) + '...');
+              log.info(
+                'Apple ID token decoded payload (truncated): ' +
+                    decoded.substring(0, decoded.length.clamp(0, 400)) +
+                    '...',
+              );
             }
           }
         } catch (e) {
           log.info('Token decode skipped: $e');
         }
       }
-      
-      final userCredential = await FirebaseAuth.instance.signInWithCredential(oauthCredential);
+
+      final userCredential = await FirebaseAuth.instance.signInWithCredential(
+        oauthCredential,
+      );
       final user = userCredential.user;
-      
+
       if (user != null) {
         // await analytics.logLogin(loginMethod: 'apple');  // Removed due to Kotlin conflicts
         log.logUserAction('sign_in_successful', {'method': 'apple'});
-        
 
-        
         // Check if user profile exists, if not, create it
         final userService = UserService();
-        final doc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
+        final doc =
+            await FirebaseFirestore.instance
+                .collection('users')
+                .doc(user.uid)
+                .get();
         if (!doc.exists) {
           // Create user profile with Apple data
           String displayName = '';
-          
+
           // Try to get name from Apple credential first
           if (credential.givenName != null && credential.familyName != null) {
             displayName = '${credential.givenName} ${credential.familyName}';
@@ -2140,11 +2325,16 @@ class _AuthScreenState extends State<AuthScreen> {
             displayName = emailPrefix
                 .replaceAll('.', ' ')
                 .split(' ')
-                .map((word) => word.isNotEmpty ? '${word[0].toUpperCase()}${word.substring(1).toLowerCase()}' : '')
+                .map(
+                  (word) =>
+                      word.isNotEmpty
+                          ? '${word[0].toUpperCase()}${word.substring(1).toLowerCase()}'
+                          : '',
+                )
                 .where((word) => word.isNotEmpty)
                 .join(' ');
           }
-          
+
           if (kDebugMode) {
             log.info('Creating Apple user profile', {
               'email': user.email,
@@ -2154,27 +2344,39 @@ class _AuthScreenState extends State<AuthScreen> {
               'userDisplayName': user.displayName,
             });
           }
-          
-          await userService.createInitialUserProfile(user.email ?? '', displayName);
-          
+
+          await userService.createInitialUserProfile(
+            user.email ?? '',
+            displayName,
+          );
+
           // For new users, always go to onboarding
           setState(() => message = 'Apple sign-in successful!');
           if (mounted) {
-            Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => OnboardingFlowPage()));
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (_) => OnboardingFlowPage()),
+            );
           }
           return;
         }
-        
+
         // Check if onboarding is complete for existing users
         final data = doc.data() as Map<String, dynamic>?;
         final onboardingCompleted = hasCompletedOnboarding(data);
-        
+
         setState(() => message = 'Apple sign-in successful!');
         if (mounted) {
           if (!onboardingCompleted) {
-            Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => OnboardingFlowPage()));
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (_) => OnboardingFlowPage()),
+            );
           } else {
-            Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => MainNavScreen()));
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (_) => MainNavScreen()),
+            );
           }
         }
       }
@@ -2189,11 +2391,15 @@ class _AuthScreenState extends State<AuthScreen> {
             log.error('FirebaseAuthException message: ${e.message}');
           }
         }
-        
+
         // Enhanced error logging based on Firebase documentation
         if (kDebugMode && e.toString().contains('Invalid OAuth response')) {
-          log.error('OAuth response error - check Firebase Console Apple Sign-In configuration');
-          log.error('Verify Services ID, Team ID, Key ID, and Private Key are correct');
+          log.error(
+            'OAuth response error - check Firebase Console Apple Sign-In configuration',
+          );
+          log.error(
+            'Verify Services ID, Team ID, Key ID, and Private Key are correct',
+          );
         }
         if (kDebugMode && e.toString().contains('internal-error')) {
           log.error('Firebase internal error - check configuration:');
@@ -2204,20 +2410,33 @@ class _AuthScreenState extends State<AuthScreen> {
           log.error('5. Private key properly configured');
         }
         if (kDebugMode && e.toString().contains('localhost')) {
-          log.error('Firebase redirecting to localhost - auth domain configuration issue');
+          log.error(
+            'Firebase redirecting to localhost - auth domain configuration issue',
+          );
           log.error('Check Firebase Console auth domain settings');
         }
         if (kDebugMode && e.toString().contains('MissingOrInvalidNonce')) {
-          log.error('Nonce validation failed - check SHA256 hashing implementation');
-          log.error('Make sure nonce is properly hashed before sending to Apple');
+          log.error(
+            'Nonce validation failed - check SHA256 hashing implementation',
+          );
+          log.error(
+            'Make sure nonce is properly hashed before sending to Apple',
+          );
         }
-        
+
         // Suppress snackbar on Apple cancel; keep logs for real errors
         final msg = e.toString();
-        final isUserCancel = msg.contains('canceled') || msg.contains('AuthorizationCanceled') || msg.contains('user canceled');
+        final isUserCancel =
+            msg.contains('canceled') ||
+            msg.contains('AuthorizationCanceled') ||
+            msg.contains('user canceled');
         if (!isUserCancel) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('${AppLocalizations.of(context)!.appleSignInFailed}: $e')),
+            SnackBar(
+              content: Text(
+                '${AppLocalizations.of(context)!.appleSignInFailed}: $e',
+              ),
+            ),
           );
         }
       }
@@ -2227,9 +2446,13 @@ class _AuthScreenState extends State<AuthScreen> {
   /// Generates a cryptographically secure random nonce, to be included in a
   /// credential request. This matches the Firebase documentation approach.
   String _generateNonce([int length = 32]) {
-    const charset = '0123456789ABCDEFGHIJKLMNOPQRSTUVXYZabcdefghijklmnopqrstuvwxyz-._';
+    const charset =
+        '0123456789ABCDEFGHIJKLMNOPQRSTUVXYZabcdefghijklmnopqrstuvwxyz-._';
     final random = Random.secure();
-    return List.generate(length, (_) => charset[random.nextInt(charset.length)]).join();
+    return List.generate(
+      length,
+      (_) => charset[random.nextInt(charset.length)],
+    ).join();
   }
 
   /// Returns the sha256 hash of [input] in hex notation.
@@ -2239,8 +2462,6 @@ class _AuthScreenState extends State<AuthScreen> {
     final digest = sha256.convert(bytes);
     return digest.toString();
   }
-
-
 
   Future<void> signIn() async {
     setState(() {
@@ -2253,12 +2474,17 @@ class _AuthScreenState extends State<AuthScreen> {
     final password = passwordController.text;
 
     // Check rate limit
-    final rateLimitResult = await _rateLimitingService.checkRateLimit('sign_in_attempt', identifier: email);
+    final rateLimitResult = await _rateLimitingService.checkRateLimit(
+      'sign_in_attempt',
+      identifier: email,
+    );
     if (!rateLimitResult.allowed) {
       if (mounted) {
         setState(() {
           isLoading = false;
-          message = rateLimitResult.message ?? 'Too many sign-in attempts. Please try again later.';
+          message =
+              rateLimitResult.message ??
+              'Too many sign-in attempts. Please try again later.';
         });
       }
       return;
@@ -2271,7 +2497,10 @@ class _AuthScreenState extends State<AuthScreen> {
           message = 'Please enter a valid email address';
         });
       }
-      ValidationUtils.showValidationError(context, 'Please enter a valid email address');
+      ValidationUtils.showValidationError(
+        context,
+        'Please enter a valid email address',
+      );
       return;
     }
 
@@ -2288,7 +2517,7 @@ class _AuthScreenState extends State<AuthScreen> {
 
     try {
       log.info('User attempting sign in', {'email': email});
-      
+
       // Check if this email was recently deleted (within 24 hours)
       final prefs = await SharedPreferences.getInstance();
       final deletedTimestamp = prefs.getString('deleted_account_$email');
@@ -2296,7 +2525,7 @@ class _AuthScreenState extends State<AuthScreen> {
         final deletedTime = int.tryParse(deletedTimestamp) ?? 0;
         final now = DateTime.now().millisecondsSinceEpoch;
         const twentyFourHours = 24 * 60 * 60 * 1000;
-        
+
         if (now - deletedTime < twentyFourHours) {
           // Account was recently deleted
           if (mounted) {
@@ -2309,15 +2538,20 @@ class _AuthScreenState extends State<AuthScreen> {
           await prefs.remove('deleted_account_$email');
         }
       }
-      
+
       log.info('Attempting Firebase sign-in', {'email': email});
-      
+
       // Check if this email exists with a different provider
-      final signInMethods = await FirebaseAuth.instance.fetchSignInMethodsForEmail(email);
+      final signInMethods = await FirebaseAuth.instance
+          .fetchSignInMethodsForEmail(email);
       if (signInMethods.isNotEmpty) {
-        final hasGoogleProvider = signInMethods.any((method) => method.contains('google'));
-        final hasEmailProvider = signInMethods.any((method) => method == 'password');
-        
+        final hasGoogleProvider = signInMethods.any(
+          (method) => method.contains('google'),
+        );
+        final hasEmailProvider = signInMethods.any(
+          (method) => method == 'password',
+        );
+
         if (hasGoogleProvider && !hasEmailProvider) {
           // User is trying to sign in with email but account was created with Google
           if (mounted) {
@@ -2327,17 +2561,20 @@ class _AuthScreenState extends State<AuthScreen> {
           return;
         }
       }
-      
+
       // Record sign-in attempt before trying
-      await _rateLimitingService.recordAttempt('sign_in_attempt', identifier: email);
-      
+      await _rateLimitingService.recordAttempt(
+        'sign_in_attempt',
+        identifier: email,
+      );
+
       await FirebaseAuth.instance.signInWithEmailAndPassword(
         email: email,
         password: password,
       );
-      
+
       log.info('Firebase sign-in successful', {'email': email});
-      
+
       // Record successful sign-in for security monitoring
       await _securityService.recordSecurityEvent(
         'sign_in_attempt',
@@ -2348,7 +2585,7 @@ class _AuthScreenState extends State<AuthScreen> {
       );
       // await analytics.logLogin(loginMethod: 'email');  // Removed due to Kotlin conflicts
       log.logUserAction('sign_in_successful', {'method': 'email'});
-      
+
       // Check if user profile exists, if not, create it
       final userService = UserService();
       final user = FirebaseAuth.instance.currentUser;
@@ -2358,16 +2595,21 @@ class _AuthScreenState extends State<AuthScreen> {
           // Force reload user to get latest verification status
           await user.reload();
           final currentUser = FirebaseAuth.instance.currentUser;
-          
+
           if (currentUser != null && !currentUser.emailVerified) {
             // Skip verification for review team accounts
-            final reviewAccounts = ['apple@applereview.com', 'google.develop@gmail.com'];
-            if (currentUser.email != null && reviewAccounts.contains(currentUser.email!.toLowerCase())) {
+            final reviewAccounts = [
+              'apple@applereview.com',
+              'google.develop@gmail.com',
+            ];
+            if (currentUser.email != null &&
+                reviewAccounts.contains(currentUser.email!.toLowerCase())) {
               // Skip email verification for review accounts
             } else {
               // Show email verification dialog
               final emailVerificationService = EmailVerificationService();
-              final verified = await emailVerificationService.showEmailVerificationDialog(context, currentUser);
+              final verified = await emailVerificationService
+                  .showEmailVerificationDialog(context, currentUser);
               if (!verified) {
                 // User closed verification dialog, sign them out
                 await FirebaseAuth.instance.signOut();
@@ -2377,25 +2619,38 @@ class _AuthScreenState extends State<AuthScreen> {
             }
           }
         }
-        
-        final doc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
+
+        final doc =
+            await FirebaseFirestore.instance
+                .collection('users')
+                .doc(user.uid)
+                .get();
         if (!doc.exists) {
           await userService.createInitialUserProfile(user.email ?? '', '');
         }
-                // Check for scheduled account deletion and offer reactivation
+        // Check for scheduled account deletion and offer reactivation
         final accountDeletionService = AccountDeletionService();
-        final isScheduledForDeletion = await accountDeletionService.checkAndOfferReactivation(context);
-        
+        final isScheduledForDeletion = await accountDeletionService
+            .checkAndOfferReactivation(context);
+
         if (!isScheduledForDeletion) {
           // Check if onboarding is complete (mimic Google sign-in logic)
           final data = doc.data() as Map<String, dynamic>?;
           final onboardingCompleted = hasCompletedOnboarding(data);
-          setState(() => message = AppLocalizations.of(context)!.signInSuccessful);
+          setState(
+            () => message = AppLocalizations.of(context)!.signInSuccessful,
+          );
           if (mounted) {
             if (!onboardingCompleted) {
-              Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => OnboardingFlowPage()));
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (_) => OnboardingFlowPage()),
+              );
             } else {
-              Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => MainNavScreen()));
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (_) => MainNavScreen()),
+              );
             }
           }
         } else {
@@ -2404,12 +2659,16 @@ class _AuthScreenState extends State<AuthScreen> {
         return;
       }
       if (mounted) {
-        setState(() => message = AppLocalizations.of(context)!.signInSuccessful);
+        setState(
+          () => message = AppLocalizations.of(context)!.signInSuccessful,
+        );
       }
     } catch (e) {
       log.error('Sign in failed', e);
-      log.error('Error details - Type: ${e.runtimeType}, Message: ${e.toString()}');
-      
+      log.error(
+        'Error details - Type: ${e.runtimeType}, Message: ${e.toString()}',
+      );
+
       // Record failed sign-in for security monitoring
       await _securityService.recordSecurityEvent(
         'sign_in_attempt',
@@ -2421,7 +2680,7 @@ class _AuthScreenState extends State<AuthScreen> {
           'error_message': e.toString(),
         },
       );
-      
+
       // Handle user-not-found specifically
       if (e is FirebaseAuthException && e.code == 'user-not-found') {
         if (mounted) {
@@ -2430,7 +2689,7 @@ class _AuthScreenState extends State<AuthScreen> {
         _showAccountNotFoundDialog();
         return;
       }
-      
+
       final errorMessage = errorHandler.handleAuthError(e);
       if (mounted) {
         setState(() => message = errorMessage);
@@ -2455,12 +2714,17 @@ class _AuthScreenState extends State<AuthScreen> {
     final name = nameController.text.trim();
 
     // Check rate limit
-    final rateLimitResult = await _rateLimitingService.checkRateLimit('sign_up_attempt', identifier: email);
+    final rateLimitResult = await _rateLimitingService.checkRateLimit(
+      'sign_up_attempt',
+      identifier: email,
+    );
     if (!rateLimitResult.allowed) {
       if (mounted) {
         setState(() {
           isLoading = false;
-          message = rateLimitResult.message ?? 'Too many sign-up attempts. Please try again later.';
+          message =
+              rateLimitResult.message ??
+              'Too many sign-up attempts. Please try again later.';
         });
       }
       return;
@@ -2473,7 +2737,10 @@ class _AuthScreenState extends State<AuthScreen> {
           message = 'Please enter a valid email address';
         });
       }
-      ValidationUtils.showValidationError(context, 'Please enter a valid email address');
+      ValidationUtils.showValidationError(
+        context,
+        'Please enter a valid email address',
+      );
       return;
     }
 
@@ -2503,7 +2770,7 @@ class _AuthScreenState extends State<AuthScreen> {
 
     try {
       log.info('User attempting sign up', {'email': email, 'name': name});
-      
+
       // Check if this email was recently deleted (within 24 hours)
       final prefs = await SharedPreferences.getInstance();
       final deletedTimestamp = prefs.getString('deleted_account_$email');
@@ -2511,21 +2778,26 @@ class _AuthScreenState extends State<AuthScreen> {
         final deletedTime = int.tryParse(deletedTimestamp) ?? 0;
         final now = DateTime.now().millisecondsSinceEpoch;
         const twentyFourHours = 24 * 60 * 60 * 1000;
-        
+
         if (now - deletedTime < twentyFourHours) {
           // Account was recently deleted, allow creating a new one
           await prefs.remove('deleted_account_$email');
           // Continue with sign-up process
         }
       }
-      
+
       // Check if account already exists with different provider
-      final signInMethods = await FirebaseAuth.instance.fetchSignInMethodsForEmail(email);
+      final signInMethods = await FirebaseAuth.instance
+          .fetchSignInMethodsForEmail(email);
       if (signInMethods.isNotEmpty) {
         // Account already exists - check if it's with a different provider
-        final hasGoogleProvider = signInMethods.any((method) => method.contains('google'));
-        final hasEmailProvider = signInMethods.any((method) => method == 'password');
-        
+        final hasGoogleProvider = signInMethods.any(
+          (method) => method.contains('google'),
+        );
+        final hasEmailProvider = signInMethods.any(
+          (method) => method == 'password',
+        );
+
         if (hasGoogleProvider) {
           // User is trying to sign up with email but already has Google account
           if (mounted) {
@@ -2537,21 +2809,27 @@ class _AuthScreenState extends State<AuthScreen> {
           // Account already exists with email/password - check if it's verified
           try {
             // Try to sign in to check verification status
-            final userCredential = await FirebaseAuth.instance.signInWithEmailAndPassword(
-              email: email,
-              password: password,
-            );
-            
-            if (userCredential.user != null && !userCredential.user!.emailVerified) {
+            final userCredential = await FirebaseAuth.instance
+                .signInWithEmailAndPassword(email: email, password: password);
+
+            if (userCredential.user != null &&
+                !userCredential.user!.emailVerified) {
               // Skip verification for review team accounts
-              final reviewAccounts = ['apple@applereview.com', 'google.develop@gmail.com'];
-              if (userCredential.user!.email != null && reviewAccounts.contains(userCredential.user!.email!.toLowerCase())) {
+              final reviewAccounts = [
+                'apple@applereview.com',
+                'google.develop@gmail.com',
+              ];
+              if (userCredential.user!.email != null &&
+                  reviewAccounts.contains(
+                    userCredential.user!.email!.toLowerCase(),
+                  )) {
                 // Skip email verification for review accounts - continue with sign in
               } else {
                 // Account exists but is not verified - show verification dialog
                 await FirebaseAuth.instance.signOut(); // Sign out first
                 final emailVerificationService = EmailVerificationService();
-                final verified = await emailVerificationService.showEmailVerificationDialog(context, userCredential.user!);
+                final verified = await emailVerificationService
+                    .showEmailVerificationDialog(context, userCredential.user!);
                 if (!verified) {
                   // User closed verification dialog
                   if (mounted) {
@@ -2562,18 +2840,25 @@ class _AuthScreenState extends State<AuthScreen> {
               }
               // If verified, proceed with onboarding
               if (mounted) {
-                setState(() => message = AppLocalizations.of(context)!.emailVerifiedWelcome);
-                Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => OnboardingFlowPage()));
+                setState(
+                  () =>
+                      message =
+                          AppLocalizations.of(context)!.emailVerifiedWelcome,
+                );
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (_) => OnboardingFlowPage()),
+                );
               }
               return;
             } else {
               // Account exists and is verified - show regular account exists dialog
               await FirebaseAuth.instance.signOut(); // Sign out
-          if (mounted) {
-            setState(() => isLoading = false);
-          }
-          _showAccountExistsDialog();
-          return;
+              if (mounted) {
+                setState(() => isLoading = false);
+              }
+              _showAccountExistsDialog();
+              return;
             }
           } catch (e) {
             // If sign-in fails, it means the password is wrong, so show account exists dialog
@@ -2585,32 +2870,40 @@ class _AuthScreenState extends State<AuthScreen> {
           }
         }
       }
-      
+
       // Record sign-up attempt before trying
-      await _rateLimitingService.recordAttempt('sign_up_attempt', identifier: email);
-      
+      await _rateLimitingService.recordAttempt(
+        'sign_up_attempt',
+        identifier: email,
+      );
+
       await FirebaseAuth.instance.createUserWithEmailAndPassword(
         email: email,
         password: password,
       );
-      
+
       // await analytics.logSignUp(signUpMethod: 'email');  // Removed due to Kotlin conflicts
       log.logUserAction('sign_up_successful', {'method': 'email'});
-      
+
       // Create a full user profile
       final userService = UserService();
       await userService.createInitialUserProfile(email, name);
-      
+
       // Require email verification for new email accounts
       final user = FirebaseAuth.instance.currentUser;
       if (user != null) {
         // Skip verification for review team accounts
-        final reviewAccounts = ['apple@applereview.com', 'google.develop@gmail.com'];
-        if (user.email != null && reviewAccounts.contains(user.email!.toLowerCase())) {
+        final reviewAccounts = [
+          'apple@applereview.com',
+          'google.develop@gmail.com',
+        ];
+        if (user.email != null &&
+            reviewAccounts.contains(user.email!.toLowerCase())) {
           // Skip email verification for review accounts
         } else {
           final emailVerificationService = EmailVerificationService();
-          final verified = await emailVerificationService.showEmailVerificationDialog(context, user);
+          final verified = await emailVerificationService
+              .showEmailVerificationDialog(context, user);
           if (!verified) {
             // User closed verification dialog, sign them out
             await FirebaseAuth.instance.signOut();
@@ -2618,10 +2911,15 @@ class _AuthScreenState extends State<AuthScreen> {
             return;
           }
         }
-        
+
         if (mounted) {
-          setState(() => message = AppLocalizations.of(context)!.signUpSuccessful);
-        Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => OnboardingFlowPage()));
+          setState(
+            () => message = AppLocalizations.of(context)!.signUpSuccessful,
+          );
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (_) => OnboardingFlowPage()),
+          );
         }
       }
     } catch (e) {
@@ -2637,20 +2935,28 @@ class _AuthScreenState extends State<AuthScreen> {
       }
     }
   }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Theme(
       data: ThemeData.light().copyWith(
         primaryColor: kPrimaryGreen,
-        colorScheme: ThemeData.light().colorScheme.copyWith(primary: kPrimaryGreen),
+        colorScheme: ThemeData.light().colorScheme.copyWith(
+          primary: kPrimaryGreen,
+        ),
         elevatedButtonTheme: ElevatedButtonThemeData(
           style: ElevatedButton.styleFrom(
             backgroundColor: kPrimaryGreen,
             foregroundColor: Colors.white,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
             padding: const EdgeInsets.symmetric(vertical: 16),
-            textStyle: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            textStyle: const TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
           ),
         ),
         checkboxTheme: CheckboxThemeData(
@@ -2661,15 +2967,17 @@ class _AuthScreenState extends State<AuthScreen> {
         backgroundColor: const Color(0xFFF8F9FA),
         body: Center(
           child: SingleChildScrollView(
-            padding: EdgeInsets.all(MediaQuery.of(context).size.width > 600 ? 24.0 : 16.0),
+            padding: EdgeInsets.all(
+              MediaQuery.of(context).size.width > 600 ? 24.0 : 16.0,
+            ),
             child: Container(
-              width: MediaQuery.of(context).size.width > 600 ? 400 : double.infinity,
-              constraints: BoxConstraints(
-                maxWidth: 400,
-                minWidth: 280,
-              ),
+              width:
+                  MediaQuery.of(context).size.width > 600
+                      ? 400
+                      : double.infinity,
+              constraints: BoxConstraints(maxWidth: 400, minWidth: 280),
               padding: EdgeInsets.symmetric(
-                vertical: MediaQuery.of(context).size.height > 700 ? 36 : 24, 
+                vertical: MediaQuery.of(context).size.height > 700 ? 36 : 24,
                 horizontal: MediaQuery.of(context).size.width > 400 ? 28 : 20,
               ),
               decoration: BoxDecoration(
@@ -2686,13 +2994,11 @@ class _AuthScreenState extends State<AuthScreen> {
               ),
               child: AnimatedSwitcher(
                 duration: const Duration(milliseconds: 300),
-                transitionBuilder: (child, animation) => FadeTransition(
-                  opacity: animation,
-                  child: ScaleTransition(
-                    scale: animation,
-                    child: child,
-                  ),
-                ),
+                transitionBuilder:
+                    (child, animation) => FadeTransition(
+                      opacity: animation,
+                      child: ScaleTransition(scale: animation, child: child),
+                    ),
                 child: Column(
                   key: ValueKey(showSignUp),
                   mainAxisSize: MainAxisSize.min,
@@ -2704,12 +3010,22 @@ class _AuthScreenState extends State<AuthScreen> {
                         shape: BoxShape.circle,
                       ),
                       padding: const EdgeInsets.all(16),
-                      child: Image.asset('assets/logo.png', height: 56, width: 56, fit: BoxFit.contain),
+                      child: Image.asset(
+                        'assets/logo.png',
+                        height: 56,
+                        width: 56,
+                        fit: BoxFit.contain,
+                      ),
                     ),
                     const SizedBox(height: 24),
                     Text(
-                      showSignUp ? AppLocalizations.of(context)!.createAccount : AppLocalizations.of(context)!.signIn,
-                      style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
+                      showSignUp
+                          ? AppLocalizations.of(context)!.createAccount
+                          : AppLocalizations.of(context)!.signIn,
+                      style: const TextStyle(
+                        fontSize: 28,
+                        fontWeight: FontWeight.bold,
+                      ),
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: 8),
@@ -2729,26 +3045,39 @@ class _AuthScreenState extends State<AuthScreen> {
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(AppLocalizations.of(context)!.fullName, style: TextStyle(fontWeight: FontWeight.w500)),
+                          Text(
+                            AppLocalizations.of(context)!.fullName,
+                            style: TextStyle(fontWeight: FontWeight.w500),
+                          ),
                           const SizedBox(height: 8),
                           TextField(
                             controller: nameController,
                             decoration: InputDecoration(
                               hintText: AppLocalizations.of(context)!.johnDoe,
-                              prefixIcon: Icon(Icons.person, color: Colors.grey[400]),
+                              prefixIcon: Icon(
+                                Icons.person,
+                                color: Colors.grey[400],
+                              ),
                               filled: true,
                               fillColor: Colors.white,
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(12),
-                                borderSide: BorderSide(color: Colors.grey[300]!),
+                                borderSide: BorderSide(
+                                  color: Colors.grey[300]!,
+                                ),
                               ),
                               enabledBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(12),
-                                borderSide: BorderSide(color: Colors.grey[300]!),
+                                borderSide: BorderSide(
+                                  color: Colors.grey[300]!,
+                                ),
                               ),
                               focusedBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(12),
-                                borderSide: BorderSide(color: kPrimaryGreen, width: 2),
+                                borderSide: BorderSide(
+                                  color: kPrimaryGreen,
+                                  width: 2,
+                                ),
                               ),
                             ),
                           ),
@@ -2757,14 +3086,21 @@ class _AuthScreenState extends State<AuthScreen> {
                       ),
                     Align(
                       alignment: Alignment.centerLeft,
-                      child: Text(AppLocalizations.of(context)!.email, style: TextStyle(fontWeight: FontWeight.w500)),
+                      child: Text(
+                        AppLocalizations.of(context)!.email,
+                        style: TextStyle(fontWeight: FontWeight.w500),
+                      ),
                     ),
                     const SizedBox(height: 8),
                     TextField(
                       controller: emailController,
                       decoration: InputDecoration(
-                        hintText: AppLocalizations.of(context)!.yourEmailExample,
-                        prefixIcon: Icon(Icons.email_outlined, color: Colors.grey[400]),
+                        hintText:
+                            AppLocalizations.of(context)!.yourEmailExample,
+                        prefixIcon: Icon(
+                          Icons.email_outlined,
+                          color: Colors.grey[400],
+                        ),
                         filled: true,
                         fillColor: Colors.white,
                         border: OutlineInputBorder(
@@ -2777,7 +3113,10 @@ class _AuthScreenState extends State<AuthScreen> {
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide(color: kPrimaryGreen, width: 2),
+                          borderSide: BorderSide(
+                            color: kPrimaryGreen,
+                            width: 2,
+                          ),
                         ),
                       ),
                       keyboardType: TextInputType.emailAddress,
@@ -2785,17 +3124,26 @@ class _AuthScreenState extends State<AuthScreen> {
                     const SizedBox(height: 18),
                     Align(
                       alignment: Alignment.centerLeft,
-                      child: Text(AppLocalizations.of(context)!.password, style: TextStyle(fontWeight: FontWeight.w500)),
+                      child: Text(
+                        AppLocalizations.of(context)!.password,
+                        style: TextStyle(fontWeight: FontWeight.w500),
+                      ),
                     ),
                     const SizedBox(height: 8),
                     TextField(
                       controller: passwordController,
                       decoration: InputDecoration(
-                        hintText: AppLocalizations.of(context)!.enterYourPassword,
-                        prefixIcon: Icon(Icons.vpn_key_outlined, color: Colors.grey[400]),
+                        hintText:
+                            AppLocalizations.of(context)!.enterYourPassword,
+                        prefixIcon: Icon(
+                          Icons.vpn_key_outlined,
+                          color: Colors.grey[400],
+                        ),
                         suffixIcon: IconButton(
                           icon: Icon(
-                            _isPasswordVisible ? Icons.visibility : Icons.visibility_off,
+                            _isPasswordVisible
+                                ? Icons.visibility
+                                : Icons.visibility_off,
                             color: Colors.grey[400],
                           ),
                           onPressed: () {
@@ -2816,7 +3164,10 @@ class _AuthScreenState extends State<AuthScreen> {
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide(color: kPrimaryGreen, width: 2),
+                          borderSide: BorderSide(
+                            color: kPrimaryGreen,
+                            width: 2,
+                          ),
                         ),
                       ),
                       obscureText: !_isPasswordVisible,
@@ -2855,11 +3206,17 @@ class _AuthScreenState extends State<AuthScreen> {
                         decoration: BoxDecoration(
                           color: Colors.orange.withOpacity(0.1),
                           borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: Colors.orange.withOpacity(0.3)),
+                          border: Border.all(
+                            color: Colors.orange.withOpacity(0.3),
+                          ),
                         ),
                         child: Row(
                           children: [
-                            Icon(Icons.info_outline, color: Colors.orange, size: 20),
+                            Icon(
+                              Icons.info_outline,
+                              color: Colors.orange,
+                              size: 20,
+                            ),
                             SizedBox(width: 12),
                             Expanded(
                               child: Text(
@@ -2877,7 +3234,7 @@ class _AuthScreenState extends State<AuthScreen> {
                     ],
                     if (isIOS) ...[
                       _GoogleSignInButton(
-                        onTap: _handleGoogleSignIn, 
+                        onTap: _handleGoogleSignIn,
                         isSignUp: showSignUp,
                         isDisabled: showSignUp && !acceptTerms,
                       ),
@@ -2896,7 +3253,7 @@ class _AuthScreenState extends State<AuthScreen> {
                       ),
                     ] else if (isAndroid) ...[
                       _GoogleSignInButton(
-                        onTap: _handleGoogleSignIn, 
+                        onTap: _handleGoogleSignIn,
                         isSignUp: showSignUp,
                         isDisabled: showSignUp && !acceptTerms,
                       ),
@@ -2906,10 +3263,16 @@ class _AuthScreenState extends State<AuthScreen> {
                       Container(
                         padding: EdgeInsets.all(16),
                         decoration: BoxDecoration(
-                          color: acceptTerms ? Colors.green.withOpacity(0.05) : Colors.orange.withOpacity(0.05),
+                          color:
+                              acceptTerms
+                                  ? Colors.green.withOpacity(0.05)
+                                  : Colors.orange.withOpacity(0.05),
                           borderRadius: BorderRadius.circular(12),
                           border: Border.all(
-                            color: acceptTerms ? Colors.green.withOpacity(0.3) : Colors.orange.withOpacity(0.3),
+                            color:
+                                acceptTerms
+                                    ? Colors.green.withOpacity(0.3)
+                                    : Colors.orange.withOpacity(0.3),
                             width: 2,
                           ),
                         ),
@@ -2917,16 +3280,21 @@ class _AuthScreenState extends State<AuthScreen> {
                           children: [
                             Checkbox(
                               value: acceptTerms,
-                              onChanged: (v) => setState(() => acceptTerms = v ?? false),
+                              onChanged:
+                                  (v) =>
+                                      setState(() => acceptTerms = v ?? false),
                               activeColor: kPrimaryGreen,
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(4),
+                              ),
                             ),
                             Expanded(
                               child: Wrap(
                                 crossAxisAlignment: WrapCrossAlignment.center,
                                 children: [
                                   Text(
-                                    AppLocalizations.of(context)!.iAcceptThe + ' ',
+                                    AppLocalizations.of(context)!.iAcceptThe +
+                                        ' ',
                                     style: TextStyle(
                                       color: Colors.grey[700],
                                       fontSize: 14,
@@ -2935,13 +3303,27 @@ class _AuthScreenState extends State<AuthScreen> {
                                   GestureDetector(
                                     onTap: () async {
                                       try {
-                                        final uri = Uri.parse('https://yumie.me/terms');
+                                        final uri = Uri.parse(
+                                          'https://yumie.me/terms',
+                                        );
                                         if (await canLaunchUrl(uri)) {
-                                          await launchUrl(uri, mode: LaunchMode.externalApplication);
+                                          await launchUrl(
+                                            uri,
+                                            mode:
+                                                LaunchMode.externalApplication,
+                                          );
                                         }
                                       } catch (e) {
-                                        ScaffoldMessenger.of(context).showSnackBar(
-                                          SnackBar(content: Text(AppLocalizations.of(context)!.couldNotOpenTermsOfService)),
+                                        ScaffoldMessenger.of(
+                                          context,
+                                        ).showSnackBar(
+                                          SnackBar(
+                                            content: Text(
+                                              AppLocalizations.of(
+                                                context,
+                                              )!.couldNotOpenTermsOfService,
+                                            ),
+                                          ),
                                         );
                                       }
                                     },
@@ -2956,7 +3338,9 @@ class _AuthScreenState extends State<AuthScreen> {
                                     ),
                                   ),
                                   Text(
-                                    ' ' + AppLocalizations.of(context)!.and + ' ',
+                                    ' ' +
+                                        AppLocalizations.of(context)!.and +
+                                        ' ',
                                     style: TextStyle(
                                       color: Colors.grey[700],
                                       fontSize: 14,
@@ -2965,13 +3349,27 @@ class _AuthScreenState extends State<AuthScreen> {
                                   GestureDetector(
                                     onTap: () async {
                                       try {
-                                        final uri = Uri.parse('https://yumie.me/privacy');
+                                        final uri = Uri.parse(
+                                          'https://yumie.me/privacy',
+                                        );
                                         if (await canLaunchUrl(uri)) {
-                                          await launchUrl(uri, mode: LaunchMode.externalApplication);
+                                          await launchUrl(
+                                            uri,
+                                            mode:
+                                                LaunchMode.externalApplication,
+                                          );
                                         }
                                       } catch (e) {
-                                        ScaffoldMessenger.of(context).showSnackBar(
-                                          SnackBar(content: Text(AppLocalizations.of(context)!.couldNotOpenPrivacyPolicy)),
+                                        ScaffoldMessenger.of(
+                                          context,
+                                        ).showSnackBar(
+                                          SnackBar(
+                                            content: Text(
+                                              AppLocalizations.of(
+                                                context,
+                                              )!.couldNotOpenPrivacyPolicy,
+                                            ),
+                                          ),
                                         );
                                       }
                                     },
@@ -2995,18 +3393,29 @@ class _AuthScreenState extends State<AuthScreen> {
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton(
-                        onPressed: isLoading
-                            ? null
-                            : showSignUp
+                        onPressed:
+                            isLoading
+                                ? null
+                                : showSignUp
                                 ? (acceptTerms ? signUp : null)
                                 : signIn,
-                        child: isLoading
-                            ? const SizedBox(
-                                width: 24,
-                                height: 24,
-                                child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-                              )
-                            : Text(showSignUp ? AppLocalizations.of(context)!.createAccount : AppLocalizations.of(context)!.signIn),
+                        child:
+                            isLoading
+                                ? const SizedBox(
+                                  width: 24,
+                                  height: 24,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: Colors.white,
+                                  ),
+                                )
+                                : Text(
+                                  showSignUp
+                                      ? AppLocalizations.of(
+                                        context,
+                                      )!.createAccount
+                                      : AppLocalizations.of(context)!.signIn,
+                                ),
                       ),
                     ),
                     const SizedBox(height: 18),
@@ -3014,10 +3423,19 @@ class _AuthScreenState extends State<AuthScreen> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Text(AppLocalizations.of(context)!.dontHaveAccount + " ", style: TextStyle(color: Colors.black54)),
+                          Text(
+                            AppLocalizations.of(context)!.dontHaveAccount + " ",
+                            style: TextStyle(color: Colors.black54),
+                          ),
                           GestureDetector(
                             onTap: () => setState(() => showSignUp = true),
-                            child: Text(AppLocalizations.of(context)!.signUp, style: TextStyle(color: kPrimaryGreen, fontWeight: FontWeight.w500)),
+                            child: Text(
+                              AppLocalizations.of(context)!.signUp,
+                              style: TextStyle(
+                                color: kPrimaryGreen,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
                           ),
                         ],
                       ),
@@ -3025,10 +3443,20 @@ class _AuthScreenState extends State<AuthScreen> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Text(AppLocalizations.of(context)!.alreadyHaveAccount + " ", style: TextStyle(color: Colors.black54)),
+                          Text(
+                            AppLocalizations.of(context)!.alreadyHaveAccount +
+                                " ",
+                            style: TextStyle(color: Colors.black54),
+                          ),
                           GestureDetector(
                             onTap: () => setState(() => showSignUp = false),
-                            child: Text(AppLocalizations.of(context)!.signIn, style: TextStyle(color: kPrimaryGreen, fontWeight: FontWeight.w500)),
+                            child: Text(
+                              AppLocalizations.of(context)!.signIn,
+                              style: TextStyle(
+                                color: kPrimaryGreen,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
                           ),
                         ],
                       ),
@@ -3037,7 +3465,10 @@ class _AuthScreenState extends State<AuthScreen> {
                       Text(
                         message,
                         style: TextStyle(
-                          color: message.startsWith('Error') ? kWarningRed : kPrimaryGreen,
+                          color:
+                              message.startsWith('Error')
+                                  ? kWarningRed
+                                  : kPrimaryGreen,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
@@ -3052,7 +3483,10 @@ class _AuthScreenState extends State<AuthScreen> {
                           crossAxisAlignment: WrapCrossAlignment.center,
                           children: [
                             Text(
-                              AppLocalizations.of(context)!.byContinuingYouAgreeToOur + ' ',
+                              AppLocalizations.of(
+                                    context,
+                                  )!.byContinuingYouAgreeToOur +
+                                  ' ',
                               style: TextStyle(
                                 color: Colors.grey[600],
                                 fontSize: 12,
@@ -3061,13 +3495,24 @@ class _AuthScreenState extends State<AuthScreen> {
                             GestureDetector(
                               onTap: () async {
                                 try {
-                                  final uri = Uri.parse('https://yumie.me/terms');
+                                  final uri = Uri.parse(
+                                    'https://yumie.me/terms',
+                                  );
                                   if (await canLaunchUrl(uri)) {
-                                    await launchUrl(uri, mode: LaunchMode.externalApplication);
+                                    await launchUrl(
+                                      uri,
+                                      mode: LaunchMode.externalApplication,
+                                    );
                                   }
                                 } catch (e) {
                                   ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(content: Text(AppLocalizations.of(context)!.couldNotOpenTermsOfService)),
+                                    SnackBar(
+                                      content: Text(
+                                        AppLocalizations.of(
+                                          context,
+                                        )!.couldNotOpenTermsOfService,
+                                      ),
+                                    ),
                                   );
                                 }
                               },
@@ -3091,13 +3536,24 @@ class _AuthScreenState extends State<AuthScreen> {
                             GestureDetector(
                               onTap: () async {
                                 try {
-                                  final uri = Uri.parse('https://yumie.me/privacy');
+                                  final uri = Uri.parse(
+                                    'https://yumie.me/privacy',
+                                  );
                                   if (await canLaunchUrl(uri)) {
-                                    await launchUrl(uri, mode: LaunchMode.externalApplication);
+                                    await launchUrl(
+                                      uri,
+                                      mode: LaunchMode.externalApplication,
+                                    );
                                   }
                                 } catch (e) {
                                   ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(content: Text(AppLocalizations.of(context)!.couldNotOpenPrivacyPolicy)),
+                                    SnackBar(
+                                      content: Text(
+                                        AppLocalizations.of(
+                                          context,
+                                        )!.couldNotOpenPrivacyPolicy,
+                                      ),
+                                    ),
                                   );
                                 }
                               },
@@ -3131,7 +3587,11 @@ class _GoogleSignInButton extends StatelessWidget {
   final VoidCallback onTap;
   final bool isSignUp;
   final bool isDisabled;
-  const _GoogleSignInButton({required this.onTap, this.isSignUp = false, this.isDisabled = false});
+  const _GoogleSignInButton({
+    required this.onTap,
+    this.isSignUp = false,
+    this.isDisabled = false,
+  });
   @override
   Widget build(BuildContext context) {
     return ElevatedButton.icon(
@@ -3139,26 +3599,39 @@ class _GoogleSignInButton extends StatelessWidget {
         backgroundColor: isDisabled ? Colors.grey[300] : Colors.white,
         foregroundColor: isDisabled ? Colors.grey[600] : Colors.black,
         minimumSize: Size(double.infinity, 48),
-        side: BorderSide(color: isDisabled ? Colors.grey[400]! : Colors.grey[300]!),
+        side: BorderSide(
+          color: isDisabled ? Colors.grey[400]! : Colors.grey[300]!,
+        ),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
-      icon: Image.asset('assets/google_logo.png', height: 24, color: isDisabled ? Colors.grey[600] : null),
+      icon: Image.asset(
+        'assets/google_logo.png',
+        height: 24,
+        color: isDisabled ? Colors.grey[600] : null,
+      ),
       label: Text(
-        isSignUp ? AppLocalizations.of(context)!.signUpWithGoogle : AppLocalizations.of(context)!.signInWithGoogle, 
+        isSignUp
+            ? AppLocalizations.of(context)!.signUpWithGoogle
+            : AppLocalizations.of(context)!.signInWithGoogle,
         style: TextStyle(
           fontWeight: FontWeight.w600,
           color: isDisabled ? Colors.grey[600] : Colors.black,
-        )
+        ),
       ),
       onPressed: isDisabled ? null : onTap,
     );
   }
 }
+
 class _AppleSignInButton extends StatelessWidget {
   final VoidCallback onTap;
   final bool isSignUp;
   final bool isDisabled;
-  const _AppleSignInButton({required this.onTap, this.isSignUp = false, this.isDisabled = false});
+  const _AppleSignInButton({
+    required this.onTap,
+    this.isSignUp = false,
+    this.isDisabled = false,
+  });
   @override
   Widget build(BuildContext context) {
     return ElevatedButton.icon(
@@ -3168,19 +3641,24 @@ class _AppleSignInButton extends StatelessWidget {
         minimumSize: Size(double.infinity, 48),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
-      icon: Icon(Icons.apple, size: 26, color: isDisabled ? Colors.grey[600] : Colors.white),
+      icon: Icon(
+        Icons.apple,
+        size: 26,
+        color: isDisabled ? Colors.grey[600] : Colors.white,
+      ),
       label: Text(
-        isSignUp ? AppLocalizations.of(context)!.signUpWithApple : AppLocalizations.of(context)!.signInWithApple, 
+        isSignUp
+            ? AppLocalizations.of(context)!.signUpWithApple
+            : AppLocalizations.of(context)!.signInWithApple,
         style: TextStyle(
           fontWeight: FontWeight.w600,
           color: isDisabled ? Colors.grey[600] : Colors.white,
-        )
+        ),
       ),
       onPressed: isDisabled ? null : onTap,
     );
   }
 }
-
 
 class StartupProfileScreen extends StatefulWidget {
   final User user;
@@ -3219,18 +3697,30 @@ class _StartupProfileScreenState extends State<StartupProfileScreen> {
         carbsGoal: int.parse(carbsController.text),
         fatGoal: int.parse(fatController.text),
         targetWeight: double.parse(weightController.text),
-        startingWeight: double.parse(weightController.text), // Set starting weight to initial weight
+        startingWeight: double.parse(
+          weightController.text,
+        ), // Set starting weight to initial weight
         createdAt: now,
         lastUpdated: now,
       );
-      await FirebaseFirestore.instance.collection('users').doc(widget.user.uid).set(profile.toMap());
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(widget.user.uid)
+          .set(profile.toMap());
       if (mounted) {
-        Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => MainNavScreen()));
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => MainNavScreen()),
+        );
       }
     } catch (e) {
       setState(() => isLoading = false);
       ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(content: Text('${AppLocalizations.of(context)!.errorSavingProfile}: $e')),
+        SnackBar(
+          content: Text(
+            '${AppLocalizations.of(context)!.errorSavingProfile}: $e',
+          ),
+        ),
       );
     }
   }
@@ -3238,78 +3728,100 @@ class _StartupProfileScreenState extends State<StartupProfileScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text(AppLocalizations.of(context)!.completeYourProfile)),
+      appBar: AppBar(
+        title: Text(AppLocalizations.of(context)!.completeYourProfile),
+      ),
       body: Padding(
         padding: const EdgeInsets.all(24.0),
         child: Form(
           key: _formKey,
           child: ListView(
             children: [
-              Text("Let's get to know you!", style: Theme.of(context).textTheme.headlineSmall),
+              Text(
+                "Let's get to know you!",
+                style: Theme.of(context).textTheme.headlineSmall,
+              ),
               const SizedBox(height: 24),
               TextFormField(
                 controller: nameController,
-                decoration: InputDecoration(labelText: AppLocalizations.of(context)!.name),
-                validator: (v) => v == null || v.isEmpty ? 'Enter your name' : null,
+                decoration: InputDecoration(
+                  labelText: AppLocalizations.of(context)!.name,
+                ),
+                validator:
+                    (v) => v == null || v.isEmpty ? 'Enter your name' : null,
               ),
               const SizedBox(height: 12),
               TextFormField(
                 controller: ageController,
                 decoration: const InputDecoration(labelText: 'Age'),
                 keyboardType: TextInputType.number,
-                validator: (v) => v == null || v.isEmpty ? 'Enter your age' : null,
+                validator:
+                    (v) => v == null || v.isEmpty ? 'Enter your age' : null,
               ),
               const SizedBox(height: 12),
               TextFormField(
                 controller: heightController,
                 decoration: const InputDecoration(labelText: 'Height (cm)'),
                 keyboardType: TextInputType.number,
-                validator: (v) => v == null || v.isEmpty ? 'Enter your height' : null,
+                validator:
+                    (v) => v == null || v.isEmpty ? 'Enter your height' : null,
               ),
               const SizedBox(height: 12),
               TextFormField(
                 controller: weightController,
                 decoration: const InputDecoration(labelText: 'Weight (kg)'),
                 keyboardType: TextInputType.number,
-                validator: (v) => v == null || v.isEmpty ? 'Enter your weight' : null,
+                validator:
+                    (v) => v == null || v.isEmpty ? 'Enter your weight' : null,
               ),
               const SizedBox(height: 24),
-              Text('Nutrition Goals', style: Theme.of(context).textTheme.titleMedium),
+              Text(
+                'Nutrition Goals',
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
               const SizedBox(height: 12),
               TextFormField(
                 controller: calorieController,
-                decoration: InputDecoration(labelText: AppLocalizations.of(context)!.dailyCalorieGoal),
+                decoration: InputDecoration(
+                  labelText: AppLocalizations.of(context)!.dailyCalorieGoal,
+                ),
                 keyboardType: TextInputType.number,
-                validator: (v) => v == null || v.isEmpty ? 'Enter calorie goal' : null,
+                validator:
+                    (v) => v == null || v.isEmpty ? 'Enter calorie goal' : null,
               ),
               const SizedBox(height: 12),
               TextFormField(
                 controller: proteinController,
-                decoration: const InputDecoration(labelText: 'Protein Goal (g)'),
+                decoration: const InputDecoration(
+                  labelText: 'Protein Goal (g)',
+                ),
                 keyboardType: TextInputType.number,
-                validator: (v) => v == null || v.isEmpty ? 'Enter protein goal' : null,
+                validator:
+                    (v) => v == null || v.isEmpty ? 'Enter protein goal' : null,
               ),
               const SizedBox(height: 12),
               TextFormField(
                 controller: carbsController,
                 decoration: const InputDecoration(labelText: 'Carbs Goal (g)'),
                 keyboardType: TextInputType.number,
-                validator: (v) => v == null || v.isEmpty ? 'Enter carbs goal' : null,
+                validator:
+                    (v) => v == null || v.isEmpty ? 'Enter carbs goal' : null,
               ),
               const SizedBox(height: 12),
               TextFormField(
                 controller: fatController,
                 decoration: const InputDecoration(labelText: 'Fat Goal (g)'),
                 keyboardType: TextInputType.number,
-                validator: (v) => v == null || v.isEmpty ? 'Enter fat goal' : null,
+                validator:
+                    (v) => v == null || v.isEmpty ? 'Enter fat goal' : null,
               ),
               const SizedBox(height: 24),
               isLoading
                   ? const Center(child: CircularProgressIndicator())
                   : ElevatedButton(
-                      onPressed: _saveProfile,
-                      child: const Text('Save & Continue'),
-                    ),
+                    onPressed: _saveProfile,
+                    child: const Text('Save & Continue'),
+                  ),
             ],
           ),
         ),
@@ -3410,6 +3922,7 @@ class FoodLogForm extends StatefulWidget {
   @override
   _FoodLogFormState createState() => _FoodLogFormState();
 }
+
 class _FoodLogFormState extends State<FoodLogForm> {
   final TextEditingController foodController = TextEditingController();
   final TextEditingController caloriesController = TextEditingController();
@@ -3427,10 +3940,10 @@ class _FoodLogFormState extends State<FoodLogForm> {
           .doc(user.uid)
           .collection('food_logs')
           .add({
-        'food': foodController.text.trim(),
-        'calories': int.tryParse(caloriesController.text) ?? 0,
-        'timestamp': FieldValue.serverTimestamp(),
-      });
+            'food': foodController.text.trim(),
+            'calories': int.tryParse(caloriesController.text) ?? 0,
+            'timestamp': FieldValue.serverTimestamp(),
+          });
       setState(() {
         message = 'Food log added!';
         foodController.clear();
@@ -3446,16 +3959,23 @@ class _FoodLogFormState extends State<FoodLogForm> {
     return Column(
       children: [
         const SizedBox(height: 32),
-        Text('Add Food Log', style: TextStyle(fontWeight: FontWeight.bold, color: kPrimaryGreen)),
+        Text(
+          'Add Food Log',
+          style: TextStyle(fontWeight: FontWeight.bold, color: kPrimaryGreen),
+        ),
         const SizedBox(height: 8),
         TextField(
           controller: foodController,
-          decoration: InputDecoration(labelText: AppLocalizations.of(context)!.foodName),
+          decoration: InputDecoration(
+            labelText: AppLocalizations.of(context)!.foodName,
+          ),
         ),
         const SizedBox(height: 8),
         _NumericTextField(
           controller: caloriesController,
-          decoration: InputDecoration(labelText: AppLocalizations.of(context)!.calories),
+          decoration: InputDecoration(
+            labelText: AppLocalizations.of(context)!.calories,
+          ),
         ),
         const SizedBox(height: 8),
         ElevatedButton(
@@ -3474,6 +3994,7 @@ class _FoodLogFormState extends State<FoodLogForm> {
     );
   }
 }
+
 class FoodLogList extends StatelessWidget {
   const FoodLogList({super.key});
 
@@ -3483,12 +4004,13 @@ class FoodLogList extends StatelessWidget {
     if (user == null) return Text('Please sign in.');
 
     return StreamBuilder<QuerySnapshot>(
-      stream: FirebaseFirestore.instance
-          .collection('users')
-          .doc(user.uid)
-          .collection('food_logs')
-          .orderBy('timestamp', descending: true)
-          .snapshots(),
+      stream:
+          FirebaseFirestore.instance
+              .collection('users')
+              .doc(user.uid)
+              .collection('food_logs')
+              .orderBy('timestamp', descending: true)
+              .snapshots(),
       builder: (context, snapshot) {
         if (!snapshot.hasData) return CircularProgressIndicator();
         final docs = snapshot.data!.docs;
@@ -3503,7 +4025,11 @@ class FoodLogList extends StatelessWidget {
               subtitle: Text('Calories: ${data['calories'] ?? 0}'),
               trailing: Text(
                 data['timestamp'] != null
-                    ? (data['timestamp'] as Timestamp).toDate().toLocal().toString().split(' ')[0]
+                    ? (data['timestamp'] as Timestamp)
+                        .toDate()
+                        .toLocal()
+                        .toString()
+                        .split(' ')[0]
                     : '',
               ),
             );
@@ -3534,11 +4060,7 @@ class HomeScreen extends StatelessWidget {
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
-          children: [
-            FoodLogForm(),
-            const SizedBox(height: 16),
-            FoodLogList(),
-          ],
+          children: [FoodLogForm(), const SizedBox(height: 16), FoodLogList()],
         ),
       ),
     );
@@ -3552,7 +4074,8 @@ class MainNavScreen extends StatefulWidget {
   State<MainNavScreen> createState() => _MainNavScreenState();
 }
 
-class _MainNavScreenState extends State<MainNavScreen> with TickerProviderStateMixin {
+class _MainNavScreenState extends State<MainNavScreen>
+    with TickerProviderStateMixin {
   int _selectedIndex = 0;
   bool _fabExpanded = false;
   bool _showFabActions = false;
@@ -3560,7 +4083,6 @@ class _MainNavScreenState extends State<MainNavScreen> with TickerProviderStateM
   late AnimationController _footerController;
   bool _isOnline = true;
   StreamSubscription? _connectivitySubscription;
-
 
   late final List<Widget> _screens;
 
@@ -3577,7 +4099,7 @@ class _MainNavScreenState extends State<MainNavScreen> with TickerProviderStateM
     } else {
       _footerController.value = 1.0;
     }
-    
+
     // Initialize device session tracking for authenticated users and enforce remote revocations
     DeviceSessionService().initialize().then((_) {
       DeviceSessionService().enforceRemoteRevocation();
@@ -3597,7 +4119,9 @@ class _MainNavScreenState extends State<MainNavScreen> with TickerProviderStateM
         _showOfflineSnackBar();
       }
     });
-    _connectivitySubscription = Connectivity().onConnectivityChanged.listen((result) {
+    _connectivitySubscription = Connectivity().onConnectivityChanged.listen((
+      result,
+    ) {
       final bool wasOnline = _isOnline;
       bool online = true;
       if (result is List<ConnectivityResult>) {
@@ -3617,42 +4141,47 @@ class _MainNavScreenState extends State<MainNavScreen> with TickerProviderStateM
         _hideSnackBarAndShowConnected();
       }
     });
-    
+
     // Do not auto-initialize global IAP restore to prevent auto-entitlements.
     // Users can restore manually from the subscription page when desired.
 
     // Check for post-onboarding popup
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       final prefs = await SharedPreferences.getInstance();
-      final justCompletedOnboarding = prefs.getBool('just_completed_onboarding') ?? false;
-      
-      if (justCompletedOnboarding) {
+      final justCompletedOnboarding =
+          prefs.getBool('just_completed_onboarding') ?? false;
 
+      if (justCompletedOnboarding) {
         // Clear the flag
         await prefs.setBool('just_completed_onboarding', false);
-        
-        final shouldShow = await SubscriptionPopupPage.shouldShowPopup(isPostOnboarding: true);
+
+        final shouldShow = await SubscriptionPopupPage.shouldShowPopup(
+          isPostOnboarding: true,
+        );
 
         if (shouldShow && mounted) {
-          await Future.delayed(Duration(seconds: 5)); // 5 second delay after reaching home screen
+          await Future.delayed(
+            Duration(seconds: 5),
+          ); // 5 second delay after reaching home screen
 
           if (mounted) {
-            await SubscriptionPopupPage.showPopup(context, isOnboardingComplete: true);
+            await SubscriptionPopupPage.showPopup(
+              context,
+              isOnboardingComplete: true,
+            );
           }
-        } else {
-
-        }
+        } else {}
       }
-      
+
       // Check subscription status and show expiration warnings
       await _checkSubscriptionStatus();
-      
+
       // Check for pending goal celebration
       await _checkForPendingCelebration();
-      
+
       // Check for birthday
       await _checkBirthday();
-      
+
       // Check for app updates
       await _checkForAppUpdates();
     });
@@ -3678,28 +4207,29 @@ class _MainNavScreenState extends State<MainNavScreen> with TickerProviderStateM
   Future<void> _checkSubscriptionStatus() async {
     try {
       final subscriptionService = SubscriptionService();
-      final isExpiringSoon = await subscriptionService.isSubscriptionExpiringSoon();
-      
+      final isExpiringSoon =
+          await subscriptionService.isSubscriptionExpiringSoon();
+
       if (isExpiringSoon && mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Your premium subscription will expire soon. Renew to keep enjoying premium features!'),
+            content: Text(
+              'Your premium subscription will expire soon. Renew to keep enjoying premium features!',
+            ),
             backgroundColor: Colors.orange,
             duration: Duration(seconds: 5),
             action: SnackBarAction(
               label: 'Renew',
               onPressed: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute(builder: (_) => SubscriptionPage()),
-                );
+                Navigator.of(
+                  context,
+                ).push(MaterialPageRoute(builder: (_) => SubscriptionPage()));
               },
             ),
           ),
         );
       }
-    } catch (e) {
-
-    }
+    } catch (e) {}
   }
 
   void _onItemTapped(int index) async {
@@ -3737,7 +4267,9 @@ class _MainNavScreenState extends State<MainNavScreen> with TickerProviderStateM
       _fabExpanded = false;
       _showFabActions = false;
     });
-    Navigator.of(context).push(MaterialPageRoute(builder: (_) => const LogMealPage()));
+    Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: (_) => const LogMealPage()));
   }
 
   void _navigateToScan() {
@@ -3745,7 +4277,9 @@ class _MainNavScreenState extends State<MainNavScreen> with TickerProviderStateM
       _fabExpanded = false;
       _showFabActions = false;
     });
-    Navigator.of(context).push(MaterialPageRoute(builder: (_) => const ScanPage()));
+    Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: (_) => const ScanPage()));
   }
 
   void _navigateToWeightLog() async {
@@ -3753,52 +4287,65 @@ class _MainNavScreenState extends State<MainNavScreen> with TickerProviderStateM
       _fabExpanded = false;
       _showFabActions = false;
     });
-    
+
     double? weightChange = await showDialog<double>(
       context: context,
       builder: (context) => _WeightLogDialog(),
     );
-    
+
     if (weightChange != null) {
       final user = FirebaseAuth.instance.currentUser;
       if (user != null) {
-        final doc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
+        final doc =
+            await FirebaseFirestore.instance
+                .collection('users')
+                .doc(user.uid)
+                .get();
         final data = doc.data() ?? {};
-        final double currentWeight = (data['weightKg'] ?? data['weight'] ?? 0.0).toDouble();
+        final double currentWeight =
+            (data['weightKg'] ?? data['weight'] ?? 0.0).toDouble();
         final double newWeight = currentWeight + weightChange;
-        
+
         // Get the current total weight change
-        final double currentTotalChange = (data['totalWeightChange'] ?? 0.0).toDouble();
+        final double currentTotalChange =
+            (data['totalWeightChange'] ?? 0.0).toDouble();
         final double newTotalChange = currentTotalChange + weightChange;
-        
-        await FirebaseFirestore.instance.collection('users').doc(user.uid).update({
-          'weight': newWeight,
-          'weightKg': newWeight, // Save with both field names for compatibility
-          'lastWeightChange': weightChange,
-          'lastWeightUpdate': FieldValue.serverTimestamp(),
-          'totalWeightChange': newTotalChange,
-        });
-        
+
+        await FirebaseFirestore.instance
+            .collection('users')
+            .doc(user.uid)
+            .update({
+              'weight': newWeight,
+              'weightKg':
+                  newWeight, // Save with both field names for compatibility
+              'lastWeightChange': weightChange,
+              'lastWeightUpdate': FieldValue.serverTimestamp(),
+              'totalWeightChange': newTotalChange,
+            });
+
         // Also save to weights collection for analytics tracking
         await FirebaseFirestore.instance
-            .collection('users').doc(user.uid)
+            .collection('users')
+            .doc(user.uid)
             .collection('weights')
             .add({
-          'weight': newWeight,
-          'timestamp': FieldValue.serverTimestamp(),
-          'note': 'Weight update',
-          'isDeleted': false,
-        });
-        
+              'weight': newWeight,
+              'timestamp': FieldValue.serverTimestamp(),
+              'note': 'Weight update',
+              'isDeleted': false,
+            });
+
         // Check if user has reached their goal weight
-        final double targetWeight = (data['targetWeightKg'] ?? data['targetWeight'] ?? 0.0).toDouble();
+        final double targetWeight =
+            (data['targetWeightKg'] ?? data['targetWeight'] ?? 0.0).toDouble();
         final bool hadReachedGoal = (data['hasReachedGoal'] ?? false) as bool;
-        final String userGoal = (data['goal'] ?? 'Maintain body weight').toString();
-        
+        final String userGoal =
+            (data['goal'] ?? 'Maintain body weight').toString();
+
         if (targetWeight > 0 && !hadReachedGoal) {
           // Check if user has reached their goal based on their goal type
           bool hasReachedGoal = false;
-          
+
           if (userGoal.toLowerCase() == 'lose body weight') {
             // For lose weight: trigger when at or below target
             hasReachedGoal = newWeight <= targetWeight;
@@ -3809,19 +4356,23 @@ class _MainNavScreenState extends State<MainNavScreen> with TickerProviderStateM
             // For other goals (maintain, build muscle, eat healthier): use lose weight logic as default
             hasReachedGoal = newWeight <= targetWeight;
           }
-          
+
           if (hasReachedGoal) {
             // Mark that user has reached their goal and needs to choose new plan
-            await FirebaseFirestore.instance.collection('users').doc(user.uid).update({
-              'hasReachedGoal': true,
-              'goalReachedDate': FieldValue.serverTimestamp(),
-              'needsCelebrationFlow': true, // Flag to persist celebration state
-            });
-            
+            await FirebaseFirestore.instance
+                .collection('users')
+                .doc(user.uid)
+                .update({
+                  'hasReachedGoal': true,
+                  'goalReachedDate': FieldValue.serverTimestamp(),
+                  'needsCelebrationFlow':
+                      true, // Flag to persist celebration state
+                });
+
             // Also store in SharedPreferences for app launch detection
             final prefs = await SharedPreferences.getInstance();
             await prefs.setBool('needs_goal_celebration', true);
-            
+
             // Show celebration popup
             _showGoalWeightCelebration();
           }
@@ -3834,26 +4385,29 @@ class _MainNavScreenState extends State<MainNavScreen> with TickerProviderStateM
     try {
       // First calculate the maintenance plan
       final maintenancePlan = await _calculateMaintenancePlan();
-      
+
       if (maintenancePlan != null) {
         showDialog(
           context: context,
           barrierDismissible: false,
-          builder: (context) => GoalWeightCelebrationPopup(
-            maintenancePlan: maintenancePlan,
-            onKeepPlan: () async {
-              Navigator.of(context).pop(); // Close celebration popup
-              await _applyMaintenancePlan(maintenancePlan);
-            },
-            onChooseDifferentGoal: () {
-              Navigator.of(context).pop(); // Close celebration popup
-              _showGoalChangeFlow(maintenancePlan: maintenancePlan);
-            },
-          ),
+          builder:
+              (context) => GoalWeightCelebrationPopup(
+                maintenancePlan: maintenancePlan,
+                onKeepPlan: () async {
+                  Navigator.of(context).pop(); // Close celebration popup
+                  await _applyMaintenancePlan(maintenancePlan);
+                },
+                onChooseDifferentGoal: () {
+                  Navigator.of(context).pop(); // Close celebration popup
+                  _showGoalChangeFlow(maintenancePlan: maintenancePlan);
+                },
+              ),
         );
       } else {
         // If maintenance plan calculation failed, show goal change flow directly
-        print('⚠️ Maintenance plan calculation failed, showing goal change flow directly');
+        print(
+          '⚠️ Maintenance plan calculation failed, showing goal change flow directly',
+        );
         _showGoalChangeFlow();
       }
     } catch (e) {
@@ -3865,26 +4419,34 @@ class _MainNavScreenState extends State<MainNavScreen> with TickerProviderStateM
 
   Future<Map<String, dynamic>?> _calculateMaintenancePlan() async {
     try {
-    final user = FirebaseAuth.instance.currentUser;
+      final user = FirebaseAuth.instance.currentUser;
       if (user == null) {
         print('❌ No user found for maintenance plan calculation');
         return null;
       }
-      
-      final doc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
+
+      final doc =
+          await FirebaseFirestore.instance
+              .collection('users')
+              .doc(user.uid)
+              .get();
       final data = doc.data() ?? {};
-      
+
       // Get user data for nutrition calculation - handle both field names
       final int age = data['age'] ?? 25;
-      final double height = (data['heightCm'] ?? data['height'] ?? 170.0).toDouble();
-      final double weight = (data['weightKg'] ?? data['weight'] ?? 70.0).toDouble();
+      final double height =
+          (data['heightCm'] ?? data['height'] ?? 170.0).toDouble();
+      final double weight =
+          (data['weightKg'] ?? data['weight'] ?? 70.0).toDouble();
       final String activityLevel = data['activityLevel'] ?? 'Moderately Active';
       final String sex = data['sex'] ?? 'Other';
-      
+
       print('🔧 Maintenance Plan Calculation:');
-      print('  Age: $age, Height: ${height.toStringAsFixed(1)} cm, Weight: ${weight.toStringAsFixed(1)} kg');
+      print(
+        '  Age: $age, Height: ${height.toStringAsFixed(1)} cm, Weight: ${weight.toStringAsFixed(1)} kg',
+      );
       print('  Activity: $activityLevel, Sex: $sex');
-      
+
       // Calculate BMR using Mifflin-St Jeor equation
       double bmr;
       if (sex.toLowerCase() == 'male') {
@@ -3892,7 +4454,7 @@ class _MainNavScreenState extends State<MainNavScreen> with TickerProviderStateM
       } else {
         bmr = 10 * weight + 6.25 * height - 5 * age - 161;
       }
-      
+
       // Apply activity multiplier
       double tdee = bmr;
       switch (activityLevel.toLowerCase()) {
@@ -3915,29 +4477,34 @@ class _MainNavScreenState extends State<MainNavScreen> with TickerProviderStateM
           tdee = bmr * 1.55; // Default to moderately active
           break;
       }
-      
+
       // For maintenance, use TDEE as calorie goal
       int calorieGoal = tdee.round();
-      
+
       // Calculate macro goals for maintenance
       int proteinGoal = (weight * 1.6).round(); // 1.6g per kg for maintenance
-      int fatGoal = (calorieGoal * 0.25 / 9).round(); // 25% of calories from fat
-      int carbsGoal = ((calorieGoal - (proteinGoal * 4) - (fatGoal * 9)) / 4).round(); // Remaining calories from carbs
-      
+      int fatGoal =
+          (calorieGoal * 0.25 / 9).round(); // 25% of calories from fat
+      int carbsGoal =
+          ((calorieGoal - (proteinGoal * 4) - (fatGoal * 9)) / 4)
+              .round(); // Remaining calories from carbs
+
       final plan = {
         'calories': calorieGoal,
         'protein': proteinGoal,
         'carbs': carbsGoal,
         'fat': fatGoal,
       };
-      
-      print('  BMR: ${bmr.toStringAsFixed(0)} kcal, TDEE: ${tdee.toStringAsFixed(0)} kcal');
+
+      print(
+        '  BMR: ${bmr.toStringAsFixed(0)} kcal, TDEE: ${tdee.toStringAsFixed(0)} kcal',
+      );
       print('  Plan: $plan');
-      
+
       return plan;
     } catch (e) {
       print('❌ Error calculating maintenance plan: $e');
-    return null;
+      return null;
     }
   }
 
@@ -3946,18 +4513,28 @@ class _MainNavScreenState extends State<MainNavScreen> with TickerProviderStateM
       final user = FirebaseAuth.instance.currentUser;
       if (user != null) {
         // Get current user data to save previous plan
-        final doc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
+        final doc =
+            await FirebaseFirestore.instance
+                .collection('users')
+                .doc(user.uid)
+                .get();
         final currentData = doc.data() ?? {};
-        final double currentWeight = (currentData['weightKg'] ?? currentData['weight'] ?? 70.0).toDouble();
-        
+        final double currentWeight =
+            (currentData['weightKg'] ?? currentData['weight'] ?? 70.0)
+                .toDouble();
+
         // Save current plan as previous plan before updating
         final currentPlanData = {
-          'startDate': currentData['lastUpdated'] is Timestamp
-              ? currentData['lastUpdated']
-              : Timestamp.now(),
+          'startDate':
+              currentData['lastUpdated'] is Timestamp
+                  ? currentData['lastUpdated']
+                  : Timestamp.now(),
           'endDate': Timestamp.now(),
           'startingWeight': currentData['startingWeight'] ?? currentWeight,
-          'targetWeight': currentData['targetWeightKg'] ?? currentData['targetWeight'] ?? currentWeight,
+          'targetWeight':
+              currentData['targetWeightKg'] ??
+              currentData['targetWeight'] ??
+              currentWeight,
           'goal': currentData['goal'] ?? 'Maintain body weight',
           'dailyCalorieGoal': currentData['dailyCalorieGoal'],
           'proteinGoal': currentData['proteinGoal'],
@@ -3967,45 +4544,58 @@ class _MainNavScreenState extends State<MainNavScreen> with TickerProviderStateM
         };
 
         // Add to previous plans array
-        final previousPlans = List<Map<String, dynamic>>.from(currentData['previousPlans'] ?? []);
+        final previousPlans = List<Map<String, dynamic>>.from(
+          currentData['previousPlans'] ?? [],
+        );
         // Deduplicate by goal + weights
-        final double swNew = (currentPlanData['startingWeight'] as num?)?.toDouble() ?? 0.0;
-        final double twNew = (currentPlanData['targetWeight'] as num?)?.toDouble() ?? 0.0;
+        final double swNew =
+            (currentPlanData['startingWeight'] as num?)?.toDouble() ?? 0.0;
+        final double twNew =
+            (currentPlanData['targetWeight'] as num?)?.toDouble() ?? 0.0;
         final String goalNew = currentPlanData['goal'] ?? '';
         final bool alreadyExists = previousPlans.any((p) {
           final double sw = (p['startingWeight'] as num?)?.toDouble() ?? -9999;
           final double tw = (p['targetWeight'] as num?)?.toDouble() ?? -9999;
           final String g = p['goal'] ?? '';
           final String st = p['status'] ?? '';
-          return st == 'completed' && g == goalNew && (sw - swNew).abs() < 0.001 && (tw - twNew).abs() < 0.001;
+          return st == 'completed' &&
+              g == goalNew &&
+              (sw - swNew).abs() < 0.001 &&
+              (tw - twNew).abs() < 0.001;
         });
         if (!alreadyExists) {
           previousPlans.add(currentPlanData);
         }
-        
+
         // Debug logging
         print('💾 Saving Previous Plan (Maintenance):');
         print('  Current plans count: ${previousPlans.length}');
-        print('  Adding plan: ${currentPlanData['goal']} (${currentPlanData['startingWeight']} → ${currentPlanData['targetWeight']})');
+        print(
+          '  Adding plan: ${currentPlanData['goal']} (${currentPlanData['startingWeight']} → ${currentPlanData['targetWeight']})',
+        );
         print('  Status: ${currentPlanData['status']}');
 
-        await FirebaseFirestore.instance.collection('users').doc(user.uid).update({
-          'dailyCalorieGoal': plan['calories'],
-          'proteinGoal': plan['protein'],
-          'carbsGoal': plan['carbs'],
-          'fatGoal': plan['fat'],
-          'lastUpdated': FieldValue.serverTimestamp(),
-          'nutritionalPlanType': 'maintenance',
-          'goal': 'Maintain body weight', // Set goal to maintenance
-          'startingWeight': currentWeight, // Update starting weight to current weight
-          'previousPlans': previousPlans, // Save previous plans
-          'needsCelebrationFlow': false, // Clear celebration flag
-        });
-        
+        await FirebaseFirestore.instance
+            .collection('users')
+            .doc(user.uid)
+            .update({
+              'dailyCalorieGoal': plan['calories'],
+              'proteinGoal': plan['protein'],
+              'carbsGoal': plan['carbs'],
+              'fatGoal': plan['fat'],
+              'lastUpdated': FieldValue.serverTimestamp(),
+              'nutritionalPlanType': 'maintenance',
+              'goal': 'Maintain body weight', // Set goal to maintenance
+              'startingWeight':
+                  currentWeight, // Update starting weight to current weight
+              'previousPlans': previousPlans, // Save previous plans
+              'needsCelebrationFlow': false, // Clear celebration flag
+            });
+
         // Clear SharedPreferences flag
         final prefs = await SharedPreferences.getInstance();
         await prefs.setBool('needs_goal_celebration', false);
-        
+
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(AppLocalizations.of(context)!.maintenancePlanUpdated),
@@ -4017,7 +4607,9 @@ class _MainNavScreenState extends State<MainNavScreen> with TickerProviderStateM
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(AppLocalizations.of(context)!.failedToGenerateMaintenancePlan),
+          content: Text(
+            AppLocalizations.of(context)!.failedToGenerateMaintenancePlan,
+          ),
           backgroundColor: Colors.red,
         ),
       );
@@ -4027,34 +4619,45 @@ class _MainNavScreenState extends State<MainNavScreen> with TickerProviderStateM
   void _showGoalChangeFlow({Map<String, dynamic>? maintenancePlan}) {
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (context) => GoalChangeFlow(
-          onPlanGenerated: (planData) {
-            Navigator.of(context).pop(); // Close goal change flow
-            _showNewPlanDisplay(planData);
-          },
-          onCancel: () {
-            Navigator.of(context).pop();
-          },
-          onBackToMaintenancePlan: maintenancePlan != null ? () {
-            Navigator.of(context).pop(); // Close goal change flow
-            // Show the maintenance plan choice again
-            showDialog(
-              context: context,
-              barrierDismissible: false,
-              builder: (context) => GoalWeightCelebrationPopup(
-                maintenancePlan: maintenancePlan,
-                onKeepPlan: () async {
-                  Navigator.of(context).pop(); // Close celebration popup
-                  await _applyMaintenancePlan(maintenancePlan);
-                },
-                onChooseDifferentGoal: () {
-                  Navigator.of(context).pop(); // Close celebration popup
-                  _showGoalChangeFlow(maintenancePlan: maintenancePlan);
-                },
-              ),
-            );
-          } : null,
-        ),
+        builder:
+            (context) => GoalChangeFlow(
+              onPlanGenerated: (planData) {
+                Navigator.of(context).pop(); // Close goal change flow
+                _showNewPlanDisplay(planData);
+              },
+              onCancel: () {
+                Navigator.of(context).pop();
+              },
+              onBackToMaintenancePlan:
+                  maintenancePlan != null
+                      ? () {
+                        Navigator.of(context).pop(); // Close goal change flow
+                        // Show the maintenance plan choice again
+                        showDialog(
+                          context: context,
+                          barrierDismissible: false,
+                          builder:
+                              (context) => GoalWeightCelebrationPopup(
+                                maintenancePlan: maintenancePlan,
+                                onKeepPlan: () async {
+                                  Navigator.of(
+                                    context,
+                                  ).pop(); // Close celebration popup
+                                  await _applyMaintenancePlan(maintenancePlan);
+                                },
+                                onChooseDifferentGoal: () {
+                                  Navigator.of(
+                                    context,
+                                  ).pop(); // Close celebration popup
+                                  _showGoalChangeFlow(
+                                    maintenancePlan: maintenancePlan,
+                                  );
+                                },
+                              ),
+                        );
+                      }
+                      : null,
+            ),
       ),
     );
   }
@@ -4062,19 +4665,22 @@ class _MainNavScreenState extends State<MainNavScreen> with TickerProviderStateM
   void _showNewPlanDisplay(Map<String, dynamic> planData) {
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (context) => NewPlanDisplay(
-          planData: planData,
-          onComplete: () {
-            Navigator.of(context).pop(); // Close plan display
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(AppLocalizations.of(context)!.maintenancePlanUpdated),
-                backgroundColor: kPrimaryGreen,
-                duration: Duration(seconds: 3),
-              ),
-            );
-          },
-        ),
+        builder:
+            (context) => NewPlanDisplay(
+              planData: planData,
+              onComplete: () {
+                Navigator.of(context).pop(); // Close plan display
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(
+                      AppLocalizations.of(context)!.maintenancePlanUpdated,
+                    ),
+                    backgroundColor: kPrimaryGreen,
+                    duration: Duration(seconds: 3),
+                  ),
+                );
+              },
+            ),
       ),
     );
   }
@@ -4083,17 +4689,21 @@ class _MainNavScreenState extends State<MainNavScreen> with TickerProviderStateM
     try {
       final prefs = await SharedPreferences.getInstance();
       final needsCelebration = prefs.getBool('needs_goal_celebration') ?? false;
-      
+
       if (needsCelebration && mounted) {
         // Double-check with Firestore
         final user = FirebaseAuth.instance.currentUser;
         if (user != null) {
-          final doc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
+          final doc =
+              await FirebaseFirestore.instance
+                  .collection('users')
+                  .doc(user.uid)
+                  .get();
           // Sync Google/Apple profile photo into Firestore if missing so Profile screen shows it
           await UserService().syncPhotoFromAuthIfMissing();
           final data = doc.data() ?? {};
           final needsCelebrationFlow = data['needsCelebrationFlow'] ?? false;
-          
+
           if (needsCelebrationFlow) {
             // Show celebration popup after a brief delay
             await Future.delayed(Duration(milliseconds: 1000));
@@ -4128,15 +4738,15 @@ class _MainNavScreenState extends State<MainNavScreen> with TickerProviderStateM
 
       // Show update dialog (AppUpdateService already confirmed update is needed)
       if (mounted) {
-        await Future.delayed(Duration(seconds: 2)); // Small delay to not interrupt other dialogs
-        
+        await Future.delayed(
+          Duration(seconds: 2),
+        ); // Small delay to not interrupt other dialogs
+
         if (mounted) {
           showDialog(
             context: context,
             barrierDismissible: !updateInfo.isForceUpdate,
-            builder: (context) => AppUpdateDialog(
-              updateInfo: updateInfo,
-            ),
+            builder: (context) => AppUpdateDialog(updateInfo: updateInfo),
           );
         }
       }
@@ -4145,14 +4755,12 @@ class _MainNavScreenState extends State<MainNavScreen> with TickerProviderStateM
     }
   }
 
-
-
   void _navigateToWaterLog() async {
     setState(() {
       _fabExpanded = false;
       _showFabActions = false;
     });
-    
+
     // Show water log dialog
     int? amount = await showDialog<int>(
       context: context,
@@ -4161,19 +4769,27 @@ class _MainNavScreenState extends State<MainNavScreen> with TickerProviderStateM
     if (amount != null) {
       final user = FirebaseAuth.instance.currentUser;
       if (user != null) {
-        final doc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
+        final doc =
+            await FirebaseFirestore.instance
+                .collection('users')
+                .doc(user.uid)
+                .get();
         // Ensure photoUrl exists in Firestore for profile page
         await UserService().syncPhotoFromAuthIfMissing();
         final data = doc.data() ?? {};
         final int prev = (data['waterLoggedMl'] ?? 0) as int;
         final int newAmount = prev + amount;
-        await FirebaseFirestore.instance.collection('users').doc(user.uid).update({
-          'waterLoggedMl': newAmount < 0 ? 0 : newAmount,
-          'lastUpdated': FieldValue.serverTimestamp(),
-        });
+        await FirebaseFirestore.instance
+            .collection('users')
+            .doc(user.uid)
+            .update({
+              'waterLoggedMl': newAmount < 0 ? 0 : newAmount,
+              'lastUpdated': FieldValue.serverTimestamp(),
+            });
       }
     }
   }
+
   @override
   Widget build(BuildContext context) {
     return Stack(
@@ -4182,17 +4798,24 @@ class _MainNavScreenState extends State<MainNavScreen> with TickerProviderStateM
         Scaffold(
           body: AnimatedSwitcher(
             duration: Duration(milliseconds: 400),
-            transitionBuilder: (child, animation) => FadeTransition(
-              opacity: animation,
-              child: child,
-            ),
+            transitionBuilder:
+                (child, animation) =>
+                    FadeTransition(opacity: animation, child: child),
             child: KeyedSubtree(
               key: ValueKey(_selectedIndex),
               child: _screens[_selectedIndex],
             ),
           ),
           bottomNavigationBar: SlideTransition(
-            position: Tween<Offset>(begin: Offset(0, 1), end: Offset.zero).animate(CurvedAnimation(parent: _footerController, curve: Curves.easeOutCubic)),
+            position: Tween<Offset>(
+              begin: Offset(0, 1),
+              end: Offset.zero,
+            ).animate(
+              CurvedAnimation(
+                parent: _footerController,
+                curve: Curves.easeOutCubic,
+              ),
+            ),
             child: Container(
               decoration: BoxDecoration(
                 color: Colors.white,
@@ -4284,7 +4907,12 @@ class _MainNavScreenState extends State<MainNavScreen> with TickerProviderStateM
                                   onTap: _navigateToWeightLog,
                                   isLarge: false,
                                 ),
-                                SizedBox(width: MediaQuery.of(context).size.width < 360 ? 20 : 40),
+                                SizedBox(
+                                  width:
+                                      MediaQuery.of(context).size.width < 360
+                                          ? 20
+                                          : 40,
+                                ),
                                 _FabActionButton(
                                   label: AppLocalizations.of(context)!.water,
                                   icon: Icons.water_drop,
@@ -4293,7 +4921,12 @@ class _MainNavScreenState extends State<MainNavScreen> with TickerProviderStateM
                                 ),
                               ],
                             ),
-                            SizedBox(height: MediaQuery.of(context).size.height < 700 ? 16 : 20),
+                            SizedBox(
+                              height:
+                                  MediaQuery.of(context).size.height < 700
+                                      ? 16
+                                      : 20,
+                            ),
                             // Second row: Log and Scan (big buttons)
                             Row(
                               mainAxisAlignment: MainAxisAlignment.center,
@@ -4304,7 +4937,12 @@ class _MainNavScreenState extends State<MainNavScreen> with TickerProviderStateM
                                   onTap: _navigateToLog,
                                   isLarge: true,
                                 ),
-                                SizedBox(width: MediaQuery.of(context).size.width < 360 ? 20 : 40),
+                                SizedBox(
+                                  width:
+                                      MediaQuery.of(context).size.width < 360
+                                          ? 20
+                                          : 40,
+                                ),
                                 _FabActionButton(
                                   label: AppLocalizations.of(context)!.scan,
                                   icon: Icons.camera_alt,
@@ -4321,7 +4959,6 @@ class _MainNavScreenState extends State<MainNavScreen> with TickerProviderStateM
               ),
             ),
           ),
-
       ],
     );
   }
@@ -4336,7 +4973,10 @@ class _MainNavScreenState extends State<MainNavScreen> with TickerProviderStateM
             SizedBox(
               height: 16,
               width: 16,
-              child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                color: Colors.white,
+              ),
             ),
             SizedBox(width: 12),
             Expanded(child: Text('No internet. Trying to reconnect...')),
@@ -4367,7 +5007,14 @@ class _AnimatedNavBarItem extends StatelessWidget {
   final VoidCallback onTap;
   final Color? selectedColor;
   final double? iconSize;
-  const _AnimatedNavBarItem({required this.icon, required this.label, required this.selected, required this.onTap, this.selectedColor, this.iconSize});
+  const _AnimatedNavBarItem({
+    required this.icon,
+    required this.label,
+    required this.selected,
+    required this.onTap,
+    this.selectedColor,
+    this.iconSize,
+  });
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
@@ -4384,13 +5031,23 @@ class _AnimatedNavBarItem extends StatelessWidget {
               scale: selected ? 1.18 : 1.0,
               duration: Duration(milliseconds: 200),
               curve: Curves.easeOut,
-              child: Icon(icon, color: selected ? (selectedColor ?? kPrimaryGreen) : Colors.grey[600], size: iconSize ?? 28),
+              child: Icon(
+                icon,
+                color:
+                    selected
+                        ? (selectedColor ?? kPrimaryGreen)
+                        : Colors.grey[600],
+                size: iconSize ?? 28,
+              ),
             ),
             const SizedBox(height: 2),
             AnimatedDefaultTextStyle(
               duration: Duration(milliseconds: 200),
               style: TextStyle(
-                color: selected ? (selectedColor ?? kPrimaryGreen) : Colors.grey[600],
+                color:
+                    selected
+                        ? (selectedColor ?? kPrimaryGreen)
+                        : Colors.grey[600],
                 fontWeight: FontWeight.w500,
                 fontSize: 13,
               ),
@@ -4410,13 +5067,19 @@ class _AnimatedFab extends StatefulWidget {
   @override
   State<_AnimatedFab> createState() => _AnimatedFabState();
 }
-class _AnimatedFabState extends State<_AnimatedFab> with SingleTickerProviderStateMixin {
+
+class _AnimatedFabState extends State<_AnimatedFab>
+    with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(vsync: this, duration: Duration(milliseconds: 220));
+    _controller = AnimationController(
+      vsync: this,
+      duration: Duration(milliseconds: 220),
+    );
   }
+
   @override
   void didUpdateWidget(covariant _AnimatedFab oldWidget) {
     super.didUpdateWidget(oldWidget);
@@ -4426,19 +5089,23 @@ class _AnimatedFabState extends State<_AnimatedFab> with SingleTickerProviderSta
       _controller.reverse();
     }
   }
+
   @override
   void dispose() {
     _controller.dispose();
     super.dispose();
   }
+
   @override
   Widget build(BuildContext context) {
     return AnimatedBuilder(
       animation: _controller,
       builder: (context, child) {
-        final color = Color.lerp(kPrimaryGreen, Colors.grey[200], _controller.value)!;
+        final color =
+            Color.lerp(kPrimaryGreen, Colors.grey[200], _controller.value)!;
         final icon = _controller.value < 0.5 ? Icons.add : Icons.close;
-        final iconColor = _controller.value < 0.5 ? Colors.white : Colors.grey[600];
+        final iconColor =
+            _controller.value < 0.5 ? Colors.white : Colors.grey[600];
         return GestureDetector(
           onTap: widget.onTap,
           child: Container(
@@ -4455,9 +5122,7 @@ class _AnimatedFabState extends State<_AnimatedFab> with SingleTickerProviderSta
                 ),
               ],
             ),
-            child: Center(
-              child: Icon(icon, color: iconColor, size: 28),
-            ),
+            child: Center(child: Icon(icon, color: iconColor, size: 28)),
           ),
         );
       },
@@ -4468,18 +5133,21 @@ class _AnimatedFabState extends State<_AnimatedFab> with SingleTickerProviderSta
 class DashboardScreen extends StatefulWidget {
   final VoidCallback? onViewAllMeals;
   final VoidCallback? onProfileTap;
-  const DashboardScreen({Key? key, this.onViewAllMeals, this.onProfileTap}) : super(key: key);
+  const DashboardScreen({Key? key, this.onViewAllMeals, this.onProfileTap})
+    : super(key: key);
   @override
   State<DashboardScreen> createState() => _DashboardScreenState();
 }
-class _DashboardScreenState extends State<DashboardScreen> with TickerProviderStateMixin {
+
+class _DashboardScreenState extends State<DashboardScreen>
+    with TickerProviderStateMixin {
   final MealService _mealService = MealService();
   Stream<List<Meal>>? _mealsStream;
   List<Meal>? _lastMeals;
   UserProfile? _lastProfile;
   final UserService _userService = UserService();
   final StreakService _streakService = StreakService();
-  
+
   // Helper function to get food type icon
   IconData _getFoodTypeIcon(String? foodType) {
     switch (foodType?.toLowerCase()) {
@@ -4503,10 +5171,22 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
   @override
   void initState() {
     super.initState();
-    _headerController = AnimationController(vsync: this, duration: const Duration(milliseconds: 600));
-    _summaryController = AnimationController(vsync: this, duration: const Duration(milliseconds: 900));
-    _quickActionsController = AnimationController(vsync: this, duration: const Duration(milliseconds: 700));
-    _mealsController = AnimationController(vsync: this, duration: const Duration(milliseconds: 700));
+    _headerController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 600),
+    );
+    _summaryController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 900),
+    );
+    _quickActionsController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 700),
+    );
+    _mealsController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 700),
+    );
     _playEntranceAnimationsIfNeeded();
     _checkAndResetWaterIntake();
   }
@@ -4534,11 +5214,18 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
                 children: [
                   Row(
                     children: [
-                      Icon(Icons.local_fire_department, color: active ? Colors.orange : Colors.grey[500], size: 24),
+                      Icon(
+                        Icons.local_fire_department,
+                        color: active ? Colors.orange : Colors.grey[500],
+                        size: 24,
+                      ),
                       const SizedBox(width: 8),
                       Text(
                         active ? l.streakActive : l.streakInactive,
-                        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                       const Spacer(),
                       TextButton(
@@ -4561,9 +5248,21 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(l.currentStreak, style: const TextStyle(color: Colors.grey, fontSize: 13)),
+                              Text(
+                                l.currentStreak,
+                                style: const TextStyle(
+                                  color: Colors.grey,
+                                  fontSize: 13,
+                                ),
+                              ),
                               const SizedBox(height: 4),
-                              Text('${info.streakDays} ${l.days}', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                              Text(
+                                '${info.streakDays} ${l.days}',
+                                style: const TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
                             ],
                           ),
                         ),
@@ -4572,9 +5271,21 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(l.entriesInStreak, style: const TextStyle(color: Colors.grey, fontSize: 13)),
+                              Text(
+                                l.entriesInStreak,
+                                style: const TextStyle(
+                                  color: Colors.grey,
+                                  fontSize: 13,
+                                ),
+                              ),
                               const SizedBox(height: 4),
-                              Text('${info.entriesInStreak}', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                              Text(
+                                '${info.entriesInStreak}',
+                                style: const TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
                             ],
                           ),
                         ),
@@ -4598,6 +5309,7 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
       },
     );
   }
+
   Widget _buildNutritionSummarySkeleton() {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
@@ -4606,7 +5318,11 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
         borderRadius: BorderRadius.circular(18),
         border: Border.all(color: const Color(0xFFE5E7EB)),
         boxShadow: [
-          BoxShadow(color: Colors.grey.withOpacity(0.06), blurRadius: 16, offset: const Offset(0, 4)),
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.06),
+            blurRadius: 16,
+            offset: const Offset(0, 4),
+          ),
         ],
       ),
       child: Column(
@@ -4649,19 +5365,18 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
   Future<void> _checkAndResetWaterIntake() async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
-    
+
     final prefs = await SharedPreferences.getInstance();
     final lastWaterResetKey = 'last_water_reset_${user.uid}';
     final lastResetDate = prefs.getString(lastWaterResetKey);
     final today = DateTime.now();
     final todayStr = '${today.year}-${today.month}-${today.day}';
-    
+
     // If it's a new day, reset water intake
     if (lastResetDate != todayStr) {
-      await FirebaseFirestore.instance.collection('users').doc(user.uid).update({
-        'waterLoggedMl': 0,
-        'lastUpdated': DateTime.now(),
-      });
+      await FirebaseFirestore.instance.collection('users').doc(user.uid).update(
+        {'waterLoggedMl': 0, 'lastUpdated': DateTime.now()},
+      );
       await prefs.setString(lastWaterResetKey, todayStr);
     }
   }
@@ -4674,6 +5389,7 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
     _mealsController.dispose();
     super.dispose();
   }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -4688,7 +5404,10 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
             FadeTransition(
               opacity: _headerController,
               child: SlideTransition(
-                position: Tween<Offset>(begin: const Offset(0, 0.1), end: Offset.zero).animate(_headerController),
+                position: Tween<Offset>(
+                  begin: const Offset(0, 0.1),
+                  end: Offset.zero,
+                ).animate(_headerController),
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
                   child: Row(
@@ -4698,36 +5417,62 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(_getCurrentGreeting(context), style: TextStyle(fontWeight: FontWeight.bold, fontSize: 26, color: Colors.black)),
+                            Text(
+                              _getCurrentGreeting(context),
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 26,
+                                color: Colors.black,
+                              ),
+                            ),
                             const SizedBox(height: 4),
-                            Text(_getGreetingSubtitle(context), style: TextStyle(color: Colors.grey[500], fontSize: 16)),
+                            Text(
+                              _getGreetingSubtitle(context),
+                              style: TextStyle(
+                                color: Colors.grey[500],
+                                fontSize: 16,
+                              ),
+                            ),
                           ],
                         ),
                       ),
                       Stack(
                         clipBehavior: Clip.none,
                         children: [
-                      AnimatedScale(
-                        scale: _headerController.value,
-                        duration: const Duration(milliseconds: 600),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            StreakBadge(
-                              streakStream: _streakService.watchStreak(),
-                              onTap: () => _showStreakBottomSheet(context),
+                          AnimatedScale(
+                            scale: _headerController.value,
+                            duration: const Duration(milliseconds: 600),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                StreakBadge(
+                                  streakStream: _streakService.watchStreak(),
+                                  onTap: () => _showStreakBottomSheet(context),
+                                ),
+                                const SizedBox(width: 12),
+                                GestureDetector(
+                                  onTap: widget.onProfileTap,
+                                  child:
+                                      user != null && user.photoURL != null
+                                          ? CircleAvatar(
+                                            radius: 24,
+                                            backgroundImage: NetworkImage(
+                                              user.photoURL!,
+                                            ),
+                                          )
+                                          : CircleAvatar(
+                                            radius: 24,
+                                            backgroundColor: kPrimaryGreen
+                                                .withOpacity(0.15),
+                                            child: Icon(
+                                              Icons.person,
+                                              color: kPrimaryGreen,
+                                            ),
+                                          ),
+                                ),
+                              ],
                             ),
-                            const SizedBox(width: 12),
-                            GestureDetector(
-                          onTap: widget.onProfileTap,
-                        child: user != null && user.photoURL != null
-                          ? CircleAvatar(radius: 24, backgroundImage: NetworkImage(user.photoURL!))
-                          : CircleAvatar(radius: 24, backgroundColor: kPrimaryGreen.withOpacity(0.15), child: Icon(Icons.person, color: kPrimaryGreen)),
-                            ),
-                          ],
-                        ),
-                      ),
-
+                          ),
                         ],
                       ),
                     ],
@@ -4740,7 +5485,10 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
             FadeTransition(
               opacity: _summaryController,
               child: SlideTransition(
-                position: Tween<Offset>(begin: const Offset(0, 0.1), end: Offset.zero).animate(_summaryController),
+                position: Tween<Offset>(
+                  begin: const Offset(0, 0.1),
+                  end: Offset.zero,
+                ).animate(_summaryController),
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: StreamBuilder<UserProfile?>(
@@ -4760,19 +5508,40 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
                         stream: _mealsStream ??= _mealService.getTodayMeals(),
                         initialData: _lastMeals,
                         builder: (context, snapshot) {
-                          final meals = snapshot.data ?? _lastMeals ?? const <Meal>[];
+                          final meals =
+                              snapshot.data ?? _lastMeals ?? const <Meal>[];
                           if (snapshot.hasData) _lastMeals = snapshot.data;
-                          final totalCalories = meals.fold(0, (sum, m) => sum + m.calories);
-                          final totalProtein = meals.fold(0, (sum, m) => sum + m.protein);
-                          final totalCarbs = meals.fold(0, (sum, m) => sum + m.carbs);
-                          final totalFat = meals.fold(0, (sum, m) => sum + m.fat);
-                          if (dailyCalorieGoal == null || proteinGoal == null || carbsGoal == null || fatGoal == null) {
+                          final totalCalories = meals.fold(
+                            0,
+                            (sum, m) => sum + m.calories,
+                          );
+                          final totalProtein = meals.fold(
+                            0,
+                            (sum, m) => sum + m.protein,
+                          );
+                          final totalCarbs = meals.fold(
+                            0,
+                            (sum, m) => sum + m.carbs,
+                          );
+                          final totalFat = meals.fold(
+                            0,
+                            (sum, m) => sum + m.fat,
+                          );
+                          if (dailyCalorieGoal == null ||
+                              proteinGoal == null ||
+                              carbsGoal == null ||
+                              fatGoal == null) {
                             return Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 24,
+                                vertical: 24,
+                              ),
                               decoration: BoxDecoration(
                                 color: Colors.white,
                                 borderRadius: BorderRadius.circular(18),
-                                border: Border.all(color: const Color(0xFFE5E7EB)),
+                                border: Border.all(
+                                  color: const Color(0xFFE5E7EB),
+                                ),
                                 boxShadow: [
                                   BoxShadow(
                                     color: Colors.grey.withOpacity(0.06),
@@ -4785,20 +5554,41 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
                                 child: Column(
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
-                                    Text(AppLocalizations.of(context)!.nutritionSummary, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20)),
+                                    Text(
+                                      AppLocalizations.of(
+                                        context,
+                                      )!.nutritionSummary,
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 20,
+                                      ),
+                                    ),
                                     SizedBox(height: 12),
-                                    Text(AppLocalizations.of(context)!.setCalorieAndMacroGoals, style: TextStyle(color: Colors.grey[700], fontSize: 16)),
+                                    Text(
+                                      AppLocalizations.of(
+                                        context,
+                                      )!.setCalorieAndMacroGoals,
+                                      style: TextStyle(
+                                        color: Colors.grey[700],
+                                        fontSize: 16,
+                                      ),
+                                    ),
                                   ],
                                 ),
                               ),
                             );
                           }
                           return Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 24,
+                              vertical: 24,
+                            ),
                             decoration: BoxDecoration(
                               color: Colors.white,
                               borderRadius: BorderRadius.circular(18),
-                              border: Border.all(color: const Color(0xFFE5E7EB)),
+                              border: Border.all(
+                                color: const Color(0xFFE5E7EB),
+                              ),
                               boxShadow: [
                                 BoxShadow(
                                   color: Colors.grey.withOpacity(0.06),
@@ -4813,90 +5603,183 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
                                 // Macro Progress
                                 Expanded(
                                   child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     mainAxisAlignment: MainAxisAlignment.center,
                                     children: [
-                                      Text(AppLocalizations.of(context)!.nutritionSummary, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 22)),
+                                      Text(
+                                        AppLocalizations.of(
+                                          context,
+                                        )!.nutritionSummary,
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 22,
+                                        ),
+                                      ),
                                       const SizedBox(height: 18),
                                       TweenAnimationBuilder<double>(
-                                        tween: Tween<double>(begin: 0, end: totalProtein / proteinGoal!),
-                                        duration: const Duration(milliseconds: 900),
-                                        curve: Curves.easeOutCubic,
-                                        builder: (context, value, child) => _MacroProgressRow(
-                                          color: kSecondaryBlue,
-                                          label: AppLocalizations.of(context)!.protein,
-                                          value: '${(value * proteinGoal!).round()} g',
-                                          percent: value,
-                                          valueSuffix: 'g',
-                                          valueFontWeight: FontWeight.w600,
-                                          valueFontSize: 16,
-                                          barHeight: 8,
-                                          labelColor: Colors.black,
-                                          dotSize: 12,
+                                        tween: Tween<double>(
+                                          begin: 0,
+                                          end: totalProtein / proteinGoal!,
                                         ),
+                                        duration: const Duration(
+                                          milliseconds: 900,
+                                        ),
+                                        curve: Curves.easeOutCubic,
+                                        builder:
+                                            (
+                                              context,
+                                              value,
+                                              child,
+                                            ) => _MacroProgressRow(
+                                              color: kSecondaryBlue,
+                                              label:
+                                                  AppLocalizations.of(
+                                                    context,
+                                                  )!.protein,
+                                              value:
+                                                  '${(value * proteinGoal!).round()} g',
+                                              percent: value,
+                                              valueSuffix: 'g',
+                                              valueFontWeight: FontWeight.w600,
+                                              valueFontSize: 16,
+                                              barHeight: 8,
+                                              labelColor: Colors.black,
+                                              dotSize: 12,
+                                            ),
                                       ),
                                       TweenAnimationBuilder<double>(
-                                        tween: Tween<double>(begin: 0, end: totalCarbs / carbsGoal!),
-                                        duration: const Duration(milliseconds: 1100),
-                                        curve: Curves.easeOutCubic,
-                                        builder: (context, value, child) => _MacroProgressRow(
-                                          color: kAccentOrange,
-                                          label: AppLocalizations.of(context)!.carbs,
-                                          value: '${(value * carbsGoal!).round()} g',
-                                          percent: value,
-                                          valueSuffix: 'g',
-                                          valueFontWeight: FontWeight.w600,
-                                          valueFontSize: 16,
-                                          barHeight: 8,
-                                          labelColor: Colors.black,
-                                          dotSize: 12,
+                                        tween: Tween<double>(
+                                          begin: 0,
+                                          end: totalCarbs / carbsGoal!,
                                         ),
+                                        duration: const Duration(
+                                          milliseconds: 1100,
+                                        ),
+                                        curve: Curves.easeOutCubic,
+                                        builder:
+                                            (
+                                              context,
+                                              value,
+                                              child,
+                                            ) => _MacroProgressRow(
+                                              color: kAccentOrange,
+                                              label:
+                                                  AppLocalizations.of(
+                                                    context,
+                                                  )!.carbs,
+                                              value:
+                                                  '${(value * carbsGoal!).round()} g',
+                                              percent: value,
+                                              valueSuffix: 'g',
+                                              valueFontWeight: FontWeight.w600,
+                                              valueFontSize: 16,
+                                              barHeight: 8,
+                                              labelColor: Colors.black,
+                                              dotSize: 12,
+                                            ),
                                       ),
                                       TweenAnimationBuilder<double>(
-                                        tween: Tween<double>(begin: 0, end: totalFat / fatGoal!),
-                                        duration: const Duration(milliseconds: 1200),
-                                        curve: Curves.easeOutCubic,
-                                        builder: (context, value, child) => _MacroProgressRow(
-                                          color: kWarningRed,
-                                          label: AppLocalizations.of(context)!.fat,
-                                          value: '${(value * fatGoal!).round()} g',
-                                          percent: value,
-                                          valueSuffix: 'g',
-                                          valueFontWeight: FontWeight.w600,
-                                          valueFontSize: 16,
-                                          barHeight: 8,
-                                          labelColor: Colors.black,
-                                          dotSize: 12,
+                                        tween: Tween<double>(
+                                          begin: 0,
+                                          end: totalFat / fatGoal!,
                                         ),
+                                        duration: const Duration(
+                                          milliseconds: 1200,
+                                        ),
+                                        curve: Curves.easeOutCubic,
+                                        builder:
+                                            (
+                                              context,
+                                              value,
+                                              child,
+                                            ) => _MacroProgressRow(
+                                              color: kWarningRed,
+                                              label:
+                                                  AppLocalizations.of(
+                                                    context,
+                                                  )!.fat,
+                                              value:
+                                                  '${(value * fatGoal!).round()} g',
+                                              percent: value,
+                                              valueSuffix: 'g',
+                                              valueFontWeight: FontWeight.w600,
+                                              valueFontSize: 16,
+                                              barHeight: 8,
+                                              labelColor: Colors.black,
+                                              dotSize: 12,
+                                            ),
                                       ),
                                       // Water Intake Tracker
                                       FutureBuilder<DocumentSnapshot>(
-                                        future: FirebaseFirestore.instance.collection('users').doc(FirebaseAuth.instance.currentUser!.uid).get(),
+                                        future:
+                                            FirebaseFirestore.instance
+                                                .collection('users')
+                                                .doc(
+                                                  FirebaseAuth
+                                                      .instance
+                                                      .currentUser!
+                                                      .uid,
+                                                )
+                                                .get(),
                                         builder: (context, firestoreSnap) {
                                           if (!firestoreSnap.hasData) {
-                                            return Container(height: 56, child: Center(child: CircularProgressIndicator(strokeWidth: 2)));
+                                            return Container(
+                                              height: 56,
+                                              child: Center(
+                                                child:
+                                                    CircularProgressIndicator(
+                                                      strokeWidth: 2,
+                                                    ),
+                                              ),
+                                            );
                                           }
-                                          
-                                          final userData = firestoreSnap.data!.data() as Map<String, dynamic>? ?? {};
-                                          final bool useMetric = Provider.of<PreferencesProvider>(context, listen: false).useMetric;
+
+                                          final userData =
+                                              firestoreSnap.data!.data()
+                                                  as Map<String, dynamic>? ??
+                                              {};
+                                          final bool useMetric =
+                                              Provider.of<PreferencesProvider>(
+                                                context,
+                                                listen: false,
+                                              ).useMetric;
                                           int waterGoalMl;
-                                          
+
                                           // Try to get from new waterGoal field first (from nutritional plan page)
-                                          final rawWaterGoal = userData['waterGoal'];
-                                          
-                                          if (rawWaterGoal != null && rawWaterGoal is int) {
+                                          final rawWaterGoal =
+                                              userData['waterGoal'];
+
+                                          if (rawWaterGoal != null &&
+                                              rawWaterGoal is int) {
                                             // New format: stored in ml
-                                            waterGoalMl = rawWaterGoal <= 30 ? (rawWaterGoal * 240) : rawWaterGoal;
+                                            waterGoalMl =
+                                                rawWaterGoal <= 30
+                                                    ? (rawWaterGoal * 240)
+                                                    : rawWaterGoal;
                                           } else {
                                             // Fallback to old waterIntake string format
-                                            final String waterGoalStr = userData['waterIntake'] ?? '2L';
-                                          final double waterGoal = double.tryParse(waterGoalStr.replaceAll('L', '').replaceAll('+', '')) ?? 2.0;
-                                            waterGoalMl = (waterGoal * 1000).round();
+                                            final String waterGoalStr =
+                                                userData['waterIntake'] ?? '2L';
+                                            final double waterGoal =
+                                                double.tryParse(
+                                                  waterGoalStr
+                                                      .replaceAll('L', '')
+                                                      .replaceAll('+', ''),
+                                                ) ??
+                                                2.0;
+                                            waterGoalMl =
+                                                (waterGoal * 1000).round();
                                           }
-                                          final int waterLoggedMl = userData['waterLoggedMl'] ?? 0;
-                                          final double percent = (waterLoggedMl / waterGoalMl).clamp(0.0, 1.0);
+                                          final int waterLoggedMl =
+                                              userData['waterLoggedMl'] ?? 0;
+                                          final double percent =
+                                              (waterLoggedMl / waterGoalMl)
+                                                  .clamp(0.0, 1.0);
                                           return Container(
-                                            padding: const EdgeInsets.only(top: 12.0),
+                                            padding: const EdgeInsets.only(
+                                              top: 12.0,
+                                            ),
                                             height: 56,
                                             child: Stack(
                                               alignment: Alignment.centerLeft,
@@ -4904,33 +5787,72 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
                                                 // Progress bar and text
                                                 Row(
                                                   children: [
-                                                    Icon(Icons.water_drop, color: Colors.blue[400]),
+                                                    Icon(
+                                                      Icons.water_drop,
+                                                      color: Colors.blue[400],
+                                                    ),
                                                     SizedBox(width: 10),
                                                     Expanded(
-                                                      child: LinearProgressIndicator(
-                                                        value: percent,
-                                                        backgroundColor: Colors.blue[50],
-                                                        color: Colors.blue[400],
-                                                        minHeight: 8,
-                                                      ),
+                                                      child:
+                                                          LinearProgressIndicator(
+                                                            value: percent,
+                                                            backgroundColor:
+                                                                Colors.blue[50],
+                                                            color:
+                                                                Colors
+                                                                    .blue[400],
+                                                            minHeight: 8,
+                                                          ),
                                                     ),
                                                     SizedBox(width: 12),
-                                                    Builder(builder: (_) {
-                                                      if (!useMetric) {
-                                                        // US: show in Liters
-                                                        final String loggedL = (waterLoggedMl / 1000.0).toStringAsFixed(1);
-                                                        final String goalL = (waterGoalMl / 1000.0).toStringAsFixed(1) + 'L';
-                                                        return Text('$loggedL / $goalL', style: TextStyle(fontWeight: FontWeight.bold));
-                                                      } else {
-                                                        // Others: show in fl oz
-                                                        final int loggedOz = (waterLoggedMl / 29.5735).round();
-                                                        final int goalOz = (waterGoalMl / 29.5735).round();
-                                                        return Text('$loggedOz / $goalOz ${AppLocalizations.of(context)!.fluidOunces}', style: TextStyle(fontWeight: FontWeight.bold));
-                                                      }
-                                                    }),
+                                                    Builder(
+                                                      builder: (_) {
+                                                        if (!useMetric) {
+                                                          // US: show in Liters
+                                                          final String loggedL =
+                                                              (waterLoggedMl /
+                                                                      1000.0)
+                                                                  .toStringAsFixed(
+                                                                    1,
+                                                                  );
+                                                          final String goalL =
+                                                              (waterGoalMl /
+                                                                      1000.0)
+                                                                  .toStringAsFixed(
+                                                                    1,
+                                                                  ) +
+                                                              'L';
+                                                          return Text(
+                                                            '$loggedL / $goalL',
+                                                            style: TextStyle(
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .bold,
+                                                            ),
+                                                          );
+                                                        } else {
+                                                          // Others: show in fl oz
+                                                          final int loggedOz =
+                                                              (waterLoggedMl /
+                                                                      29.5735)
+                                                                  .round();
+                                                          final int goalOz =
+                                                              (waterGoalMl /
+                                                                      29.5735)
+                                                                  .round();
+                                                          return Text(
+                                                            '$loggedOz / $goalOz ${AppLocalizations.of(context)!.fluidOunces}',
+                                                            style: TextStyle(
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .bold,
+                                                            ),
+                                                          );
+                                                        }
+                                                      },
+                                                    ),
                                                   ],
                                                 ),
-                                                
                                               ],
                                             ),
                                           );
@@ -4942,24 +5864,38 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
                                 const SizedBox(width: 24),
                                 // Circular Calories (move down slightly)
                                 TweenAnimationBuilder<double>(
-                                  tween: Tween<double>(begin: 0, end: totalCalories / dailyCalorieGoal!),
+                                  tween: Tween<double>(
+                                    begin: 0,
+                                    end: totalCalories / dailyCalorieGoal!,
+                                  ),
                                   duration: const Duration(milliseconds: 1200),
                                   curve: Curves.easeOutCubic,
-                                  builder: (context, value, child) => Column(
-                                    mainAxisAlignment: MainAxisAlignment.start,
-                                    children: [
-                                      const SizedBox(height: 24),
-                                      Text(AppLocalizations.of(context)!.calories, style: TextStyle(color: Colors.grey[600], fontWeight: FontWeight.w600, fontSize: 16)),
-                                      const SizedBox(height: 8),
-                                      _CircularCalories(
-                                        calories: totalCalories,
-                                        goal: dailyCalorieGoal!,
-                                        size: 90,
-                                        fontSize: 26,
-                                        subFontSize: 15,
+                                  builder:
+                                      (context, value, child) => Column(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.start,
+                                        children: [
+                                          const SizedBox(height: 24),
+                                          Text(
+                                            AppLocalizations.of(
+                                              context,
+                                            )!.calories,
+                                            style: TextStyle(
+                                              color: Colors.grey[600],
+                                              fontWeight: FontWeight.w600,
+                                              fontSize: 16,
+                                            ),
+                                          ),
+                                          const SizedBox(height: 8),
+                                          _CircularCalories(
+                                            calories: totalCalories,
+                                            goal: dailyCalorieGoal!,
+                                            size: 90,
+                                            fontSize: 26,
+                                            subFontSize: 15,
+                                          ),
+                                        ],
                                       ),
-                                    ],
-                                  ),
                                 ),
                               ],
                             ),
@@ -4976,13 +5912,22 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
             FadeTransition(
               opacity: _quickActionsController,
               child: SlideTransition(
-                position: Tween<Offset>(begin: const Offset(0, 0.1), end: Offset.zero).animate(_quickActionsController),
+                position: Tween<Offset>(
+                  begin: const Offset(0, 0.1),
+                  end: Offset.zero,
+                ).animate(_quickActionsController),
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(AppLocalizations.of(context)!.quickActions, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+                      Text(
+                        AppLocalizations.of(context)!.quickActions,
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 18,
+                        ),
+                      ),
                       const SizedBox(height: 12),
                       Row(
                         children: [
@@ -4994,7 +5939,9 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
                                 color: kPrimaryGreen,
                                 onTap: () {
                                   Navigator.of(context).push(
-                                    MaterialPageRoute(builder: (_) => const LogMealPage()),
+                                    MaterialPageRoute(
+                                      builder: (_) => const LogMealPage(),
+                                    ),
                                   );
                                 },
                               ),
@@ -5009,7 +5956,9 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
                                 color: kSecondaryBlue,
                                 onTap: () {
                                   Navigator.of(context).push(
-                                    MaterialPageRoute(builder: (_) => const ScanPage()),
+                                    MaterialPageRoute(
+                                      builder: (_) => const ScanPage(),
+                                    ),
                                   );
                                 },
                               ),
@@ -5027,16 +5976,28 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
             FadeTransition(
               opacity: _mealsController,
               child: SlideTransition(
-                position: Tween<Offset>(begin: const Offset(0, 0.1), end: Offset.zero).animate(_mealsController),
+                position: Tween<Offset>(
+                  begin: const Offset(0, 0.1),
+                  end: Offset.zero,
+                ).animate(_mealsController),
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(AppLocalizations.of(context)!.todaysMeals, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+                      Text(
+                        AppLocalizations.of(context)!.todaysMeals,
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 18,
+                        ),
+                      ),
                       TextButton(
                         onPressed: widget.onViewAllMeals,
-                        child: Text(AppLocalizations.of(context)!.viewAll, style: TextStyle(color: kPrimaryGreen)),
+                        child: Text(
+                          AppLocalizations.of(context)!.viewAll,
+                          style: TextStyle(color: kPrimaryGreen),
+                        ),
                       ),
                     ],
                   ),
@@ -5046,18 +6007,32 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
             FadeTransition(
               opacity: _mealsController,
               child: SlideTransition(
-                position: Tween<Offset>(begin: const Offset(0, 0.1), end: Offset.zero).animate(_mealsController),
+                position: Tween<Offset>(
+                  begin: const Offset(0, 0.1),
+                  end: Offset.zero,
+                ).animate(_mealsController),
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: StreamBuilder<List<Meal>>(
                     stream: _mealService.getTodayMeals(),
                     builder: (context, snapshot) {
-                      if (!snapshot.hasData) return const SizedBox(height: 120, child: Center(child: CircularProgressIndicator()));
+                      if (!snapshot.hasData)
+                        return const SizedBox(
+                          height: 120,
+                          child: Center(child: CircularProgressIndicator()),
+                        );
                       final meals = snapshot.data!;
                       if (meals.isEmpty) {
                         return Padding(
                           padding: const EdgeInsets.symmetric(vertical: 24),
-                          child: Center(child: Text(AppLocalizations.of(context)!.noMealsLoggedForThisDay, style: TextStyle(color: Colors.grey[600]))),
+                          child: Center(
+                            child: Text(
+                              AppLocalizations.of(
+                                context,
+                              )!.noMealsLoggedForThisDay,
+                              style: TextStyle(color: Colors.grey[600]),
+                            ),
+                          ),
                         );
                       }
                       return Column(
@@ -5066,13 +6041,16 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
                             TweenAnimationBuilder<double>(
                               tween: Tween<double>(begin: 0, end: 1),
                               duration: Duration(milliseconds: 500 + i * 200),
-                              builder: (context, value, child) => Opacity(
-                                opacity: value,
-                                child: Transform.translate(
-                                  offset: Offset(0, (1 - value) * 30),
-                                  child: _AnimatedScaleOnTap(child: _MealCardModern(meal: meals[i])),
-                                ),
-                              ),
+                              builder:
+                                  (context, value, child) => Opacity(
+                                    opacity: value,
+                                    child: Transform.translate(
+                                      offset: Offset(0, (1 - value) * 30),
+                                      child: _AnimatedScaleOnTap(
+                                        child: _MealCardModern(meal: meals[i]),
+                                      ),
+                                    ),
+                                  ),
                             ),
                         ],
                       );
@@ -5124,9 +6102,22 @@ class _MacroProgressRow extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 7.0),
       child: Row(
         children: [
-          Container(width: dotSize ?? 10, height: dotSize ?? 10, decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
+          Container(
+            width: dotSize ?? 10,
+            height: dotSize ?? 10,
+            decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+          ),
           const SizedBox(width: 10),
-          SizedBox(width: 70, child: Text(label, style: TextStyle(fontWeight: FontWeight.w600, color: labelColor ?? Colors.black))),
+          SizedBox(
+            width: 70,
+            child: Text(
+              label,
+              style: TextStyle(
+                fontWeight: FontWeight.w600,
+                color: labelColor ?? Colors.black,
+              ),
+            ),
+          ),
           Expanded(
             child: LinearProgressIndicator(
               value: percent.clamp(0.0, 1.0),
@@ -5136,7 +6127,13 @@ class _MacroProgressRow extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 16),
-          Text(value, style: TextStyle(fontWeight: valueFontWeight ?? FontWeight.w500, fontSize: valueFontSize ?? 15)),
+          Text(
+            value,
+            style: TextStyle(
+              fontWeight: valueFontWeight ?? FontWeight.w500,
+              fontSize: valueFontSize ?? 15,
+            ),
+          ),
         ],
       ),
     );
@@ -5167,7 +6164,13 @@ class _CircularCalories extends StatelessWidget {
   final double? size;
   final double? fontSize;
   final double? subFontSize;
-  const _CircularCalories({required this.calories, required this.goal, this.size, this.fontSize, this.subFontSize});
+  const _CircularCalories({
+    required this.calories,
+    required this.goal,
+    this.size,
+    this.fontSize,
+    this.subFontSize,
+  });
   @override
   Widget build(BuildContext context) {
     final percent = calories / goal;
@@ -5188,8 +6191,20 @@ class _CircularCalories extends StatelessWidget {
         Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text('$calories', style: TextStyle(fontWeight: FontWeight.bold, fontSize: fontSize ?? 20)),
-            Text('/ $goal', style: TextStyle(color: Colors.grey[600], fontSize: subFontSize ?? 14)),
+            Text(
+              '$calories',
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: fontSize ?? 20,
+              ),
+            ),
+            Text(
+              '/ $goal',
+              style: TextStyle(
+                color: Colors.grey[600],
+                fontSize: subFontSize ?? 14,
+              ),
+            ),
           ],
         ),
       ],
@@ -5203,12 +6218,18 @@ class _QuickActionCard extends StatefulWidget {
   final String label;
   final Color color;
   final VoidCallback onTap;
-  const _QuickActionCard({required this.icon, required this.label, required this.color, required this.onTap});
+  const _QuickActionCard({
+    required this.icon,
+    required this.label,
+    required this.color,
+    required this.onTap,
+  });
   @override
   State<_QuickActionCard> createState() => _QuickActionCardState();
 }
 
-class _QuickActionCardState extends State<_QuickActionCard> with SingleTickerProviderStateMixin {
+class _QuickActionCardState extends State<_QuickActionCard>
+    with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _scale;
 
@@ -5219,10 +6240,10 @@ class _QuickActionCardState extends State<_QuickActionCard> with SingleTickerPro
       vsync: this,
       duration: const Duration(milliseconds: 120),
     );
-    _scale = Tween<double>(begin: 1.0, end: 0.93).animate(CurvedAnimation(
-      parent: _controller,
-      curve: Curves.easeInOut,
-    ));
+    _scale = Tween<double>(
+      begin: 1.0,
+      end: 0.93,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
   }
 
   @override
@@ -5243,45 +6264,47 @@ class _QuickActionCardState extends State<_QuickActionCard> with SingleTickerPro
       onTap: _handleTap,
       child: AnimatedBuilder(
         animation: _scale,
-        builder: (context, child) => Transform.scale(
-          scale: _scale.value,
-          child: child,
-        ),
-      child: Container(
+        builder:
+            (context, child) =>
+                Transform.scale(scale: _scale.value, child: child),
+        child: Container(
           height: 80, // fixed height for all cards
           width: double.infinity,
-        decoration: BoxDecoration(
+          decoration: BoxDecoration(
             color: widget.color.withOpacity(0.08),
-          borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(16),
             border: Border.all(color: widget.color.withOpacity(0.15)),
-        ),
-        padding: const EdgeInsets.all(16),
-        child: Row(
-          children: [
-            Container(
-              decoration: BoxDecoration(
+          ),
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            children: [
+              Container(
+                decoration: BoxDecoration(
                   color: widget.color.withOpacity(0.15),
-                shape: BoxShape.circle,
-              ),
-              padding: const EdgeInsets.all(10),
+                  shape: BoxShape.circle,
+                ),
+                padding: const EdgeInsets.all(10),
                 child: Icon(widget.icon, color: widget.color, size: 28),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisAlignment: MainAxisAlignment.center,
-                children: [
+                  children: [
                     Text(
                       widget.label,
-                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
-                ],
+                  ],
+                ),
               ),
-            ),
-          ],
+            ],
           ),
         ),
       ),
@@ -5296,9 +6319,10 @@ class _MealCardModern extends StatefulWidget {
   @override
   State<_MealCardModern> createState() => _MealCardModernState();
 }
+
 class _MealCardModernState extends State<_MealCardModern> {
   bool _expanded = false;
-  
+
   // Helper function to get food type icon
   IconData _getFoodTypeIcon(String? foodType) {
     switch (foodType?.toLowerCase()) {
@@ -5311,7 +6335,7 @@ class _MealCardModernState extends State<_MealCardModern> {
         return Icons.restaurant;
     }
   }
-  
+
   @override
   Widget build(BuildContext context) {
     final meal = widget.meal;
@@ -5338,42 +6362,43 @@ class _MealCardModernState extends State<_MealCardModern> {
               // Meal image - prioritize user's photo, otherwise use food type icon
               ClipRRect(
                 borderRadius: BorderRadius.circular(16),
-                child: meal.imageUrl != null
-                    ? Image.network(
-                        meal.imageUrl!,
-                        width: 70,
-                        height: 70,
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) {
-                          // Fallback to food type icon if user's image fails to load
-                                return Container(
-                                  width: 70,
-                                  height: 70,
-                            decoration: BoxDecoration(
-                              color: kPrimaryGreen.withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                            child: Icon(
-                              _getFoodTypeIcon(meal.foodType),
-                              size: 35,
-                              color: kPrimaryGreen,
-                            ),
-                          );
-                        },
-                                )
-                              : Container(
-                                  width: 70,
-                                  height: 70,
-                        decoration: BoxDecoration(
-                          color: kPrimaryGreen.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(16),
+                child:
+                    meal.imageUrl != null
+                        ? Image.network(
+                          meal.imageUrl!,
+                          width: 70,
+                          height: 70,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) {
+                            // Fallback to food type icon if user's image fails to load
+                            return Container(
+                              width: 70,
+                              height: 70,
+                              decoration: BoxDecoration(
+                                color: kPrimaryGreen.withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                              child: Icon(
+                                _getFoodTypeIcon(meal.foodType),
+                                size: 35,
+                                color: kPrimaryGreen,
+                              ),
+                            );
+                          },
+                        )
+                        : Container(
+                          width: 70,
+                          height: 70,
+                          decoration: BoxDecoration(
+                            color: kPrimaryGreen.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          child: Icon(
+                            _getFoodTypeIcon(meal.foodType),
+                            size: 35,
+                            color: kPrimaryGreen,
+                          ),
                         ),
-                        child: Icon(
-                          _getFoodTypeIcon(meal.foodType),
-                          size: 35,
-                          color: kPrimaryGreen,
-                        ),
-                      ),
               ),
               const SizedBox(width: 14),
               Expanded(
@@ -5382,13 +6407,29 @@ class _MealCardModernState extends State<_MealCardModern> {
                   children: [
                     Row(
                       children: [
-                        Text(getMealTypeLocalized(context, meal.mealType), style: TextStyle(color: kPrimaryGreen, fontWeight: FontWeight.w600)),
+                        Text(
+                          getMealTypeLocalized(context, meal.mealType),
+                          style: TextStyle(
+                            color: kPrimaryGreen,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
                         const SizedBox(width: 8),
-                        Text(formatTime(meal.timestamp), style: TextStyle(color: Colors.grey[500], fontSize: 13)),
-                        if (meal.quantity != null && meal.quantityUnit != null) ...[
+                        Text(
+                          formatTime(meal.timestamp),
+                          style: TextStyle(
+                            color: Colors.grey[500],
+                            fontSize: 13,
+                          ),
+                        ),
+                        if (meal.quantity != null &&
+                            meal.quantityUnit != null) ...[
                           const SizedBox(width: 8),
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 6,
+                              vertical: 2,
+                            ),
                             decoration: BoxDecoration(
                               color: kPrimaryGreen.withOpacity(0.1),
                               borderRadius: BorderRadius.circular(8),
@@ -5408,19 +6449,39 @@ class _MealCardModernState extends State<_MealCardModern> {
                     const SizedBox(height: 2),
                     Text(
                       meal.name,
-                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      textDirection: AppLocalizations.of(context)!.localeName.startsWith('ar') ? TextDirection.rtl : TextDirection.ltr,
+                      textDirection:
+                          AppLocalizations.of(
+                                context,
+                              )!.localeName.startsWith('ar')
+                              ? TextDirection.rtl
+                              : TextDirection.ltr,
                     ),
                     const SizedBox(height: 6),
                     Wrap(
                       spacing: 6,
                       runSpacing: 2,
                       children: [
-                        _MacroTag(label: 'P', value: '${meal.protein}g', color: kSecondaryBlue),
-                        _MacroTag(label: 'C', value: '${meal.carbs}g', color: kAccentOrange),
-                        _MacroTag(label: 'F', value: '${meal.fat}g', color: kWarningRed),
+                        _MacroTag(
+                          label: 'P',
+                          value: '${meal.protein}g',
+                          color: kSecondaryBlue,
+                        ),
+                        _MacroTag(
+                          label: 'C',
+                          value: '${meal.carbs}g',
+                          color: kAccentOrange,
+                        ),
+                        _MacroTag(
+                          label: 'F',
+                          value: '${meal.fat}g',
+                          color: kWarningRed,
+                        ),
                       ],
                     ),
                   ],
@@ -5435,31 +6496,62 @@ class _MealCardModernState extends State<_MealCardModern> {
                     crossAxisAlignment: CrossAxisAlignment.end,
                     mainAxisAlignment: MainAxisAlignment.start,
                     children: [
-                      Text('${meal.calories}', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
-                      Text('cal', style: TextStyle(color: Colors.grey[600], fontSize: 13)),
+                      Text(
+                        '${meal.calories}',
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 18,
+                        ),
+                      ),
+                      Text(
+                        'cal',
+                        style: TextStyle(color: Colors.grey[600], fontSize: 13),
+                      ),
                       IconButton(
-                        icon: Icon(Icons.delete, color: Colors.redAccent, size: 22),
+                        icon: Icon(
+                          Icons.delete,
+                          color: Colors.redAccent,
+                          size: 22,
+                        ),
                         tooltip: 'Delete meal',
                         padding: EdgeInsets.all(8),
-                        constraints: BoxConstraints(minWidth: 48, minHeight: 48),
+                        constraints: BoxConstraints(
+                          minWidth: 48,
+                          minHeight: 48,
+                        ),
                         onPressed: () async {
                           final confirm = await showDialog<bool>(
                             context: context,
-                            builder: (context) => AlertDialog(
-                              title: Text(AppLocalizations.of(context)!.deleteMeal),
-                              content: Text(AppLocalizations.of(context)!.areYouSureDeleteMeal),
-                              actions: [
-                                TextButton(
-                                  onPressed: () => Navigator.pop(context, false),
-                                  child: Text(AppLocalizations.of(context)!.cancel),
+                            builder:
+                                (context) => AlertDialog(
+                                  title: Text(
+                                    AppLocalizations.of(context)!.deleteMeal,
+                                  ),
+                                  content: Text(
+                                    AppLocalizations.of(
+                                      context,
+                                    )!.areYouSureDeleteMeal,
+                                  ),
+                                  actions: [
+                                    TextButton(
+                                      onPressed:
+                                          () => Navigator.pop(context, false),
+                                      child: Text(
+                                        AppLocalizations.of(context)!.cancel,
+                                      ),
+                                    ),
+                                    TextButton(
+                                      onPressed:
+                                          () => Navigator.pop(context, true),
+                                      style: TextButton.styleFrom(
+                                        foregroundColor: Colors.red,
+                                      ),
+                                      child: Text(
+                                        AppLocalizations.of(context)!.delete,
+                                      ),
+                                    ),
+                                  ],
                                 ),
-                                TextButton(
-                                  onPressed: () => Navigator.pop(context, true),
-                                  style: TextButton.styleFrom(foregroundColor: Colors.red),
-                                  child: Text(AppLocalizations.of(context)!.delete),
-                                ),
-                              ],
-                            ),
                           );
                           if (confirm == true) {
                             await MealService().deleteMeal(meal.id);
@@ -5467,10 +6559,18 @@ class _MealCardModernState extends State<_MealCardModern> {
                         },
                       ),
                       IconButton(
-                        icon: Icon(_expanded ? Icons.expand_less : Icons.expand_more, color: kPrimaryGreen, size: 22),
-                        tooltip: _expanded ? 'Hide ingredients' : 'Show ingredients',
+                        icon: Icon(
+                          _expanded ? Icons.expand_less : Icons.expand_more,
+                          color: kPrimaryGreen,
+                          size: 22,
+                        ),
+                        tooltip:
+                            _expanded ? 'Hide ingredients' : 'Show ingredients',
                         padding: EdgeInsets.all(8),
-                        constraints: BoxConstraints(minWidth: 48, minHeight: 48),
+                        constraints: BoxConstraints(
+                          minWidth: 48,
+                          minHeight: 48,
+                        ),
                         onPressed: () => setState(() => _expanded = !_expanded),
                       ),
                     ],
@@ -5491,12 +6591,31 @@ class _MealCardModernState extends State<_MealCardModern> {
                       return Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('Ingredients:', style: TextStyle(fontWeight: FontWeight.w600, color: kPrimaryGreen)),
-                          ...ingredients.map((ing) => Text('- $ing', style: TextStyle(color: Colors.black87))).toList(),
+                          Text(
+                            'Ingredients:',
+                            style: TextStyle(
+                              fontWeight: FontWeight.w600,
+                              color: kPrimaryGreen,
+                            ),
+                          ),
+                          ...ingredients
+                              .map(
+                                (ing) => Text(
+                                  '- $ing',
+                                  style: TextStyle(color: Colors.black87),
+                                ),
+                              )
+                              .toList(),
                         ],
                       );
                     } else {
-                      return Text(AppLocalizations.of(context)!.noIngredientsListed, style: TextStyle(color: Colors.grey[600], fontStyle: FontStyle.italic));
+                      return Text(
+                        AppLocalizations.of(context)!.noIngredientsListed,
+                        style: TextStyle(
+                          color: Colors.grey[600],
+                          fontStyle: FontStyle.italic,
+                        ),
+                      );
                     }
                   },
                 ),
@@ -5519,7 +6638,11 @@ class _MacroTag extends StatelessWidget {
   final String label;
   final String value;
   final Color color;
-  const _MacroTag({required this.label, required this.value, required this.color});
+  const _MacroTag({
+    required this.label,
+    required this.value,
+    required this.color,
+  });
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -5530,9 +6653,23 @@ class _MacroTag extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Text(label, style: TextStyle(color: color, fontWeight: FontWeight.bold, fontSize: 13)),
+          Text(
+            label,
+            style: TextStyle(
+              color: color,
+              fontWeight: FontWeight.bold,
+              fontSize: 13,
+            ),
+          ),
           const SizedBox(width: 2),
-          Text(value, style: TextStyle(color: color, fontWeight: FontWeight.w500, fontSize: 13)),
+          Text(
+            value,
+            style: TextStyle(
+              color: color,
+              fontWeight: FontWeight.w500,
+              fontSize: 13,
+            ),
+          ),
         ],
       ),
     );
@@ -5540,10 +6677,9 @@ class _MacroTag extends StatelessWidget {
 }
 
 extension StringCasingExtension on String {
-  String capitalize() => isEmpty ? this : '${this[0].toUpperCase()}${substring(1)}';
+  String capitalize() =>
+      isEmpty ? this : '${this[0].toUpperCase()}${substring(1)}';
 }
-
-
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -5555,16 +6691,20 @@ class ProfileScreen extends StatefulWidget {
 class _ProfileScreenState extends State<ProfileScreen> {
   final UserService _userService = UserService();
   final RateLimitingService _rateLimitingService = RateLimitingService();
-  final SecurityMonitoringService _securityService = SecurityMonitoringService();
+  final SecurityMonitoringService _securityService =
+      SecurityMonitoringService();
 
   // Check if the current user signed in with a social provider (Google or Apple)
   bool _isSocialUser() {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return false;
-    
+
     // Check if user has Google or Apple as a provider
-    return user.providerData.any((provider) => 
-      provider.providerId == 'google.com' || provider.providerId == 'apple.com');
+    return user.providerData.any(
+      (provider) =>
+          provider.providerId == 'google.com' ||
+          provider.providerId == 'apple.com',
+    );
   }
 
   // Helper functions for sharing and rating
@@ -5581,11 +6721,8 @@ Track your calories, scan food with AI, and get personalized nutrition insights 
 
 #Yumie™ #Nutrition #Fitness #HealthyLiving
       ''';
-      
-      await Share.share(
-        shareText,
-        subject: 'Yumie™ – Calorie Tracker',
-      );
+
+      await Share.share(shareText, subject: 'Yumie™ – Calorie Tracker');
     } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -5604,30 +6741,41 @@ Track your calories, scan food with AI, and get personalized nutrition insights 
 
   Future<void> _changeProfilePicture() async {
     final picker = ImagePicker();
-    final picked = await picker.pickImage(source: ImageSource.gallery, imageQuality: 80);
+    final picked = await picker.pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 80,
+    );
     if (picked == null) return;
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
-    
+
     showDialog(
       context: context,
       barrierDismissible: false,
       builder: (context) => const Center(child: CircularProgressIndicator()),
     );
     try {
-      final ref = FirebaseStorage.instance.ref().child('profile_pics/${user.uid}.jpg');
+      final ref = FirebaseStorage.instance.ref().child(
+        'profile_pics/${user.uid}.jpg',
+      );
       final file = File(picked.path);
       final uploadTask = await ref.putFile(file);
       if (uploadTask.state != TaskState.success) {
         throw Exception('Upload failed: \'${uploadTask.state}\'');
       }
-              final url = await ref.getDownloadURL();
+      final url = await ref.getDownloadURL();
       await _userService.updateUserPhotoUrl(url);
       await user.updatePhotoURL(url);
       setState(() {}); // Refresh UI
-          } catch (e, stack) {
-        // Handle error silently
-                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('${AppLocalizations.of(context)!.failedToUpdatePhoto}: $e')));
+    } catch (e, stack) {
+      // Handle error silently
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            '${AppLocalizations.of(context)!.failedToUpdatePhoto}: $e',
+          ),
+        ),
+      );
     } finally {
       Navigator.of(context, rootNavigator: true).pop();
     }
@@ -5637,103 +6785,123 @@ Track your calories, scan food with AI, and get personalized nutrition insights 
   void _showLanguageSelectionDialog(BuildContext context) {
     showDialog(
       context: context,
-      builder: (context) => Consumer<LanguageProvider>(
-        builder: (context, languageProvider, child) {
-          final supportedLanguages = languageProvider.getAllSupportedLanguages();
-          
-          return AlertDialog(
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-            title: Row(
-              children: [
-                Text('🌍', style: TextStyle(fontSize: 20)),
-                SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    AppLocalizations.of(context)!.selectLanguageTitle,
-                    style: TextStyle(fontSize: 18),
-                    overflow: TextOverflow.ellipsis,
-                  ),
+      builder:
+          (context) => Consumer<LanguageProvider>(
+            builder: (context, languageProvider, child) {
+              final supportedLanguages =
+                  languageProvider.getAllSupportedLanguages();
+
+              return AlertDialog(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
                 ),
-              ],
-            ),
-            content: SizedBox(
-              width: double.maxFinite,
-              height: 400, // Fixed height for the dialog
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    AppLocalizations.of(context)!.chooseYourPreferredLanguage,
-                    style: TextStyle(color: Colors.grey[600]),
-                  ),
-                  SizedBox(height: 16),
-                  Expanded(
-                    child: Scrollbar(
-                      thumbVisibility: true,
-                      trackVisibility: true,
-                      thickness: 6,
-                      radius: Radius.circular(3),
-                      child: ListView.builder(
-                        itemCount: supportedLanguages.length,
-                        itemBuilder: (context, index) {
-                          final language = supportedLanguages[index];
-                          final isSelected = languageProvider.currentLanguageCode == language['code'];
-                          
-                          return Card(
-                            margin: EdgeInsets.only(bottom: 8),
-                            color: isSelected ? Colors.blue.withOpacity(0.1) : null,
-                            child: ListTile(
-                              leading: Text(
-                                language['flag'] ?? '🌐',
-                                style: TextStyle(fontSize: 28),
-                              ),
-                              title: Text(
-                                language['nativeName']!,
-                                style: TextStyle(
-                                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                                ),
-                              ),
-                              subtitle: Text(
-                                language['name']!,
-                                style: TextStyle(fontSize: 12),
-                              ),
-                              trailing: isSelected
-                                  ? Icon(Icons.check_circle, color: Colors.blue)
-                                  : null,
-                              onTap: () async {
-                                await languageProvider.changeLanguage(language['code']!);
-                                Navigator.pop(context);
-                                
-                                // Show confirmation
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Text('${AppLocalizations.of(context)!.languageChangedTo} ${language['nativeName']}'),
-                                    backgroundColor: Colors.green,
-                                  ),
-                                );
-                              },
-                            ),
-                          );
-                        },
+                title: Row(
+                  children: [
+                    Text('🌍', style: TextStyle(fontSize: 20)),
+                    SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        AppLocalizations.of(context)!.selectLanguageTitle,
+                        style: TextStyle(fontSize: 18),
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
+                  ],
+                ),
+                content: SizedBox(
+                  width: double.maxFinite,
+                  height: 400, // Fixed height for the dialog
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        AppLocalizations.of(
+                          context,
+                        )!.chooseYourPreferredLanguage,
+                        style: TextStyle(color: Colors.grey[600]),
+                      ),
+                      SizedBox(height: 16),
+                      Expanded(
+                        child: Scrollbar(
+                          thumbVisibility: true,
+                          trackVisibility: true,
+                          thickness: 6,
+                          radius: Radius.circular(3),
+                          child: ListView.builder(
+                            itemCount: supportedLanguages.length,
+                            itemBuilder: (context, index) {
+                              final language = supportedLanguages[index];
+                              final isSelected =
+                                  languageProvider.currentLanguageCode ==
+                                  language['code'];
+
+                              return Card(
+                                margin: EdgeInsets.only(bottom: 8),
+                                color:
+                                    isSelected
+                                        ? Colors.blue.withOpacity(0.1)
+                                        : null,
+                                child: ListTile(
+                                  leading: Text(
+                                    language['flag'] ?? '🌐',
+                                    style: TextStyle(fontSize: 28),
+                                  ),
+                                  title: Text(
+                                    language['nativeName']!,
+                                    style: TextStyle(
+                                      fontWeight:
+                                          isSelected
+                                              ? FontWeight.bold
+                                              : FontWeight.normal,
+                                    ),
+                                  ),
+                                  subtitle: Text(
+                                    language['name']!,
+                                    style: TextStyle(fontSize: 12),
+                                  ),
+                                  trailing:
+                                      isSelected
+                                          ? Icon(
+                                            Icons.check_circle,
+                                            color: Colors.blue,
+                                          )
+                                          : null,
+                                  onTap: () async {
+                                    await languageProvider.changeLanguage(
+                                      language['code']!,
+                                    );
+                                    Navigator.pop(context);
+
+                                    // Show confirmation
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text(
+                                          '${AppLocalizations.of(context)!.languageChangedTo} ${language['nativeName']}',
+                                        ),
+                                        backgroundColor: Colors.green,
+                                      ),
+                                    );
+                                  },
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: Text(AppLocalizations.of(context)!.close),
                   ),
                 ],
-              ),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: Text(AppLocalizations.of(context)!.close),
-              ),
-            ],
-          );
-        },
-      ),
+              );
+            },
+          ),
     );
   }
-
-
 
   Future<void> _changeProfileName(String currentName) async {
     final controller = TextEditingController(text: currentName);
@@ -5744,73 +6912,112 @@ Track your calories, scan food with AI, and get personalized nutrition insights 
     bool didUpdate = false;
     await showDialog(
       context: parentContext,
-      builder: (dialogContext) => StatefulBuilder(
-        builder: (context, setState) => AlertDialog(
-          title: Text(AppLocalizations.of(context)!.changeProfileName),
-          content: TextField(
-            controller: controller,
-            decoration: InputDecoration(
-              hintText: 'Enter new name', 
-              errorText: error,
-              counterText: '${controller.text.length}/25',
-            ),
-            maxLength: 25,
+      builder:
+          (dialogContext) => StatefulBuilder(
+            builder:
+                (context, setState) => AlertDialog(
+                  title: Text(AppLocalizations.of(context)!.changeProfileName),
+                  content: TextField(
+                    controller: controller,
+                    decoration: InputDecoration(
+                      hintText: 'Enter new name',
+                      errorText: error,
+                      counterText: '${controller.text.length}/25',
+                    ),
+                    maxLength: 25,
+                  ),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(dialogContext),
+                      child: Text(AppLocalizations.of(context)!.cancel),
+                    ),
+                    ElevatedButton(
+                      onPressed: () async {
+                        final newName = controller.text.trim();
+                        if (newName.isEmpty) {
+                          setState(() {
+                            error = 'Name cannot be empty';
+                          });
+                          return;
+                        }
+                        Navigator.pop(dialogContext); // Close the input dialog
+                        showDialog(
+                          context: parentContext,
+                          barrierDismissible: false,
+                          builder:
+                              (context) => const Center(
+                                child: CircularProgressIndicator(),
+                              ),
+                        );
+                        try {
+                          // Update Firestore
+                          final snap =
+                              await FirebaseFirestore.instance
+                                  .collection('users')
+                                  .doc(user.uid)
+                                  .get();
+                          final data = snap.data();
+                          if (data != null) {
+                            await FirebaseFirestore.instance
+                                .collection('users')
+                                .doc(user.uid)
+                                .update({
+                                  'name': newName,
+                                  'lastUpdated': DateTime.now(),
+                                });
+                          }
+                          // Update Auth
+                          await user.updateDisplayName(newName);
+                          didUpdate = true;
+                        } catch (e, stack) {
+                          if (mounted)
+                            ScaffoldMessenger.of(parentContext).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  '${AppLocalizations.of(parentContext)!.failedToUpdateName}: $e',
+                                ),
+                              ),
+                            );
+                        } finally {
+                          await Future.delayed(
+                            const Duration(milliseconds: 100),
+                          );
+                          Navigator.of(
+                            parentContext,
+                            rootNavigator: true,
+                          ).maybePop();
+                          if (didUpdate && mounted)
+                            setState(() {}); // Only refresh parent if needed
+                        }
+                      },
+                      child: Text(AppLocalizations.of(context)!.save),
+                    ),
+                  ],
+                ),
           ),
-          actions: [
-            TextButton(onPressed: () => Navigator.pop(dialogContext), child: Text(AppLocalizations.of(context)!.cancel)),
-            ElevatedButton(
-              onPressed: () async {
-                final newName = controller.text.trim();
-                if (newName.isEmpty) {
-                  setState(() { error = 'Name cannot be empty'; });
-                                  return;
-              }
-              Navigator.pop(dialogContext); // Close the input dialog
-                showDialog(
-                  context: parentContext,
-                  barrierDismissible: false,
-                  builder: (context) => const Center(child: CircularProgressIndicator()),
-                );
-                try {
-                  // Update Firestore
-                  final snap = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
-                  final data = snap.data();
-                  if (data != null) {
-                    await FirebaseFirestore.instance.collection('users').doc(user.uid).update({'name': newName, 'lastUpdated': DateTime.now()});
-                  }
-                  // Update Auth
-                  await user.updateDisplayName(newName);
-                  didUpdate = true;
-                } catch (e, stack) {
-                  if (mounted) ScaffoldMessenger.of(parentContext).showSnackBar(SnackBar(content: Text('${AppLocalizations.of(parentContext)!.failedToUpdateName}: $e')));
-                } finally {
-                  await Future.delayed(const Duration(milliseconds: 100));
-                  Navigator.of(parentContext, rootNavigator: true).maybePop();
-                  if (didUpdate && mounted) setState(() {}); // Only refresh parent if needed
-                }
-              },
-              child: Text(AppLocalizations.of(context)!.save),
-            ),
-          ],
-        ),
-      ),
     );
   }
 
-
-
   void _showEditProfileDialog(UserProfile profile) {
     final nameController = TextEditingController(text: profile.name);
-    final startingWeightController = TextEditingController(text: profile.startingWeight.toStringAsFixed(1));
-    final weightController = TextEditingController(text: profile.weight.toStringAsFixed(1));
-    final targetWeightController = TextEditingController(text: profile.targetWeight.toStringAsFixed(1));
+    final startingWeightController = TextEditingController(
+      text: profile.startingWeight.toStringAsFixed(1),
+    );
+    final weightController = TextEditingController(
+      text: profile.weight.toStringAsFixed(1),
+    );
+    final targetWeightController = TextEditingController(
+      text: profile.targetWeight.toStringAsFixed(1),
+    );
 
     showDialog(
       context: context,
       builder: (context) {
         final theme = Theme.of(context);
         return Dialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(28),
+          ),
           backgroundColor: theme.cardColor,
           child: Padding(
             padding: const EdgeInsets.all(24.0),
@@ -5818,17 +7025,31 @@ Track your calories, scan food with AI, and get personalized nutrition insights 
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Edit Profile', style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold, color: theme.textTheme.bodyLarge?.color)),
+                Text(
+                  'Edit Profile',
+                  style: theme.textTheme.headlineSmall?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: theme.textTheme.bodyLarge?.color,
+                  ),
+                ),
                 const SizedBox(height: 18),
                 TextField(
                   controller: nameController,
                   decoration: InputDecoration(
                     labelText: AppLocalizations.of(context)!.name,
-                    prefixIcon: Icon(Icons.person, color: theme.iconTheme.color),
+                    prefixIcon: Icon(
+                      Icons.person,
+                      color: theme.iconTheme.color,
+                    ),
                     filled: true,
                     fillColor: theme.cardColor,
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
-                    labelStyle: TextStyle(color: theme.textTheme.bodyLarge?.color),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide.none,
+                    ),
+                    labelStyle: TextStyle(
+                      color: theme.textTheme.bodyLarge?.color,
+                    ),
                     counterText: '${nameController.text.length}/25',
                   ),
                   style: TextStyle(color: theme.textTheme.bodyLarge?.color),
@@ -5839,24 +7060,42 @@ Track your calories, scan food with AI, and get personalized nutrition insights 
                   controller: startingWeightController,
                   decoration: InputDecoration(
                     labelText: 'Starting Weight (kg)',
-                    prefixIcon: Icon(Icons.trending_up, color: theme.iconTheme.color),
+                    prefixIcon: Icon(
+                      Icons.trending_up,
+                      color: theme.iconTheme.color,
+                    ),
                     filled: true,
                     fillColor: theme.cardColor,
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
-                    labelStyle: TextStyle(color: theme.textTheme.bodyLarge?.color),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide.none,
+                    ),
+                    labelStyle: TextStyle(
+                      color: theme.textTheme.bodyLarge?.color,
+                    ),
                   ),
-                  enabled: profile.startingWeight == 0.0, // Only allow editing if not set
+                  enabled:
+                      profile.startingWeight ==
+                      0.0, // Only allow editing if not set
                 ),
                 const SizedBox(height: 12),
                 _NumericTextField(
                   controller: weightController,
                   decoration: InputDecoration(
                     labelText: 'Current Weight (kg)',
-                    prefixIcon: Icon(Icons.monitor_weight, color: theme.iconTheme.color),
+                    prefixIcon: Icon(
+                      Icons.monitor_weight,
+                      color: theme.iconTheme.color,
+                    ),
                     filled: true,
                     fillColor: theme.cardColor,
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
-                    labelStyle: TextStyle(color: theme.textTheme.bodyLarge?.color),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide.none,
+                    ),
+                    labelStyle: TextStyle(
+                      color: theme.textTheme.bodyLarge?.color,
+                    ),
                   ),
                 ),
                 const SizedBox(height: 12),
@@ -5867,8 +7106,13 @@ Track your calories, scan food with AI, and get personalized nutrition insights 
                     prefixIcon: Icon(Icons.flag, color: theme.iconTheme.color),
                     filled: true,
                     fillColor: theme.cardColor,
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
-                    labelStyle: TextStyle(color: theme.textTheme.bodyLarge?.color),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide.none,
+                    ),
+                    labelStyle: TextStyle(
+                      color: theme.textTheme.bodyLarge?.color,
+                    ),
                   ),
                 ),
                 const SizedBox(height: 24),
@@ -5880,7 +7124,9 @@ Track your calories, scan food with AI, and get personalized nutrition insights 
                       style: OutlinedButton.styleFrom(
                         foregroundColor: kPrimaryGreen,
                         side: BorderSide(color: kPrimaryGreen, width: 2),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                       ),
                       child: Text(AppLocalizations.of(context)!.cancel),
                     ),
@@ -5900,8 +7146,15 @@ Track your calories, scan food with AI, and get personalized nutrition insights 
                             proteinGoal: profile.proteinGoal,
                             carbsGoal: profile.carbsGoal,
                             fatGoal: profile.fatGoal,
-                            targetWeight: double.parse(targetWeightController.text),
-                            startingWeight: profile.startingWeight == 0.0 ? double.parse(startingWeightController.text) : profile.startingWeight,
+                            targetWeight: double.parse(
+                              targetWeightController.text,
+                            ),
+                            startingWeight:
+                                profile.startingWeight == 0.0
+                                    ? double.parse(
+                                      startingWeightController.text,
+                                    )
+                                    : profile.startingWeight,
                             createdAt: profile.createdAt,
                             lastUpdated: DateTime.now(),
                           );
@@ -5909,13 +7162,23 @@ Track your calories, scan food with AI, and get personalized nutrition insights 
                           if (mounted) {
                             Navigator.pop(context);
                             ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text(AppLocalizations.of(context)!.profileUpdatedSuccessfully)),
+                              SnackBar(
+                                content: Text(
+                                  AppLocalizations.of(
+                                    context,
+                                  )!.profileUpdatedSuccessfully,
+                                ),
+                              ),
                             );
                           }
                         } catch (e) {
                           if (mounted) {
                             ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text('${AppLocalizations.of(context)!.errorUpdatingProfile}: $e')),
+                              SnackBar(
+                                content: Text(
+                                  '${AppLocalizations.of(context)!.errorUpdatingProfile}: $e',
+                                ),
+                              ),
                             );
                           }
                         }
@@ -5923,8 +7186,13 @@ Track your calories, scan food with AI, and get personalized nutrition insights 
                       style: ElevatedButton.styleFrom(
                         backgroundColor: kPrimaryGreen,
                         foregroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                        padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 28,
+                          vertical: 14,
+                        ),
                       ),
                       child: const Text('Save', style: TextStyle(fontSize: 16)),
                     ),
@@ -5939,72 +7207,100 @@ Track your calories, scan food with AI, and get personalized nutrition insights 
   }
 
   void _showEditGoalsDialog(UserProfile profile) {
-    final caloriesController = TextEditingController(text: profile.dailyCalorieGoal.toString());
-    final proteinController = TextEditingController(text: profile.proteinGoal.toString());
-    final carbsController = TextEditingController(text: profile.carbsGoal.toString());
-    final fatController = TextEditingController(text: profile.fatGoal.toString());
+    final caloriesController = TextEditingController(
+      text: profile.dailyCalorieGoal.toString(),
+    );
+    final proteinController = TextEditingController(
+      text: profile.proteinGoal.toString(),
+    );
+    final carbsController = TextEditingController(
+      text: profile.carbsGoal.toString(),
+    );
+    final fatController = TextEditingController(
+      text: profile.fatGoal.toString(),
+    );
 
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text(AppLocalizations.of(context)!.editGoals),
-        content: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              _NumericTextField(
-                decoration: InputDecoration(labelText: AppLocalizations.of(context)!.dailyCalorieGoal),
-                controller: caloriesController,
+      builder:
+          (context) => AlertDialog(
+            title: Text(AppLocalizations.of(context)!.editGoals),
+            content: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  _NumericTextField(
+                    decoration: InputDecoration(
+                      labelText: AppLocalizations.of(context)!.dailyCalorieGoal,
+                    ),
+                    controller: caloriesController,
+                  ),
+                  _NumericTextField(
+                    decoration: const InputDecoration(
+                      labelText: 'Protein Goal (g)',
+                    ),
+                    controller: proteinController,
+                  ),
+                  _NumericTextField(
+                    decoration: const InputDecoration(
+                      labelText: 'Carbs Goal (g)',
+                    ),
+                    controller: carbsController,
+                  ),
+                  _NumericTextField(
+                    decoration: const InputDecoration(
+                      labelText: 'Fat Goal (g)',
+                    ),
+                    controller: fatController,
+                  ),
+                ],
               ),
-              _NumericTextField(
-                decoration: const InputDecoration(labelText: 'Protein Goal (g)'),
-                controller: proteinController,
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: Text(AppLocalizations.of(context)!.cancel),
               ),
-              _NumericTextField(
-                decoration: const InputDecoration(labelText: 'Carbs Goal (g)'),
-                controller: carbsController,
-              ),
-              _NumericTextField(
-                decoration: const InputDecoration(labelText: 'Fat Goal (g)'),
-                controller: fatController,
+              ElevatedButton(
+                onPressed: () async {
+                  try {
+                    await _userService.updateUserGoals(
+                      dailyCalorieGoal: int.parse(caloriesController.text),
+                      proteinGoal: int.parse(proteinController.text),
+                      carbsGoal: int.parse(carbsController.text),
+                      fatGoal: int.parse(fatController.text),
+                    );
+                    if (mounted) {
+                      Navigator.pop(context);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            AppLocalizations.of(
+                              context,
+                            )!.goalsUpdatedSuccessfully,
+                          ),
+                        ),
+                      );
+                    }
+                  } catch (e) {
+                    if (mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            '${AppLocalizations.of(context)!.errorUpdatingGoals}: $e',
+                          ),
+                        ),
+                      );
+                    }
+                  }
+                },
+                child: Text(AppLocalizations.of(context)!.save),
               ),
             ],
           ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(AppLocalizations.of(context)!.cancel),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              try {
-                await _userService.updateUserGoals(
-                  dailyCalorieGoal: int.parse(caloriesController.text),
-                  proteinGoal: int.parse(proteinController.text),
-                  carbsGoal: int.parse(carbsController.text),
-                  fatGoal: int.parse(fatController.text),
-                );
-                if (mounted) {
-                  Navigator.pop(context);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text(AppLocalizations.of(context)!.goalsUpdatedSuccessfully)),
-                  );
-                }
-              } catch (e) {
-                if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                                                SnackBar(content: Text('${AppLocalizations.of(context)!.errorUpdatingGoals}: $e')),
-                  );
-                }
-              }
-            },
-            child: Text(AppLocalizations.of(context)!.save),
-          ),
-        ],
-      ),
     );
   }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -6026,7 +7322,13 @@ Track your calories, scan food with AI, and get personalized nutrition insights 
                   // Header
                   Padding(
                     padding: const EdgeInsets.fromLTRB(24, 24, 24, 8),
-                    child: Text(AppLocalizations.of(context)!.profile, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 28)),
+                    child: Text(
+                      AppLocalizations.of(context)!.profile,
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 28,
+                      ),
+                    ),
                   ),
 
                   Divider(height: 1, thickness: 1, color: Colors.grey[200]),
@@ -6057,7 +7359,11 @@ Track your calories, scan food with AI, and get personalized nutrition insights 
                                     context: context,
                                     builder: (context) {
                                       return Dialog(
-                                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(
+                                            24,
+                                          ),
+                                        ),
                                         child: Padding(
                                           padding: const EdgeInsets.all(24.0),
                                           child: Column(
@@ -6067,20 +7373,43 @@ Track your calories, scan food with AI, and get personalized nutrition insights 
                                                 children: [
                                                   CircleAvatar(
                                                     radius: 60,
-                                                    backgroundImage: profile != null && profile.photoUrl.isNotEmpty
-                                                      ? NetworkImage(profile.photoUrl)
-                                                      : null,
-                                                    backgroundColor: kPrimaryGreen.withOpacity(0.08),
-                                                    child: profile == null || profile.photoUrl.isEmpty
-                                                      ? Icon(Icons.person, color: kPrimaryGreen, size: 60)
-                                                      : null,
+                                                    backgroundImage:
+                                                        profile != null &&
+                                                                profile
+                                                                    .photoUrl
+                                                                    .isNotEmpty
+                                                            ? NetworkImage(
+                                                              profile.photoUrl,
+                                                            )
+                                                            : null,
+                                                    backgroundColor:
+                                                        kPrimaryGreen
+                                                            .withOpacity(0.08),
+                                                    child:
+                                                        profile == null ||
+                                                                profile
+                                                                    .photoUrl
+                                                                    .isEmpty
+                                                            ? Icon(
+                                                              Icons.person,
+                                                              color:
+                                                                  kPrimaryGreen,
+                                                              size: 60,
+                                                            )
+                                                            : null,
                                                   ),
                                                   Positioned(
                                                     top: 0,
                                                     right: 0,
                                                     child: IconButton(
-                                                      icon: Icon(Icons.close, color: Colors.grey[700]),
-                                                      onPressed: () => Navigator.pop(context),
+                                                      icon: Icon(
+                                                        Icons.close,
+                                                        color: Colors.grey[700],
+                                                      ),
+                                                      onPressed:
+                                                          () => Navigator.pop(
+                                                            context,
+                                                          ),
                                                     ),
                                                   ),
                                                 ],
@@ -6092,26 +7421,56 @@ Track your calories, scan food with AI, and get personalized nutrition insights 
                                                     width: double.infinity,
                                                     child: ElevatedButton.icon(
                                                       icon: Icon(Icons.upload),
-                                                      label: Text(AppLocalizations.of(context)!.uploadNew),
+                                                      label: Text(
+                                                        AppLocalizations.of(
+                                                          context,
+                                                        )!.uploadNew,
+                                                      ),
                                                       onPressed: () async {
                                                         Navigator.pop(context);
                                                         await _changeProfilePicture();
                                                       },
                                                     ),
                                                   ),
-                                                  if (profile != null && profile.photoUrl.isNotEmpty) ...[
+                                                  if (profile != null &&
+                                                      profile
+                                                          .photoUrl
+                                                          .isNotEmpty) ...[
                                                     SizedBox(height: 12),
                                                     SizedBox(
                                                       width: double.infinity,
                                                       child: OutlinedButton.icon(
-                                                        icon: Icon(Icons.delete),
-                                                        label: Text(AppLocalizations.of(context)!.delete),
+                                                        icon: Icon(
+                                                          Icons.delete,
+                                                        ),
+                                                        label: Text(
+                                                          AppLocalizations.of(
+                                                            context,
+                                                          )!.delete,
+                                                        ),
                                                         onPressed: () async {
-                                                          Navigator.pop(context);
-                                                          final user = FirebaseAuth.instance.currentUser;
+                                                          Navigator.pop(
+                                                            context,
+                                                          );
+                                                          final user =
+                                                              FirebaseAuth
+                                                                  .instance
+                                                                  .currentUser;
                                                           if (user != null) {
-                                                            await FirebaseFirestore.instance.collection('users').doc(user.uid).update({'photoUrl': ''});
-                                                            await user.updatePhotoURL('');
+                                                            await FirebaseFirestore
+                                                                .instance
+                                                                .collection(
+                                                                  'users',
+                                                                )
+                                                                .doc(user.uid)
+                                                                .update({
+                                                                  'photoUrl':
+                                                                      '',
+                                                                });
+                                                            await user
+                                                                .updatePhotoURL(
+                                                                  '',
+                                                                );
                                                             setState(() {});
                                                           }
                                                         },
@@ -6132,18 +7491,33 @@ Track your calories, scan food with AI, and get personalized nutrition insights 
                                     Container(
                                       decoration: BoxDecoration(
                                         shape: BoxShape.circle,
-                                        border: Border.all(color: kPrimaryGreen, width: 3),
+                                        border: Border.all(
+                                          color: kPrimaryGreen,
+                                          width: 3,
+                                        ),
                                       ),
                                       child: CircleAvatar(
                                         radius: 34,
-                                        backgroundImage: profile != null && profile.photoUrl.isNotEmpty
-                                          ? NetworkImage(profile.photoUrl)
-                                          : null,
-                                        backgroundColor: kPrimaryGreen.withOpacity(0.08),
-                                        child: profile == null || profile.photoUrl.isEmpty ? Icon(Icons.person, color: kPrimaryGreen, size: 38) : null,
+                                        backgroundImage:
+                                            profile != null &&
+                                                    profile.photoUrl.isNotEmpty
+                                                ? NetworkImage(profile.photoUrl)
+                                                : null,
+                                        backgroundColor: kPrimaryGreen
+                                            .withOpacity(0.08),
+                                        child:
+                                            profile == null ||
+                                                    profile.photoUrl.isEmpty
+                                                ? Icon(
+                                                  Icons.person,
+                                                  color: kPrimaryGreen,
+                                                  size: 38,
+                                                )
+                                                : null,
                                       ),
                                     ),
-                                    if (profile == null || profile.photoUrl.isEmpty)
+                                    if (profile == null ||
+                                        profile.photoUrl.isEmpty)
                                       Positioned(
                                         bottom: 0,
                                         right: 0,
@@ -6151,10 +7525,19 @@ Track your calories, scan food with AI, and get personalized nutrition insights 
                                           decoration: BoxDecoration(
                                             color: Colors.white,
                                             shape: BoxShape.circle,
-                                            boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 2)],
+                                            boxShadow: [
+                                              BoxShadow(
+                                                color: Colors.black12,
+                                                blurRadius: 2,
+                                              ),
+                                            ],
                                           ),
                                           padding: EdgeInsets.all(4),
-                                          child: Icon(Icons.edit, color: kPrimaryGreen, size: 18),
+                                          child: Icon(
+                                            Icons.edit,
+                                            color: kPrimaryGreen,
+                                            size: 18,
+                                          ),
                                         ),
                                       ),
                                   ],
@@ -6169,38 +7552,70 @@ Track your calories, scan food with AI, and get personalized nutrition insights 
                                       children: [
                                         Expanded(
                                           child: Text(
-                                            userName, 
-                                            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 22),
+                                            userName,
+                                            style: TextStyle(
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 22,
+                                            ),
                                             maxLines: 1,
                                             overflow: TextOverflow.ellipsis,
                                           ),
                                         ),
                                         IconButton(
-                                          icon: Icon(Icons.edit, color: kPrimaryGreen, size: 20),
-                                          tooltip: AppLocalizations.of(context)!.editName,
-                                          onPressed: () => _changeProfileName(userName),
+                                          icon: Icon(
+                                            Icons.edit,
+                                            color: kPrimaryGreen,
+                                            size: 20,
+                                          ),
+                                          tooltip:
+                                              AppLocalizations.of(
+                                                context,
+                                              )!.editName,
+                                          onPressed:
+                                              () =>
+                                                  _changeProfileName(userName),
                                         ),
                                       ],
                                     ),
                                     SizedBox(height: 4),
                                     ValueListenableBuilder<bool>(
-                                      valueListenable: SubscriptionService().watchPremium(),
+                                      valueListenable:
+                                          SubscriptionService().watchPremium(),
                                       builder: (context, isPremium, _) {
                                         return Container(
-                                          padding: EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                          padding: EdgeInsets.symmetric(
+                                            horizontal: 10,
+                                            vertical: 4,
+                                          ),
                                           decoration: BoxDecoration(
-                                            color: isPremium 
-                                                ? kPrimaryGreen.withOpacity(0.10)
-                                                : Colors.grey.withOpacity(0.10),
-                                            borderRadius: BorderRadius.circular(12),
+                                            color:
+                                                isPremium
+                                                    ? kPrimaryGreen.withOpacity(
+                                                      0.10,
+                                                    )
+                                                    : Colors.grey.withOpacity(
+                                                      0.10,
+                                                    ),
+                                            borderRadius: BorderRadius.circular(
+                                              12,
+                                            ),
                                           ),
                                           child: Text(
-                                            isPremium ? AppLocalizations.of(context)!.premium : AppLocalizations.of(context)!.freemium, 
+                                            isPremium
+                                                ? AppLocalizations.of(
+                                                  context,
+                                                )!.premium
+                                                : AppLocalizations.of(
+                                                  context,
+                                                )!.freemium,
                                             style: TextStyle(
-                                              color: isPremium ? kPrimaryGreen : Colors.grey[600], 
-                                              fontWeight: FontWeight.w600, 
-                                              fontSize: 12
-                                            )
+                                              color:
+                                                  isPremium
+                                                      ? kPrimaryGreen
+                                                      : Colors.grey[600],
+                                              fontWeight: FontWeight.w600,
+                                              fontSize: 12,
+                                            ),
                                           ),
                                         );
                                       },
@@ -6222,34 +7637,60 @@ Track your calories, scan food with AI, and get personalized nutrition insights 
                           if (profile != null) ...[
                             // Plan name display
                             FutureBuilder<DocumentSnapshot>(
-                              future: FirebaseFirestore.instance.collection('users').doc(FirebaseAuth.instance.currentUser?.uid).get(),
+                              future:
+                                  FirebaseFirestore.instance
+                                      .collection('users')
+                                      .doc(
+                                        FirebaseAuth.instance.currentUser?.uid,
+                                      )
+                                      .get(),
                               builder: (context, snapshot) {
                                 if (snapshot.hasData && snapshot.data != null) {
-                                  final data = snapshot.data!.data() as Map<String, dynamic>?;
-                                  final goal = data?['goal'] ?? 'Maintain body weight';
-                                  final planName = _getLocalizedPlanName(goal, AppLocalizations.of(context)!);
-                                  IconData _goalIcon(String g){
+                                  final data =
+                                      snapshot.data!.data()
+                                          as Map<String, dynamic>?;
+                                  final goal =
+                                      data?['goal'] ?? 'Maintain body weight';
+                                  final planName = _getLocalizedPlanName(
+                                    goal,
+                                    AppLocalizations.of(context)!,
+                                  );
+                                  IconData _goalIcon(String g) {
                                     final gl = (g as String).toLowerCase();
-                                    if(gl.contains('lose')) return Icons.trending_down;
-                                    if(gl.contains('gain')) return Icons.trending_up;
-                                    if(gl.contains('build')) return Icons.fitness_center;
-                                    if(gl.contains('eat')) return Icons.restaurant;
+                                    if (gl.contains('lose'))
+                                      return Icons.trending_down;
+                                    if (gl.contains('gain'))
+                                      return Icons.trending_up;
+                                    if (gl.contains('build'))
+                                      return Icons.fitness_center;
+                                    if (gl.contains('eat'))
+                                      return Icons.restaurant;
                                     return Icons.monitor_weight;
                                   }
-                                  
+
                                   return Container(
                                     width: double.infinity,
-                                    padding: EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                                    padding: EdgeInsets.symmetric(
+                                      vertical: 12,
+                                      horizontal: 16,
+                                    ),
                                     margin: EdgeInsets.only(bottom: 12),
                                     decoration: BoxDecoration(
                                       color: kPrimaryGreen.withOpacity(0.1),
                                       borderRadius: BorderRadius.circular(12),
-                                      border: Border.all(color: kPrimaryGreen.withOpacity(0.2)),
+                                      border: Border.all(
+                                        color: kPrimaryGreen.withOpacity(0.2),
+                                      ),
                                     ),
                                     child: Row(
-                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
                                       children: [
-                                        Icon(_goalIcon(goal), color: kPrimaryGreen, size: 20),
+                                        Icon(
+                                          _goalIcon(goal),
+                                          color: kPrimaryGreen,
+                                          size: 20,
+                                        ),
                                         SizedBox(width: 8),
                                         Flexible(
                                           child: Text(
@@ -6272,15 +7713,24 @@ Track your calories, scan food with AI, and get personalized nutrition insights 
                             ),
                             Builder(
                               builder: (context) {
-                                final prefs = Provider.of<PreferencesProvider>(context);
+                                final prefs = Provider.of<PreferencesProvider>(
+                                  context,
+                                );
                                 final useMetric = prefs.useMetric;
-                                final weight = useMetric ? profile.weight : (profile.weight * 2.20462);
+                                final weight =
+                                    useMetric
+                                        ? profile.weight
+                                        : (profile.weight * 2.20462);
                                 final weightUnit = useMetric ? 'kg' : 'lb';
-                                final height = useMetric ? profile.height : (profile.height * 0.393701);
+                                final height =
+                                    useMetric
+                                        ? profile.height
+                                        : (profile.height * 0.393701);
                                 final heightUnit = useMetric ? 'cm' : 'ft';
                                 String heightDisplay;
                                 if (useMetric) {
-                                  heightDisplay = '${height.toStringAsFixed(1)} cm';
+                                  heightDisplay =
+                                      '${height.toStringAsFixed(1)} cm';
                                 } else {
                                   int totalInches = height.round();
                                   int feet = totalInches ~/ 12;
@@ -6289,11 +7739,16 @@ Track your calories, scan food with AI, and get personalized nutrition insights 
                                 }
                                 return Container(
                                   width: double.infinity,
-                                  padding: EdgeInsets.symmetric(vertical: 18, horizontal: 12),
+                                  padding: EdgeInsets.symmetric(
+                                    vertical: 18,
+                                    horizontal: 12,
+                                  ),
                                   decoration: BoxDecoration(
                                     color: kPrimaryGreen.withOpacity(0.07),
                                     borderRadius: BorderRadius.circular(18),
-                                    border: Border.all(color: kPrimaryGreen.withOpacity(0.13)),
+                                    border: Border.all(
+                                      color: kPrimaryGreen.withOpacity(0.13),
+                                    ),
                                     boxShadow: [
                                       BoxShadow(
                                         color: Colors.black.withOpacity(0.03),
@@ -6308,11 +7763,32 @@ Track your calories, scan food with AI, and get personalized nutrition insights 
                                         child: Column(
                                           mainAxisSize: MainAxisSize.min,
                                           children: [
-                                            Icon(Icons.trending_up, color: kPrimaryGreen, size: 26),
+                                            Icon(
+                                              Icons.trending_up,
+                                              color: kPrimaryGreen,
+                                              size: 26,
+                                            ),
                                             SizedBox(height: 6),
-                                            Text(AppLocalizations.of(context)!.startingWeight, style: TextStyle(color: kPrimaryGreen, fontWeight: FontWeight.w600, fontSize: 15), textAlign: TextAlign.center),
+                                            Text(
+                                              AppLocalizations.of(
+                                                context,
+                                              )!.startingWeight,
+                                              style: TextStyle(
+                                                color: kPrimaryGreen,
+                                                fontWeight: FontWeight.w600,
+                                                fontSize: 15,
+                                              ),
+                                              textAlign: TextAlign.center,
+                                            ),
                                             SizedBox(height: 2),
-                                            Text('${useMetric ? profile.startingWeight.toStringAsFixed(1) : (profile.startingWeight * 2.20462).toStringAsFixed(1)} ${useMetric ? 'kg' : 'lb'}', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.black)),
+                                            Text(
+                                              '${useMetric ? profile.startingWeight.toStringAsFixed(1) : (profile.startingWeight * 2.20462).toStringAsFixed(1)} ${useMetric ? 'kg' : 'lb'}',
+                                              style: TextStyle(
+                                                fontWeight: FontWeight.bold,
+                                                fontSize: 16,
+                                                color: Colors.black,
+                                              ),
+                                            ),
                                           ],
                                         ),
                                       ),
@@ -6325,46 +7801,131 @@ Track your calories, scan food with AI, and get personalized nutrition insights 
                                         child: Column(
                                           mainAxisSize: MainAxisSize.min,
                                           children: [
-                                            Icon(Icons.monitor_weight, color: kPrimaryGreen, size: 26),
+                                            Icon(
+                                              Icons.monitor_weight,
+                                              color: kPrimaryGreen,
+                                              size: 26,
+                                            ),
                                             SizedBox(height: 6),
-                                            Text(AppLocalizations.of(context)!.weight, style: TextStyle(color: kPrimaryGreen, fontWeight: FontWeight.w600, fontSize: 15)),
+                                            Text(
+                                              AppLocalizations.of(
+                                                context,
+                                              )!.weight,
+                                              style: TextStyle(
+                                                color: kPrimaryGreen,
+                                                fontWeight: FontWeight.w600,
+                                                fontSize: 15,
+                                              ),
+                                            ),
                                             SizedBox(height: 2),
-                                            Text('${weight.toStringAsFixed(1)} $weightUnit', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Colors.black)),
+                                            Text(
+                                              '${weight.toStringAsFixed(1)} $weightUnit',
+                                              style: TextStyle(
+                                                fontWeight: FontWeight.bold,
+                                                fontSize: 18,
+                                                color: Colors.black,
+                                              ),
+                                            ),
                                             // Weight change indicator
                                             Consumer<PreferencesProvider>(
                                               builder: (context, prefs, child) {
-                                                final useMetric = prefs.useMetric;
-                                                return FutureBuilder<DocumentSnapshot>(
-                                                  future: FirebaseFirestore.instance.collection('users').doc(FirebaseAuth.instance.currentUser?.uid).get(),
+                                                final useMetric =
+                                                    prefs.useMetric;
+                                                return FutureBuilder<
+                                                  DocumentSnapshot
+                                                >(
+                                                  future:
+                                                      FirebaseFirestore.instance
+                                                          .collection('users')
+                                                          .doc(
+                                                            FirebaseAuth
+                                                                .instance
+                                                                .currentUser
+                                                                ?.uid,
+                                                          )
+                                                          .get(),
                                                   builder: (context, snapshot) {
-                                                    if (snapshot.hasData && snapshot.data != null) {
-                                                      final data = snapshot.data!.data() as Map<String, dynamic>?;
-                                                      final totalWeightChange = data?['totalWeightChange'] as double?;
-                                                      final lastWeightUpdate = data?['lastWeightUpdate'] as Timestamp?;
-                                                      
-                                                      if (totalWeightChange != null && totalWeightChange != 0 && lastWeightUpdate != null) {
-                                                        final daysSinceUpdate = DateTime.now().difference(lastWeightUpdate.toDate()).inDays;
-                                                        if (daysSinceUpdate <= 7) { // Show for last 7 days
-                                                          final isPositive = totalWeightChange > 0;
-                                                          final color = isPositive ? Colors.red : Colors.blue;
-                                                          final sign = isPositive ? '+' : '';
-                                                          
+                                                    if (snapshot.hasData &&
+                                                        snapshot.data != null) {
+                                                      final data =
+                                                          snapshot.data!.data()
+                                                              as Map<
+                                                                String,
+                                                                dynamic
+                                                              >?;
+                                                      final totalWeightChange =
+                                                          data?['totalWeightChange']
+                                                              as double?;
+                                                      final lastWeightUpdate =
+                                                          data?['lastWeightUpdate']
+                                                              as Timestamp?;
+
+                                                      if (totalWeightChange !=
+                                                              null &&
+                                                          totalWeightChange !=
+                                                              0 &&
+                                                          lastWeightUpdate !=
+                                                              null) {
+                                                        final daysSinceUpdate =
+                                                            DateTime.now()
+                                                                .difference(
+                                                                  lastWeightUpdate
+                                                                      .toDate(),
+                                                                )
+                                                                .inDays;
+                                                        if (daysSinceUpdate <=
+                                                            7) {
+                                                          // Show for last 7 days
+                                                          final isPositive =
+                                                              totalWeightChange >
+                                                              0;
+                                                          final color =
+                                                              isPositive
+                                                                  ? Colors.red
+                                                                  : Colors.blue;
+                                                          final sign =
+                                                              isPositive
+                                                                  ? '+'
+                                                                  : '';
+
                                                           // Convert to user's preferred unit
-                                                          final displayWeightChange = useMetric ? totalWeightChange : (totalWeightChange * 2.20462);
-                                                          final unit = useMetric ? 'kg' : 'lb';
-                                                          
+                                                          final displayWeightChange =
+                                                              useMetric
+                                                                  ? totalWeightChange
+                                                                  : (totalWeightChange *
+                                                                      2.20462);
+                                                          final unit =
+                                                              useMetric
+                                                                  ? 'kg'
+                                                                  : 'lb';
+
                                                           return Container(
-                                                            margin: EdgeInsets.only(top: 2),
-                                                            padding: EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                                            margin:
+                                                                EdgeInsets.only(
+                                                                  top: 2,
+                                                                ),
+                                                            padding:
+                                                                EdgeInsets.symmetric(
+                                                                  horizontal: 6,
+                                                                  vertical: 2,
+                                                                ),
                                                             decoration: BoxDecoration(
-                                                              color: color.withOpacity(0.1),
-                                                              borderRadius: BorderRadius.circular(8),
+                                                              color: color
+                                                                  .withOpacity(
+                                                                    0.1,
+                                                                  ),
+                                                              borderRadius:
+                                                                  BorderRadius.circular(
+                                                                    8,
+                                                                  ),
                                                             ),
                                                             child: Text(
                                                               '$sign${displayWeightChange.toStringAsFixed(1)}$unit',
                                                               style: TextStyle(
                                                                 color: color,
-                                                                fontWeight: FontWeight.bold,
+                                                                fontWeight:
+                                                                    FontWeight
+                                                                        .bold,
                                                                 fontSize: 12,
                                                               ),
                                                             ),
@@ -6389,11 +7950,32 @@ Track your calories, scan food with AI, and get personalized nutrition insights 
                                         child: Column(
                                           mainAxisSize: MainAxisSize.min,
                                           children: [
-                                            Icon(Icons.flag, color: kPrimaryGreen, size: 26),
+                                            Icon(
+                                              Icons.flag,
+                                              color: kPrimaryGreen,
+                                              size: 26,
+                                            ),
                                             SizedBox(height: 6),
-                                            Text(AppLocalizations.of(context)!.targetWeight, style: TextStyle(color: kPrimaryGreen, fontWeight: FontWeight.w600, fontSize: 15), textAlign: TextAlign.center),
+                                            Text(
+                                              AppLocalizations.of(
+                                                context,
+                                              )!.targetWeight,
+                                              style: TextStyle(
+                                                color: kPrimaryGreen,
+                                                fontWeight: FontWeight.w600,
+                                                fontSize: 15,
+                                              ),
+                                              textAlign: TextAlign.center,
+                                            ),
                                             SizedBox(height: 2),
-                                            Text('${useMetric ? profile.targetWeight.toStringAsFixed(1) : (profile.targetWeight * 2.20462).toStringAsFixed(1)} ${useMetric ? 'kg' : 'lb'}', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Colors.black)),
+                                            Text(
+                                              '${useMetric ? profile.targetWeight.toStringAsFixed(1) : (profile.targetWeight * 2.20462).toStringAsFixed(1)} ${useMetric ? 'kg' : 'lb'}',
+                                              style: TextStyle(
+                                                fontWeight: FontWeight.bold,
+                                                fontSize: 18,
+                                                color: Colors.black,
+                                              ),
+                                            ),
                                           ],
                                         ),
                                       ),
@@ -6419,12 +8001,24 @@ Track your calories, scan food with AI, and get personalized nutrition insights 
                         icon: const Icon(Icons.insights, color: Colors.white),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: kPrimaryGreen,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
                         ),
                         onPressed: () {
-                          Navigator.of(context).push(MaterialPageRoute(builder: (_) => const WeightAnalyticsPage()));
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (_) => const WeightAnalyticsPage(),
+                            ),
+                          );
                         },
-                        label: Text(AppLocalizations.of(context)!.weightAnalytics, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
+                        label: Text(
+                          AppLocalizations.of(context)!.weightAnalytics,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
                       ),
                     ),
                   ),
@@ -6448,17 +8042,27 @@ Track your calories, scan food with AI, and get personalized nutrition insights 
                         children: [
                           _ProfileMenuTile(
                             icon: Icons.restaurant_menu,
-                            label: AppLocalizations.of(context)!.nutritionalPlan,
+                            label:
+                                AppLocalizations.of(context)!.nutritionalPlan,
                             onTap: () {
-                              Navigator.of(context).push(MaterialPageRoute(builder: (context) => NutritionalPlanPage()));
+                              Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (context) => NutritionalPlanPage(),
+                                ),
+                              );
                             },
                           ),
                           Divider(height: 1, color: Colors.grey[200]),
                           _ProfileMenuTile(
                             icon: Icons.health_and_safety,
-                            label: AppLocalizations.of(context)!.healthAwareness,
+                            label:
+                                AppLocalizations.of(context)!.healthAwareness,
                             onTap: () {
-                              Navigator.of(context).push(MaterialPageRoute(builder: (context) => HealthAwarenessPage()));
+                              Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (context) => HealthAwarenessPage(),
+                                ),
+                              );
                             },
                           ),
                           Divider(height: 1, color: Colors.grey[200]),
@@ -6467,21 +8071,44 @@ Track your calories, scan food with AI, and get personalized nutrition insights 
                             label: AppLocalizations.of(context)!.settings,
                             iconColor: kPrimaryGreen,
                             onTap: () {
-                              Navigator.of(context).push(MaterialPageRoute(builder: (context) => SettingsPage()));
+                              Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (context) => SettingsPage(),
+                                ),
+                              );
                             },
                           ),
                           Divider(height: 1, color: Colors.grey[200]),
                           ValueListenableBuilder<bool>(
-                            valueListenable: SubscriptionService().watchPremium(),
+                            valueListenable:
+                                SubscriptionService().watchPremium(),
                             builder: (context, isPremium, _) {
                               return Column(
                                 children: [
                                   _ProfileMenuTile(
-                                    icon: isPremium ? Icons.workspace_premium : Icons.workspace_premium_outlined,
-                                    label: isPremium ? AppLocalizations.of(context)!.youArePremium : AppLocalizations.of(context)!.upgradeToPremium,
-                                    iconColor: isPremium ? kPrimaryGreen : Colors.grey[600],
+                                    icon:
+                                        isPremium
+                                            ? Icons.workspace_premium
+                                            : Icons.workspace_premium_outlined,
+                                    label:
+                                        isPremium
+                                            ? AppLocalizations.of(
+                                              context,
+                                            )!.youArePremium
+                                            : AppLocalizations.of(
+                                              context,
+                                            )!.upgradeToPremium,
+                                    iconColor:
+                                        isPremium
+                                            ? kPrimaryGreen
+                                            : Colors.grey[600],
                                     onTap: () {
-                                      Navigator.of(context).push(MaterialPageRoute(builder: (context) => SubscriptionPage()));
+                                      Navigator.of(context).push(
+                                        MaterialPageRoute(
+                                          builder:
+                                              (context) => SubscriptionPage(),
+                                        ),
+                                      );
                                     },
                                   ),
                                   if (isPremium)
@@ -6489,32 +8116,64 @@ Track your calories, scan food with AI, and get personalized nutrition insights 
                                   if (isPremium)
                                     _ProfileMenuTile(
                                       icon: Icons.settings,
-                                      label: AppLocalizations.of(context)!.manageSubscription,
+                                      label:
+                                          AppLocalizations.of(
+                                            context,
+                                          )!.manageSubscription,
                                       iconColor: Colors.grey[600],
                                       onTap: () async {
                                         // Open device subscription management (OS-specific)
                                         if (Platform.isIOS) {
-                                          final uri = Uri.parse('https://apps.apple.com/account/subscriptions');
+                                          final uri = Uri.parse(
+                                            'https://apps.apple.com/account/subscriptions',
+                                          );
                                           if (await canLaunchUrl(uri)) {
-                                            await launchUrl(uri, mode: LaunchMode.externalApplication);
+                                            await launchUrl(
+                                              uri,
+                                              mode:
+                                                  LaunchMode
+                                                      .externalApplication,
+                                            );
                                           } else {
-                                            ScaffoldMessenger.of(context).showSnackBar(
-                                              SnackBar(content: Text(AppLocalizations.of(context)!.couldNotOpenLink)),
+                                            ScaffoldMessenger.of(
+                                              context,
+                                            ).showSnackBar(
+                                              SnackBar(
+                                                content: Text(
+                                                  AppLocalizations.of(
+                                                    context,
+                                                  )!.couldNotOpenLink,
+                                                ),
+                                              ),
                                             );
                                           }
                                         } else {
-                                          final uri = Uri.parse('https://play.google.com/store/account/subscriptions?package=com.yumie.healthai');
+                                          final uri = Uri.parse(
+                                            'https://play.google.com/store/account/subscriptions?package=com.yumie.healthai',
+                                          );
                                           if (await canLaunchUrl(uri)) {
-                                            await launchUrl(uri, mode: LaunchMode.externalApplication);
+                                            await launchUrl(
+                                              uri,
+                                              mode:
+                                                  LaunchMode
+                                                      .externalApplication,
+                                            );
                                           } else {
-                                            ScaffoldMessenger.of(context).showSnackBar(
-                                              SnackBar(content: Text(AppLocalizations.of(context)!.couldNotOpenPlayStore)),
+                                            ScaffoldMessenger.of(
+                                              context,
+                                            ).showSnackBar(
+                                              SnackBar(
+                                                content: Text(
+                                                  AppLocalizations.of(
+                                                    context,
+                                                  )!.couldNotOpenPlayStore,
+                                                ),
+                                              ),
                                             );
                                           }
                                         }
                                       },
                                     ),
-
                                 ],
                               );
                             },
@@ -6522,48 +8181,73 @@ Track your calories, scan food with AI, and get personalized nutrition insights 
                           Divider(height: 1, color: Colors.grey[200]),
                           _ProfileMenuTile(
                             icon: Icons.share,
-                            label: AppLocalizations.of(context)!.shareWithFriends,
+                            label:
+                                AppLocalizations.of(context)!.shareWithFriends,
                             iconColor: kSecondaryBlue,
                             onTap: () => _shareApp(context),
                           ),
                           Divider(height: 1, color: Colors.grey[200]),
                           _ProfileMenuTile(
                             icon: Icons.star,
-                            label: Platform.isIOS
-                                ? (AppLocalizations.of(context)!.rateUsOn + ' App Store')
-                                : (AppLocalizations.of(context)!.rateUsOn + ' Play Store'),
+                            label:
+                                Platform.isIOS
+                                    ? (AppLocalizations.of(context)!.rateUsOn +
+                                        ' App Store')
+                                    : (AppLocalizations.of(context)!.rateUsOn +
+                                        ' Play Store'),
                             iconColor: Colors.amber[600],
                             onTap: () async {
                               try {
-                                final uri = Platform.isIOS
-                                    ? Uri.parse('https://apps.apple.com/app/id6748360245')
-                                    : Uri.parse('https://play.google.com/store/apps/details?id=com.yumie.healthai');
+                                final uri =
+                                    Platform.isIOS
+                                        ? Uri.parse(
+                                          'https://apps.apple.com/app/id6748360245',
+                                        )
+                                        : Uri.parse(
+                                          'https://play.google.com/store/apps/details?id=com.yumie.healthai',
+                                        );
                                 if (await canLaunchUrl(uri)) {
-                                  await launchUrl(uri, mode: LaunchMode.externalApplication);
+                                  await launchUrl(
+                                    uri,
+                                    mode: LaunchMode.externalApplication,
+                                  );
                                 } else {
                                   ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(content: Text(AppLocalizations.of(context)!.couldNotOpenPlayStore)),
+                                    SnackBar(
+                                      content: Text(
+                                        AppLocalizations.of(
+                                          context,
+                                        )!.couldNotOpenPlayStore,
+                                      ),
+                                    ),
                                   );
                                 }
                               } catch (e) {
                                 ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(content: Text(AppLocalizations.of(context)!.errorOpeningPlayStore)),
+                                  SnackBar(
+                                    content: Text(
+                                      AppLocalizations.of(
+                                        context,
+                                      )!.errorOpeningPlayStore,
+                                    ),
+                                  ),
                                 );
                               }
                             },
                           ),
                           Divider(height: 1, color: Colors.grey[200]),
-                          
+
                           // Session Management
                           _ProfileMenuTile(
                             icon: Icons.devices,
                             label: AppLocalizations.of(context)!.manageSessions,
                             onTap: () {
-                              DeviceSessionService().showSessionManagementDialog(context);
+                              DeviceSessionService()
+                                  .showSessionManagementDialog(context);
                             },
                           ),
                           Divider(height: 1, color: Colors.grey[200]),
-                          
+
                           // Language Settings
                           _ProfileMenuTile(
                             icon: Icons.language,
@@ -6573,173 +8257,327 @@ Track your calories, scan food with AI, and get personalized nutrition insights 
                             },
                           ),
                           Divider(height: 1, color: Colors.grey[200]),
-                          
+
                           // Only show Reset Password for email/password users, not social users (Google/Apple)
                           if (!_isSocialUser())
                             _ProfileMenuTile(
                               icon: Icons.lock_reset,
-                              label: AppLocalizations.of(context)!.resetPassword,
+                              label:
+                                  AppLocalizations.of(context)!.resetPassword,
                               onTap: () {
-                              showDialog(
-                                context: context,
-                                builder: (context) {
-                                  final user = FirebaseAuth.instance.currentUser;
-                                  final String? email = user?.email;
-                                  bool isLoading = false;
-                                  String message = '';
-                                  bool emailSent = false;
-                                  return StatefulBuilder(
-                                    builder: (context, setState) => Dialog(
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(20),
-                                      ),
-                                      child: Container(
-                                        padding: EdgeInsets.all(24),
-                                        child: Column(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            Icon(Icons.lock_reset, size: 48, color: kPrimaryGreen),
-                                            SizedBox(height: 16),
-                                            Text(AppLocalizations.of(context)!.resetPassword, style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-                                            SizedBox(height: 8),
-                                            Text(AppLocalizations.of(context)!.resetPasswordDescription,
-                                              style: TextStyle(fontSize: 14, color: Colors.grey[600]),
-                                              textAlign: TextAlign.center,
+                                showDialog(
+                                  context: context,
+                                  builder: (context) {
+                                    final user =
+                                        FirebaseAuth.instance.currentUser;
+                                    final String? email = user?.email;
+                                    bool isLoading = false;
+                                    String message = '';
+                                    bool emailSent = false;
+                                    return StatefulBuilder(
+                                      builder:
+                                          (context, setState) => Dialog(
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(20),
                                             ),
-                                            SizedBox(height: 16),
-                                            Container(
-                                              width: double.infinity,
-                                              padding: EdgeInsets.symmetric(vertical: 14, horizontal: 12),
-                                              decoration: BoxDecoration(
-                                                color: kPrimaryGreen.withOpacity(0.08),
-                                                borderRadius: BorderRadius.circular(12),
-                                                border: Border.all(color: kPrimaryGreen.withOpacity(0.18)),
-                                              ),
-                                              child: Row(
+                                            child: Container(
+                                              padding: EdgeInsets.all(24),
+                                              child: Column(
+                                                mainAxisSize: MainAxisSize.min,
                                                 children: [
-                                                  Icon(Icons.email, color: kPrimaryGreen),
-                                                  SizedBox(width: 10),
-                                                  Expanded(
-                                                    child: Text(
-                                                      email ?? 'No email found',
-                                                      style: TextStyle(fontWeight: FontWeight.w600, color: kPrimaryGreen, fontSize: 16),
-                                                      overflow: TextOverflow.ellipsis,
+                                                  Icon(
+                                                    Icons.lock_reset,
+                                                    size: 48,
+                                                    color: kPrimaryGreen,
+                                                  ),
+                                                  SizedBox(height: 16),
+                                                  Text(
+                                                    AppLocalizations.of(
+                                                      context,
+                                                    )!.resetPassword,
+                                                    style: TextStyle(
+                                                      fontSize: 20,
+                                                      fontWeight:
+                                                          FontWeight.bold,
                                                     ),
                                                   ),
-                                                ],
-                                              ),
-                                            ),
-                                            SizedBox(height: 16),
-                                            if (message.isNotEmpty)
-                                              Padding(
-                                                padding: const EdgeInsets.only(bottom: 8),
-                                                child: Text(
-                                                  message,
-                                                  style: TextStyle(
-                                                    color: message.startsWith('Success') ? kPrimaryGreen : kWarningRed,
-                                                    fontWeight: FontWeight.bold,
+                                                  SizedBox(height: 8),
+                                                  Text(
+                                                    AppLocalizations.of(
+                                                      context,
+                                                    )!.resetPasswordDescription,
+                                                    style: TextStyle(
+                                                      fontSize: 14,
+                                                      color: Colors.grey[600],
+                                                    ),
+                                                    textAlign: TextAlign.center,
                                                   ),
-                                                  textAlign: TextAlign.center,
-                                                ),
-                                              ),
-                                            Row(
-                                              mainAxisAlignment: MainAxisAlignment.center,
-                                              children: [
-                                                // Hide close button when loading or email has been sent
-                                                if (!isLoading && !emailSent) ...[
-                                                  OutlinedButton(
-                                                    onPressed: () => Navigator.pop(context),
-                                                    style: OutlinedButton.styleFrom(
-                                                      foregroundColor: kPrimaryGreen,
-                                                      side: BorderSide(color: kPrimaryGreen),
-                                                      shape: RoundedRectangleBorder(
-                                                        borderRadius: BorderRadius.circular(12),
+                                                  SizedBox(height: 16),
+                                                  Container(
+                                                    width: double.infinity,
+                                                    padding:
+                                                        EdgeInsets.symmetric(
+                                                          vertical: 14,
+                                                          horizontal: 12,
+                                                        ),
+                                                    decoration: BoxDecoration(
+                                                      color: kPrimaryGreen
+                                                          .withOpacity(0.08),
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                            12,
+                                                          ),
+                                                      border: Border.all(
+                                                        color: kPrimaryGreen
+                                                            .withOpacity(0.18),
                                                       ),
                                                     ),
-                                                    child: Text(AppLocalizations.of(context)!.close),
-                                                  ),
-                                                  SizedBox(width: 12),
-                                                ],
-                                                Expanded(
-                                                  child: ElevatedButton(
-                                                    onPressed: (isLoading || email == null)
-                                                      ? null
-                                                      : () async {
-                                                          setState(() { isLoading = true; message = ''; });
-                                                          
-                                                          // Check rate limit for password reset
-                                                          final rateLimitResult = await _rateLimitingService.checkRateLimit('password_reset', identifier: email);
-                                                          if (!rateLimitResult.allowed) {
-                                                            setState(() {
-                                                              message = rateLimitResult.message ?? 'Too many password reset requests. Please try again later.';
-                                                              isLoading = false;
-                                                            });
-                                                            return;
-                                                          }
-
-                                                          try {
-                                                            await FirebaseAuth.instance.sendPasswordResetEmail(email: email);
-                                                            
-                                                            // Only record the attempt AFTER successful email send
-                                                            await _rateLimitingService.recordAttempt('password_reset', identifier: email);
-                                                            
-                                                            // Record password reset request for security monitoring
-                                                            await _securityService.recordSecurityEvent(
-                                                              'password_reset_request',
-                                                              userId: FirebaseAuth.instance.currentUser?.uid,
-                                                              email: email,
-                                                              successful: true,
-                                                              metadata: {'source': 'profile_screen'},
-                                                            );
-                                                            
-                                                            setState(() {
-                                                              message = 'Success! Check your email for a reset link. Logging you out for security...';
-                                                              isLoading = false;
-                                                              emailSent = true; // Mark email as sent to hide close button
-                                                            });
-                                                            // Show message briefly, then logout and navigate properly
-                                                            await Future.delayed(Duration(seconds: 2));
-                                                            // Log out the user after sending password reset email
-                                                            await FirebaseAuth.instance.signOut();
-                                                            // Close the dialog first
-                                                            if (mounted) {
-                                                              Navigator.of(context).pop();
-                                                              // Navigate to a redirect screen to properly handle logout
-                                                              Navigator.of(context).pushAndRemoveUntil(
-                                                                MaterialPageRoute(builder: (_) => _PasswordResetRedirectScreen()),
-                                                                (route) => false,
-                                                              );
-                                                            }
-                                                          } catch (e) {
-                                                            setState(() {
-                                                              message = 'Error: ${e.toString()}';
-                                                              isLoading = false;
-                                                            });
-                                                          }
-                                                        },
-                                                    style: ElevatedButton.styleFrom(
-                                                      textStyle: TextStyle(fontSize: 14),
-                                                    ),
-                                                    child: isLoading
-                                                      ? SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                                                      : Text(
-                                                          AppLocalizations.of(context)!.send,
-                                                          style: TextStyle(fontSize: 14),
-                                                          overflow: TextOverflow.ellipsis,
+                                                    child: Row(
+                                                      children: [
+                                                        Icon(
+                                                          Icons.email,
+                                                          color: kPrimaryGreen,
                                                         ),
+                                                        SizedBox(width: 10),
+                                                        Expanded(
+                                                          child: Text(
+                                                            email ??
+                                                                'No email found',
+                                                            style: TextStyle(
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .w600,
+                                                              color:
+                                                                  kPrimaryGreen,
+                                                              fontSize: 16,
+                                                            ),
+                                                            overflow:
+                                                                TextOverflow
+                                                                    .ellipsis,
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    ),
                                                   ),
-                                                ),
-                                              ],
+                                                  SizedBox(height: 16),
+                                                  if (message.isNotEmpty)
+                                                    Padding(
+                                                      padding:
+                                                          const EdgeInsets.only(
+                                                            bottom: 8,
+                                                          ),
+                                                      child: Text(
+                                                        message,
+                                                        style: TextStyle(
+                                                          color:
+                                                              message.startsWith(
+                                                                    'Success',
+                                                                  )
+                                                                  ? kPrimaryGreen
+                                                                  : kWarningRed,
+                                                          fontWeight:
+                                                              FontWeight.bold,
+                                                        ),
+                                                        textAlign:
+                                                            TextAlign.center,
+                                                      ),
+                                                    ),
+                                                  Row(
+                                                    mainAxisAlignment:
+                                                        MainAxisAlignment
+                                                            .center,
+                                                    children: [
+                                                      // Hide close button when loading or email has been sent
+                                                      if (!isLoading &&
+                                                          !emailSent) ...[
+                                                        OutlinedButton(
+                                                          onPressed:
+                                                              () =>
+                                                                  Navigator.pop(
+                                                                    context,
+                                                                  ),
+                                                          style: OutlinedButton.styleFrom(
+                                                            foregroundColor:
+                                                                kPrimaryGreen,
+                                                            side: BorderSide(
+                                                              color:
+                                                                  kPrimaryGreen,
+                                                            ),
+                                                            shape: RoundedRectangleBorder(
+                                                              borderRadius:
+                                                                  BorderRadius.circular(
+                                                                    12,
+                                                                  ),
+                                                            ),
+                                                          ),
+                                                          child: Text(
+                                                            AppLocalizations.of(
+                                                              context,
+                                                            )!.close,
+                                                          ),
+                                                        ),
+                                                        SizedBox(width: 12),
+                                                      ],
+                                                      Expanded(
+                                                        child: ElevatedButton(
+                                                          onPressed:
+                                                              (isLoading ||
+                                                                      email ==
+                                                                          null)
+                                                                  ? null
+                                                                  : () async {
+                                                                    setState(() {
+                                                                      isLoading =
+                                                                          true;
+                                                                      message =
+                                                                          '';
+                                                                    });
+
+                                                                    // Check rate limit for password reset
+                                                                    final rateLimitResult = await _rateLimitingService.checkRateLimit(
+                                                                      'password_reset',
+                                                                      identifier:
+                                                                          email,
+                                                                    );
+                                                                    if (!rateLimitResult
+                                                                        .allowed) {
+                                                                      setState(() {
+                                                                        message =
+                                                                            rateLimitResult.message ??
+                                                                            'Too many password reset requests. Please try again later.';
+                                                                        isLoading =
+                                                                            false;
+                                                                      });
+                                                                      return;
+                                                                    }
+
+                                                                    try {
+                                                                      await FirebaseAuth
+                                                                          .instance
+                                                                          .sendPasswordResetEmail(
+                                                                            email:
+                                                                                email,
+                                                                          );
+
+                                                                      // Only record the attempt AFTER successful email send
+                                                                      await _rateLimitingService.recordAttempt(
+                                                                        'password_reset',
+                                                                        identifier:
+                                                                            email,
+                                                                      );
+
+                                                                      // Record password reset request for security monitoring
+                                                                      await _securityService.recordSecurityEvent(
+                                                                        'password_reset_request',
+                                                                        userId:
+                                                                            FirebaseAuth.instance.currentUser?.uid,
+                                                                        email:
+                                                                            email,
+                                                                        successful:
+                                                                            true,
+                                                                        metadata: {
+                                                                          'source':
+                                                                              'profile_screen',
+                                                                        },
+                                                                      );
+
+                                                                      setState(() {
+                                                                        message =
+                                                                            'Success! Check your email for a reset link. Logging you out for security...';
+                                                                        isLoading =
+                                                                            false;
+                                                                        emailSent =
+                                                                            true; // Mark email as sent to hide close button
+                                                                      });
+                                                                      // Show message briefly, then logout and navigate properly
+                                                                      await Future.delayed(
+                                                                        Duration(
+                                                                          seconds:
+                                                                              2,
+                                                                        ),
+                                                                      );
+                                                                      // Log out the user after sending password reset email
+                                                                      await FirebaseAuth
+                                                                          .instance
+                                                                          .signOut();
+                                                                      // Close the dialog first
+                                                                      if (mounted) {
+                                                                        Navigator.of(
+                                                                          context,
+                                                                        ).pop();
+                                                                        // Navigate to a redirect screen to properly handle logout
+                                                                        Navigator.of(
+                                                                          context,
+                                                                        ).pushAndRemoveUntil(
+                                                                          MaterialPageRoute(
+                                                                            builder:
+                                                                                (_) =>
+                                                                                    _PasswordResetRedirectScreen(),
+                                                                          ),
+                                                                          (
+                                                                            route,
+                                                                          ) =>
+                                                                              false,
+                                                                        );
+                                                                      }
+                                                                    } catch (
+                                                                      e
+                                                                    ) {
+                                                                      setState(() {
+                                                                        message =
+                                                                            'Error: ${e.toString()}';
+                                                                        isLoading =
+                                                                            false;
+                                                                      });
+                                                                    }
+                                                                  },
+                                                          style:
+                                                              ElevatedButton.styleFrom(
+                                                                textStyle:
+                                                                    TextStyle(
+                                                                      fontSize:
+                                                                          14,
+                                                                    ),
+                                                              ),
+                                                          child:
+                                                              isLoading
+                                                                  ? SizedBox(
+                                                                    width: 20,
+                                                                    height: 20,
+                                                                    child: CircularProgressIndicator(
+                                                                      strokeWidth:
+                                                                          2,
+                                                                      color:
+                                                                          Colors
+                                                                              .white,
+                                                                    ),
+                                                                  )
+                                                                  : Text(
+                                                                    AppLocalizations.of(
+                                                                      context,
+                                                                    )!.send,
+                                                                    style: TextStyle(
+                                                                      fontSize:
+                                                                          14,
+                                                                    ),
+                                                                    overflow:
+                                                                        TextOverflow
+                                                                            .ellipsis,
+                                                                  ),
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ],
+                                              ),
                                             ),
-                                          ],
-                                        ),
-                                      ),
-                                    ),
-                                  );
-                                },
-                              );
-                            },
-                          ),
+                                          ),
+                                    );
+                                  },
+                                );
+                              },
+                            ),
 
                           Divider(height: 1, color: Colors.grey[200]),
                           _ProfileMenuTile(
@@ -6750,15 +8588,30 @@ Track your calories, scan food with AI, and get personalized nutrition insights 
                               try {
                                 final uri = Uri.parse('https://maivenx.com/');
                                 if (await canLaunchUrl(uri)) {
-                                  await launchUrl(uri, mode: LaunchMode.externalApplication);
+                                  await launchUrl(
+                                    uri,
+                                    mode: LaunchMode.externalApplication,
+                                  );
                                 } else {
                                   ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(content: Text(AppLocalizations.of(context)!.couldNotOpenWebsite)),
+                                    SnackBar(
+                                      content: Text(
+                                        AppLocalizations.of(
+                                          context,
+                                        )!.couldNotOpenWebsite,
+                                      ),
+                                    ),
                                   );
                                 }
                               } catch (e) {
                                 ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(content: Text(AppLocalizations.of(context)!.errorOpeningWebsite)),
+                                  SnackBar(
+                                    content: Text(
+                                      AppLocalizations.of(
+                                        context,
+                                      )!.errorOpeningWebsite,
+                                    ),
+                                  ),
                                 );
                               }
                             },
@@ -6771,118 +8624,177 @@ Track your calories, scan food with AI, and get personalized nutrition insights 
                             onTap: () {
                               showDialog(
                                 context: context,
-                                builder: (context) => Dialog(
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(20),
-                                  ),
-                                  child: Container(
-                                    padding: EdgeInsets.all(24),
-                                    child: Column(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        Icon(
-                                          Icons.gavel,
-                                          size: 48,
-                                          color: kPrimaryGreen,
-                                        ),
-                                        SizedBox(height: 16),
-                                        RichText(
-                                          textAlign: TextAlign.center,
-                                          text: TextSpan(
-                                            children: [
-                                              TextSpan(
-                                                text: 'Yumie™',
-                                                style: TextStyle(
-                                                  fontSize: 24,
-                                                  fontWeight: FontWeight.bold,
+                                builder:
+                                    (context) => Dialog(
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(20),
+                                      ),
+                                      child: Container(
+                                        padding: EdgeInsets.all(24),
+                                        child: Column(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Icon(
+                                              Icons.gavel,
+                                              size: 48,
+                                              color: kPrimaryGreen,
+                                            ),
+                                            SizedBox(height: 16),
+                                            RichText(
+                                              textAlign: TextAlign.center,
+                                              text: TextSpan(
+                                                children: [
+                                                  TextSpan(
+                                                    text: 'Yumie™',
+                                                    style: TextStyle(
+                                                      fontSize: 24,
+                                                      fontWeight:
+                                                          FontWeight.bold,
+                                                      color: kPrimaryGreen,
+                                                    ),
+                                                  ),
+                                                  TextSpan(
+                                                    text: ' by mAIven X inc.',
+                                                    style: TextStyle(
+                                                      fontSize: 24,
+                                                      fontWeight:
+                                                          FontWeight.bold,
+                                                      color: Colors.black,
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                            SizedBox(height: 16),
+                                            _LegalLinkTile(
+                                              icon: Icons.privacy_tip,
+                                              title:
+                                                  AppLocalizations.of(
+                                                    context,
+                                                  )!.privacyPolicy,
+                                              subtitle:
+                                                  'Read our privacy policy',
+                                              url: 'https://yumie.me/privacy',
+                                            ),
+                                            SizedBox(height: 12),
+                                            _LegalLinkTile(
+                                              icon: Icons.description,
+                                              title:
+                                                  AppLocalizations.of(
+                                                    context,
+                                                  )!.termsOfService,
+                                              subtitle:
+                                                  'Read our terms of service',
+                                              url: 'https://yumie.me/terms',
+                                            ),
+                                            SizedBox(height: 12),
+
+                                            // Manage Privacy & Ads (reopen consent)
+                                            Container(
+                                              margin: EdgeInsets.symmetric(
+                                                horizontal: 16,
+                                                vertical: 8,
+                                              ),
+                                              decoration: BoxDecoration(
+                                                color: Colors.white,
+                                                borderRadius:
+                                                    BorderRadius.circular(12),
+                                                border: Border.all(
+                                                  color: kPrimaryGreen
+                                                      .withOpacity(0.3),
+                                                ),
+                                                boxShadow: [
+                                                  BoxShadow(
+                                                    color: Colors.black
+                                                        .withOpacity(0.05),
+                                                    blurRadius: 8,
+                                                    offset: Offset(0, 2),
+                                                  ),
+                                                ],
+                                              ),
+                                              child: ListTile(
+                                                leading: Icon(
+                                                  Icons.shield,
                                                   color: kPrimaryGreen,
                                                 ),
-                                              ),
-                                              TextSpan(
-                                                text: ' by mAIven X inc.',
-                                                style: TextStyle(
-                                                  fontSize: 24,
-                                                  fontWeight: FontWeight.bold,
-                                                  color: Colors.black,
+                                                title: Text(
+                                                  AppLocalizations.of(
+                                                    context,
+                                                  )!.privacyAndAds,
                                                 ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                        SizedBox(height: 16),
-                                        _LegalLinkTile(
-                                          icon: Icons.privacy_tip,
-                                          title: AppLocalizations.of(context)!.privacyPolicy,
-                                          subtitle: 'Read our privacy policy',
-                                          url: 'https://yumie.me/privacy',
-                                        ),
-                                        SizedBox(height: 12),
-                                        _LegalLinkTile(
-                                          icon: Icons.description,
-                                          title: AppLocalizations.of(context)!.termsOfService,
-                                          subtitle: 'Read our terms of service',
-                                          url: 'https://yumie.me/terms',
-                                        ),
-                                        SizedBox(height: 12),
-
-                                        // Manage Privacy & Ads (reopen consent)
-                                        Container(
-                                          margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                                          decoration: BoxDecoration(
-                                            color: Colors.white,
-                                            borderRadius: BorderRadius.circular(12),
-                                            border: Border.all(color: kPrimaryGreen.withOpacity(0.3)),
-                                            boxShadow: [
-                                              BoxShadow(
-                                                color: Colors.black.withOpacity(0.05),
-                                                blurRadius: 8,
-                                                offset: Offset(0, 2),
-                                              ),
-                                            ],
-                                          ),
-                                          child: ListTile(
-                                            leading: Icon(Icons.shield, color: kPrimaryGreen),
-                                            title: Text(AppLocalizations.of(context)!.privacyAndAds),
-                                            subtitle: Text(AppLocalizations.of(context)!.reviewAdPreferences),
-                                            trailing: Icon(Icons.chevron_right, color: Colors.grey[400]),
-                                            onTap: () async {
-                                              Navigator.pop(context);
-                                              final shown = await ConsentService.instance.showPrivacyOptions();
-                                              if (!shown && context.mounted) {
-                                                ScaffoldMessenger.of(context).showSnackBar(
-                                                  SnackBar(content: Text(AppLocalizations.of(context)!.privacyOptionsNotAvailable)),
-                                                );
-                                              }
-                                            },
-                                          ),
-                                        ),
-
-                                        SizedBox(height: 24),
-                                        Row(
-                                          mainAxisAlignment: MainAxisAlignment.center,
-                                          children: [
-                                            OutlinedButton(
-                                              onPressed: () => Navigator.pop(context),
-                                              style: OutlinedButton.styleFrom(
-                                                foregroundColor: kPrimaryGreen,
-                                                side: BorderSide(color: kPrimaryGreen),
-                                                shape: RoundedRectangleBorder(
-                                                  borderRadius: BorderRadius.circular(12),
+                                                subtitle: Text(
+                                                  AppLocalizations.of(
+                                                    context,
+                                                  )!.reviewAdPreferences,
                                                 ),
+                                                trailing: Icon(
+                                                  Icons.chevron_right,
+                                                  color: Colors.grey[400],
+                                                ),
+                                                onTap: () async {
+                                                  Navigator.pop(context);
+                                                  final shown =
+                                                      await ConsentService
+                                                          .instance
+                                                          .showPrivacyOptions();
+                                                  if (!shown &&
+                                                      context.mounted) {
+                                                    ScaffoldMessenger.of(
+                                                      context,
+                                                    ).showSnackBar(
+                                                      SnackBar(
+                                                        content: Text(
+                                                          AppLocalizations.of(
+                                                            context,
+                                                          )!.privacyOptionsNotAvailable,
+                                                        ),
+                                                      ),
+                                                    );
+                                                  }
+                                                },
                                               ),
-                                              child: Text(AppLocalizations.of(context)!.close),
+                                            ),
+
+                                            SizedBox(height: 24),
+                                            Row(
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment.center,
+                                              children: [
+                                                OutlinedButton(
+                                                  onPressed:
+                                                      () => Navigator.pop(
+                                                        context,
+                                                      ),
+                                                  style: OutlinedButton.styleFrom(
+                                                    foregroundColor:
+                                                        kPrimaryGreen,
+                                                    side: BorderSide(
+                                                      color: kPrimaryGreen,
+                                                    ),
+                                                    shape: RoundedRectangleBorder(
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                            12,
+                                                          ),
+                                                    ),
+                                                  ),
+                                                  child: Text(
+                                                    AppLocalizations.of(
+                                                      context,
+                                                    )!.close,
+                                                  ),
+                                                ),
+                                              ],
                                             ),
                                           ],
                                         ),
-                                      ],
+                                      ),
                                     ),
-                                  ),
-                                ),
                               );
                             },
                           ),
                           Divider(height: 1, color: Colors.grey[200]),
-                          
+
                           // Account Deletion
                           _ProfileMenuTile(
                             icon: Icons.delete_forever,
@@ -6890,11 +8802,12 @@ Track your calories, scan food with AI, and get personalized nutrition insights 
                             iconColor: Colors.red[800],
                             labelColor: Colors.red[800],
                             onTap: () {
-                              AccountDeletionService().showAccountDeletionDialog(context);
+                              AccountDeletionService()
+                                  .showAccountDeletionDialog(context);
                             },
                           ),
                           Divider(height: 1, color: Colors.grey[200]),
-                          
+
                           _ProfileMenuTile(
                             icon: Icons.logout,
                             label: AppLocalizations.of(context)!.logOut,
@@ -6903,78 +8816,119 @@ Track your calories, scan food with AI, and get personalized nutrition insights 
                             onTap: () {
                               showDialog(
                                 context: context,
-                                builder: (context) => Dialog(
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(20),
-                                  ),
-                                  child: Container(
-                                    padding: EdgeInsets.all(24),
-                                    child: Column(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        Icon(
-                                          Icons.logout,
-                                          size: 48,
-                                          color: Colors.red,
-                                        ),
-                                        SizedBox(height: 16),
-                                        Text(
-                                          AppLocalizations.of(context)!.logOut,
-                                          style: TextStyle(
-                                            fontSize: 24,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
-                                        SizedBox(height: 8),
-                                        Text(
-                                          AppLocalizations.of(context)!.areYouSureYouWantToLogOut,
-                                          style: TextStyle(
-                                            fontSize: 16,
-                                            color: Colors.grey[600],
-                                          ),
-                                          textAlign: TextAlign.center,
-                                        ),
-                                        SizedBox(height: 24),
-                                        Row(
-                                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                builder:
+                                    (context) => Dialog(
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(20),
+                                      ),
+                                      child: Container(
+                                        padding: EdgeInsets.all(24),
+                                        child: Column(
+                                          mainAxisSize: MainAxisSize.min,
                                           children: [
-                                            OutlinedButton(
-                                              onPressed: () => Navigator.pop(context),
-                                              style: OutlinedButton.styleFrom(
-                                                foregroundColor: kPrimaryGreen,
-                                                side: BorderSide(color: kPrimaryGreen),
-                                                shape: RoundedRectangleBorder(
-                                                  borderRadius: BorderRadius.circular(12),
-                                                ),
-                                                padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                                              ),
-                                              child: Text(AppLocalizations.of(context)!.no),
+                                            Icon(
+                                              Icons.logout,
+                                              size: 48,
+                                              color: Colors.red,
                                             ),
-                                            ElevatedButton(
-                                              onPressed: () async {
-                                                Navigator.pop(context);
-                                                await AuthService().logout();
-                                                Navigator.of(context).pushAndRemoveUntil(
-                                                  MaterialPageRoute(builder: (_) => AuthScreen()),
-                                                  (route) => false,
-                                                );
-                                              },
-                                              style: ElevatedButton.styleFrom(
-                                                backgroundColor: Colors.red,
-                                                foregroundColor: Colors.white,
-                                                shape: RoundedRectangleBorder(
-                                                  borderRadius: BorderRadius.circular(12),
-                                                ),
-                                                padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                                            SizedBox(height: 16),
+                                            Text(
+                                              AppLocalizations.of(
+                                                context,
+                                              )!.logOut,
+                                              style: TextStyle(
+                                                fontSize: 24,
+                                                fontWeight: FontWeight.bold,
                                               ),
-                                              child: Text(AppLocalizations.of(context)!.yes),
+                                            ),
+                                            SizedBox(height: 8),
+                                            Text(
+                                              AppLocalizations.of(
+                                                context,
+                                              )!.areYouSureYouWantToLogOut,
+                                              style: TextStyle(
+                                                fontSize: 16,
+                                                color: Colors.grey[600],
+                                              ),
+                                              textAlign: TextAlign.center,
+                                            ),
+                                            SizedBox(height: 24),
+                                            Row(
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment.spaceEvenly,
+                                              children: [
+                                                OutlinedButton(
+                                                  onPressed:
+                                                      () => Navigator.pop(
+                                                        context,
+                                                      ),
+                                                  style: OutlinedButton.styleFrom(
+                                                    foregroundColor:
+                                                        kPrimaryGreen,
+                                                    side: BorderSide(
+                                                      color: kPrimaryGreen,
+                                                    ),
+                                                    shape: RoundedRectangleBorder(
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                            12,
+                                                          ),
+                                                    ),
+                                                    padding:
+                                                        EdgeInsets.symmetric(
+                                                          horizontal: 24,
+                                                          vertical: 12,
+                                                        ),
+                                                  ),
+                                                  child: Text(
+                                                    AppLocalizations.of(
+                                                      context,
+                                                    )!.no,
+                                                  ),
+                                                ),
+                                                ElevatedButton(
+                                                  onPressed: () async {
+                                                    Navigator.pop(context);
+                                                    await AuthService()
+                                                        .logout();
+                                                    Navigator.of(
+                                                      context,
+                                                    ).pushAndRemoveUntil(
+                                                      MaterialPageRoute(
+                                                        builder:
+                                                            (_) => AuthScreen(),
+                                                      ),
+                                                      (route) => false,
+                                                    );
+                                                  },
+                                                  style: ElevatedButton.styleFrom(
+                                                    backgroundColor: Colors.red,
+                                                    foregroundColor:
+                                                        Colors.white,
+                                                    shape: RoundedRectangleBorder(
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                            12,
+                                                          ),
+                                                    ),
+                                                    padding:
+                                                        EdgeInsets.symmetric(
+                                                          horizontal: 24,
+                                                          vertical: 12,
+                                                        ),
+                                                  ),
+                                                  child: Text(
+                                                    AppLocalizations.of(
+                                                      context,
+                                                    )!.yes,
+                                                  ),
+                                                ),
+                                              ],
                                             ),
                                           ],
                                         ),
-                                      ],
+                                      ),
                                     ),
-                                  ),
-                                ),
                               );
                             },
                           ),
@@ -7017,12 +8971,24 @@ class _ProfileMenuTile extends StatelessWidget {
   final VoidCallback onTap;
   final Color? iconColor;
   final Color? labelColor;
-  const _ProfileMenuTile({required this.icon, required this.label, required this.onTap, this.iconColor, this.labelColor});
+  const _ProfileMenuTile({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+    this.iconColor,
+    this.labelColor,
+  });
   @override
   Widget build(BuildContext context) {
     return ListTile(
       leading: Icon(icon, color: iconColor ?? Colors.grey[600]),
-      title: Text(label, style: TextStyle(fontWeight: FontWeight.w500, color: labelColor ?? Colors.black)),
+      title: Text(
+        label,
+        style: TextStyle(
+          fontWeight: FontWeight.w500,
+          color: labelColor ?? Colors.black,
+        ),
+      ),
       trailing: Icon(Icons.chevron_right, color: Colors.grey[400]),
       onTap: onTap,
       contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 2),
@@ -7036,7 +9002,9 @@ class CoachScreen extends StatefulWidget {
   @override
   State<CoachScreen> createState() => _CoachScreenState();
 }
-class _CoachScreenState extends State<CoachScreen> with TickerProviderStateMixin {
+
+class _CoachScreenState extends State<CoachScreen>
+    with TickerProviderStateMixin {
   int _tabIndex = 0;
   final TextEditingController _controller = TextEditingController();
   final ScrollController _scrollController = ScrollController();
@@ -7052,8 +9020,9 @@ class _CoachScreenState extends State<CoachScreen> with TickerProviderStateMixin
   String? _aiHealthInsight;
   bool _loadingInsight = false;
   int? _lastInsightCalories; // Track calories when last insight was generated
-  String? _lastInsightMealPeriod; // Track meal period when last insight was generated
-  
+  String?
+  _lastInsightMealPeriod; // Track meal period when last insight was generated
+
   // Scroll to bottom button state
   bool _showScrollToBottomButton = false;
 
@@ -7084,15 +9053,13 @@ class _CoachScreenState extends State<CoachScreen> with TickerProviderStateMixin
     });
   }
 
-
-
   // Load message count from SharedPreferences
   Future<void> _loadMessageCount() async {
     final prefs = await SharedPreferences.getInstance();
     final today = DateTime.now();
     final todayStr = '${today.year}-${today.month}-${today.day}';
     final messageCountKey = 'message_count_$todayStr';
-    
+
     setState(() {
       _messageCount = prefs.getInt(messageCountKey) ?? 0;
     });
@@ -7104,7 +9071,7 @@ class _CoachScreenState extends State<CoachScreen> with TickerProviderStateMixin
     final today = DateTime.now();
     final todayStr = '${today.year}-${today.month}-${today.day}';
     final messageCountKey = 'message_count_$todayStr';
-    
+
     await prefs.setInt(messageCountKey, _messageCount);
   }
 
@@ -7128,19 +9095,24 @@ class _CoachScreenState extends State<CoachScreen> with TickerProviderStateMixin
       _initializeWelcomeMessage();
       return;
     }
-    
+
     final chatKey = 'chat_history_${user.uid}';
     final chatJson = prefs.getString(chatKey);
-    
+
     if (chatJson != null) {
       try {
         final List<dynamic> decoded = jsonDecode(chatJson);
-        final messages = decoded.map((msg) => _ChatMessage(
-          text: msg['text'],
-          isUser: msg['isUser'],
-          quickReplies: List<String>.from(msg['quickReplies'] ?? []),
-        )).toList();
-        
+        final messages =
+            decoded
+                .map(
+                  (msg) => _ChatMessage(
+                    text: msg['text'],
+                    isUser: msg['isUser'],
+                    quickReplies: List<String>.from(msg['quickReplies'] ?? []),
+                  ),
+                )
+                .toList();
+
         setState(() {
           _messages = messages;
         });
@@ -7182,16 +9154,21 @@ class _CoachScreenState extends State<CoachScreen> with TickerProviderStateMixin
   Future<void> _saveChatHistory() async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
-    
+
     final prefs = await SharedPreferences.getInstance();
     final chatKey = 'chat_history_${user.uid}';
-    
-    final messagesJson = _messages.map((msg) => {
-      'text': msg.text,
-      'isUser': msg.isUser,
-      'quickReplies': msg.quickReplies,
-    }).toList();
-    
+
+    final messagesJson =
+        _messages
+            .map(
+              (msg) => {
+                'text': msg.text,
+                'isUser': msg.isUser,
+                'quickReplies': msg.quickReplies,
+              },
+            )
+            .toList();
+
     await prefs.setString(chatKey, jsonEncode(messagesJson));
   }
 
@@ -7199,7 +9176,7 @@ class _CoachScreenState extends State<CoachScreen> with TickerProviderStateMixin
   Future<void> _clearChatHistory() async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
-    
+
     final prefs = await SharedPreferences.getInstance();
     final chatKey = 'chat_history_${user.uid}';
     await prefs.remove(chatKey);
@@ -7213,24 +9190,25 @@ class _CoachScreenState extends State<CoachScreen> with TickerProviderStateMixin
     if (!isPremium) {
       return; // Don't refresh for non-premium users
     }
-    
+
     try {
       final meals = await MealService().getTodayMeals().first;
       final currentCalories = meals.fold(0, (sum, m) => sum + m.calories);
       final currentMealPeriod = getCurrentMealPeriod();
-      
+
       // If no previous insight exists, generate one
       if (_aiHealthInsight == null || _aiHealthInsight!.isEmpty) {
         await _fetchAIHealthInsight();
         return;
       }
-      
+
       // Only refresh if calories have changed significantly (more than 50 calories difference)
-      if (_lastInsightCalories != null && (_lastInsightCalories! - currentCalories).abs() > 50) {
+      if (_lastInsightCalories != null &&
+          (_lastInsightCalories! - currentCalories).abs() > 50) {
         await _fetchAIHealthInsight();
         return;
       }
-      
+
       // Only refresh if meal period has changed AND it's been more than 2 hours since last insight
       final lastMealPeriod = _getLastInsightMealPeriod();
       if (lastMealPeriod != null && lastMealPeriod != currentMealPeriod) {
@@ -7238,7 +9216,9 @@ class _CoachScreenState extends State<CoachScreen> with TickerProviderStateMixin
         final prefs = await SharedPreferences.getInstance();
         final lastInsightTime = prefs.getInt('last_insight_timestamp');
         final now = DateTime.now().millisecondsSinceEpoch;
-        if (lastInsightTime == null || (now - lastInsightTime) > (2 * 60 * 60 * 1000)) { // 2 hours in milliseconds
+        if (lastInsightTime == null ||
+            (now - lastInsightTime) > (2 * 60 * 60 * 1000)) {
+          // 2 hours in milliseconds
           await _fetchAIHealthInsight();
           await prefs.setInt('last_insight_timestamp', now);
         }
@@ -7248,8 +9228,6 @@ class _CoachScreenState extends State<CoachScreen> with TickerProviderStateMixin
       await _fetchAIHealthInsight();
     }
   }
-
-
 
   // Helper to translate meal types
   String _getMealTypeLocalized(BuildContext context, String mealType) {
@@ -7277,11 +9255,16 @@ class _CoachScreenState extends State<CoachScreen> with TickerProviderStateMixin
     if (!isPremium) {
       return; // Don't fetch insights for non-premium users
     }
-    
-    setState(() { _loadingInsight = true; });
+
+    setState(() {
+      _loadingInsight = true;
+    });
     final userProfile = await UserService().getCurrentUserProfile().first;
     if (userProfile == null) {
-      setState(() { _aiHealthInsight = "Could not load profile."; _loadingInsight = false; });
+      setState(() {
+        _aiHealthInsight = "Could not load profile.";
+        _loadingInsight = false;
+      });
       return;
     }
     // User health data (bloodType, isDiabetic, etc.) is now available in userProfile
@@ -7292,7 +9275,11 @@ class _CoachScreenState extends State<CoachScreen> with TickerProviderStateMixin
     int fatG = meals.fold(0, (sum, m) => sum + m.fat);
     double waterIntakeL = (userProfile.waterLoggedMl ?? 0) / 1000.0;
     final chatHistory = [
-      {'role': 'user', 'content': "Analyze my health data and provide exactly 3 concise insights. Focus on calorie goal achievement, macro balance, and actionable recommendations. Be direct and factual - no conversational tone."},
+      {
+        'role': 'user',
+        'content':
+            "Analyze my health data and provide exactly 3 concise insights. Focus on calorie goal achievement, macro balance, and actionable recommendations. Be direct and factual - no conversational tone.",
+      },
     ];
     final prefs = Provider.of<PreferencesProvider>(context, listen: false);
     final aiResponse = await AIService().sendCoachMessage(
@@ -7315,17 +9302,24 @@ class _CoachScreenState extends State<CoachScreen> with TickerProviderStateMixin
       waterIntakeL: waterIntakeL,
       bloodType: userProfile.bloodType,
       isDiabetic: userProfile.isDiabetic,
-      specialInstruction: 'Provide exactly 3 concise health insights with citations. Format as simple bullet points without markdown formatting. Focus on: 1) Calorie goal achievement with specific percentages, 2) Macro balance assessment, 3) One actionable recommendation. Include [Source: Organization] for each insight. Be direct and factual - no greetings or conversational language. Keep each point brief to fit in the UI box. Example: "• Consuming 30% protein supports muscle retention during weight loss [Source: Academy of Nutrition and Dietetics]"',
+      specialInstruction:
+          'Provide exactly 3 concise health insights with citations. Format as simple bullet points without markdown formatting. Focus on: 1) Calorie goal achievement with specific percentages, 2) Macro balance assessment, 3) One actionable recommendation. Include [Source: Organization] for each insight. Be direct and factual - no greetings or conversational language. Keep each point brief to fit in the UI box. Example: "• Consuming 30% protein supports muscle retention during weight loss [Source: Academy of Nutrition and Dietetics]"',
       language: prefs.language,
     );
-    setState(() { _aiHealthInsight = aiResponse ?? "Could not get AI insight."; _loadingInsight = false; });
+    setState(() {
+      _aiHealthInsight = aiResponse ?? "Could not get AI insight.";
+      _loadingInsight = false;
+    });
     // Save to SharedPreferences
     final prefs2 = await SharedPreferences.getInstance();
     if (_aiHealthInsight != null) {
       prefs2.setString('last_health_insight', _aiHealthInsight!);
       prefs2.setInt('last_insight_calories', caloriesConsumed);
       prefs2.setString('last_insight_meal_period', getCurrentMealPeriod());
-      prefs2.setInt('last_insight_timestamp', DateTime.now().millisecondsSinceEpoch);
+      prefs2.setInt(
+        'last_insight_timestamp',
+        DateTime.now().millisecondsSinceEpoch,
+      );
     }
   }
 
@@ -7364,17 +9358,17 @@ class _CoachScreenState extends State<CoachScreen> with TickerProviderStateMixin
     // Close keyboard on send for better UX
     FocusScope.of(context).unfocus();
     if (text.trim().isEmpty) return;
-    
+
     final subscriptionService = SubscriptionService();
     final isPremium = await subscriptionService.isPremiumUser();
-    
+
     // Check message limit for free users
     if (!isPremium && _messageCount >= _maxFreeMessages) {
       // Show subscription prompt instead of sending message
       _showSubscriptionPrompt();
       return;
     }
-    
+
     setState(() {
       _messages.add(_ChatMessage(text: text, isUser: true));
       if (!isPremium) {
@@ -7389,16 +9383,19 @@ class _CoachScreenState extends State<CoachScreen> with TickerProviderStateMixin
   }
 
   void _showSubscriptionPrompt() {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (context) => SubscriptionPage(),
-      ),
-    );
+    Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: (context) => SubscriptionPage()));
   }
 
   void _botReply(String userText) async {
     setState(() {
-      _messages.add(_ChatMessage(text: AppLocalizations.of(context)!.yumieThinking, isUser: false));
+      _messages.add(
+        _ChatMessage(
+          text: AppLocalizations.of(context)!.yumieThinking,
+          isUser: false,
+        ),
+      );
     });
 
     // 1. Get user profile
@@ -7406,7 +9403,12 @@ class _CoachScreenState extends State<CoachScreen> with TickerProviderStateMixin
     if (userProfile == null) {
       setState(() {
         _messages.removeLast();
-        _messages.add(_ChatMessage(text: "Sorry, I couldn't find your profile.", isUser: false));
+        _messages.add(
+          _ChatMessage(
+            text: "Sorry, I couldn't find your profile.",
+            isUser: false,
+          ),
+        );
       });
       return;
     }
@@ -7415,10 +9417,15 @@ class _CoachScreenState extends State<CoachScreen> with TickerProviderStateMixin
 
     // 3. Fetch today's meals
     final meals = await MealService().getTodayMeals().first;
-    String mealsSummary = meals.isEmpty
-        ? "No meals logged today."
-        : meals.map((m) =>
-            "${getMealTypeLocalized(context, m.mealType)}: ${m.name} (${m.calories} kcal, P:${m.protein}g C:${m.carbs}g F:${m.fat}g)").join("; ");
+    String mealsSummary =
+        meals.isEmpty
+            ? "No meals logged today."
+            : meals
+                .map(
+                  (m) =>
+                      "${getMealTypeLocalized(context, m.mealType)}: ${m.name} (${m.calories} kcal, P:${m.protein}g C:${m.carbs}g F:${m.fat}g)",
+                )
+                .join("; ");
 
     // 4. Nutrition log
     int caloriesConsumed = meals.fold(0, (sum, m) => sum + m.calories);
@@ -7428,15 +9435,21 @@ class _CoachScreenState extends State<CoachScreen> with TickerProviderStateMixin
     double waterIntakeL = (userProfile.waterLoggedMl ?? 0) / 1000.0;
 
     // 5. Build chat history for OpenAI
-    final chatHistory = _messages
-        .where((m) => m.text != "Yumie is thinking...")
-        .map((m) => {
-              'role': m.isUser ? 'user' : 'assistant',
-              'content': m.text,
-            })
-        .toList();
+    final chatHistory =
+        _messages
+            .where((m) => m.text != "Yumie is thinking...")
+            .map(
+              (m) => {
+                'role': m.isUser ? 'user' : 'assistant',
+                'content': m.text,
+              },
+            )
+            .toList();
     // Add the new user message
-    chatHistory.add({'role': 'user', 'content': userText + "\n\nToday's meals: $mealsSummary"});
+    chatHistory.add({
+      'role': 'user',
+      'content': userText + "\n\nToday's meals: $mealsSummary",
+    });
 
     // 6. Call the AI with full chat history
     final prefs = Provider.of<PreferencesProvider>(context, listen: false);
@@ -7465,20 +9478,25 @@ class _CoachScreenState extends State<CoachScreen> with TickerProviderStateMixin
 
     setState(() {
       _messages.removeLast();
-      _messages.add(_ChatMessage(text: aiResponse ?? "Sorry, I couldn't get a response.", isUser: false));
+      _messages.add(
+        _ChatMessage(
+          text: aiResponse ?? "Sorry, I couldn't get a response.",
+          isUser: false,
+        ),
+      );
     });
     // Don't auto-scroll - let user control with button
     _saveChatHistory(); // Save after AI response
   }
 
-
-
   void _onScrollChanged() {
     if (!_scrollController.hasClients) return;
-    
+
     final position = _scrollController.position;
-    final isAtBottom = position.pixels >= position.maxScrollExtent - 50; // Consider at bottom when within 50px
-    
+    final isAtBottom =
+        position.pixels >=
+        position.maxScrollExtent - 50; // Consider at bottom when within 50px
+
     setState(() {
       // If there are messages and we're not at bottom, show scroll button
       // If no messages or we're at bottom, show send button
@@ -7488,10 +9506,10 @@ class _CoachScreenState extends State<CoachScreen> with TickerProviderStateMixin
 
   void _checkInitialScrollState() {
     if (!_scrollController.hasClients) return;
-    
+
     final position = _scrollController.position;
     final isAtBottom = position.pixels >= position.maxScrollExtent - 50;
-    
+
     setState(() {
       // If there are messages and we're not at bottom, show scroll button
       // If no messages or we're at bottom, show send button
@@ -7508,6 +9526,7 @@ class _CoachScreenState extends State<CoachScreen> with TickerProviderStateMixin
       );
     }
   }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -7539,9 +9558,19 @@ class _CoachScreenState extends State<CoachScreen> with TickerProviderStateMixin
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(AppLocalizations.of(context)!.yumie, style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black, fontSize: 22)),
+                    Text(
+                      AppLocalizations.of(context)!.yumie,
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black,
+                        fontSize: 22,
+                      ),
+                    ),
                     SizedBox(height: 2),
-                    Text(AppLocalizations.of(context)!.askAboutMeals, style: TextStyle(fontSize: 13, color: Colors.grey[500])),
+                    Text(
+                      AppLocalizations.of(context)!.askAboutMeals,
+                      style: TextStyle(fontSize: 13, color: Colors.grey[500]),
+                    ),
                   ],
                 ),
               ],
@@ -7571,11 +9600,22 @@ class _CoachScreenState extends State<CoachScreen> with TickerProviderStateMixin
                     child: Container(
                       padding: EdgeInsets.symmetric(vertical: 12),
                       decoration: BoxDecoration(
-                        color: _tabIndex == 0 ? Colors.white : Colors.transparent,
+                        color:
+                            _tabIndex == 0 ? Colors.white : Colors.transparent,
                         borderRadius: BorderRadius.circular(18),
                       ),
                       child: Center(
-                        child: Text(AppLocalizations.of(context)!.chat, style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16, color: _tabIndex == 0 ? Colors.black : Colors.grey[500])),
+                        child: Text(
+                          AppLocalizations.of(context)!.chat,
+                          style: TextStyle(
+                            fontWeight: FontWeight.w600,
+                            fontSize: 16,
+                            color:
+                                _tabIndex == 0
+                                    ? Colors.black
+                                    : Colors.grey[500],
+                          ),
+                        ),
                       ),
                     ),
                   ),
@@ -7592,11 +9632,22 @@ class _CoachScreenState extends State<CoachScreen> with TickerProviderStateMixin
                     child: Container(
                       padding: EdgeInsets.symmetric(vertical: 12),
                       decoration: BoxDecoration(
-                        color: _tabIndex == 1 ? Colors.white : Colors.transparent,
+                        color:
+                            _tabIndex == 1 ? Colors.white : Colors.transparent,
                         borderRadius: BorderRadius.circular(18),
                       ),
                       child: Center(
-                        child: Text(AppLocalizations.of(context)!.insights, style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16, color: _tabIndex == 1 ? Colors.black : Colors.grey[500])),
+                        child: Text(
+                          AppLocalizations.of(context)!.insights,
+                          style: TextStyle(
+                            fontWeight: FontWeight.w600,
+                            fontSize: 16,
+                            color:
+                                _tabIndex == 1
+                                    ? Colors.black
+                                    : Colors.grey[500],
+                          ),
+                        ),
                       ),
                     ),
                   ),
@@ -7616,15 +9667,17 @@ class _CoachScreenState extends State<CoachScreen> with TickerProviderStateMixin
                       await _clearChatHistory(); // Clear from SharedPreferences
                       setState(() {
                         _messages.clear();
-                        _messages.add(_ChatMessage(
-                          text: AppLocalizations.of(context)!.coachWelcome,
-                          isUser: false,
-                          quickReplies: [
-                            AppLocalizations.of(context)!.coachQuick1,
-                            AppLocalizations.of(context)!.coachQuick2,
-                            AppLocalizations.of(context)!.coachQuick3,
-                          ],
-                        ));
+                        _messages.add(
+                          _ChatMessage(
+                            text: AppLocalizations.of(context)!.coachWelcome,
+                            isUser: false,
+                            quickReplies: [
+                              AppLocalizations.of(context)!.coachQuick1,
+                              AppLocalizations.of(context)!.coachQuick2,
+                              AppLocalizations.of(context)!.coachQuick3,
+                            ],
+                          ),
+                        );
                       });
                     },
                     icon: Icon(Icons.refresh, size: 18),
@@ -7632,9 +9685,17 @@ class _CoachScreenState extends State<CoachScreen> with TickerProviderStateMixin
                     style: ElevatedButton.styleFrom(
                       backgroundColor: kPrimaryGreen,
                       foregroundColor: Colors.white,
-                      padding: EdgeInsets.symmetric(horizontal: 18, vertical: 10),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                      textStyle: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 18,
+                        vertical: 10,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      textStyle: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 15,
+                      ),
                     ),
                   ),
                 ],
@@ -7644,404 +9705,651 @@ class _CoachScreenState extends State<CoachScreen> with TickerProviderStateMixin
           Expanded(
             child: AnimatedSwitcher(
               duration: Duration(milliseconds: 300),
-              child: _tabIndex == 0
-                ? FadeTransition(
-                    opacity: _chatController,
-                    child: SlideTransition(
-                      position: Tween<Offset>(begin: Offset(0, 0.1), end: Offset.zero).animate(_chatController),
-                      child: ListView.builder(
-                        key: ValueKey('chat'),
-                        controller: _scrollController,
-                        padding: EdgeInsets.symmetric(vertical: 16, horizontal: 8),
-                        itemCount: _messages.length,
-                        itemBuilder: (context, i) {
-                          final msg = _messages[i];
-                          final isUser = msg.isUser;
-                          final prefs = Provider.of<PreferencesProvider>(context, listen: false);
-                          final isArabic = prefs.language == 'ar';
-                          return TweenAnimationBuilder<double>(
-                            tween: Tween<double>(begin: 0, end: 1),
-                            duration: Duration(milliseconds: 400),
-                            builder: (context, value, child) => Opacity(
-                              opacity: value,
-                              child: Transform.translate(
-                                offset: Offset(0, (1 - value) * 20),
-                                child: Column(
-                                  crossAxisAlignment: isUser
-                                      ? (isArabic ? CrossAxisAlignment.end : CrossAxisAlignment.end)
-                                      : (isArabic ? CrossAxisAlignment.start : CrossAxisAlignment.start),
-                                  children: [
-                                    if (!isUser)
-                                      Container(
-                                        margin: isArabic
-                                            ? EdgeInsets.only(bottom: 8, right: 8, left: 48)
-                                            : EdgeInsets.only(bottom: 8, left: 8, right: 48),
-                                        padding: EdgeInsets.all(18),
-                                        decoration: BoxDecoration(
-                                          color: Colors.white,
-                                          borderRadius: BorderRadius.circular(18),
-                                          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 8, offset: Offset(0, 2))],
-                                        ),
+              child:
+                  _tabIndex == 0
+                      ? FadeTransition(
+                        opacity: _chatController,
+                        child: SlideTransition(
+                          position: Tween<Offset>(
+                            begin: Offset(0, 0.1),
+                            end: Offset.zero,
+                          ).animate(_chatController),
+                          child: ListView.builder(
+                            key: ValueKey('chat'),
+                            controller: _scrollController,
+                            padding: EdgeInsets.symmetric(
+                              vertical: 16,
+                              horizontal: 8,
+                            ),
+                            itemCount: _messages.length,
+                            itemBuilder: (context, i) {
+                              final msg = _messages[i];
+                              final isUser = msg.isUser;
+                              final prefs = Provider.of<PreferencesProvider>(
+                                context,
+                                listen: false,
+                              );
+                              final isArabic = prefs.language == 'ar';
+                              return TweenAnimationBuilder<double>(
+                                tween: Tween<double>(begin: 0, end: 1),
+                                duration: Duration(milliseconds: 400),
+                                builder:
+                                    (context, value, child) => Opacity(
+                                      opacity: value,
+                                      child: Transform.translate(
+                                        offset: Offset(0, (1 - value) * 20),
                                         child: Column(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          crossAxisAlignment:
+                                              isUser
+                                                  ? (isArabic
+                                                      ? CrossAxisAlignment.end
+                                                      : CrossAxisAlignment.end)
+                                                  : (isArabic
+                                                      ? CrossAxisAlignment.start
+                                                      : CrossAxisAlignment
+                                                          .start),
                                           children: [
-                                            Directionality(
-                                              textDirection: isArabic ? TextDirection.rtl : TextDirection.ltr,
-                                              child: Text(removeMarkdown(msg.text), style: TextStyle(fontSize: 17, color: Colors.black)),
-                                            ),
-                                            if (msg.quickReplies.isNotEmpty) ...[
-                                              SizedBox(height: 14),
-                                              Wrap(
-                                                spacing: 10,
-                                                runSpacing: 10,
-                                                children: msg.quickReplies.map((qr) => _QuickReplyButton(
-                                                  text: qr,
-                                                  onTap: () => _sendMessage(qr),
-                                                )).toList(),
+                                            if (!isUser)
+                                              Container(
+                                                margin:
+                                                    isArabic
+                                                        ? EdgeInsets.only(
+                                                          bottom: 8,
+                                                          right: 8,
+                                                          left: 48,
+                                                        )
+                                                        : EdgeInsets.only(
+                                                          bottom: 8,
+                                                          left: 8,
+                                                          right: 48,
+                                                        ),
+                                                padding: EdgeInsets.all(18),
+                                                decoration: BoxDecoration(
+                                                  color: Colors.white,
+                                                  borderRadius:
+                                                      BorderRadius.circular(18),
+                                                  boxShadow: [
+                                                    BoxShadow(
+                                                      color: Colors.black
+                                                          .withOpacity(0.04),
+                                                      blurRadius: 8,
+                                                      offset: Offset(0, 2),
+                                                    ),
+                                                  ],
+                                                ),
+                                                child: Column(
+                                                  crossAxisAlignment:
+                                                      CrossAxisAlignment.start,
+                                                  children: [
+                                                    Directionality(
+                                                      textDirection:
+                                                          isArabic
+                                                              ? TextDirection
+                                                                  .rtl
+                                                              : TextDirection
+                                                                  .ltr,
+                                                      child: Text(
+                                                        removeMarkdown(
+                                                          msg.text,
+                                                        ),
+                                                        style: TextStyle(
+                                                          fontSize: 17,
+                                                          color: Colors.black,
+                                                        ),
+                                                      ),
+                                                    ),
+                                                    if (msg
+                                                        .quickReplies
+                                                        .isNotEmpty) ...[
+                                                      SizedBox(height: 14),
+                                                      Wrap(
+                                                        spacing: 10,
+                                                        runSpacing: 10,
+                                                        children:
+                                                            msg.quickReplies
+                                                                .map(
+                                                                  (
+                                                                    qr,
+                                                                  ) => _QuickReplyButton(
+                                                                    text: qr,
+                                                                    onTap:
+                                                                        () =>
+                                                                            _sendMessage(
+                                                                              qr,
+                                                                            ),
+                                                                  ),
+                                                                )
+                                                                .toList(),
+                                                      ),
+                                                    ],
+                                                  ],
+                                                ),
                                               ),
-                                            ],
+                                            if (isUser)
+                                              Container(
+                                                margin:
+                                                    isArabic
+                                                        ? EdgeInsets.only(
+                                                          bottom: 8,
+                                                          left: 8,
+                                                          right: 48,
+                                                        )
+                                                        : EdgeInsets.only(
+                                                          bottom: 8,
+                                                          right: 8,
+                                                          left: 48,
+                                                        ),
+                                                padding: EdgeInsets.symmetric(
+                                                  vertical: 14,
+                                                  horizontal: 18,
+                                                ),
+                                                decoration: BoxDecoration(
+                                                  color: kPrimaryGreen,
+                                                  borderRadius:
+                                                      BorderRadius.circular(18),
+                                                  boxShadow: [
+                                                    BoxShadow(
+                                                      color: Colors.black
+                                                          .withOpacity(0.08),
+                                                      blurRadius: 8,
+                                                      offset: Offset(0, 2),
+                                                    ),
+                                                  ],
+                                                ),
+                                                child: Directionality(
+                                                  textDirection:
+                                                      isArabic
+                                                          ? TextDirection.rtl
+                                                          : TextDirection.ltr,
+                                                  child: Text(
+                                                    removeMarkdown(msg.text),
+                                                    style: TextStyle(
+                                                      fontSize: 17,
+                                                      color: Colors.white,
+                                                    ),
+                                                  ),
+                                                ),
+                                              ),
+                                            SizedBox(height: 6),
                                           ],
                                         ),
                                       ),
-                                    if (isUser)
-                                      Container(
-                                        margin: isArabic
-                                            ? EdgeInsets.only(bottom: 8, left: 8, right: 48)
-                                            : EdgeInsets.only(bottom: 8, right: 8, left: 48),
-                                        padding: EdgeInsets.symmetric(vertical: 14, horizontal: 18),
-                                        decoration: BoxDecoration(
-                                          color: kPrimaryGreen,
-                                          borderRadius: BorderRadius.circular(18),
-                                          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.08), blurRadius: 8, offset: Offset(0, 2))],
-                                        ),
-                                        child: Directionality(
-                                          textDirection: isArabic ? TextDirection.rtl : TextDirection.ltr,
-                                          child: Text(removeMarkdown(msg.text), style: TextStyle(fontSize: 17, color: Colors.white)),
-                                        ),
-                                      ),
-                                    SizedBox(height: 6),
-                                  ],
-                                ),
-                              ),
+                                    ),
+                              );
+                            },
+                          ),
+                        ),
+                      )
+                      : FadeTransition(
+                        opacity: _insightsController,
+                        child: SlideTransition(
+                          position: Tween<Offset>(
+                            begin: Offset(0, 0.1),
+                            end: Offset.zero,
+                          ).animate(_insightsController),
+                          child: SingleChildScrollView(
+                            key: ValueKey('insights'),
+                            padding: EdgeInsets.symmetric(
+                              vertical: 18,
+                              horizontal: 0,
                             ),
-                          );
-                        },
-                      ),
-                    ),
-                  )
-                : FadeTransition(
-                    opacity: _insightsController,
-                    child: SlideTransition(
-                      position: Tween<Offset>(begin: Offset(0, 0.1), end: Offset.zero).animate(_insightsController),
-                      child: SingleChildScrollView(
-                        key: ValueKey('insights'),
-                        padding: EdgeInsets.symmetric(vertical: 18, horizontal: 0),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            // Nutrition Summary
-                            Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 16),
-                              child: StreamBuilder<UserProfile?>(
-                                stream: UserService().getCurrentUserProfile(),
-                                builder: (context, userSnap) {
-                                  if (!userSnap.hasData) return _insightCard(child: Center(child: CircularProgressIndicator()));
-                                  final userProfile = userSnap.data!;
-                                  final dailyCalorieGoal = userProfile.dailyCalorieGoal;
-                                  return StreamBuilder<List<Meal>>(
-                                    stream: MealService().getTodayMeals(),
-                                    builder: (context, mealSnap) {
-                                      if (!mealSnap.hasData) return _insightCard(child: Center(child: CircularProgressIndicator()));
-                                      final meals = mealSnap.data!;
-                                      final totalCalories = meals.fold(0, (sum, m) => sum + m.calories);
-                                      return TweenAnimationBuilder<double>(
-                                        tween: Tween<double>(begin: 0, end: totalCalories / dailyCalorieGoal),
-                                        duration: Duration(milliseconds: 900),
-                                        builder: (context, value, child) => _insightCard(
-                                          child: Column(
-                                            crossAxisAlignment: CrossAxisAlignment.start,
-                                            children: [
-                                              Text(AppLocalizations.of(context)!.nutritionSummary, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20)),
-                                              SizedBox(height: 18),
-                                              Row(
-                                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                                children: [
-                                                  Text(AppLocalizations.of(context)!.calories, style: TextStyle(fontSize: 16)),
-                                                  Text('$totalCalories / $dailyCalorieGoal', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16)),
-                                                ],
-                                              ),
-                                              SizedBox(height: 10),
-                                              LinearProgressIndicator(
-                                                value: value.clamp(0.0, 1.0),
-                                                backgroundColor: kContainerGrey,
-                                                color: kAccentOrange,
-                                                minHeight: 8,
-                                              ),
-                                            ],
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                // Nutrition Summary
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 16,
+                                  ),
+                                  child: StreamBuilder<UserProfile?>(
+                                    stream:
+                                        UserService().getCurrentUserProfile(),
+                                    builder: (context, userSnap) {
+                                      if (!userSnap.hasData)
+                                        return _insightCard(
+                                          child: Center(
+                                            child: CircularProgressIndicator(),
                                           ),
-                                        ),
-                                      );
-                                    },
-                                  );
-                                },
-                              ),
-                            ),
-                            SizedBox(height: 18),
-                            // Health Insights (AI-powered)
-                            Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 16),
-                              child: ValueListenableBuilder<bool>(
-                                valueListenable: SubscriptionService().watchPremium(),
-                                builder: (context, isPremium, _) {
-                                  
-                                  return _insightCard(
-                                    child: Stack(
-                                      children: [
-                                        // Content
-                                        Column(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
-                                          children: [
-                                            Text(AppLocalizations.of(context)!.healthInsights, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20)),
-                                            SizedBox(height: 14),
-                                            if (isPremium) ...[
-                                              _loadingInsight
-                                                ? Center(
-                                                    child: Lottie.asset(
-                                                      'assets/animations/AI Loading spinner..json',
-                                                      width: 80,
-                                                      height: 80,
-                                                      fit: BoxFit.contain,
-                                                    ),
-                                                  )
-                                                : _aiHealthInsight != null
-                                                    ? Builder(
-                                                  builder: (context) {
-                                                    // Clean the AI response and ensure exactly 3 bullet points
-                                                    String cleanedText = _aiHealthInsight!
-                                                      .replaceAll(RegExp(r'\*\*\*.*?\*\*\*', caseSensitive: false), '') // Remove markdown bold
-                                                      .replaceAll(RegExp(r'\*\*.*?\*\*', caseSensitive: false), '') // Remove markdown bold
-                                                      .replaceAll(RegExp(r'^\s*(hey|hi|hello|great to see you)[^\n]*\n*', caseSensitive: false), '') // Remove greetings
-                                                      .replaceAll(RegExp(r"you're doing great.*", caseSensitive: false), '') // Remove outro
-                                                      .trim();
-                                                    
-                                                    // Split into bullet points and take exactly 3
-                                                    final lines = cleanedText
-                                                      .split(RegExp(r'\n+|- '))
-                                                      .map((l) => l.trim())
-                                                      .where((l) => l.isNotEmpty && l.length > 10) // Filter out very short lines
-                                                      .take(3)
-                                                      .toList();
-                                                    
-                                                    // Ensure we have exactly 3 points
-                                                    while (lines.length < 3) {
-                                                      lines.add("Continue tracking your nutrition goals for optimal health.");
-                                                    }
-                                                    
-                                                    return Column(
-                                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                                      children: [
-                                                        for (int i = 0; i < lines.length; i++)
-                                                          Padding(
-                                                            padding: const EdgeInsets.only(bottom: 12),
-                                                            child: Row(
-                                                              crossAxisAlignment: CrossAxisAlignment.start,
-                                                              children: [
-                                                                Container(
-                                                                  width: 8, 
-                                                                  height: 8, 
-                                                                  margin: EdgeInsets.only(top: 7), 
-                                                                  decoration: BoxDecoration(color: kPrimaryGreen, shape: BoxShape.circle)
-                                                                ),
-                                                                SizedBox(width: 10),
-                                                                Expanded(
-                                                                  child: Text(
-                                                                    lines[i], 
-                                                                    style: TextStyle(
-                                                                      fontSize: 15, 
-                                                                      color: Colors.black87, 
-                                                                      fontWeight: FontWeight.w500,
-                                                                      height: 1.35,
-                                                                    ),
-                                                                    softWrap: true,
-                                                                  ),
-                                                                ),
-                                                              ],
+                                        );
+                                      final userProfile = userSnap.data!;
+                                      final dailyCalorieGoal =
+                                          userProfile.dailyCalorieGoal;
+                                      return StreamBuilder<List<Meal>>(
+                                        stream: MealService().getTodayMeals(),
+                                        builder: (context, mealSnap) {
+                                          if (!mealSnap.hasData)
+                                            return _insightCard(
+                                              child: Center(
+                                                child:
+                                                    CircularProgressIndicator(),
+                                              ),
+                                            );
+                                          final meals = mealSnap.data!;
+                                          final totalCalories = meals.fold(
+                                            0,
+                                            (sum, m) => sum + m.calories,
+                                          );
+                                          return TweenAnimationBuilder<double>(
+                                            tween: Tween<double>(
+                                              begin: 0,
+                                              end:
+                                                  totalCalories /
+                                                  dailyCalorieGoal,
+                                            ),
+                                            duration: Duration(
+                                              milliseconds: 900,
+                                            ),
+                                            builder:
+                                                (
+                                                  context,
+                                                  value,
+                                                  child,
+                                                ) => _insightCard(
+                                                  child: Column(
+                                                    crossAxisAlignment:
+                                                        CrossAxisAlignment
+                                                            .start,
+                                                    children: [
+                                                      Text(
+                                                        AppLocalizations.of(
+                                                          context,
+                                                        )!.nutritionSummary,
+                                                        style: TextStyle(
+                                                          fontWeight:
+                                                              FontWeight.bold,
+                                                          fontSize: 20,
+                                                        ),
+                                                      ),
+                                                      SizedBox(height: 18),
+                                                      Row(
+                                                        mainAxisAlignment:
+                                                            MainAxisAlignment
+                                                                .spaceBetween,
+                                                        children: [
+                                                          Text(
+                                                            AppLocalizations.of(
+                                                              context,
+                                                            )!.calories,
+                                                            style: TextStyle(
+                                                              fontSize: 16,
                                                             ),
                                                           ),
-                                                      ],
-                                                    );
-                                                  },
-                                                )
-                                                    : Text(AppLocalizations.of(context)!.noInsightAvailable, style: TextStyle(fontSize: 16, color: Colors.grey[800])),
-                                                                                         ] else ...[
-                                               // Non-premium placeholder content
-                                               Column(
-                                                 crossAxisAlignment: CrossAxisAlignment.start,
-                                                 children: [
-                                                   for (int i = 0; i < 3; i++)
-                                                     Padding(
-                                                       padding: const EdgeInsets.only(bottom: 12),
-                                                       child: Row(
-                                                         crossAxisAlignment: CrossAxisAlignment.start,
-                                                         children: [
-                                                           Container(
-                                                             width: 8, 
-                                                             height: 8, 
-                                                             margin: EdgeInsets.only(top: 7), 
-                                                             decoration: BoxDecoration(color: Colors.grey[400], shape: BoxShape.circle)
-                                                           ),
-                                                           SizedBox(width: 10),
-                                                           Expanded(
-                                                             child: Container(
-                                                               height: 15,
-                                                               width: double.infinity,
-                                                               decoration: BoxDecoration(
-                                                                 color: Colors.grey[200],
-                                                                 borderRadius: BorderRadius.circular(4),
-                                                               ),
-                                                             ),
-                                                           ),
-                                                         ],
-                                                       ),
-                                                     ),
-                                                 ],
-                                               ),
-                                             ],
-                                          ],
-                                        ),
-                                        
-                                                                                 // Premium overlay for non-premium users
-                                         if (!isPremium)
-                                           Container(
-                                             decoration: BoxDecoration(
-                                               color: Colors.white.withOpacity(0.95),
-                                               borderRadius: BorderRadius.circular(16),
-                                             ),
-                                             child: Padding(
-                                               padding: const EdgeInsets.all(24),
-                                               child: Column(
-                                                 mainAxisAlignment: MainAxisAlignment.center,
-                                                 children: [
-                                                   Icon(
-                                                     Icons.lock_outline,
-                                                     size: 56,
-                                                     color: Colors.grey[500],
-                                                   ),
-                                                   SizedBox(height: 20),
-                                                   Text(
-                                                     AppLocalizations.of(context)!.subscribeForDailyInsights,
-                                                     textAlign: TextAlign.center,
-                                                     style: TextStyle(
-                                                       fontSize: 20,
-                                                       fontWeight: FontWeight.bold,
-                                                       color: Colors.grey[800],
-                                                     ),
-                                                   ),
-                                                   SizedBox(height: 12),
-                                                   Text(
-                                                     AppLocalizations.of(context)!.getPersonalizedHealthInsights,
-                                                     textAlign: TextAlign.center,
-                                                     style: TextStyle(
-                                                       fontSize: 15,
-                                                       color: Colors.grey[600],
-                                                       height: 1.4,
-                                                     ),
-                                                   ),
-                                                   SizedBox(height: 28),
-                                                   Container(
-                                                     width: double.infinity,
-                                                     child: ElevatedButton(
-                                                       onPressed: () {
-                                                         Navigator.of(context).push(
-                                                           MaterialPageRoute(
-                                                             builder: (context) => SubscriptionPage(),
-                                                           ),
-                                                         );
-                                                       },
-                                                       style: ElevatedButton.styleFrom(
-                                                         backgroundColor: kPrimaryGreen,
-                                                         foregroundColor: Colors.white,
-                                                         padding: EdgeInsets.symmetric(vertical: 16),
-                                                         shape: RoundedRectangleBorder(
-                                                           borderRadius: BorderRadius.circular(12),
-                                                         ),
-                                                         elevation: 2,
-                                                       ),
-                                                       child: Text(
-                                                         AppLocalizations.of(context)!.upgradeToPremium,
-                                                         style: TextStyle(
-                                                           fontSize: 16,
-                                                           fontWeight: FontWeight.bold,
-                                                         ),
-                                                       ),
-                                                     ),
-                                                   ),
-                                                 ],
-                                               ),
-                                             ),
-                                           ),
-                                      ],
-                                    ),
-                                  );
-                                },
-                              ),
-                            ),
-                            SizedBox(height: 18),
-                            // Common Questions
-                            Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 0),
-                              child: TweenAnimationBuilder<double>(
-                                tween: Tween<double>(begin: 0, end: 1),
-                                duration: Duration(milliseconds: 600),
-                                builder: (context, value, child) => _insightCard(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Container(
-                                        width: double.infinity,
-                                        padding: EdgeInsets.symmetric(vertical: 12, horizontal: 18),
-                                        decoration: BoxDecoration(
-                                          color: kPrimaryGreen.withOpacity(0.08),
-                                          borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-                                        ),
-                                        child: Text(AppLocalizations.of(context)!.commonQuestions, style: TextStyle(fontWeight: FontWeight.w600, color: kPrimaryGreen, fontSize: 18)),
-                                      ),
-                                      ...[
-                                        AppLocalizations.of(context)!.dinnerIdeas,
-                                        AppLocalizations.of(context)!.calorieCheck,
-                                        AppLocalizations.of(context)!.proteinSnacks,
-                                        AppLocalizations.of(context)!.dietTips,
-                                      ].map((q) => TweenAnimationBuilder<double>(
-                                        tween: Tween<double>(begin: 0, end: 1),
-                                        duration: Duration(milliseconds: 400),
-                                        builder: (context, value, child) => Opacity(
-                                          opacity: value,
-                                          child: Transform.translate(
-                                            offset: Offset(0, (1 - value) * 20),
-                                            child: Material(
-                                              color: Colors.transparent,
-                                              child: InkWell(
-                                                onTap: () => _handleCommonQuestion(q),
-                                                borderRadius: BorderRadius.circular(12),
-                                                child: Container(
-                                                  padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                                                  child: Row(
-                                                    children: [
-                                                      Container(
-                                                        decoration: BoxDecoration(
-                                                          color: kPrimaryGreen.withOpacity(0.10),
-                                                          shape: BoxShape.circle,
-                                                        ),
-                                                        padding: EdgeInsets.all(10),
-                                                        child: Icon(Icons.search, color: Colors.black54, size: 20),
+                                                          Text(
+                                                            '$totalCalories / $dailyCalorieGoal',
+                                                            style: TextStyle(
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .w600,
+                                                              fontSize: 16,
+                                                            ),
+                                                          ),
+                                                        ],
                                                       ),
-                                                      SizedBox(width: 16),
-                                                      Expanded(
-                                                        child: Text(
-                                                          q, 
-                                                          style: TextStyle(
-                                                            fontWeight: FontWeight.w500,
-                                                            fontSize: 16,
+                                                      SizedBox(height: 10),
+                                                      LinearProgressIndicator(
+                                                        value: value.clamp(
+                                                          0.0,
+                                                          1.0,
+                                                        ),
+                                                        backgroundColor:
+                                                            kContainerGrey,
+                                                        color: kAccentOrange,
+                                                        minHeight: 8,
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ),
+                                          );
+                                        },
+                                      );
+                                    },
+                                  ),
+                                ),
+                                SizedBox(height: 18),
+                                // Health Insights (AI-powered)
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 16,
+                                  ),
+                                  child: ValueListenableBuilder<bool>(
+                                    valueListenable:
+                                        SubscriptionService().watchPremium(),
+                                    builder: (context, isPremium, _) {
+                                      return _insightCard(
+                                        child: Stack(
+                                          children: [
+                                            // Content
+                                            Column(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              children: [
+                                                Text(
+                                                  AppLocalizations.of(
+                                                    context,
+                                                  )!.healthInsights,
+                                                  style: TextStyle(
+                                                    fontWeight: FontWeight.bold,
+                                                    fontSize: 20,
+                                                  ),
+                                                ),
+                                                SizedBox(height: 14),
+                                                if (isPremium) ...[
+                                                  _loadingInsight
+                                                      ? Center(
+                                                        child: Lottie.asset(
+                                                          'assets/animations/AI Loading spinner..json',
+                                                          width: 80,
+                                                          height: 80,
+                                                          fit: BoxFit.contain,
+                                                        ),
+                                                      )
+                                                      : _aiHealthInsight != null
+                                                      ? Builder(
+                                                        builder: (context) {
+                                                          // Clean the AI response and ensure exactly 3 bullet points
+                                                          String cleanedText =
+                                                              _aiHealthInsight!
+                                                                  .replaceAll(
+                                                                    RegExp(
+                                                                      r'\*\*\*.*?\*\*\*',
+                                                                      caseSensitive:
+                                                                          false,
+                                                                    ),
+                                                                    '',
+                                                                  ) // Remove markdown bold
+                                                                  .replaceAll(
+                                                                    RegExp(
+                                                                      r'\*\*.*?\*\*',
+                                                                      caseSensitive:
+                                                                          false,
+                                                                    ),
+                                                                    '',
+                                                                  ) // Remove markdown bold
+                                                                  .replaceAll(
+                                                                    RegExp(
+                                                                      r'^\s*(hey|hi|hello|great to see you)[^\n]*\n*',
+                                                                      caseSensitive:
+                                                                          false,
+                                                                    ),
+                                                                    '',
+                                                                  ) // Remove greetings
+                                                                  .replaceAll(
+                                                                    RegExp(
+                                                                      r"you're doing great.*",
+                                                                      caseSensitive:
+                                                                          false,
+                                                                    ),
+                                                                    '',
+                                                                  ) // Remove outro
+                                                                  .trim();
+
+                                                          // Split into bullet points and take exactly 3
+                                                          final lines =
+                                                              cleanedText
+                                                                  .split(
+                                                                    RegExp(
+                                                                      r'\n+|- ',
+                                                                    ),
+                                                                  )
+                                                                  .map(
+                                                                    (l) =>
+                                                                        l.trim(),
+                                                                  )
+                                                                  .where(
+                                                                    (l) =>
+                                                                        l.isNotEmpty &&
+                                                                        l.length >
+                                                                            10,
+                                                                  ) // Filter out very short lines
+                                                                  .take(3)
+                                                                  .toList();
+
+                                                          // Ensure we have exactly 3 points
+                                                          while (lines.length <
+                                                              3) {
+                                                            lines.add(
+                                                              "Continue tracking your nutrition goals for optimal health.",
+                                                            );
+                                                          }
+
+                                                          return Column(
+                                                            crossAxisAlignment:
+                                                                CrossAxisAlignment
+                                                                    .start,
+                                                            children: [
+                                                              for (
+                                                                int i = 0;
+                                                                i <
+                                                                    lines
+                                                                        .length;
+                                                                i++
+                                                              )
+                                                                Padding(
+                                                                  padding:
+                                                                      const EdgeInsets.only(
+                                                                        bottom:
+                                                                            12,
+                                                                      ),
+                                                                  child: Row(
+                                                                    crossAxisAlignment:
+                                                                        CrossAxisAlignment
+                                                                            .start,
+                                                                    children: [
+                                                                      Container(
+                                                                        width:
+                                                                            8,
+                                                                        height:
+                                                                            8,
+                                                                        margin: EdgeInsets.only(
+                                                                          top:
+                                                                              7,
+                                                                        ),
+                                                                        decoration: BoxDecoration(
+                                                                          color:
+                                                                              kPrimaryGreen,
+                                                                          shape:
+                                                                              BoxShape.circle,
+                                                                        ),
+                                                                      ),
+                                                                      SizedBox(
+                                                                        width:
+                                                                            10,
+                                                                      ),
+                                                                      Expanded(
+                                                                        child: Text(
+                                                                          lines[i],
+                                                                          style: TextStyle(
+                                                                            fontSize:
+                                                                                15,
+                                                                            color:
+                                                                                Colors.black87,
+                                                                            fontWeight:
+                                                                                FontWeight.w500,
+                                                                            height:
+                                                                                1.35,
+                                                                          ),
+                                                                          softWrap:
+                                                                              true,
+                                                                        ),
+                                                                      ),
+                                                                    ],
+                                                                  ),
+                                                                ),
+                                                            ],
+                                                          );
+                                                        },
+                                                      )
+                                                      : Text(
+                                                        AppLocalizations.of(
+                                                          context,
+                                                        )!.noInsightAvailable,
+                                                        style: TextStyle(
+                                                          fontSize: 16,
+                                                          color:
+                                                              Colors.grey[800],
+                                                        ),
+                                                      ),
+                                                ] else ...[
+                                                  // Non-premium placeholder content
+                                                  Column(
+                                                    crossAxisAlignment:
+                                                        CrossAxisAlignment
+                                                            .start,
+                                                    children: [
+                                                      for (
+                                                        int i = 0;
+                                                        i < 3;
+                                                        i++
+                                                      )
+                                                        Padding(
+                                                          padding:
+                                                              const EdgeInsets.only(
+                                                                bottom: 12,
+                                                              ),
+                                                          child: Row(
+                                                            crossAxisAlignment:
+                                                                CrossAxisAlignment
+                                                                    .start,
+                                                            children: [
+                                                              Container(
+                                                                width: 8,
+                                                                height: 8,
+                                                                margin:
+                                                                    EdgeInsets.only(
+                                                                      top: 7,
+                                                                    ),
+                                                                decoration: BoxDecoration(
+                                                                  color:
+                                                                      Colors
+                                                                          .grey[400],
+                                                                  shape:
+                                                                      BoxShape
+                                                                          .circle,
+                                                                ),
+                                                              ),
+                                                              SizedBox(
+                                                                width: 10,
+                                                              ),
+                                                              Expanded(
+                                                                child: Container(
+                                                                  height: 15,
+                                                                  width:
+                                                                      double
+                                                                          .infinity,
+                                                                  decoration: BoxDecoration(
+                                                                    color:
+                                                                        Colors
+                                                                            .grey[200],
+                                                                    borderRadius:
+                                                                        BorderRadius.circular(
+                                                                          4,
+                                                                        ),
+                                                                  ),
+                                                                ),
+                                                              ),
+                                                            ],
+                                                          ),
+                                                        ),
+                                                    ],
+                                                  ),
+                                                ],
+                                              ],
+                                            ),
+
+                                            // Premium overlay for non-premium users
+                                            if (!isPremium)
+                                              Container(
+                                                decoration: BoxDecoration(
+                                                  color: Colors.white
+                                                      .withOpacity(0.95),
+                                                  borderRadius:
+                                                      BorderRadius.circular(16),
+                                                ),
+                                                child: Padding(
+                                                  padding: const EdgeInsets.all(
+                                                    24,
+                                                  ),
+                                                  child: Column(
+                                                    mainAxisAlignment:
+                                                        MainAxisAlignment
+                                                            .center,
+                                                    children: [
+                                                      Icon(
+                                                        Icons.lock_outline,
+                                                        size: 56,
+                                                        color: Colors.grey[500],
+                                                      ),
+                                                      SizedBox(height: 20),
+                                                      Text(
+                                                        AppLocalizations.of(
+                                                          context,
+                                                        )!.subscribeForDailyInsights,
+                                                        textAlign:
+                                                            TextAlign.center,
+                                                        style: TextStyle(
+                                                          fontSize: 20,
+                                                          fontWeight:
+                                                              FontWeight.bold,
+                                                          color:
+                                                              Colors.grey[800],
+                                                        ),
+                                                      ),
+                                                      SizedBox(height: 12),
+                                                      Text(
+                                                        AppLocalizations.of(
+                                                          context,
+                                                        )!.getPersonalizedHealthInsights,
+                                                        textAlign:
+                                                            TextAlign.center,
+                                                        style: TextStyle(
+                                                          fontSize: 15,
+                                                          color:
+                                                              Colors.grey[600],
+                                                          height: 1.4,
+                                                        ),
+                                                      ),
+                                                      SizedBox(height: 28),
+                                                      Container(
+                                                        width: double.infinity,
+                                                        child: ElevatedButton(
+                                                          onPressed: () {
+                                                            Navigator.of(
+                                                              context,
+                                                            ).push(
+                                                              MaterialPageRoute(
+                                                                builder:
+                                                                    (context) =>
+                                                                        SubscriptionPage(),
+                                                              ),
+                                                            );
+                                                          },
+                                                          style: ElevatedButton.styleFrom(
+                                                            backgroundColor:
+                                                                kPrimaryGreen,
+                                                            foregroundColor:
+                                                                Colors.white,
+                                                            padding:
+                                                                EdgeInsets.symmetric(
+                                                                  vertical: 16,
+                                                                ),
+                                                            shape: RoundedRectangleBorder(
+                                                              borderRadius:
+                                                                  BorderRadius.circular(
+                                                                    12,
+                                                                  ),
+                                                            ),
+                                                            elevation: 2,
+                                                          ),
+                                                          child: Text(
+                                                            AppLocalizations.of(
+                                                              context,
+                                                            )!.upgradeToPremium,
+                                                            style: TextStyle(
+                                                              fontSize: 16,
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .bold,
+                                                            ),
                                                           ),
                                                         ),
                                                       ),
@@ -8049,20 +10357,169 @@ class _CoachScreenState extends State<CoachScreen> with TickerProviderStateMixin
                                                   ),
                                                 ),
                                               ),
-                                            ),
-                                          ),
+                                          ],
                                         ),
-                                      )),
-                                    ],
+                                      );
+                                    },
                                   ),
                                 ),
-                              ),
+                                SizedBox(height: 18),
+                                // Common Questions
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 0,
+                                  ),
+                                  child: TweenAnimationBuilder<double>(
+                                    tween: Tween<double>(begin: 0, end: 1),
+                                    duration: Duration(milliseconds: 600),
+                                    builder:
+                                        (context, value, child) => _insightCard(
+                                          child: Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              Container(
+                                                width: double.infinity,
+                                                padding: EdgeInsets.symmetric(
+                                                  vertical: 12,
+                                                  horizontal: 18,
+                                                ),
+                                                decoration: BoxDecoration(
+                                                  color: kPrimaryGreen
+                                                      .withOpacity(0.08),
+                                                  borderRadius:
+                                                      BorderRadius.vertical(
+                                                        top: Radius.circular(
+                                                          16,
+                                                        ),
+                                                      ),
+                                                ),
+                                                child: Text(
+                                                  AppLocalizations.of(
+                                                    context,
+                                                  )!.commonQuestions,
+                                                  style: TextStyle(
+                                                    fontWeight: FontWeight.w600,
+                                                    color: kPrimaryGreen,
+                                                    fontSize: 18,
+                                                  ),
+                                                ),
+                                              ),
+                                              ...[
+                                                AppLocalizations.of(
+                                                  context,
+                                                )!.dinnerIdeas,
+                                                AppLocalizations.of(
+                                                  context,
+                                                )!.calorieCheck,
+                                                AppLocalizations.of(
+                                                  context,
+                                                )!.proteinSnacks,
+                                                AppLocalizations.of(
+                                                  context,
+                                                )!.dietTips,
+                                              ].map(
+                                                (q) => TweenAnimationBuilder<
+                                                  double
+                                                >(
+                                                  tween: Tween<double>(
+                                                    begin: 0,
+                                                    end: 1,
+                                                  ),
+                                                  duration: Duration(
+                                                    milliseconds: 400,
+                                                  ),
+                                                  builder:
+                                                      (
+                                                        context,
+                                                        value,
+                                                        child,
+                                                      ) => Opacity(
+                                                        opacity: value,
+                                                        child: Transform.translate(
+                                                          offset: Offset(
+                                                            0,
+                                                            (1 - value) * 20,
+                                                          ),
+                                                          child: Material(
+                                                            color:
+                                                                Colors
+                                                                    .transparent,
+                                                            child: InkWell(
+                                                              onTap:
+                                                                  () =>
+                                                                      _handleCommonQuestion(
+                                                                        q,
+                                                                      ),
+                                                              borderRadius:
+                                                                  BorderRadius.circular(
+                                                                    12,
+                                                                  ),
+                                                              child: Container(
+                                                                padding:
+                                                                    EdgeInsets.symmetric(
+                                                                      horizontal:
+                                                                          16,
+                                                                      vertical:
+                                                                          12,
+                                                                    ),
+                                                                child: Row(
+                                                                  children: [
+                                                                    Container(
+                                                                      decoration: BoxDecoration(
+                                                                        color: kPrimaryGreen
+                                                                            .withOpacity(
+                                                                              0.10,
+                                                                            ),
+                                                                        shape:
+                                                                            BoxShape.circle,
+                                                                      ),
+                                                                      padding:
+                                                                          EdgeInsets.all(
+                                                                            10,
+                                                                          ),
+                                                                      child: Icon(
+                                                                        Icons
+                                                                            .search,
+                                                                        color:
+                                                                            Colors.black54,
+                                                                        size:
+                                                                            20,
+                                                                      ),
+                                                                    ),
+                                                                    SizedBox(
+                                                                      width: 16,
+                                                                    ),
+                                                                    Expanded(
+                                                                      child: Text(
+                                                                        q,
+                                                                        style: TextStyle(
+                                                                          fontWeight:
+                                                                              FontWeight.w500,
+                                                                          fontSize:
+                                                                              16,
+                                                                        ),
+                                                                      ),
+                                                                    ),
+                                                                  ],
+                                                                ),
+                                                              ),
+                                                            ),
+                                                          ),
+                                                        ),
+                                                      ),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                  ),
+                                ),
+                              ],
                             ),
-                          ],
+                          ),
                         ),
                       ),
-                    ),
-                  ),
             ),
           ),
           // Input
@@ -8074,14 +10531,17 @@ class _CoachScreenState extends State<CoachScreen> with TickerProviderStateMixin
                   valueListenable: SubscriptionService().watchPremium(),
                   builder: (context, isPremium, _) {
                     if (isPremium) return SizedBox.shrink();
-                    
+
                     return Padding(
                       padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Container(
-                            padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                            padding: EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 6,
+                            ),
                             decoration: BoxDecoration(
                               color: _getMessageCounterColor().withOpacity(0.1),
                               borderRadius: BorderRadius.circular(12),
@@ -8118,9 +10578,13 @@ class _CoachScreenState extends State<CoachScreen> with TickerProviderStateMixin
                           child: TextField(
                             controller: _controller,
                             decoration: InputDecoration(
-                              hintText: AppLocalizations.of(context)!.typeYourMessage,
+                              hintText:
+                                  AppLocalizations.of(context)!.typeYourMessage,
                               border: InputBorder.none,
-                              contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                              contentPadding: EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 14,
+                              ),
                             ),
                             onSubmitted: _sendMessage,
                           ),
@@ -8129,39 +10593,48 @@ class _CoachScreenState extends State<CoachScreen> with TickerProviderStateMixin
                       SizedBox(width: 10),
                       AnimatedSwitcher(
                         duration: Duration(milliseconds: 200),
-                        child: _showScrollToBottomButton
-                            ? Material(
-                                key: ValueKey('scroll_button'),
-                                color: Colors.transparent,
-                                child: InkWell(
-                                  onTap: _scrollToBottom,
-                                  borderRadius: BorderRadius.circular(16),
-                                  child: Container(
-                                    decoration: BoxDecoration(
-                                      color: kPrimaryGreen,
-                                      borderRadius: BorderRadius.circular(16),
+                        child:
+                            _showScrollToBottomButton
+                                ? Material(
+                                  key: ValueKey('scroll_button'),
+                                  color: Colors.transparent,
+                                  child: InkWell(
+                                    onTap: _scrollToBottom,
+                                    borderRadius: BorderRadius.circular(16),
+                                    child: Container(
+                                      decoration: BoxDecoration(
+                                        color: kPrimaryGreen,
+                                        borderRadius: BorderRadius.circular(16),
+                                      ),
+                                      padding: EdgeInsets.all(12),
+                                      child: Icon(
+                                        Icons.keyboard_arrow_down,
+                                        color: Colors.white,
+                                        size: 22,
+                                      ),
                                     ),
-                                    padding: EdgeInsets.all(12),
-                                    child: Icon(Icons.keyboard_arrow_down, color: Colors.white, size: 22),
+                                  ),
+                                )
+                                : Material(
+                                  key: ValueKey('send_button'),
+                                  color: Colors.transparent,
+                                  child: InkWell(
+                                    onTap: () => _sendMessage(_controller.text),
+                                    borderRadius: BorderRadius.circular(16),
+                                    child: Container(
+                                      decoration: BoxDecoration(
+                                        color: kPrimaryGreen,
+                                        borderRadius: BorderRadius.circular(16),
+                                      ),
+                                      padding: EdgeInsets.all(12),
+                                      child: Icon(
+                                        Icons.send,
+                                        color: Colors.white,
+                                        size: 22,
+                                      ),
+                                    ),
                                   ),
                                 ),
-                              )
-                            : Material(
-                                key: ValueKey('send_button'),
-                                color: Colors.transparent,
-                                child: InkWell(
-                                  onTap: () => _sendMessage(_controller.text),
-                                  borderRadius: BorderRadius.circular(16),
-                                  child: Container(
-                                    decoration: BoxDecoration(
-                                      color: kPrimaryGreen,
-                                      borderRadius: BorderRadius.circular(16),
-                                    ),
-                                    padding: EdgeInsets.all(12),
-                                    child: Icon(Icons.send, color: Colors.white, size: 22),
-                                  ),
-                                ),
-                              ),
                       ),
                     ],
                   ),
@@ -8178,7 +10651,11 @@ class _ChatMessage {
   final String text;
   final bool isUser;
   final List<String> quickReplies;
-  _ChatMessage({required this.text, required this.isUser, this.quickReplies = const []});
+  _ChatMessage({
+    required this.text,
+    required this.isUser,
+    this.quickReplies = const [],
+  });
 }
 
 class _QuickReplyButton extends StatelessWidget {
@@ -8200,9 +10677,9 @@ class _QuickReplyButton extends StatelessWidget {
             border: Border.all(color: kPrimaryGreen.withOpacity(0.18)),
           ),
           child: Text(
-            text, 
+            text,
             style: TextStyle(
-              fontWeight: FontWeight.w500, 
+              fontWeight: FontWeight.w500,
               color: kPrimaryGreen,
               fontSize: 15,
             ),
@@ -8238,12 +10715,13 @@ class FoodScreen extends StatefulWidget {
   @override
   State<FoodScreen> createState() => _FoodScreenState();
 }
+
 class _FoodScreenState extends State<FoodScreen> with TickerProviderStateMixin {
   DateTime _focusedDay = DateTime.now();
   DateTime? _selectedDay;
   int _tabIndex = 0; // 0: My Meals, 1: Suggested Meals
   final MealService _mealService = MealService();
-  
+
   // Helper function to get food type icon
   IconData _getFoodTypeIcon(String? foodType) {
     switch (foodType?.toLowerCase()) {
@@ -8270,7 +10748,16 @@ class _FoodScreenState extends State<FoodScreen> with TickerProviderStateMixin {
       }
     }
     // Remove common trailing notes like 'overnight', 'rest', 'marinate'
-    s = s.replaceAll(RegExp(r'\b(overnight|rest|marinate|chill|rise|proof)\b', caseSensitive: false), '').trim();
+    s =
+        s
+            .replaceAll(
+              RegExp(
+                r'\b(overnight|rest|marinate|chill|rise|proof)\b',
+                caseSensitive: false,
+              ),
+              '',
+            )
+            .trim();
     // Collapse multiple spaces
     s = s.replaceAll(RegExp(r'\s+'), ' ').trim();
     if (s.isEmpty) return '5 mins';
@@ -8315,7 +10802,7 @@ class _FoodScreenState extends State<FoodScreen> with TickerProviderStateMixin {
   // Add state for meal type filter in Food page
   int _selectedFoodMealTypeIndex = 0;
   bool _hasFoodPageInitialized = false;
-  
+
   // Helper to get localized food meal types
   List<String> _getFoodMealTypes(BuildContext context) {
     final localizations = AppLocalizations.of(context)!;
@@ -8326,10 +10813,15 @@ class _FoodScreenState extends State<FoodScreen> with TickerProviderStateMixin {
       localizations.snack,
     ];
   }
-  
+
   // Helper to get meal type keys for filtering
-  final List<String> _foodMealTypeKeys = ['breakfast', 'lunch', 'dinner', 'snack'];
-  
+  final List<String> _foodMealTypeKeys = [
+    'breakfast',
+    'lunch',
+    'dinner',
+    'snack',
+  ];
+
   // Helper to get meal type index based on current time
   int _getCurrentMealTypeIndex() {
     final currentMealPeriod = getCurrentMealPeriod();
@@ -8363,7 +10855,9 @@ class _FoodScreenState extends State<FoodScreen> with TickerProviderStateMixin {
       return _cachedAIMeals[cacheKey]!;
     }
     // Try to load from SharedPreferences
-    final cachedJson = await SharedPreferences.getInstance().then((sp) => sp.getString(cacheKey));
+    final cachedJson = await SharedPreferences.getInstance().then(
+      (sp) => sp.getString(cacheKey),
+    );
     if (cachedJson != null) {
       final List<dynamic> decoded = jsonDecode(cachedJson);
       final meals = decoded.cast<Map<String, dynamic>>();
@@ -8374,7 +10868,10 @@ class _FoodScreenState extends State<FoodScreen> with TickerProviderStateMixin {
     }
     // Fetch from AI
     final language = prefs.language;
-    final meals = await AIService().getSuggestedMeals(mealPeriod: period, language: language);
+    final meals = await AIService().getSuggestedMeals(
+      mealPeriod: period,
+      language: language,
+    );
     if (meals != null) {
       final sp = await SharedPreferences.getInstance();
       sp.setString(cacheKey, jsonEncode(meals));
@@ -8388,10 +10885,22 @@ class _FoodScreenState extends State<FoodScreen> with TickerProviderStateMixin {
   @override
   void initState() {
     super.initState();
-    _tabController = AnimationController(vsync: this, duration: Duration(milliseconds: 350));
-    _calendarController = AnimationController(vsync: this, duration: Duration(milliseconds: 400));
-    _myMealsController = AnimationController(vsync: this, duration: Duration(milliseconds: 500));
-    _suggestedController = AnimationController(vsync: this, duration: Duration(milliseconds: 500));
+    _tabController = AnimationController(
+      vsync: this,
+      duration: Duration(milliseconds: 350),
+    );
+    _calendarController = AnimationController(
+      vsync: this,
+      duration: Duration(milliseconds: 400),
+    );
+    _myMealsController = AnimationController(
+      vsync: this,
+      duration: Duration(milliseconds: 500),
+    );
+    _suggestedController = AnimationController(
+      vsync: this,
+      duration: Duration(milliseconds: 500),
+    );
     _selectedDay = DateTime.now();
     _refreshAIMeals();
     _calendarController.forward();
@@ -8425,7 +10934,7 @@ class _FoodScreenState extends State<FoodScreen> with TickerProviderStateMixin {
       _suggestedController.forward();
     }
   }
-  
+
   // Method to force refresh meals (for manual refresh)
   Future<void> _forceRefreshAIMeals() async {
     // Clear cache for current period
@@ -8433,14 +10942,14 @@ class _FoodScreenState extends State<FoodScreen> with TickerProviderStateMixin {
     final period = _currentMealPeriod;
     final language = prefs.language;
     await AIService().clearSuggestedMealsCache(period, language);
-    
+
     // Clear in-memory cache
     final today = DateTime.now();
     final dateKey = '${today.year}-${today.month}-${today.day}';
     final cacheKey = 'ai_meals_${period}_$dateKey';
     _cachedAIMeals.remove(cacheKey);
     _cachedPeriodKey = null;
-    
+
     // Fetch fresh meals
     await _refreshAIMeals();
   }
@@ -8465,7 +10974,7 @@ class _FoodScreenState extends State<FoodScreen> with TickerProviderStateMixin {
       localizations.dinner,
       localizations.snack,
     ];
-    
+
     // Initialize meal type selection based on current time (only once)
     if (!_hasFoodPageInitialized) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -8488,546 +10997,990 @@ class _FoodScreenState extends State<FoodScreen> with TickerProviderStateMixin {
           return localizations.snack;
       }
     }
+
     return ValueListenableBuilder<bool>(
       valueListenable: ConnectivityService.instance.online,
       builder: (context, isOnline, _) {
         return Stack(
-      children: [
-        Scaffold(
-      backgroundColor: const Color(0xFFF9FAFB),
-      appBar: PreferredSize(
-        preferredSize: Size.fromHeight(80),
-        child: AppBar(
-          backgroundColor: Colors.white,
-          elevation: 0,
-          leading: null,
-          title: Padding(
-            padding: EdgeInsets.only(left: 16, right: 0),
-            child: Row(
-              children: [
-                Container(
-                  decoration: BoxDecoration(
-                    color: kPrimaryGreen.withOpacity(0.12),
-                    shape: BoxShape.circle,
-                  ),
-                  padding: EdgeInsets.all(4),
-                  child: Image.asset(
-                    'assets/logo.png',
-                    width: 48,
-                    height: 48,
-                    fit: BoxFit.contain,
-                  ),
-                ),
-                SizedBox(width: 10),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(localizations.food, style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black, fontSize: 22)),
-                    SizedBox(height: 2),
-                    Text(localizations.trackYourNutrition, style: TextStyle(fontSize: 13, color: Colors.grey[500])),
-                  ],
-                ),
-              ],
-            ),
-          ),
-          titleSpacing: 0,
-        ),
-      ),
-      body: Column(
-        children: [
-          // TabBar
-          Container(
-            color: Colors.transparent,
-            child: Row(
-              children: [
-                Expanded(
-                  child: GestureDetector(
-                    onTap: () => _onTabChanged(0),
-                    child: Container(
-                      padding: EdgeInsets.symmetric(vertical: 12),
-                      decoration: BoxDecoration(
-                        color: _tabIndex == 0 ? Colors.white : Colors.transparent,
-                        borderRadius: BorderRadius.circular(18),
-                      ),
-                      child: Center(
-                        child: Text(localizations.myMeals, style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16, color: _tabIndex == 0 ? Colors.black : Colors.grey[500])),
-                      ),
-                    ),
-                  ),
-                ),
-                Expanded(
-                  child: GestureDetector(
-                    onTap: () => _onTabChanged(1),
-                    child: Container(
-                      padding: EdgeInsets.symmetric(vertical: 12),
-                      decoration: BoxDecoration(
-                        color: _tabIndex == 1 ? Colors.white : Colors.transparent,
-                        borderRadius: BorderRadius.circular(18),
-                      ),
-                      child: Center(
-                        child: Text(localizations.suggestedMeals, style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16, color: _tabIndex == 1 ? Colors.black : Colors.grey[500])),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          // Animated tab content
-          Expanded(
-            child: AnimatedSwitcher(
-              duration: Duration(milliseconds: 350),
-              switchInCurve: Curves.easeOutCubic,
-              switchOutCurve: Curves.easeInCubic,
-              child: _tabIndex == 0
-                  ? Column(
-                      key: ValueKey('mymeals'),
+          children: [
+            Scaffold(
+              backgroundColor: const Color(0xFFF9FAFB),
+              appBar: PreferredSize(
+                preferredSize: Size.fromHeight(80),
+                child: AppBar(
+                  backgroundColor: Colors.white,
+                  elevation: 0,
+                  leading: null,
+                  title: Padding(
+                    padding: EdgeInsets.only(left: 16, right: 0),
+                    child: Row(
                       children: [
-                        FadeTransition(
-                          opacity: _calendarController,
-                          child: SlideTransition(
-                            position: Tween<Offset>(begin: Offset(0, 0.08), end: Offset.zero).animate(_calendarController),
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                              child: TableCalendar(
-                                firstDay: DateTime.utc(2020, 1, 1),
-                                lastDay: DateTime.utc(2100, 12, 31),
-                                focusedDay: _focusedDay,
-                                selectedDayPredicate: (day) => _selectedDay != null && day.year == _selectedDay!.year && day.month == _selectedDay!.month && day.day == _selectedDay!.day,
-                                onDaySelected: (selectedDay, focusedDay) {
-                                  setState(() {
-                                    _selectedDay = selectedDay;
-                                    _focusedDay = focusedDay;
-                                  });
-                                  _myMealsController.forward(from: 0.0);
-                                },
-                                calendarFormat: _calendarFormat,
-                                onFormatChanged: (format) {
-                                  setState(() {
-                                    _calendarFormat = format;
-                                    _calendarView = format == CalendarFormat.week ? 'week' : 'month';
-                                  });
-                                },
-                                calendarStyle: CalendarStyle(
-                                  todayDecoration: BoxDecoration(color: kPrimaryGreen.withOpacity(0.18), shape: BoxShape.circle),
-                                  selectedDecoration: BoxDecoration(color: kPrimaryGreen, shape: BoxShape.circle),
-                                  selectedTextStyle: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-                                  todayTextStyle: const TextStyle(color: kPrimaryGreen, fontWeight: FontWeight.bold),
-                                ),
-                                headerStyle: HeaderStyle(
-                                  formatButtonVisible: false,
-                                  titleCentered: true,
-                                  leftChevronIcon: Icon(Icons.chevron_left, color: Colors.black),
-                                  rightChevronIcon: Icon(Icons.chevron_right, color: Colors.black),
-                                  titleTextStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Colors.black),
-                                ),
-                                daysOfWeekStyle: DaysOfWeekStyle(
-                                  weekdayStyle: TextStyle(color: Colors.grey[600]),
-                                  weekendStyle: TextStyle(color: Colors.grey[600]),
+                        Container(
+                          decoration: BoxDecoration(
+                            color: kPrimaryGreen.withOpacity(0.12),
+                            shape: BoxShape.circle,
+                          ),
+                          padding: EdgeInsets.all(4),
+                          child: Image.asset(
+                            'assets/logo.png',
+                            width: 48,
+                            height: 48,
+                            fit: BoxFit.contain,
+                          ),
+                        ),
+                        SizedBox(width: 10),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              localizations.food,
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: Colors.black,
+                                fontSize: 22,
+                              ),
+                            ),
+                            SizedBox(height: 2),
+                            Text(
+                              localizations.trackYourNutrition,
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: Colors.grey[500],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                  titleSpacing: 0,
+                ),
+              ),
+              body: Column(
+                children: [
+                  // TabBar
+                  Container(
+                    color: Colors.transparent,
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: GestureDetector(
+                            onTap: () => _onTabChanged(0),
+                            child: Container(
+                              padding: EdgeInsets.symmetric(vertical: 12),
+                              decoration: BoxDecoration(
+                                color:
+                                    _tabIndex == 0
+                                        ? Colors.white
+                                        : Colors.transparent,
+                                borderRadius: BorderRadius.circular(18),
+                              ),
+                              child: Center(
+                                child: Text(
+                                  localizations.myMeals,
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 16,
+                                    color:
+                                        _tabIndex == 0
+                                            ? Colors.black
+                                            : Colors.grey[500],
+                                  ),
                                 ),
                               ),
                             ),
                           ),
                         ),
-                        // Meal type bar for filtering meals
-                        Padding(
-                          padding: const EdgeInsets.only(top: 8, bottom: 8),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                            children: List.generate(localizedMealTypes.length, (i) {
-                              final selected = i == _selectedFoodMealTypeIndex;
-                              return Expanded(
-                                child: GestureDetector(
-                                  onTap: () => setState(() => _selectedFoodMealTypeIndex = i),
-                                  child: AnimatedContainer(
-                                    duration: Duration(milliseconds: 180),
-                                    margin: EdgeInsets.symmetric(horizontal: 4),
-                                    padding: EdgeInsets.symmetric(vertical: 12),
-                                    decoration: BoxDecoration(
-                                      color: selected ? kPrimaryGreen : Color(0xFFF1F1F1),
-                                      borderRadius: BorderRadius.circular(22),
-                                    ),
-                                    child: Center(
-                                      child: Text(
-                                        localizedMealTypes[i],
-                                        style: TextStyle(
-                                          color: selected ? Colors.white : Colors.grey[700],
-                                          fontWeight: FontWeight.w600,
-                                          fontSize: 17,
-                                        ),
-                                      ),
-                                    ),
+                        Expanded(
+                          child: GestureDetector(
+                            onTap: () => _onTabChanged(1),
+                            child: Container(
+                              padding: EdgeInsets.symmetric(vertical: 12),
+                              decoration: BoxDecoration(
+                                color:
+                                    _tabIndex == 1
+                                        ? Colors.white
+                                        : Colors.transparent,
+                                borderRadius: BorderRadius.circular(18),
+                              ),
+                              child: Center(
+                                child: Text(
+                                  localizations.suggestedMeals,
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 16,
+                                    color:
+                                        _tabIndex == 1
+                                            ? Colors.black
+                                            : Colors.grey[500],
                                   ),
                                 ),
-                              );
-                            }),
-                          ),
-                        ),
-                        // Filtered meal list
-                        Expanded(
-                          child: StreamBuilder<List<Meal>>(
-                            stream: _mealService.getMealsForDate(_selectedDay ?? DateTime.now()),
-                            builder: (context, snapshot) {
-                              if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
-                              final meals = snapshot.data!;
-                              final filteredMeals = meals.where((m) => m.mealType.toLowerCase() == _foodMealTypeKeys[_selectedFoodMealTypeIndex]).toList();
-                              if (filteredMeals.isEmpty) {
-                                return Center(child: Text(localizations.noMealsLoggedForThisDay, style: TextStyle(color: Colors.grey)));
-                              }
-                              return ListView.builder(
-                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-                                itemCount: filteredMeals.length,
-                                itemBuilder: (context, i) {
-                                  return TweenAnimationBuilder<double>(
-                                    tween: Tween<double>(begin: 0, end: 1),
-                                    duration: Duration(milliseconds: 400 + i * 80),
-                                    builder: (context, value, child) => Opacity(
-                                      opacity: value,
-                                      child: Transform.translate(
-                                        offset: Offset(0, (1 - value) * 24),
-                                        child: _FoodMealCard(meal: filteredMeals[i]),
-                                      ),
-                                    ),
-                                  );
-                                },
-                              );
-                            },
+                              ),
+                            ),
                           ),
                         ),
                       ],
-                    )
-                  : FadeTransition(
-                      key: ValueKey('suggested'),
-                      opacity: _suggestedController,
-                      child: SlideTransition(
-                        position: Tween<Offset>(begin: Offset(0, 0.06), end: Offset.zero).animate(_suggestedController),
-                        child: FutureBuilder<List<Map<String, dynamic>>?>(
-                          future: _getOrFetchAIMeals(),
-                          builder: (context, snapshot) {
-                            if (snapshot.connectionState == ConnectionState.waiting) {
-                              return SizedBox(
-                                height: 320,
-                                child: Center(child: CircularProgressIndicator()),
-                              );
-                            }
-                            if (snapshot.hasError || !snapshot.hasData || snapshot.data == null) {
-                              return Padding(
-                                padding: const EdgeInsets.all(32),
-                                child: Center(child: Text(localizations.noMealsLoggedForThisDay, style: TextStyle(color: Colors.grey[600], fontSize: 16))),
-                              );
-                            }
-                            final meals = snapshot.data!;
-                            return SafeArea(
-                              child: ListView(
-                                padding: const EdgeInsets.only(left: 0, right: 0, top: 0, bottom: 24),
+                    ),
+                  ),
+
+                  // Animated tab content
+                  Expanded(
+                    child: AnimatedSwitcher(
+                      duration: Duration(milliseconds: 350),
+                      switchInCurve: Curves.easeOutCubic,
+                      switchOutCurve: Curves.easeInCubic,
+                      child:
+                          _tabIndex == 0
+                              ? Column(
+                                key: ValueKey('mymeals'),
                                 children: [
-                                  // Enhanced meal period header
-                                  Container(
-                                    margin: const EdgeInsets.fromLTRB(20, 20, 20, 16),
-                                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-                                    decoration: BoxDecoration(
-                                      gradient: LinearGradient(
-                                        colors: [kPrimaryGreen.withOpacity(0.1), kPrimaryGreen.withOpacity(0.05)],
-                                        begin: Alignment.topLeft,
-                                        end: Alignment.bottomRight,
-                                      ),
-                                      borderRadius: BorderRadius.circular(16),
-                                      border: Border.all(color: kPrimaryGreen.withOpacity(0.2), width: 1),
-                                    ),
-                                    child: Row(
-                                      children: [
-                                        Container(
-                                          padding: const EdgeInsets.all(8),
-                                          decoration: BoxDecoration(
-                                            color: kPrimaryGreen.withOpacity(0.15),
-                                            borderRadius: BorderRadius.circular(12),
-                                          ),
-                                          child: Icon(
-                                            _currentMealPeriod == 'breakfast' ? Icons.wb_sunny :
-                                            _currentMealPeriod == 'lunch' ? Icons.wb_sunny_outlined :
-                                            _currentMealPeriod == 'dinner' ? Icons.nights_stay :
-                                            Icons.nightlight,
-                                            color: kPrimaryGreen,
-                                            size: 24,
-                                          ),
+                                  FadeTransition(
+                                    opacity: _calendarController,
+                                    child: SlideTransition(
+                                      position: Tween<Offset>(
+                                        begin: Offset(0, 0.08),
+                                        end: Offset.zero,
+                                      ).animate(_calendarController),
+                                      child: Padding(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 8,
+                                          vertical: 4,
                                         ),
-                                        const SizedBox(width: 12),
-                                        Expanded(
-                                          child: Text(
-                                            _getCurrentMealLabel(context),
-                                            style: TextStyle(
-                                              fontWeight: FontWeight.bold,
-                                              fontSize: 20,
-                                              color: Colors.black87,
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                  // Enhanced meal cards
-                                  ...List.generate(meals.length, (i) {
-                                    final meal = meals[i];
-                                    return Container(
-                                      margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-                                      child: Material(
-                                        color: Colors.transparent,
-                                        child: InkWell(
-                                          borderRadius: BorderRadius.circular(20),
-                                          onTap: () {
-                                            Navigator.of(context).push(
-                                              MaterialPageRoute(
-                                                builder: (_) => GeneratedMealFromFridgePage(meal: meal),
-                                              ),
+                                        child: TableCalendar(
+                                          firstDay: DateTime.utc(2020, 1, 1),
+                                          lastDay: DateTime.utc(2100, 12, 31),
+                                          focusedDay: _focusedDay,
+                                          selectedDayPredicate:
+                                              (day) =>
+                                                  _selectedDay != null &&
+                                                  day.year ==
+                                                      _selectedDay!.year &&
+                                                  day.month ==
+                                                      _selectedDay!.month &&
+                                                  day.day == _selectedDay!.day,
+                                          onDaySelected: (
+                                            selectedDay,
+                                            focusedDay,
+                                          ) {
+                                            setState(() {
+                                              _selectedDay = selectedDay;
+                                              _focusedDay = focusedDay;
+                                            });
+                                            _myMealsController.forward(
+                                              from: 0.0,
                                             );
                                           },
-                                          child: Container(
-                                            padding: const EdgeInsets.all(20),
-                                            decoration: BoxDecoration(
-                                              color: Colors.white,
-                                              borderRadius: BorderRadius.circular(20),
-                                              boxShadow: [
-                                                BoxShadow(
-                                                  color: Colors.black.withOpacity(0.06),
-                                                  blurRadius: 12,
-                                                  offset: const Offset(0, 4),
-                                                ),
-                                              ],
-                                              border: Border.all(color: Colors.grey.withOpacity(0.1), width: 1),
+                                          calendarFormat: _calendarFormat,
+                                          onFormatChanged: (format) {
+                                            setState(() {
+                                              _calendarFormat = format;
+                                              _calendarView =
+                                                  format == CalendarFormat.week
+                                                      ? 'week'
+                                                      : 'month';
+                                            });
+                                          },
+                                          calendarStyle: CalendarStyle(
+                                            todayDecoration: BoxDecoration(
+                                              color: kPrimaryGreen.withOpacity(
+                                                0.18,
+                                              ),
+                                              shape: BoxShape.circle,
                                             ),
-                                            child: Column(
-                                              crossAxisAlignment: CrossAxisAlignment.start,
-                                              children: [
-                                                // Header row with meal name and calories
-                                                Row(
-                                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                                  children: [
-                                                    // Enhanced meal icon
-                                                    Container(
-                                                      width: 60,
-                                                      height: 60,
-                                                      decoration: BoxDecoration(
-                                                        gradient: LinearGradient(
-                                                          colors: [kPrimaryGreen.withOpacity(0.15), kPrimaryGreen.withOpacity(0.08)],
-                                                          begin: Alignment.topLeft,
-                                                          end: Alignment.bottomRight,
-                                                        ),
-                                                        borderRadius: BorderRadius.circular(16),
-                                                        border: Border.all(color: kPrimaryGreen.withOpacity(0.2), width: 1),
+                                            selectedDecoration: BoxDecoration(
+                                              color: kPrimaryGreen,
+                                              shape: BoxShape.circle,
+                                            ),
+                                            selectedTextStyle: const TextStyle(
+                                              color: Colors.white,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                            todayTextStyle: const TextStyle(
+                                              color: kPrimaryGreen,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                          headerStyle: HeaderStyle(
+                                            formatButtonVisible: false,
+                                            titleCentered: true,
+                                            leftChevronIcon: Icon(
+                                              Icons.chevron_left,
+                                              color: Colors.black,
+                                            ),
+                                            rightChevronIcon: Icon(
+                                              Icons.chevron_right,
+                                              color: Colors.black,
+                                            ),
+                                            titleTextStyle: const TextStyle(
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 18,
+                                              color: Colors.black,
+                                            ),
+                                          ),
+                                          daysOfWeekStyle: DaysOfWeekStyle(
+                                            weekdayStyle: TextStyle(
+                                              color: Colors.grey[600],
+                                            ),
+                                            weekendStyle: TextStyle(
+                                              color: Colors.grey[600],
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  // Meal type bar for filtering meals
+                                  Padding(
+                                    padding: const EdgeInsets.only(
+                                      top: 8,
+                                      bottom: 8,
+                                    ),
+                                    child: Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceEvenly,
+                                      children: List.generate(
+                                        localizedMealTypes.length,
+                                        (i) {
+                                          final selected =
+                                              i == _selectedFoodMealTypeIndex;
+                                          return Expanded(
+                                            child: GestureDetector(
+                                              onTap:
+                                                  () => setState(
+                                                    () =>
+                                                        _selectedFoodMealTypeIndex =
+                                                            i,
+                                                  ),
+                                              child: AnimatedContainer(
+                                                duration: Duration(
+                                                  milliseconds: 180,
+                                                ),
+                                                margin: EdgeInsets.symmetric(
+                                                  horizontal: 4,
+                                                ),
+                                                padding: EdgeInsets.symmetric(
+                                                  vertical: 12,
+                                                ),
+                                                decoration: BoxDecoration(
+                                                  color:
+                                                      selected
+                                                          ? kPrimaryGreen
+                                                          : Color(0xFFF1F1F1),
+                                                  borderRadius:
+                                                      BorderRadius.circular(22),
+                                                ),
+                                                child: Center(
+                                                  child: Text(
+                                                    localizedMealTypes[i],
+                                                    style: TextStyle(
+                                                      color:
+                                                          selected
+                                                              ? Colors.white
+                                                              : Colors
+                                                                  .grey[700],
+                                                      fontWeight:
+                                                          FontWeight.w600,
+                                                      fontSize: 17,
+                                                    ),
+                                                  ),
+                                                ),
+                                              ),
+                                            ),
+                                          );
+                                        },
+                                      ),
+                                    ),
+                                  ),
+                                  // Filtered meal list
+                                  Expanded(
+                                    child: StreamBuilder<List<Meal>>(
+                                      stream: _mealService.getMealsForDate(
+                                        _selectedDay ?? DateTime.now(),
+                                      ),
+                                      builder: (context, snapshot) {
+                                        if (!snapshot.hasData)
+                                          return const Center(
+                                            child: CircularProgressIndicator(),
+                                          );
+                                        final meals = snapshot.data!;
+                                        final filteredMeals =
+                                            meals
+                                                .where(
+                                                  (m) =>
+                                                      m.mealType
+                                                          .toLowerCase() ==
+                                                      _foodMealTypeKeys[_selectedFoodMealTypeIndex],
+                                                )
+                                                .toList();
+                                        if (filteredMeals.isEmpty) {
+                                          return Center(
+                                            child: Text(
+                                              localizations
+                                                  .noMealsLoggedForThisDay,
+                                              style: TextStyle(
+                                                color: Colors.grey,
+                                              ),
+                                            ),
+                                          );
+                                        }
+                                        return ListView.builder(
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 8,
+                                            vertical: 8,
+                                          ),
+                                          itemCount: filteredMeals.length,
+                                          itemBuilder: (context, i) {
+                                            return TweenAnimationBuilder<
+                                              double
+                                            >(
+                                              tween: Tween<double>(
+                                                begin: 0,
+                                                end: 1,
+                                              ),
+                                              duration: Duration(
+                                                milliseconds: 400 + i * 80,
+                                              ),
+                                              builder:
+                                                  (
+                                                    context,
+                                                    value,
+                                                    child,
+                                                  ) => Opacity(
+                                                    opacity: value,
+                                                    child: Transform.translate(
+                                                      offset: Offset(
+                                                        0,
+                                                        (1 - value) * 24,
                                                       ),
-                                                      child: Icon(
-                                                        _getFoodTypeIcon('meal'),
-                                                        size: 28,
-                                                        color: kPrimaryGreen,
+                                                      child: _FoodMealCard(
+                                                        meal: filteredMeals[i],
                                                       ),
                                                     ),
-                                                    const SizedBox(width: 16),
-                                                    // Meal name and calories
-                                                    Expanded(
-                                                      child: Column(
-                                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                                        children: [
-                                                          Text(
-                                                            meal['meal_name'] as String? ?? '',
-                                                            style: TextStyle(
-                                                              fontWeight: FontWeight.bold,
-                                                              fontSize: 18,
-                                                              color: Colors.black87,
-                                                              height: 1.2,
-                                                            ),
-                                                            maxLines: 2,
-                                                            overflow: TextOverflow.ellipsis,
+                                                  ),
+                                            );
+                                          },
+                                        );
+                                      },
+                                    ),
+                                  ),
+                                ],
+                              )
+                              : FadeTransition(
+                                key: ValueKey('suggested'),
+                                opacity: _suggestedController,
+                                child: SlideTransition(
+                                  position: Tween<Offset>(
+                                    begin: Offset(0, 0.06),
+                                    end: Offset.zero,
+                                  ).animate(_suggestedController),
+                                  child: FutureBuilder<
+                                    List<Map<String, dynamic>>?
+                                  >(
+                                    future: _getOrFetchAIMeals(),
+                                    builder: (context, snapshot) {
+                                      if (snapshot.connectionState ==
+                                          ConnectionState.waiting) {
+                                        return SizedBox(
+                                          height: 320,
+                                          child: Center(
+                                            child: CircularProgressIndicator(),
+                                          ),
+                                        );
+                                      }
+                                      if (snapshot.hasError ||
+                                          !snapshot.hasData ||
+                                          snapshot.data == null) {
+                                        return Padding(
+                                          padding: const EdgeInsets.all(32),
+                                          child: Center(
+                                            child: Text(
+                                              localizations
+                                                  .noMealsLoggedForThisDay,
+                                              style: TextStyle(
+                                                color: Colors.grey[600],
+                                                fontSize: 16,
+                                              ),
+                                            ),
+                                          ),
+                                        );
+                                      }
+                                      final meals = snapshot.data!;
+                                      return SafeArea(
+                                        child: ListView(
+                                          padding: const EdgeInsets.only(
+                                            left: 0,
+                                            right: 0,
+                                            top: 0,
+                                            bottom: 24,
+                                          ),
+                                          children: [
+                                            // Enhanced meal period header
+                                            Container(
+                                              margin: const EdgeInsets.fromLTRB(
+                                                20,
+                                                20,
+                                                20,
+                                                16,
+                                              ),
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                    horizontal: 20,
+                                                    vertical: 16,
+                                                  ),
+                                              decoration: BoxDecoration(
+                                                gradient: LinearGradient(
+                                                  colors: [
+                                                    kPrimaryGreen.withOpacity(
+                                                      0.1,
+                                                    ),
+                                                    kPrimaryGreen.withOpacity(
+                                                      0.05,
+                                                    ),
+                                                  ],
+                                                  begin: Alignment.topLeft,
+                                                  end: Alignment.bottomRight,
+                                                ),
+                                                borderRadius:
+                                                    BorderRadius.circular(16),
+                                                border: Border.all(
+                                                  color: kPrimaryGreen
+                                                      .withOpacity(0.2),
+                                                  width: 1,
+                                                ),
+                                              ),
+                                              child: Row(
+                                                children: [
+                                                  Container(
+                                                    padding:
+                                                        const EdgeInsets.all(8),
+                                                    decoration: BoxDecoration(
+                                                      color: kPrimaryGreen
+                                                          .withOpacity(0.15),
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                            12,
                                                           ),
-                                                          const SizedBox(height: 4),
-                                                          Row(
-                                                            children: [
-                                                              Container(
-                                                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                                                decoration: BoxDecoration(
-                                                                  color: kPrimaryGreen.withOpacity(0.1),
-                                                                  borderRadius: BorderRadius.circular(8),
+                                                    ),
+                                                    child: Icon(
+                                                      _currentMealPeriod ==
+                                                              'breakfast'
+                                                          ? Icons.wb_sunny
+                                                          : _currentMealPeriod ==
+                                                              'lunch'
+                                                          ? Icons
+                                                              .wb_sunny_outlined
+                                                          : _currentMealPeriod ==
+                                                              'dinner'
+                                                          ? Icons.nights_stay
+                                                          : Icons.nightlight,
+                                                      color: kPrimaryGreen,
+                                                      size: 24,
+                                                    ),
+                                                  ),
+                                                  const SizedBox(width: 12),
+                                                  Expanded(
+                                                    child: Text(
+                                                      _getCurrentMealLabel(
+                                                        context,
+                                                      ),
+                                                      style: TextStyle(
+                                                        fontWeight:
+                                                            FontWeight.bold,
+                                                        fontSize: 20,
+                                                        color: Colors.black87,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                            // Enhanced meal cards
+                                            ...List.generate(meals.length, (i) {
+                                              final meal = meals[i];
+                                              return Container(
+                                                margin:
+                                                    const EdgeInsets.symmetric(
+                                                      horizontal: 20,
+                                                      vertical: 8,
+                                                    ),
+                                                child: Material(
+                                                  color: Colors.transparent,
+                                                  child: InkWell(
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                          20,
+                                                        ),
+                                                    onTap: () {
+                                                      Navigator.of(
+                                                        context,
+                                                      ).push(
+                                                        MaterialPageRoute(
+                                                          builder:
+                                                              (_) =>
+                                                                  GeneratedMealFromFridgePage(
+                                                                    meal: meal,
+                                                                  ),
+                                                        ),
+                                                      );
+                                                    },
+                                                    child: Container(
+                                                      padding:
+                                                          const EdgeInsets.all(
+                                                            20,
+                                                          ),
+                                                      decoration: BoxDecoration(
+                                                        color: Colors.white,
+                                                        borderRadius:
+                                                            BorderRadius.circular(
+                                                              20,
+                                                            ),
+                                                        boxShadow: [
+                                                          BoxShadow(
+                                                            color: Colors.black
+                                                                .withOpacity(
+                                                                  0.06,
                                                                 ),
-                                                                child: Text(
-                                                                  '${meal['calories']} cal',
-                                                                  style: TextStyle(
-                                                                    fontWeight: FontWeight.w600,
-                                                                    fontSize: 14,
-                                                                    color: kPrimaryGreen,
+                                                            blurRadius: 12,
+                                                            offset:
+                                                                const Offset(
+                                                                  0,
+                                                                  4,
+                                                                ),
+                                                          ),
+                                                        ],
+                                                        border: Border.all(
+                                                          color: Colors.grey
+                                                              .withOpacity(0.1),
+                                                          width: 1,
+                                                        ),
+                                                      ),
+                                                      child: Column(
+                                                        crossAxisAlignment:
+                                                            CrossAxisAlignment
+                                                                .start,
+                                                        children: [
+                                                          // Header row with meal name and calories
+                                                          Row(
+                                                            crossAxisAlignment:
+                                                                CrossAxisAlignment
+                                                                    .start,
+                                                            children: [
+                                                              // Enhanced meal icon
+                                                              Container(
+                                                                width: 60,
+                                                                height: 60,
+                                                                decoration: BoxDecoration(
+                                                                  gradient: LinearGradient(
+                                                                    colors: [
+                                                                      kPrimaryGreen
+                                                                          .withOpacity(
+                                                                            0.15,
+                                                                          ),
+                                                                      kPrimaryGreen
+                                                                          .withOpacity(
+                                                                            0.08,
+                                                                          ),
+                                                                    ],
+                                                                    begin:
+                                                                        Alignment
+                                                                            .topLeft,
+                                                                    end:
+                                                                        Alignment
+                                                                            .bottomRight,
+                                                                  ),
+                                                                  borderRadius:
+                                                                      BorderRadius.circular(
+                                                                        16,
+                                                                      ),
+                                                                  border: Border.all(
+                                                                    color: kPrimaryGreen
+                                                                        .withOpacity(
+                                                                          0.2,
+                                                                        ),
+                                                                    width: 1,
                                                                   ),
                                                                 ),
-                                                              ),
-                                                              const SizedBox(width: 8),
-                                                              Container(
-                                                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                                                decoration: BoxDecoration(
-                                                                  color: Colors.blue.withOpacity(0.1),
-                                                                  borderRadius: BorderRadius.circular(8),
+                                                                child: Icon(
+                                                                  _getFoodTypeIcon(
+                                                                    'meal',
+                                                                  ),
+                                                                  size: 28,
+                                                                  color:
+                                                                      kPrimaryGreen,
                                                                 ),
-                                                                child: Text(
-                                                                  _formatMealTime(meal['time'] as String?),
-                                                                  style: TextStyle(
-                                                                    fontWeight: FontWeight.w500,
-                                                                    fontSize: 14,
-                                                                    color: Colors.blue[700],
+                                                              ),
+                                                              const SizedBox(
+                                                                width: 16,
+                                                              ),
+                                                              // Meal name and calories
+                                                              Expanded(
+                                                                child: Column(
+                                                                  crossAxisAlignment:
+                                                                      CrossAxisAlignment
+                                                                          .start,
+                                                                  children: [
+                                                                    Text(
+                                                                      meal['meal_name']
+                                                                              as String? ??
+                                                                          '',
+                                                                      style: TextStyle(
+                                                                        fontWeight:
+                                                                            FontWeight.bold,
+                                                                        fontSize:
+                                                                            18,
+                                                                        color:
+                                                                            Colors.black87,
+                                                                        height:
+                                                                            1.2,
+                                                                      ),
+                                                                      maxLines:
+                                                                          2,
+                                                                      overflow:
+                                                                          TextOverflow
+                                                                              .ellipsis,
+                                                                    ),
+                                                                    const SizedBox(
+                                                                      height: 4,
+                                                                    ),
+                                                                    Row(
+                                                                      children: [
+                                                                        Container(
+                                                                          padding: const EdgeInsets.symmetric(
+                                                                            horizontal:
+                                                                                8,
+                                                                            vertical:
+                                                                                4,
+                                                                          ),
+                                                                          decoration: BoxDecoration(
+                                                                            color: kPrimaryGreen.withOpacity(
+                                                                              0.1,
+                                                                            ),
+                                                                            borderRadius: BorderRadius.circular(
+                                                                              8,
+                                                                            ),
+                                                                          ),
+                                                                          child: Text(
+                                                                            '${meal['calories']} cal',
+                                                                            style: TextStyle(
+                                                                              fontWeight:
+                                                                                  FontWeight.w600,
+                                                                              fontSize:
+                                                                                  14,
+                                                                              color:
+                                                                                  kPrimaryGreen,
+                                                                            ),
+                                                                          ),
+                                                                        ),
+                                                                        const SizedBox(
+                                                                          width:
+                                                                              8,
+                                                                        ),
+                                                                        Container(
+                                                                          padding: const EdgeInsets.symmetric(
+                                                                            horizontal:
+                                                                                8,
+                                                                            vertical:
+                                                                                4,
+                                                                          ),
+                                                                          decoration: BoxDecoration(
+                                                                            color: Colors.blue.withOpacity(
+                                                                              0.1,
+                                                                            ),
+                                                                            borderRadius: BorderRadius.circular(
+                                                                              8,
+                                                                            ),
+                                                                          ),
+                                                                          child: Text(
+                                                                            _formatMealTime(
+                                                                              meal['time']
+                                                                                  as String?,
+                                                                            ),
+                                                                            style: TextStyle(
+                                                                              fontWeight:
+                                                                                  FontWeight.w500,
+                                                                              fontSize:
+                                                                                  14,
+                                                                              color:
+                                                                                  Colors.blue[700],
+                                                                            ),
+                                                                          ),
+                                                                        ),
+                                                                      ],
+                                                                    ),
+                                                                  ],
+                                                                ),
+                                                              ),
+                                                              // Add button
+                                                              Container(
+                                                                decoration: BoxDecoration(
+                                                                  gradient: LinearGradient(
+                                                                    colors: [
+                                                                      kPrimaryGreen,
+                                                                      kPrimaryGreen
+                                                                          .withOpacity(
+                                                                            0.8,
+                                                                          ),
+                                                                    ],
+                                                                    begin:
+                                                                        Alignment
+                                                                            .topLeft,
+                                                                    end:
+                                                                        Alignment
+                                                                            .bottomRight,
+                                                                  ),
+                                                                  borderRadius:
+                                                                      BorderRadius.circular(
+                                                                        16,
+                                                                      ),
+                                                                  boxShadow: [
+                                                                    BoxShadow(
+                                                                      color: kPrimaryGreen
+                                                                          .withOpacity(
+                                                                            0.3,
+                                                                          ),
+                                                                      blurRadius:
+                                                                          8,
+                                                                      offset:
+                                                                          const Offset(
+                                                                            0,
+                                                                            2,
+                                                                          ),
+                                                                    ),
+                                                                  ],
+                                                                ),
+                                                                child: Material(
+                                                                  color:
+                                                                      Colors
+                                                                          .transparent,
+                                                                  child: InkWell(
+                                                                    borderRadius:
+                                                                        BorderRadius.circular(
+                                                                          16,
+                                                                        ),
+                                                                    onTap: () {
+                                                                      Navigator.of(
+                                                                        context,
+                                                                      ).push(
+                                                                        MaterialPageRoute(
+                                                                          builder:
+                                                                              (_) => GeneratedMealFromFridgePage(
+                                                                                meal:
+                                                                                    meal,
+                                                                              ),
+                                                                        ),
+                                                                      );
+                                                                    },
+                                                                    child: Container(
+                                                                      padding:
+                                                                          const EdgeInsets.all(
+                                                                            12,
+                                                                          ),
+                                                                      child: Icon(
+                                                                        Icons
+                                                                            .add,
+                                                                        color:
+                                                                            Colors.white,
+                                                                        size:
+                                                                            20,
+                                                                      ),
+                                                                    ),
                                                                   ),
                                                                 ),
                                                               ),
                                                             ],
                                                           ),
+                                                          // Benefits tags
+                                                          if ((meal['benefits']
+                                                                      as List<
+                                                                        dynamic
+                                                                      >? ??
+                                                                  [])
+                                                              .isNotEmpty) ...[
+                                                            const SizedBox(
+                                                              height: 16,
+                                                            ),
+                                                            Wrap(
+                                                              spacing: 8,
+                                                              runSpacing: 6,
+                                                              children: [
+                                                                for (final tag
+                                                                    in (meal['benefits']
+                                                                            as List<
+                                                                              dynamic
+                                                                            >? ??
+                                                                        []))
+                                                                  Container(
+                                                                    padding: const EdgeInsets.symmetric(
+                                                                      horizontal:
+                                                                          10,
+                                                                      vertical:
+                                                                          6,
+                                                                    ),
+                                                                    decoration: BoxDecoration(
+                                                                      gradient: LinearGradient(
+                                                                        colors: [
+                                                                          Colors.orange.withOpacity(
+                                                                            0.15,
+                                                                          ),
+                                                                          Colors.orange.withOpacity(
+                                                                            0.08,
+                                                                          ),
+                                                                        ],
+                                                                        begin:
+                                                                            Alignment.topLeft,
+                                                                        end:
+                                                                            Alignment.bottomRight,
+                                                                      ),
+                                                                      borderRadius:
+                                                                          BorderRadius.circular(
+                                                                            12,
+                                                                          ),
+                                                                      border: Border.all(
+                                                                        color: Colors
+                                                                            .orange
+                                                                            .withOpacity(
+                                                                              0.3,
+                                                                            ),
+                                                                        width:
+                                                                            1,
+                                                                      ),
+                                                                    ),
+                                                                    child: Text(
+                                                                      tag.toString(),
+                                                                      style: TextStyle(
+                                                                        color:
+                                                                            Colors.orange[700],
+                                                                        fontWeight:
+                                                                            FontWeight.w600,
+                                                                        fontSize:
+                                                                            12,
+                                                                      ),
+                                                                      maxLines:
+                                                                          1,
+                                                                      overflow:
+                                                                          TextOverflow
+                                                                              .ellipsis,
+                                                                    ),
+                                                                  ),
+                                                              ],
+                                                            ),
+                                                          ],
                                                         ],
                                                       ),
                                                     ),
-                                                    // Add button
-                                                    Container(
-                                                      decoration: BoxDecoration(
-                                                        gradient: LinearGradient(
-                                                          colors: [kPrimaryGreen, kPrimaryGreen.withOpacity(0.8)],
-                                                          begin: Alignment.topLeft,
-                                                          end: Alignment.bottomRight,
-                                                        ),
-                                                        borderRadius: BorderRadius.circular(16),
-                                                        boxShadow: [
-                                                          BoxShadow(
-                                                            color: kPrimaryGreen.withOpacity(0.3),
-                                                            blurRadius: 8,
-                                                            offset: const Offset(0, 2),
-                                                          ),
-                                                        ],
-                                                      ),
-                                                      child: Material(
-                                                        color: Colors.transparent,
-                                                        child: InkWell(
-                                                          borderRadius: BorderRadius.circular(16),
-                                                          onTap: () {
-                                                            Navigator.of(context).push(
-                                                              MaterialPageRoute(
-                                                                builder: (_) => GeneratedMealFromFridgePage(meal: meal),
-                                                              ),
-                                                            );
-                                                          },
-                                                          child: Container(
-                                                            padding: const EdgeInsets.all(12),
-                                                            child: Icon(
-                                                              Icons.add,
-                                                              color: Colors.white,
-                                                              size: 20,
-                                                            ),
-                                                          ),
-                                                        ),
-                                                      ),
-                                                    ),
-                                                  ],
-                                                ),
-                                                // Benefits tags
-                                                if ((meal['benefits'] as List<dynamic>? ?? []).isNotEmpty) ...[
-                                                  const SizedBox(height: 16),
-                                                  Wrap(
-                                                    spacing: 8,
-                                                    runSpacing: 6,
-                                                    children: [
-                                                      for (final tag in (meal['benefits'] as List<dynamic>? ?? []))
-                                                        Container(
-                                                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                                                          decoration: BoxDecoration(
-                                                            gradient: LinearGradient(
-                                                              colors: [Colors.orange.withOpacity(0.15), Colors.orange.withOpacity(0.08)],
-                                                              begin: Alignment.topLeft,
-                                                              end: Alignment.bottomRight,
-                                                            ),
-                                                            borderRadius: BorderRadius.circular(12),
-                                                            border: Border.all(color: Colors.orange.withOpacity(0.3), width: 1),
-                                                          ),
-                                                          child: Text(
-                                                            tag.toString(),
-                                                            style: TextStyle(
-                                                              color: Colors.orange[700],
-                                                              fontWeight: FontWeight.w600,
-                                                              fontSize: 12,
-                                                            ),
-                                                            maxLines: 1,
-                                                            overflow: TextOverflow.ellipsis,
-                                                          ),
-                                                        ),
-                                                    ],
                                                   ),
-                                                ],
-                                              ],
-                                            ),
-                                          ),
+                                                ),
+                                              );
+                                            }).toList(),
+                                          ],
                                         ),
-                                      ),
-                                    );
-                                  }).toList(),
-                                ],
+                                      );
+                                    },
+                                  ),
+                                ),
                               ),
-                            );
-                          },
-                        ),
-                      ),
                     ),
-            ),
-          ),
-        ],
-      ),
-        ),
-        if (!isOnline && _tabIndex == 1)
-          Positioned.fill(
-            child: Container(
-              color: Colors.black.withOpacity(0.45),
-              child: Center(
-                child: Container(
-                  padding: const EdgeInsets.all(20),
-                  margin: const EdgeInsets.symmetric(horizontal: 24),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(16),
-                    boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.08), blurRadius: 12, offset: Offset(0, 6))],
                   ),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(Icons.wifi_off_rounded, size: 48, color: Colors.redAccent),
-                      const SizedBox(height: 12),
-                      Text('No internet', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700), textAlign: TextAlign.center),
-                      const SizedBox(height: 8),
-                      Text('Please connect to use this feature. You can still log meals offline and they will sync when you are back online.',
-                          style: TextStyle(fontSize: 15, color: Colors.black54, height: 1.4), textAlign: TextAlign.center),
-                      const SizedBox(height: 16),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: OutlinedButton.icon(
-                              onPressed: () => Navigator.of(context).popUntil((route) => route.isFirst),
-                              icon: Icon(Icons.home),
-                              label: Text('Home'),
-                              style: OutlinedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 12)),
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: ElevatedButton.icon(
-                              onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const LogMealPage())),
-                              icon: Icon(Icons.restaurant_menu),
-                              label: Text('Log a meal'),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: kPrimaryGreen,
-                                foregroundColor: Colors.white,
-                                padding: const EdgeInsets.symmetric(vertical: 12),
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                              ),
-                            ),
+                ],
+              ),
+            ),
+            if (!isOnline && _tabIndex == 1)
+              Positioned.fill(
+                child: Container(
+                  color: Colors.black.withOpacity(0.45),
+                  child: Center(
+                    child: Container(
+                      padding: const EdgeInsets.all(20),
+                      margin: const EdgeInsets.symmetric(horizontal: 24),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.08),
+                            blurRadius: 12,
+                            offset: Offset(0, 6),
                           ),
                         ],
                       ),
-                    ],
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.wifi_off_rounded,
+                            size: 48,
+                            color: Colors.redAccent,
+                          ),
+                          const SizedBox(height: 12),
+                          Text(
+                            'No internet',
+                            style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.w700,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Please connect to use this feature. You can still log meals offline and they will sync when you are back online.',
+                            style: TextStyle(
+                              fontSize: 15,
+                              color: Colors.black54,
+                              height: 1.4,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                          const SizedBox(height: 16),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: OutlinedButton.icon(
+                                  onPressed:
+                                      () => Navigator.of(
+                                        context,
+                                      ).popUntil((route) => route.isFirst),
+                                  icon: Icon(Icons.home),
+                                  label: Text('Home'),
+                                  style: OutlinedButton.styleFrom(
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 12,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: ElevatedButton.icon(
+                                  onPressed:
+                                      () => Navigator.of(context).push(
+                                        MaterialPageRoute(
+                                          builder: (_) => const LogMealPage(),
+                                        ),
+                                      ),
+                                  icon: Icon(Icons.restaurant_menu),
+                                  label: Text('Log a meal'),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: kPrimaryGreen,
+                                    foregroundColor: Colors.white,
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 12,
+                                    ),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
                 ),
               ),
-            ),
-          ),
-      ],
-    );
+          ],
+        );
       },
     );
   }
@@ -9039,9 +11992,10 @@ class _FoodMealCard extends StatefulWidget {
   @override
   State<_FoodMealCard> createState() => _FoodMealCardState();
 }
+
 class _FoodMealCardState extends State<_FoodMealCard> {
   bool _expanded = false;
-  
+
   // Helper function to get food type icon
   IconData _getFoodTypeIcon(String? foodType) {
     switch (foodType?.toLowerCase()) {
@@ -9054,7 +12008,7 @@ class _FoodMealCardState extends State<_FoodMealCard> {
         return Icons.restaurant;
     }
   }
-  
+
   @override
   Widget build(BuildContext context) {
     final meal = widget.meal;
@@ -9081,42 +12035,43 @@ class _FoodMealCardState extends State<_FoodMealCard> {
               // Meal image - prioritize user's photo, otherwise use food type icon
               ClipRRect(
                 borderRadius: BorderRadius.circular(16),
-                child: meal.imageUrl != null
-                    ? Image.network(
-                        meal.imageUrl!,
-                        width: 70,
-                        height: 70,
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) {
-                          // Fallback to food type icon if user's image fails to load
-                                return Container(
-                                  width: 70,
-                                  height: 70,
-                            decoration: BoxDecoration(
-                              color: kPrimaryGreen.withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                            child: Icon(
-                              _getFoodTypeIcon(meal.foodType),
-                              size: 35,
-                              color: kPrimaryGreen,
-                            ),
-                          );
-                        },
-                                )
-                              : Container(
-                                  width: 70,
-                                  height: 70,
-                        decoration: BoxDecoration(
-                          color: kPrimaryGreen.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(16),
+                child:
+                    meal.imageUrl != null
+                        ? Image.network(
+                          meal.imageUrl!,
+                          width: 70,
+                          height: 70,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) {
+                            // Fallback to food type icon if user's image fails to load
+                            return Container(
+                              width: 70,
+                              height: 70,
+                              decoration: BoxDecoration(
+                                color: kPrimaryGreen.withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                              child: Icon(
+                                _getFoodTypeIcon(meal.foodType),
+                                size: 35,
+                                color: kPrimaryGreen,
+                              ),
+                            );
+                          },
+                        )
+                        : Container(
+                          width: 70,
+                          height: 70,
+                          decoration: BoxDecoration(
+                            color: kPrimaryGreen.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          child: Icon(
+                            _getFoodTypeIcon(meal.foodType),
+                            size: 35,
+                            color: kPrimaryGreen,
+                          ),
                         ),
-                        child: Icon(
-                          _getFoodTypeIcon(meal.foodType),
-                          size: 35,
-                          color: kPrimaryGreen,
-                        ),
-                      ),
               ),
               const SizedBox(width: 14),
               Expanded(
@@ -9125,27 +12080,59 @@ class _FoodMealCardState extends State<_FoodMealCard> {
                   children: [
                     Row(
                       children: [
-                        Text(getMealTypeLocalized(context, meal.mealType), style: TextStyle(color: kPrimaryGreen, fontWeight: FontWeight.w600)),
+                        Text(
+                          getMealTypeLocalized(context, meal.mealType),
+                          style: TextStyle(
+                            color: kPrimaryGreen,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
                         const SizedBox(width: 8),
-                        Text(formatTime(meal.timestamp), style: TextStyle(color: Colors.grey[500], fontSize: 13)),
+                        Text(
+                          formatTime(meal.timestamp),
+                          style: TextStyle(
+                            color: Colors.grey[500],
+                            fontSize: 13,
+                          ),
+                        ),
                       ],
                     ),
                     const SizedBox(height: 2),
                     Text(
                       meal.name,
-                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
-                      textDirection: AppLocalizations.of(context)!.localeName.startsWith('ar') ? TextDirection.rtl : TextDirection.ltr,
+                      textDirection:
+                          AppLocalizations.of(
+                                context,
+                              )!.localeName.startsWith('ar')
+                              ? TextDirection.rtl
+                              : TextDirection.ltr,
                     ),
                     const SizedBox(height: 6),
                     Wrap(
                       spacing: 6,
                       runSpacing: 2,
                       children: [
-                        _MacroTag(label: 'P', value: '${meal.protein}g', color: kSecondaryBlue),
-                        _MacroTag(label: 'C', value: '${meal.carbs}g', color: kAccentOrange),
-                        _MacroTag(label: 'F', value: '${meal.fat}g', color: kWarningRed),
+                        _MacroTag(
+                          label: 'P',
+                          value: '${meal.protein}g',
+                          color: kSecondaryBlue,
+                        ),
+                        _MacroTag(
+                          label: 'C',
+                          value: '${meal.carbs}g',
+                          color: kAccentOrange,
+                        ),
+                        _MacroTag(
+                          label: 'F',
+                          value: '${meal.fat}g',
+                          color: kWarningRed,
+                        ),
                       ],
                     ),
                   ],
@@ -9159,31 +12146,62 @@ class _FoodMealCardState extends State<_FoodMealCard> {
                     crossAxisAlignment: CrossAxisAlignment.end,
                     mainAxisAlignment: MainAxisAlignment.start,
                     children: [
-                      Text('${meal.calories}', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
-                      Text('cal', style: TextStyle(color: Colors.grey[600], fontSize: 13)),
+                      Text(
+                        '${meal.calories}',
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 18,
+                        ),
+                      ),
+                      Text(
+                        'cal',
+                        style: TextStyle(color: Colors.grey[600], fontSize: 13),
+                      ),
                       IconButton(
-                        icon: Icon(Icons.delete, color: Colors.redAccent, size: 22),
+                        icon: Icon(
+                          Icons.delete,
+                          color: Colors.redAccent,
+                          size: 22,
+                        ),
                         tooltip: 'Delete meal',
                         padding: EdgeInsets.all(8),
-                        constraints: BoxConstraints(minWidth: 48, minHeight: 48),
+                        constraints: BoxConstraints(
+                          minWidth: 48,
+                          minHeight: 48,
+                        ),
                         onPressed: () async {
                           final confirm = await showDialog<bool>(
                             context: context,
-                            builder: (context) => AlertDialog(
-                              title: Text(AppLocalizations.of(context)!.deleteMeal),
-                              content: Text(AppLocalizations.of(context)!.areYouSureDeleteMeal),
-                              actions: [
-                                TextButton(
-                                  onPressed: () => Navigator.pop(context, false),
-                                  child: Text(AppLocalizations.of(context)!.cancel),
+                            builder:
+                                (context) => AlertDialog(
+                                  title: Text(
+                                    AppLocalizations.of(context)!.deleteMeal,
+                                  ),
+                                  content: Text(
+                                    AppLocalizations.of(
+                                      context,
+                                    )!.areYouSureDeleteMeal,
+                                  ),
+                                  actions: [
+                                    TextButton(
+                                      onPressed:
+                                          () => Navigator.pop(context, false),
+                                      child: Text(
+                                        AppLocalizations.of(context)!.cancel,
+                                      ),
+                                    ),
+                                    TextButton(
+                                      onPressed:
+                                          () => Navigator.pop(context, true),
+                                      style: TextButton.styleFrom(
+                                        foregroundColor: Colors.red,
+                                      ),
+                                      child: Text(
+                                        AppLocalizations.of(context)!.delete,
+                                      ),
+                                    ),
+                                  ],
                                 ),
-                                TextButton(
-                                  onPressed: () => Navigator.pop(context, true),
-                                  style: TextButton.styleFrom(foregroundColor: Colors.red),
-                                  child: Text(AppLocalizations.of(context)!.delete),
-                                ),
-                              ],
-                            ),
                           );
                           if (confirm == true) {
                             await MealService().deleteMeal(meal.id);
@@ -9191,10 +12209,18 @@ class _FoodMealCardState extends State<_FoodMealCard> {
                         },
                       ),
                       IconButton(
-                        icon: Icon(_expanded ? Icons.expand_less : Icons.expand_more, color: kPrimaryGreen, size: 22),
-                        tooltip: _expanded ? 'Hide ingredients' : 'Show ingredients',
+                        icon: Icon(
+                          _expanded ? Icons.expand_less : Icons.expand_more,
+                          color: kPrimaryGreen,
+                          size: 22,
+                        ),
+                        tooltip:
+                            _expanded ? 'Hide ingredients' : 'Show ingredients',
                         padding: EdgeInsets.all(8),
-                        constraints: BoxConstraints(minWidth: 48, minHeight: 48),
+                        constraints: BoxConstraints(
+                          minWidth: 48,
+                          minHeight: 48,
+                        ),
                         onPressed: () => setState(() => _expanded = !_expanded),
                       ),
                     ],
@@ -9215,12 +12241,31 @@ class _FoodMealCardState extends State<_FoodMealCard> {
                       return Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('Ingredients:', style: TextStyle(fontWeight: FontWeight.w600, color: kPrimaryGreen)),
-                          ...ingredients.map((ing) => Text('- $ing', style: TextStyle(color: Colors.black87))).toList(),
+                          Text(
+                            'Ingredients:',
+                            style: TextStyle(
+                              fontWeight: FontWeight.w600,
+                              color: kPrimaryGreen,
+                            ),
+                          ),
+                          ...ingredients
+                              .map(
+                                (ing) => Text(
+                                  '- $ing',
+                                  style: TextStyle(color: Colors.black87),
+                                ),
+                              )
+                              .toList(),
                         ],
                       );
                     } else {
-                      return Text(AppLocalizations.of(context)!.noIngredientsListed, style: TextStyle(color: Colors.grey[600], fontStyle: FontStyle.italic));
+                      return Text(
+                        AppLocalizations.of(context)!.noIngredientsListed,
+                        style: TextStyle(
+                          color: Colors.grey[600],
+                          fontStyle: FontStyle.italic,
+                        ),
+                      );
                     }
                   },
                 ),
@@ -9231,7 +12276,6 @@ class _FoodMealCardState extends State<_FoodMealCard> {
     );
   }
 }
-
 
 class _RecipeCardBig extends StatelessWidget {
   final Map<String, dynamic> recipe;
@@ -9268,8 +12312,20 @@ class _RecipeCardBig extends StatelessWidget {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(recipe['title'], style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
-                Text('${recipe['calories']} cal', style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16)),
+                Text(
+                  recipe['title'],
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 18,
+                  ),
+                ),
+                Text(
+                  '${recipe['calories']} cal',
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 16,
+                  ),
+                ),
               ],
             ),
           ),
@@ -9277,19 +12333,37 @@ class _RecipeCardBig extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Row(
               children: [
-                Text(recipe['time'], style: TextStyle(color: Colors.grey[600], fontSize: 15)),
+                Text(
+                  recipe['time'],
+                  style: TextStyle(color: Colors.grey[600], fontSize: 15),
+                ),
                 const SizedBox(width: 12),
                 ...List.generate(recipe['tags'].length, (i) {
                   final tag = recipe['tags'][i];
-                  final color = tag == 'High Protein' ? kSecondaryBlue : tag == 'Vegetarian' ? Colors.green : Colors.blue[200];
+                  final color =
+                      tag == 'High Protein'
+                          ? kSecondaryBlue
+                          : tag == 'Vegetarian'
+                          ? Colors.green
+                          : Colors.blue[200];
                   return Container(
                     margin: const EdgeInsets.only(right: 6),
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
                       color: color?.withOpacity(0.12) ?? Colors.blue[50],
                       borderRadius: BorderRadius.circular(10),
                     ),
-                    child: Text(tag, style: TextStyle(color: color ?? Colors.blue, fontWeight: FontWeight.w500, fontSize: 13)),
+                    child: Text(
+                      tag,
+                      style: TextStyle(
+                        color: color ?? Colors.blue,
+                        fontWeight: FontWeight.w500,
+                        fontSize: 13,
+                      ),
+                    ),
                   );
                 }),
               ],
@@ -9335,25 +12409,48 @@ class _RecipeCardSmall extends StatelessWidget {
           ),
           Padding(
             padding: const EdgeInsets.fromLTRB(10, 8, 10, 4),
-            child: Text(recipe['title'], style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15), maxLines: 1, overflow: TextOverflow.ellipsis),
+            child: Text(
+              recipe['title'],
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
           ),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 10),
             child: Row(
               children: [
-                Text(recipe['time'], style: TextStyle(color: Colors.grey[600], fontSize: 13)),
+                Text(
+                  recipe['time'],
+                  style: TextStyle(color: Colors.grey[600], fontSize: 13),
+                ),
                 const SizedBox(width: 6),
                 ...List.generate(recipe['tags'].length > 0 ? 1 : 0, (i) {
                   final tag = recipe['tags'][i];
-                  final color = tag == 'High Protein' ? kSecondaryBlue : tag == 'Vegetarian' ? Colors.green : Colors.blue[200];
+                  final color =
+                      tag == 'High Protein'
+                          ? kSecondaryBlue
+                          : tag == 'Vegetarian'
+                          ? Colors.green
+                          : Colors.blue[200];
                   return Container(
                     margin: const EdgeInsets.only(right: 4),
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 2,
+                    ),
                     decoration: BoxDecoration(
                       color: color?.withOpacity(0.12) ?? Colors.blue[50],
                       borderRadius: BorderRadius.circular(8),
                     ),
-                    child: Text(tag, style: TextStyle(color: color ?? Colors.blue, fontWeight: FontWeight.w500, fontSize: 11)),
+                    child: Text(
+                      tag,
+                      style: TextStyle(
+                        color: color ?? Colors.blue,
+                        fontWeight: FontWeight.w500,
+                        fontSize: 11,
+                      ),
+                    ),
                   );
                 }),
               ],
@@ -9371,7 +12468,12 @@ class _FabActionButton extends StatelessWidget {
   final IconData icon;
   final VoidCallback onTap;
   final bool isLarge;
-  const _FabActionButton({required this.label, required this.icon, required this.onTap, this.isLarge = false});
+  const _FabActionButton({
+    required this.label,
+    required this.icon,
+    required this.onTap,
+    this.isLarge = false,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -9379,18 +12481,25 @@ class _FabActionButton extends StatelessWidget {
     final screenHeight = MediaQuery.of(context).size.height;
     final screenWidth = MediaQuery.of(context).size.width;
     final isSmallScreen = screenHeight < 700 || screenWidth < 360;
-    
+
     // Both Log and Scan use kPrimaryGreen
     Color color = kPrimaryGreen;
-    final iconSize = isLarge ? (isSmallScreen ? 20.0 : 24.0) : (isSmallScreen ? 16.0 : 18.0);
-    final fontSize = isLarge ? (isSmallScreen ? 14.0 : 16.0) : (isSmallScreen ? 12.0 : 14.0);
-    final horizontalPadding = isLarge ? (isSmallScreen ? 18.0 : 24.0) : (isSmallScreen ? 14.0 : 18.0);
-    final verticalPadding = isLarge ? (isSmallScreen ? 12.0 : 16.0) : (isSmallScreen ? 8.0 : 12.0);
-    
+    final iconSize =
+        isLarge ? (isSmallScreen ? 20.0 : 24.0) : (isSmallScreen ? 16.0 : 18.0);
+    final fontSize =
+        isLarge ? (isSmallScreen ? 14.0 : 16.0) : (isSmallScreen ? 12.0 : 14.0);
+    final horizontalPadding =
+        isLarge ? (isSmallScreen ? 18.0 : 24.0) : (isSmallScreen ? 14.0 : 18.0);
+    final verticalPadding =
+        isLarge ? (isSmallScreen ? 12.0 : 16.0) : (isSmallScreen ? 8.0 : 12.0);
+
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: EdgeInsets.symmetric(horizontal: horizontalPadding, vertical: verticalPadding),
+        padding: EdgeInsets.symmetric(
+          horizontal: horizontalPadding,
+          vertical: verticalPadding,
+        ),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(16),
@@ -9412,13 +12521,13 @@ class _FabActionButton extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  label, 
+                  label,
                   style: TextStyle(
-                    fontWeight: FontWeight.w600, 
-                    fontSize: fontSize, 
-                    color: color, 
-                    decoration: TextDecoration.none
-                  )
+                    fontWeight: FontWeight.w600,
+                    fontSize: fontSize,
+                    color: color,
+                    decoration: TextDecoration.none,
+                  ),
                 ),
               ],
             ),
@@ -9438,7 +12547,8 @@ class _AnimatedScaleOnTap extends StatefulWidget {
   State<_AnimatedScaleOnTap> createState() => _AnimatedScaleOnTapState();
 }
 
-class _AnimatedScaleOnTapState extends State<_AnimatedScaleOnTap> with SingleTickerProviderStateMixin {
+class _AnimatedScaleOnTapState extends State<_AnimatedScaleOnTap>
+    with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _scale;
 
@@ -9449,10 +12559,10 @@ class _AnimatedScaleOnTapState extends State<_AnimatedScaleOnTap> with SingleTic
       vsync: this,
       duration: const Duration(milliseconds: 150),
     );
-    _scale = Tween<double>(begin: 1.0, end: 0.95).animate(CurvedAnimation(
-      parent: _controller,
-      curve: Curves.easeInOut,
-    ));
+    _scale = Tween<double>(
+      begin: 1.0,
+      end: 0.95,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
   }
 
   @override
@@ -9469,10 +12579,9 @@ class _AnimatedScaleOnTapState extends State<_AnimatedScaleOnTap> with SingleTic
       onTapCancel: () => _controller.reverse(),
       child: AnimatedBuilder(
         animation: _scale,
-        builder: (context, child) => Transform.scale(
-          scale: _scale.value,
-          child: child,
-        ),
+        builder:
+            (context, child) =>
+                Transform.scale(scale: _scale.value, child: child),
         child: widget.child,
       ),
     );
@@ -9484,7 +12593,11 @@ class _ProfileActionButton extends StatelessWidget {
   final IconData icon;
   final String label;
   final VoidCallback onTap;
-  const _ProfileActionButton({required this.icon, required this.label, required this.onTap});
+  const _ProfileActionButton({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -9508,7 +12621,11 @@ class _ProfileActionButton extends StatelessWidget {
                 Text(
                   label,
                   textAlign: TextAlign.center,
-                  style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: Colors.black),
+                  style: const TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                    color: Colors.black,
+                  ),
                 ),
               ],
             ),
@@ -9523,7 +12640,11 @@ class _ProfileInfoChip extends StatelessWidget {
   final IconData icon;
   final String label;
   final String value;
-  const _ProfileInfoChip({required this.icon, required this.label, required this.value});
+  const _ProfileInfoChip({
+    required this.icon,
+    required this.label,
+    required this.value,
+  });
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -9570,90 +12691,156 @@ class SettingsPage extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-              Text(AppLocalizations.of(context)!.preferences, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 22)),
-              SizedBox(height: 18),
-              Card(
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-                elevation: 2,
-                child: Column(
-          children: [
-
-            SwitchListTile(
-                      title: Text(AppLocalizations.of(context)!.useMetricUnits, style: TextStyle(fontWeight: FontWeight.w600)),
-              subtitle: Text(AppLocalizations.of(context)!.unitsSubtitle),
-              value: prefs.useMetric,
-              onChanged: (v) => prefs.setUseMetric(v),
-              secondary: Icon(Icons.straighten),
-            ),
-                  ],
+                Text(
+                  AppLocalizations.of(context)!.preferences,
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 22),
                 ),
-              ),
-              SizedBox(height: 32),
-              Text(AppLocalizations.of(context)!.appPermissions, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 22)),
-              SizedBox(height: 18),
-              Card(
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-                elevation: 2,
-                child: ListTile(
-                  leading: Icon(Icons.security),
-                  title: Text(AppLocalizations.of(context)!.managePermissions, style: TextStyle(fontWeight: FontWeight.w600)),
-                  subtitle: Text(AppLocalizations.of(context)!.cameraNotificationsAndMore),
-                  trailing: Icon(Icons.chevron_right),
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => PermissionStatusScreen(),
+                SizedBox(height: 18),
+                Card(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(18),
+                  ),
+                  elevation: 2,
+                  child: Column(
+                    children: [
+                      SwitchListTile(
+                        title: Text(
+                          AppLocalizations.of(context)!.useMetricUnits,
+                          style: TextStyle(fontWeight: FontWeight.w600),
+                        ),
+                        subtitle: Text(
+                          AppLocalizations.of(context)!.unitsSubtitle,
+                        ),
+                        value: prefs.useMetric,
+                        onChanged: (v) => prefs.setUseMetric(v),
+                        secondary: Icon(Icons.straighten),
                       ),
-                    );
-                  },
+                    ],
+                  ),
                 ),
-              ),
-              SizedBox(height: 32),
-              Text(AppLocalizations.of(context)!.habitNotifications, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 22)),
-              SizedBox(height: 18),
-              Card(
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-                elevation: 2,
-                child: Column(
-                  children: [
-                    SwitchListTile(
-                      title: Text(AppLocalizations.of(context)!.mealLoggingPrompts, style: TextStyle(fontWeight: FontWeight.w600)),
-                      subtitle: Text(AppLocalizations.of(context)!.mealLoggingPromptsSubtitle),
-                      value: prefs.mealLoggingPrompts,
-                      onChanged: (v) => prefs.setMealLoggingPrompts(v),
-                      secondary: Icon(Icons.restaurant),
-                    ),
-                    Divider(height: 1, thickness: 1, indent: 16, endIndent: 16),
-                    SwitchListTile(
-                      title: Text(AppLocalizations.of(context)!.waterIntakeReminders, style: TextStyle(fontWeight: FontWeight.w600)),
-                      subtitle: Text(AppLocalizations.of(context)!.waterIntakeRemindersSubtitle),
-                      value: prefs.waterIntakeReminders,
-                      onChanged: (v) => prefs.setWaterIntakeReminders(v),
-                      secondary: Icon(Icons.water_drop),
-                    ),
-                    Divider(height: 1, thickness: 1, indent: 16, endIndent: 16),
-                    SwitchListTile(
-                      title: Text(AppLocalizations.of(context)!.mindfulWalksReminders, style: TextStyle(fontWeight: FontWeight.w600)),
-                      subtitle: Text(AppLocalizations.of(context)!.mindfulWalksRemindersSubtitle),
-                      value: prefs.mindfulWalksReminders,
-                      onChanged: (v) => prefs.setMindfulWalksReminders(v),
-                      secondary: Icon(Icons.directions_walk),
-                    ),
-                    Divider(height: 1, thickness: 1, indent: 16, endIndent: 16),
-                    SwitchListTile(
-                      title: Text(AppLocalizations.of(context)!.momentOfCalmAfterMeals, style: TextStyle(fontWeight: FontWeight.w600)),
-                      subtitle: Text(AppLocalizations.of(context)!.momentOfCalmAfterMealsSubtitle),
-                      value: prefs.momentOfCalmReminders,
-                      onChanged: (v) => prefs.setMomentOfCalmReminders(v),
-                      secondary: Icon(Icons.self_improvement),
-                    ),
-                  ],
+                SizedBox(height: 32),
+                Text(
+                  AppLocalizations.of(context)!.appPermissions,
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 22),
                 ),
-              ),
-              SizedBox(height: 20), // Extra bottom padding
-
-            ],
+                SizedBox(height: 18),
+                Card(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(18),
+                  ),
+                  elevation: 2,
+                  child: ListTile(
+                    leading: Icon(Icons.security),
+                    title: Text(
+                      AppLocalizations.of(context)!.managePermissions,
+                      style: TextStyle(fontWeight: FontWeight.w600),
+                    ),
+                    subtitle: Text(
+                      AppLocalizations.of(context)!.cameraNotificationsAndMore,
+                    ),
+                    trailing: Icon(Icons.chevron_right),
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => PermissionStatusScreen(),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+                SizedBox(height: 32),
+                Text(
+                  AppLocalizations.of(context)!.habitNotifications,
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 22),
+                ),
+                SizedBox(height: 18),
+                Card(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(18),
+                  ),
+                  elevation: 2,
+                  child: Column(
+                    children: [
+                      SwitchListTile(
+                        title: Text(
+                          AppLocalizations.of(context)!.mealLoggingPrompts,
+                          style: TextStyle(fontWeight: FontWeight.w600),
+                        ),
+                        subtitle: Text(
+                          AppLocalizations.of(
+                            context,
+                          )!.mealLoggingPromptsSubtitle,
+                        ),
+                        value: prefs.mealLoggingPrompts,
+                        onChanged: (v) => prefs.setMealLoggingPrompts(v),
+                        secondary: Icon(Icons.restaurant),
+                      ),
+                      Divider(
+                        height: 1,
+                        thickness: 1,
+                        indent: 16,
+                        endIndent: 16,
+                      ),
+                      SwitchListTile(
+                        title: Text(
+                          AppLocalizations.of(context)!.waterIntakeReminders,
+                          style: TextStyle(fontWeight: FontWeight.w600),
+                        ),
+                        subtitle: Text(
+                          AppLocalizations.of(
+                            context,
+                          )!.waterIntakeRemindersSubtitle,
+                        ),
+                        value: prefs.waterIntakeReminders,
+                        onChanged: (v) => prefs.setWaterIntakeReminders(v),
+                        secondary: Icon(Icons.water_drop),
+                      ),
+                      Divider(
+                        height: 1,
+                        thickness: 1,
+                        indent: 16,
+                        endIndent: 16,
+                      ),
+                      SwitchListTile(
+                        title: Text(
+                          AppLocalizations.of(context)!.mindfulWalksReminders,
+                          style: TextStyle(fontWeight: FontWeight.w600),
+                        ),
+                        subtitle: Text(
+                          AppLocalizations.of(
+                            context,
+                          )!.mindfulWalksRemindersSubtitle,
+                        ),
+                        value: prefs.mindfulWalksReminders,
+                        onChanged: (v) => prefs.setMindfulWalksReminders(v),
+                        secondary: Icon(Icons.directions_walk),
+                      ),
+                      Divider(
+                        height: 1,
+                        thickness: 1,
+                        indent: 16,
+                        endIndent: 16,
+                      ),
+                      SwitchListTile(
+                        title: Text(
+                          AppLocalizations.of(context)!.momentOfCalmAfterMeals,
+                          style: TextStyle(fontWeight: FontWeight.w600),
+                        ),
+                        subtitle: Text(
+                          AppLocalizations.of(
+                            context,
+                          )!.momentOfCalmAfterMealsSubtitle,
+                        ),
+                        value: prefs.momentOfCalmReminders,
+                        onChanged: (v) => prefs.setMomentOfCalmReminders(v),
+                        secondary: Icon(Icons.self_improvement),
+                      ),
+                    ],
+                  ),
+                ),
+                SizedBox(height: 20), // Extra bottom padding
+              ],
             ),
           ),
         ),
@@ -9666,6 +12853,7 @@ class HealthAwarenessPage extends StatefulWidget {
   @override
   _HealthAwarenessPageState createState() => _HealthAwarenessPageState();
 }
+
 class _HealthAwarenessPageState extends State<HealthAwarenessPage> {
   bool? _isDiabetic;
   String? _activityLevel;
@@ -9675,22 +12863,39 @@ class _HealthAwarenessPageState extends State<HealthAwarenessPage> {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
     try {
-      await FirebaseFirestore.instance.collection('users').doc(user.uid).update({
-        field: value,
-        'lastUpdated': FieldValue.serverTimestamp(),
-      });
+      await FirebaseFirestore.instance.collection('users').doc(user.uid).update(
+        {field: value, 'lastUpdated': FieldValue.serverTimestamp()},
+      );
     } catch (_) {
       // best-effort; UI state already updated
     }
   }
 
-
-
   List<Map<String, dynamic>> get activityLevels => [
-    {'label': AppLocalizations.of(context)!.sedentary, 'value': 'Sedentary', 'desc': AppLocalizations.of(context)!.littleOrNoExercise, 'icon': Icons.self_improvement},
-    {'label': AppLocalizations.of(context)!.lightlyActive, 'value': 'Lightly active', 'desc': AppLocalizations.of(context)!.lightExercise, 'icon': Icons.directions_walk},
-    {'label': AppLocalizations.of(context)!.moderatelyActive, 'value': 'Active', 'desc': AppLocalizations.of(context)!.moderateExercise, 'icon': Icons.directions_run},
-    {'label': AppLocalizations.of(context)!.veryActive, 'value': 'Very active', 'desc': AppLocalizations.of(context)!.hardExercise, 'icon': Icons.fitness_center},
+    {
+      'label': AppLocalizations.of(context)!.sedentary,
+      'value': 'Sedentary',
+      'desc': AppLocalizations.of(context)!.littleOrNoExercise,
+      'icon': Icons.self_improvement,
+    },
+    {
+      'label': AppLocalizations.of(context)!.lightlyActive,
+      'value': 'Lightly active',
+      'desc': AppLocalizations.of(context)!.lightExercise,
+      'icon': Icons.directions_walk,
+    },
+    {
+      'label': AppLocalizations.of(context)!.moderatelyActive,
+      'value': 'Active',
+      'desc': AppLocalizations.of(context)!.moderateExercise,
+      'icon': Icons.directions_run,
+    },
+    {
+      'label': AppLocalizations.of(context)!.veryActive,
+      'value': 'Very active',
+      'desc': AppLocalizations.of(context)!.hardExercise,
+      'icon': Icons.fitness_center,
+    },
   ];
 
   @override
@@ -9702,7 +12907,11 @@ class _HealthAwarenessPageState extends State<HealthAwarenessPage> {
   Future<void> _loadUserData() async {
     final user = FirebaseAuth.instance.currentUser;
     if (user != null) {
-      final doc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
+      final doc =
+          await FirebaseFirestore.instance
+              .collection('users')
+              .doc(user.uid)
+              .get();
       final data = doc.data() ?? {};
       setState(() {
         _isDiabetic = data['isDiabetic'] as bool?;
@@ -9715,13 +12924,20 @@ class _HealthAwarenessPageState extends State<HealthAwarenessPage> {
     setState(() => _saving = true);
     final user = FirebaseAuth.instance.currentUser;
     if (user != null) {
-      await FirebaseFirestore.instance.collection('users').doc(user.uid).update({
-        'isDiabetic': _isDiabetic,
-        'activityLevel': _activityLevel,
-        'lastUpdated': DateTime.now(),
-      });
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .update({
+            'isDiabetic': _isDiabetic,
+            'activityLevel': _activityLevel,
+            'lastUpdated': DateTime.now(),
+          });
       setState(() => _saving = false);
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(AppLocalizations.of(context)!.healthAwarenessUpdated)));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(AppLocalizations.of(context)!.healthAwarenessUpdated),
+        ),
+      );
       Navigator.pop(context);
     }
   }
@@ -9730,116 +12946,192 @@ class _HealthAwarenessPageState extends State<HealthAwarenessPage> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Scaffold(
-      appBar: AppBar(title: Text(AppLocalizations.of(context)!.healthAwareness)),
-      body: _saving
-          ? Center(child: CircularProgressIndicator())
-          : SingleChildScrollView(
-              padding: const EdgeInsets.all(24.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(AppLocalizations.of(context)!.areYouDiabetic, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20)),
-                  SizedBox(height: 12),
-                  Row(
-                    children: [
-                      ChoiceChip(
-                        label: Row(children: [Icon(Icons.check_circle, color: Colors.green), SizedBox(width: 6), Text(AppLocalizations.of(context)!.yes)]),
-                        selected: _isDiabetic == true,
-                        selectedColor: Colors.green.withOpacity(0.18),
-                        onSelected: (selected) async {
-                          setState(() => _isDiabetic = true);
-                          await _updateField('isDiabetic', true);
-                        },
-                        labelStyle: TextStyle(color: _isDiabetic == true ? Colors.green : Colors.black),
-                        backgroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                        side: BorderSide(color: _isDiabetic == true ? Colors.green : Colors.grey[300]!, width: 2),
+      appBar: AppBar(
+        title: Text(AppLocalizations.of(context)!.healthAwareness),
+      ),
+      body:
+          _saving
+              ? Center(child: CircularProgressIndicator())
+              : SingleChildScrollView(
+                padding: const EdgeInsets.all(24.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      AppLocalizations.of(context)!.areYouDiabetic,
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 20,
                       ),
-                      SizedBox(width: 18),
-                      ChoiceChip(
-                        label: Row(children: [Icon(Icons.cancel, color: Colors.red), SizedBox(width: 6), Text(AppLocalizations.of(context)!.no)]),
-                        selected: _isDiabetic == false,
-                        selectedColor: Colors.red.withOpacity(0.18),
-                        onSelected: (selected) async {
-                          setState(() => _isDiabetic = false);
-                          await _updateField('isDiabetic', false);
-                        },
-                        labelStyle: TextStyle(color: _isDiabetic == false ? Colors.red : Colors.black),
-                        backgroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                        side: BorderSide(color: _isDiabetic == false ? Colors.red : Colors.grey[300]!, width: 2),
-                      ),
-                    ],
-                  ),
-                  SizedBox(height: 32),
-                  Text(AppLocalizations.of(context)!.activityLevelLabel, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20)),
-                  SizedBox(height: 12),
-                  ListView.builder(
-                    shrinkWrap: true,
-                    physics: NeverScrollableScrollPhysics(),
-                    itemCount: activityLevels.length,
-                    itemBuilder: (context, i) {
-                      final level = activityLevels[i];
-                      final isSelected = _activityLevel == level['value'];
-                      return Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 4),
-                        child: GestureDetector(
-                          onTap: () async {
-                            setState(() => _activityLevel = level['value']);
-                            await _updateField('activityLevel', level['value']);
+                    ),
+                    SizedBox(height: 12),
+                    Row(
+                      children: [
+                        ChoiceChip(
+                          label: Row(
+                            children: [
+                              Icon(Icons.check_circle, color: Colors.green),
+                              SizedBox(width: 6),
+                              Text(AppLocalizations.of(context)!.yes),
+                            ],
+                          ),
+                          selected: _isDiabetic == true,
+                          selectedColor: Colors.green.withOpacity(0.18),
+                          onSelected: (selected) async {
+                            setState(() => _isDiabetic = true);
+                            await _updateField('isDiabetic', true);
                           },
-                          child: AnimatedContainer(
-                            duration: Duration(milliseconds: 200),
-                            padding: EdgeInsets.all(16),
-                            decoration: BoxDecoration(
-                              color: isSelected ? theme.primaryColor.withOpacity(0.08) : Colors.white,
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(
-                                color: isSelected ? theme.primaryColor : Colors.grey[300]!,
-                                width: isSelected ? 2 : 1,
-                              ),
-                            ),
-                            child: Row(
-                              children: [
-                                Icon(level['icon'], color: isSelected ? theme.primaryColor : Colors.grey[600]),
-                                SizedBox(width: 12),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        level['label'],
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.w600,
-                                          color: isSelected ? theme.primaryColor : Colors.black,
-                                        ),
-                                      ),
-                                      Text(
-                                        level['desc'],
-                                        style: TextStyle(
-                                          fontSize: 12,
-                                          color: Colors.grey[600],
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                if (isSelected)
-                                  Icon(Icons.check_circle, color: theme.primaryColor),
-                              ],
-                            ),
+                          labelStyle: TextStyle(
+                            color:
+                                _isDiabetic == true
+                                    ? Colors.green
+                                    : Colors.black,
+                          ),
+                          backgroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          side: BorderSide(
+                            color:
+                                _isDiabetic == true
+                                    ? Colors.green
+                                    : Colors.grey[300]!,
+                            width: 2,
                           ),
                         ),
-                      );
-                    },
-                  ),
-                  SizedBox(height: 16),
-                ],
+                        SizedBox(width: 18),
+                        ChoiceChip(
+                          label: Row(
+                            children: [
+                              Icon(Icons.cancel, color: Colors.red),
+                              SizedBox(width: 6),
+                              Text(AppLocalizations.of(context)!.no),
+                            ],
+                          ),
+                          selected: _isDiabetic == false,
+                          selectedColor: Colors.red.withOpacity(0.18),
+                          onSelected: (selected) async {
+                            setState(() => _isDiabetic = false);
+                            await _updateField('isDiabetic', false);
+                          },
+                          labelStyle: TextStyle(
+                            color:
+                                _isDiabetic == false
+                                    ? Colors.red
+                                    : Colors.black,
+                          ),
+                          backgroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          side: BorderSide(
+                            color:
+                                _isDiabetic == false
+                                    ? Colors.red
+                                    : Colors.grey[300]!,
+                            width: 2,
+                          ),
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: 32),
+                    Text(
+                      AppLocalizations.of(context)!.activityLevelLabel,
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 20,
+                      ),
+                    ),
+                    SizedBox(height: 12),
+                    ListView.builder(
+                      shrinkWrap: true,
+                      physics: NeverScrollableScrollPhysics(),
+                      itemCount: activityLevels.length,
+                      itemBuilder: (context, i) {
+                        final level = activityLevels[i];
+                        final isSelected = _activityLevel == level['value'];
+                        return Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 4),
+                          child: GestureDetector(
+                            onTap: () async {
+                              setState(() => _activityLevel = level['value']);
+                              await _updateField(
+                                'activityLevel',
+                                level['value'],
+                              );
+                            },
+                            child: AnimatedContainer(
+                              duration: Duration(milliseconds: 200),
+                              padding: EdgeInsets.all(16),
+                              decoration: BoxDecoration(
+                                color:
+                                    isSelected
+                                        ? theme.primaryColor.withOpacity(0.08)
+                                        : Colors.white,
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                  color:
+                                      isSelected
+                                          ? theme.primaryColor
+                                          : Colors.grey[300]!,
+                                  width: isSelected ? 2 : 1,
+                                ),
+                              ),
+                              child: Row(
+                                children: [
+                                  Icon(
+                                    level['icon'],
+                                    color:
+                                        isSelected
+                                            ? theme.primaryColor
+                                            : Colors.grey[600],
+                                  ),
+                                  SizedBox(width: 12),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          level['label'],
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.w600,
+                                            color:
+                                                isSelected
+                                                    ? theme.primaryColor
+                                                    : Colors.black,
+                                          ),
+                                        ),
+                                        Text(
+                                          level['desc'],
+                                          style: TextStyle(
+                                            fontSize: 12,
+                                            color: Colors.grey[600],
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  if (isSelected)
+                                    Icon(
+                                      Icons.check_circle,
+                                      color: theme.primaryColor,
+                                    ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                    SizedBox(height: 16),
+                  ],
+                ),
               ),
-            ),
     );
   }
 }
+
 // Weight Log Dialog
 class _WeightLogDialog extends StatefulWidget {
   @override
@@ -9852,16 +13144,16 @@ class _WeightLogDialogState extends State<_WeightLogDialog> {
   final double _max = 10.0;
   final double _step = 0.1;
   bool _isAdd = false; // Default to LOST instead of gained
-  
+
   // Convert values based on user's unit preference
   double _getDisplayValue(double kgValue, bool useMetric) {
     return useMetric ? kgValue : (kgValue * 2.20462);
   }
-  
+
   double _getKgValue(double displayValue, bool useMetric) {
     return useMetric ? displayValue : (displayValue / 2.20462);
   }
-  
+
   String _getUnit(bool useMetric) {
     return useMetric ? 'kg' : 'lb';
   }
@@ -9875,7 +13167,7 @@ class _WeightLogDialogState extends State<_WeightLogDialog> {
     final displayMax = _getDisplayValue(_max, useMetric);
     final unit = _getUnit(useMetric);
     final theme = Theme.of(context);
-    
+
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
       child: Container(
@@ -9885,10 +13177,7 @@ class _WeightLogDialogState extends State<_WeightLogDialog> {
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [
-              Colors.white,
-              Colors.grey[50]!,
-            ],
+            colors: [Colors.white, Colors.grey[50]!],
           ),
           boxShadow: [
             BoxShadow(
@@ -9899,8 +13188,8 @@ class _WeightLogDialogState extends State<_WeightLogDialog> {
           ],
         ),
         child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
+          mainAxisSize: MainAxisSize.min,
+          children: [
             // Header with icon
             Container(
               padding: EdgeInsets.all(16),
@@ -9909,8 +13198,8 @@ class _WeightLogDialogState extends State<_WeightLogDialog> {
                 borderRadius: BorderRadius.circular(16),
               ),
               child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
                   Icon(
                     _isAdd ? Icons.trending_up : Icons.trending_down,
                     color: _isAdd ? Colors.red[600] : Colors.blue[600],
@@ -9928,7 +13217,7 @@ class _WeightLogDialogState extends State<_WeightLogDialog> {
               ),
             ),
             SizedBox(height: 24),
-            
+
             // Weight change type selector
             Container(
               padding: EdgeInsets.all(4),
@@ -9942,9 +13231,13 @@ class _WeightLogDialogState extends State<_WeightLogDialog> {
                     child: GestureDetector(
                       onTap: () => setState(() => _isAdd = false),
                       child: Container(
-                        padding: EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                        padding: EdgeInsets.symmetric(
+                          vertical: 12,
+                          horizontal: 16,
+                        ),
                         decoration: BoxDecoration(
-                          color: !_isAdd ? Colors.blue[600] : Colors.transparent,
+                          color:
+                              !_isAdd ? Colors.blue[600] : Colors.transparent,
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Row(
@@ -9959,13 +13252,14 @@ class _WeightLogDialogState extends State<_WeightLogDialog> {
                             Text(
                               AppLocalizations.of(context)!.lost,
                               style: TextStyle(
-                                color: !_isAdd ? Colors.white : Colors.grey[600],
+                                color:
+                                    !_isAdd ? Colors.white : Colors.grey[600],
                                 fontWeight: FontWeight.w600,
                                 fontSize: 14,
-                ),
-              ),
-            ],
-          ),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ),
@@ -9973,7 +13267,10 @@ class _WeightLogDialogState extends State<_WeightLogDialog> {
                     child: GestureDetector(
                       onTap: () => setState(() => _isAdd = true),
                       child: Container(
-                        padding: EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                        padding: EdgeInsets.symmetric(
+                          vertical: 12,
+                          horizontal: 16,
+                        ),
                         decoration: BoxDecoration(
                           color: _isAdd ? Colors.red[600] : Colors.transparent,
                           borderRadius: BorderRadius.circular(8),
@@ -10004,7 +13301,7 @@ class _WeightLogDialogState extends State<_WeightLogDialog> {
               ),
             ),
             SizedBox(height: 32),
-            
+
             // Weight value display
             Container(
               padding: EdgeInsets.all(24),
@@ -10039,13 +13336,14 @@ class _WeightLogDialogState extends State<_WeightLogDialog> {
               ),
             ),
             SizedBox(height: 24),
-            
+
             // Slider
             Column(
               children: [
                 SliderTheme(
                   data: SliderTheme.of(context).copyWith(
-                    activeTrackColor: _isAdd ? Colors.red[400] : Colors.blue[400],
+                    activeTrackColor:
+                        _isAdd ? Colors.red[400] : Colors.blue[400],
                     inactiveTrackColor: Colors.grey[200],
                     thumbColor: _isAdd ? Colors.red[600] : Colors.blue[600],
                     thumbShape: RoundSliderThumbShape(enabledThumbRadius: 12),
@@ -10057,14 +13355,17 @@ class _WeightLogDialogState extends State<_WeightLogDialog> {
                     min: _min,
                     max: _max,
                     divisions: ((_max - _min) / _step).round(),
-                    onChanged: (v) => setState(() => _value = double.parse(v.toStringAsFixed(1))),
+                    onChanged:
+                        (v) => setState(
+                          () => _value = double.parse(v.toStringAsFixed(1)),
+                        ),
                   ),
                 ),
                 Padding(
                   padding: EdgeInsets.symmetric(horizontal: 16),
                   child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
                       Text(
                         '${displayMin.toStringAsFixed(1)}$unit',
                         style: TextStyle(
@@ -10081,17 +13382,17 @@ class _WeightLogDialogState extends State<_WeightLogDialog> {
                       ),
                     ],
                   ),
-          ),
-        ],
-      ),
+                ),
+              ],
+            ),
             SizedBox(height: 32),
-            
+
             // Action buttons
             Row(
               children: [
                 Expanded(
                   child: TextButton(
-          onPressed: () => Navigator.of(context).pop(),
+                    onPressed: () => Navigator.of(context).pop(),
                     style: TextButton.styleFrom(
                       padding: EdgeInsets.symmetric(vertical: 16),
                       shape: RoundedRectangleBorder(
@@ -10111,10 +13412,14 @@ class _WeightLogDialogState extends State<_WeightLogDialog> {
                 SizedBox(width: 12),
                 Expanded(
                   child: ElevatedButton(
-          onPressed: () => Navigator.of(context).pop(_isAdd ? _value : -_value),
-          style: ElevatedButton.styleFrom(
-                      backgroundColor: _isAdd ? Colors.red[600] : Colors.blue[600],
-            foregroundColor: Colors.white,
+                    onPressed:
+                        () => Navigator.of(
+                          context,
+                        ).pop(_isAdd ? _value : -_value),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor:
+                          _isAdd ? Colors.red[600] : Colors.blue[600],
+                      foregroundColor: Colors.white,
                       padding: EdgeInsets.symmetric(vertical: 16),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
@@ -10123,15 +13428,17 @@ class _WeightLogDialogState extends State<_WeightLogDialog> {
                       shadowColor: Colors.transparent,
                     ),
                     child: Text(
-                      _isAdd ? AppLocalizations.of(context)!.gained : AppLocalizations.of(context)!.lost,
+                      _isAdd
+                          ? AppLocalizations.of(context)!.gained
+                          : AppLocalizations.of(context)!.lost,
                       style: TextStyle(
                         fontWeight: FontWeight.w600,
                         fontSize: 16,
                       ),
                     ),
-          ),
-        ),
-      ],
+                  ),
+                ),
+              ],
             ),
           ],
         ),
@@ -10145,6 +13452,7 @@ class _WaterLogSliderDialog extends StatefulWidget {
   @override
   State<_WaterLogSliderDialog> createState() => _WaterLogSliderDialogState();
 }
+
 class _WaterLogSliderDialogState extends State<_WaterLogSliderDialog> {
   double _value = 0.25; // default 0.25L
   final double _min = 0.1;
@@ -10163,7 +13471,11 @@ class _WaterLogSliderDialogState extends State<_WaterLogSliderDialog> {
   Future<void> _loadCurrentWaterLogged() async {
     final user = FirebaseAuth.instance.currentUser;
     if (user != null) {
-      final doc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
+      final doc =
+          await FirebaseFirestore.instance
+              .collection('users')
+              .doc(user.uid)
+              .get();
       final data = doc.data() ?? {};
       final waterLogged = data['waterLoggedMl'] ?? 0;
       setState(() {
@@ -10179,14 +13491,17 @@ class _WaterLogSliderDialogState extends State<_WaterLogSliderDialog> {
     final prefs = Provider.of<PreferencesProvider>(context);
     final useMetric = prefs.useMetric;
     final bool isUS = !useMetric; // US uses L, others use fl oz
-    final String waterUnit = isUS ? 'L' : AppLocalizations.of(context)!.fluidOunces;
-    
+    final String waterUnit =
+        isUS ? 'L' : AppLocalizations.of(context)!.fluidOunces;
+
     // Convert display values based on unit system
-    final double displayValue = isUS ? _value : (_value * 1000 / 29.5735); // L or fl oz
+    final double displayValue =
+        isUS ? _value : (_value * 1000 / 29.5735); // L or fl oz
     final double displayMin = isUS ? _min : (_min * 1000 / 29.5735);
     final double displayMax = isUS ? _max : (_max * 1000 / 29.5735);
-    final double displayCurrent = isUS ? (_currentWaterLogged / 1000.0) : (_currentWaterLogged / 29.5735);
-    
+    final double displayCurrent =
+        isUS ? (_currentWaterLogged / 1000.0) : (_currentWaterLogged / 29.5735);
+
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
       child: Container(
@@ -10196,10 +13511,7 @@ class _WaterLogSliderDialogState extends State<_WaterLogSliderDialog> {
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [
-              Colors.white,
-              Colors.blue[50]!,
-            ],
+            colors: [Colors.white, Colors.blue[50]!],
           ),
           boxShadow: [
             BoxShadow(
@@ -10210,8 +13522,8 @@ class _WaterLogSliderDialogState extends State<_WaterLogSliderDialog> {
           ],
         ),
         child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
+          mainAxisSize: MainAxisSize.min,
+          children: [
             // Header with water icon
             Container(
               padding: EdgeInsets.all(16),
@@ -10220,13 +13532,9 @@ class _WaterLogSliderDialogState extends State<_WaterLogSliderDialog> {
                 borderRadius: BorderRadius.circular(16),
               ),
               child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-                  Icon(
-                    Icons.water_drop,
-                    color: Colors.blue[600],
-                    size: 24,
-                  ),
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.water_drop, color: Colors.blue[600], size: 24),
                   SizedBox(width: 8),
                   Text(
                     AppLocalizations.of(context)!.logWaterIntake,
@@ -10239,9 +13547,9 @@ class _WaterLogSliderDialogState extends State<_WaterLogSliderDialog> {
               ),
             ),
             SizedBox(height: 24),
-            
+
             // Water action selector
-              if (_hasWaterLogged) ...[
+            if (_hasWaterLogged) ...[
               Container(
                 padding: EdgeInsets.all(4),
                 decoration: BoxDecoration(
@@ -10254,9 +13562,13 @@ class _WaterLogSliderDialogState extends State<_WaterLogSliderDialog> {
                       child: GestureDetector(
                         onTap: () => setState(() => _isAdd = true),
                         child: Container(
-                          padding: EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                          padding: EdgeInsets.symmetric(
+                            vertical: 12,
+                            horizontal: 16,
+                          ),
                           decoration: BoxDecoration(
-                            color: _isAdd ? Colors.blue[600] : Colors.transparent,
+                            color:
+                                _isAdd ? Colors.blue[600] : Colors.transparent,
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Row(
@@ -10271,12 +13583,13 @@ class _WaterLogSliderDialogState extends State<_WaterLogSliderDialog> {
                               Text(
                                 AppLocalizations.of(context)!.add,
                                 style: TextStyle(
-                                  color: _isAdd ? Colors.white : Colors.grey[600],
+                                  color:
+                                      _isAdd ? Colors.white : Colors.grey[600],
                                   fontWeight: FontWeight.w600,
                                   fontSize: 14,
-                  ),
-                ),
-              ],
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                       ),
@@ -10285,9 +13598,13 @@ class _WaterLogSliderDialogState extends State<_WaterLogSliderDialog> {
                       child: GestureDetector(
                         onTap: () => setState(() => _isAdd = false),
                         child: Container(
-                          padding: EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                          padding: EdgeInsets.symmetric(
+                            vertical: 12,
+                            horizontal: 16,
+                          ),
                           decoration: BoxDecoration(
-                            color: !_isAdd ? Colors.red[600] : Colors.transparent,
+                            color:
+                                !_isAdd ? Colors.red[600] : Colors.transparent,
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Row(
@@ -10295,14 +13612,16 @@ class _WaterLogSliderDialogState extends State<_WaterLogSliderDialog> {
                             children: [
                               Icon(
                                 Icons.remove,
-                                color: !_isAdd ? Colors.white : Colors.grey[600],
+                                color:
+                                    !_isAdd ? Colors.white : Colors.grey[600],
                                 size: 18,
                               ),
                               SizedBox(width: 6),
                               Text(
                                 AppLocalizations.of(context)!.remove,
                                 style: TextStyle(
-                                  color: !_isAdd ? Colors.white : Colors.grey[600],
+                                  color:
+                                      !_isAdd ? Colors.white : Colors.grey[600],
                                   fontWeight: FontWeight.w600,
                                   fontSize: 14,
                                 ),
@@ -10317,7 +13636,7 @@ class _WaterLogSliderDialogState extends State<_WaterLogSliderDialog> {
               ),
               SizedBox(height: 24),
             ],
-            
+
             // Water value display
             Container(
               padding: EdgeInsets.all(24),
@@ -10332,7 +13651,9 @@ class _WaterLogSliderDialogState extends State<_WaterLogSliderDialog> {
               child: Column(
                 children: [
                   Text(
-                    isUS ? '${_value.toStringAsFixed(2)}' : '${displayValue.round()}',
+                    isUS
+                        ? '${_value.toStringAsFixed(2)}'
+                        : '${displayValue.round()}',
                     style: TextStyle(
                       fontSize: 48,
                       fontWeight: FontWeight.w800,
@@ -10352,15 +13673,16 @@ class _WaterLogSliderDialogState extends State<_WaterLogSliderDialog> {
               ),
             ),
             SizedBox(height: 24),
-            
+
             // Quick add removed
-            
+
             // Slider
             Column(
               children: [
                 SliderTheme(
                   data: SliderTheme.of(context).copyWith(
-                    activeTrackColor: _isAdd ? Colors.blue[400] : Colors.red[400],
+                    activeTrackColor:
+                        _isAdd ? Colors.blue[400] : Colors.red[400],
                     inactiveTrackColor: Colors.grey[200],
                     thumbColor: _isAdd ? Colors.blue[600] : Colors.red[600],
                     thumbShape: RoundSliderThumbShape(enabledThumbRadius: 12),
@@ -10368,27 +13690,70 @@ class _WaterLogSliderDialogState extends State<_WaterLogSliderDialog> {
                     trackHeight: 6,
                   ),
                   child: Slider(
-            value: isUS ? _value : displayValue,
-            min: isUS ? (_isAdd ? _min : 0.1) : (_isAdd ? displayMin : 3.0),
-            max: isUS ? (_isAdd ? _max : (_currentWaterLogged / 1000.0).clamp(0.1, _max)) : (_isAdd ? displayMax : displayCurrent.clamp(3.0, displayMax)),
-            divisions: isUS ? (_isAdd ? ((_max - _min) / _step).round() : (((_currentWaterLogged / 1000.0).clamp(0.1, _max) - 0.1) / _step).round()) : 50,
-            onChanged: (v) => setState(() => _value = isUS ? double.parse(v.toStringAsFixed(2)) : double.parse((v * 29.5735 / 1000).toStringAsFixed(2))),
-          ),
+                    value: isUS ? _value : displayValue,
+                    min:
+                        isUS
+                            ? (_isAdd ? _min : 0.1)
+                            : (_isAdd ? displayMin : 3.0),
+                    max:
+                        isUS
+                            ? (_isAdd
+                                ? _max
+                                : (_currentWaterLogged / 1000.0).clamp(
+                                  0.1,
+                                  _max,
+                                ))
+                            : (_isAdd
+                                ? displayMax
+                                : displayCurrent.clamp(3.0, displayMax)),
+                    divisions:
+                        isUS
+                            ? (_isAdd
+                                ? ((_max - _min) / _step).round()
+                                : (((_currentWaterLogged / 1000.0).clamp(
+                                              0.1,
+                                              _max,
+                                            ) -
+                                            0.1) /
+                                        _step)
+                                    .round())
+                            : 50,
+                    onChanged:
+                        (v) => setState(
+                          () =>
+                              _value =
+                                  isUS
+                                      ? double.parse(v.toStringAsFixed(2))
+                                      : double.parse(
+                                        (v * 29.5735 / 1000).toStringAsFixed(2),
+                                      ),
+                        ),
+                  ),
                 ),
                 Padding(
                   padding: EdgeInsets.symmetric(horizontal: 16),
                   child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
                       Text(
-                        isUS ? (_isAdd ? '${_min.toStringAsFixed(1)}L' : '0.1L') : (_isAdd ? '${displayMin.round()} $waterUnit' : '3 $waterUnit'),
+                        isUS
+                            ? (_isAdd ? '${_min.toStringAsFixed(1)}L' : '0.1L')
+                            : (_isAdd
+                                ? '${displayMin.round()} $waterUnit'
+                                : '3 $waterUnit'),
                         style: TextStyle(
                           color: Colors.grey[600],
                           fontWeight: FontWeight.w500,
                         ),
                       ),
                       Text(
-                        isUS ? (_isAdd ? '${_max.toStringAsFixed(1)}L' : '${(_currentWaterLogged / 1000.0).clamp(0.1, _max).toStringAsFixed(1)}L') : (_isAdd ? '${displayMax.round()} $waterUnit' : '${displayCurrent.round()} $waterUnit'),
+                        isUS
+                            ? (_isAdd
+                                ? '${_max.toStringAsFixed(1)}L'
+                                : '${(_currentWaterLogged / 1000.0).clamp(0.1, _max).toStringAsFixed(1)}L')
+                            : (_isAdd
+                                ? '${displayMax.round()} $waterUnit'
+                                : '${displayCurrent.round()} $waterUnit'),
                         style: TextStyle(
                           color: Colors.grey[600],
                           fontWeight: FontWeight.w500,
@@ -10396,17 +13761,17 @@ class _WaterLogSliderDialogState extends State<_WaterLogSliderDialog> {
                       ),
                     ],
                   ),
-          ),
-        ],
-      ),
+                ),
+              ],
+            ),
             SizedBox(height: 32),
-            
+
             // Action buttons
             Row(
               children: [
                 Expanded(
                   child: TextButton(
-          onPressed: () => Navigator.of(context).pop(),
+                    onPressed: () => Navigator.of(context).pop(),
                     style: TextButton.styleFrom(
                       padding: EdgeInsets.symmetric(vertical: 16),
                       shape: RoundedRectangleBorder(
@@ -10426,10 +13791,16 @@ class _WaterLogSliderDialogState extends State<_WaterLogSliderDialog> {
                 SizedBox(width: 12),
                 Expanded(
                   child: ElevatedButton(
-          onPressed: () => Navigator.of(context).pop(_isAdd ? (_value * 1000).round() : -(_value * 1000).round()),
-          style: ElevatedButton.styleFrom(
-                      backgroundColor: _isAdd ? Colors.blue[600] : Colors.red[600],
-            foregroundColor: Colors.white,
+                    onPressed:
+                        () => Navigator.of(context).pop(
+                          _isAdd
+                              ? (_value * 1000).round()
+                              : -(_value * 1000).round(),
+                        ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor:
+                          _isAdd ? Colors.blue[600] : Colors.red[600],
+                      foregroundColor: Colors.white,
                       padding: EdgeInsets.symmetric(vertical: 16),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
@@ -10438,15 +13809,17 @@ class _WaterLogSliderDialogState extends State<_WaterLogSliderDialog> {
                       shadowColor: Colors.transparent,
                     ),
                     child: Text(
-                      _isAdd ? AppLocalizations.of(context)!.add : AppLocalizations.of(context)!.remove,
+                      _isAdd
+                          ? AppLocalizations.of(context)!.add
+                          : AppLocalizations.of(context)!.remove,
                       style: TextStyle(
                         fontWeight: FontWeight.w600,
                         fontSize: 16,
                       ),
                     ),
-          ),
-        ),
-      ],
+                  ),
+                ),
+              ],
             ),
           ],
         ),
@@ -10545,12 +13918,16 @@ class _LegalLinkTile extends StatelessWidget {
             await launchUrl(uri, mode: LaunchMode.externalApplication);
           } else {
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(AppLocalizations.of(context)!.couldNotOpenLink)),
+              SnackBar(
+                content: Text(AppLocalizations.of(context)!.couldNotOpenLink),
+              ),
             );
           }
         } catch (e) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(AppLocalizations.of(context)!.errorOpeningLink)),
+            SnackBar(
+              content: Text(AppLocalizations.of(context)!.errorOpeningLink),
+            ),
           );
         }
       },
@@ -10571,18 +13948,12 @@ class _LegalLinkTile extends StatelessWidget {
                 children: [
                   Text(
                     title,
-                    style: TextStyle(
-                      fontWeight: FontWeight.w600,
-                      fontSize: 16,
-                    ),
+                    style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
                   ),
                   SizedBox(height: 2),
                   Text(
                     subtitle,
-                    style: TextStyle(
-                      color: Colors.grey[600],
-                      fontSize: 12,
-                    ),
+                    style: TextStyle(color: Colors.grey[600], fontSize: 12),
                   ),
                 ],
               ),
@@ -10598,9 +13969,12 @@ class _LegalLinkTile extends StatelessWidget {
 // Password reset redirect screen that shows success message and redirects to sign-in
 class _PasswordResetRedirectScreen extends StatefulWidget {
   @override
-  State<_PasswordResetRedirectScreen> createState() => _PasswordResetRedirectScreenState();
+  State<_PasswordResetRedirectScreen> createState() =>
+      _PasswordResetRedirectScreenState();
 }
-class _PasswordResetRedirectScreenState extends State<_PasswordResetRedirectScreen> {
+
+class _PasswordResetRedirectScreenState
+    extends State<_PasswordResetRedirectScreen> {
   @override
   void initState() {
     super.initState();
@@ -10639,19 +14013,13 @@ class _PasswordResetRedirectScreenState extends State<_PasswordResetRedirectScre
               SizedBox(height: 16),
               Text(
                 'Check your email for a password reset link.',
-                style: TextStyle(
-                  fontSize: 16,
-                  color: Colors.grey[600],
-                ),
+                style: TextStyle(fontSize: 16, color: Colors.grey[600]),
                 textAlign: TextAlign.center,
               ),
               SizedBox(height: 8),
               Text(
                 'You have been logged out for security.',
-                style: TextStyle(
-                  fontSize: 14,
-                  color: Colors.grey[500],
-                ),
+                style: TextStyle(fontSize: 14, color: Colors.grey[500]),
                 textAlign: TextAlign.center,
               ),
               SizedBox(height: 32),

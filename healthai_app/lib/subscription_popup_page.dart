@@ -12,9 +12,9 @@ import 'package:in_app_purchase/in_app_purchase.dart';
 class SubscriptionPopupPage extends StatefulWidget {
   final VoidCallback? onDismiss;
   final bool isOnboardingComplete;
-  
+
   const SubscriptionPopupPage({
-    Key? key, 
+    Key? key,
     this.onDismiss,
     this.isOnboardingComplete = false,
   }) : super(key: key);
@@ -23,14 +23,19 @@ class SubscriptionPopupPage extends StatefulWidget {
   State<SubscriptionPopupPage> createState() => _SubscriptionPopupPageState();
 
   // Show using DialogCoordinator to avoid overlapping with other modals
-  static Future<bool> showPopup(BuildContext context, {bool isOnboardingComplete = false, VoidCallback? onDismiss}) async {
+  static Future<bool> showPopup(
+    BuildContext context, {
+    bool isOnboardingComplete = false,
+    VoidCallback? onDismiss,
+  }) async {
     final result = await DialogCoordinator.instance.showExclusiveDialog<bool>(
       context: context,
       barrierDismissible: false,
-      builder: (_) => SubscriptionPopupPage(
-        isOnboardingComplete: isOnboardingComplete,
-        onDismiss: onDismiss,
-      ),
+      builder:
+          (_) => SubscriptionPopupPage(
+            isOnboardingComplete: isOnboardingComplete,
+            onDismiss: onDismiss,
+          ),
     );
     return result ?? false;
   }
@@ -39,22 +44,27 @@ class SubscriptionPopupPage extends StatefulWidget {
     try {
       final subscriptionService = SubscriptionService();
       final isPremium = await subscriptionService.isPremiumUser();
-      
-      print('🔍 POPUP CHECK: isPremium=$isPremium, isPostOnboarding=$isPostOnboarding');
-      
+
+      print(
+        '🔍 POPUP CHECK: isPremium=$isPremium, isPostOnboarding=$isPostOnboarding',
+      );
+
       if (isPremium) {
         print('❌ POPUP CHECK: User is premium, not showing popup');
         return false; // Don't show for premium users
       }
-      
+
       // ALWAYS show popup immediately after onboarding completion
       if (isPostOnboarding) {
-        print('✅ POPUP CHECK: Post-onboarding for non-premium user, showing popup');
+        print(
+          '✅ POPUP CHECK: Post-onboarding for non-premium user, showing popup',
+        );
         return true;
       }
-      
+
       // If user previously had premium but lost it, encourage re-subscribe more often
-      if ((await SharedPreferences.getInstance()).getBool('hadPremiumEver') == true) {
+      if ((await SharedPreferences.getInstance()).getBool('hadPremiumEver') ==
+          true) {
         return true;
       }
 
@@ -63,17 +73,17 @@ class SubscriptionPopupPage extends StatefulWidget {
       final showCount = prefs.getInt('subscription_popup_shown_count') ?? 0;
       final lastShown = prefs.getInt('last_subscription_popup_timestamp') ?? 0;
       final now = DateTime.now().millisecondsSinceEpoch;
-      
+
       // Show popup if:
       // 1. Never shown before
       // 2. Shown less than 3 times AND last shown more than 3 days ago
       if (showCount == 0) return true;
-      
+
       const threeDaysInMs = 3 * 24 * 60 * 60 * 1000;
       if (showCount < 3 && (now - lastShown) > threeDaysInMs) {
         return true;
       }
-      
+
       return false;
     } catch (e) {
       print('Error checking popup show condition: $e');
@@ -98,18 +108,18 @@ class _SubscriptionPopupPageState extends State<SubscriptionPopupPage>
   @override
   void initState() {
     super.initState();
-    
+
     // Initialize animations
     _fadeController = AnimationController(
       duration: const Duration(milliseconds: 800),
       vsync: this,
     );
-    
+
     _slideController = AnimationController(
       duration: const Duration(milliseconds: 1000),
       vsync: this,
     );
-    
+
     _scaleController = AnimationController(
       duration: const Duration(milliseconds: 1200),
       vsync: this,
@@ -118,26 +128,18 @@ class _SubscriptionPopupPageState extends State<SubscriptionPopupPage>
     _fadeAnimation = Tween<double>(
       begin: 0.0,
       end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _fadeController,
-      curve: Curves.easeOut,
-    ));
+    ).animate(CurvedAnimation(parent: _fadeController, curve: Curves.easeOut));
 
     _slideAnimation = Tween<Offset>(
       begin: const Offset(0, 0.3),
       end: Offset.zero,
-    ).animate(CurvedAnimation(
-      parent: _slideController,
-      curve: Curves.elasticOut,
-    ));
+    ).animate(
+      CurvedAnimation(parent: _slideController, curve: Curves.elasticOut),
+    );
 
-    _scaleAnimation = Tween<double>(
-      begin: 0.8,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _scaleController,
-      curve: Curves.bounceOut,
-    ));
+    _scaleAnimation = Tween<double>(begin: 0.8, end: 1.0).animate(
+      CurvedAnimation(parent: _scaleController, curve: Curves.bounceOut),
+    );
 
     // Start animations
     _fadeController.forward();
@@ -150,7 +152,7 @@ class _SubscriptionPopupPageState extends State<SubscriptionPopupPage>
 
     // Load product details
     _loadProducts();
-    
+
     // Give products a moment to load before showing UI
     Future.delayed(const Duration(milliseconds: 500), () {
       if (mounted && _isLoadingProducts) {
@@ -164,11 +166,13 @@ class _SubscriptionPopupPageState extends State<SubscriptionPopupPage>
     try {
       final InAppPurchase iap = InAppPurchase.instance;
       final bool available = await iap.isAvailable();
-      
+
       if (available) {
         final Set<String> productIds = {'premium_monthly', 'premium_yearly'};
-        final ProductDetailsResponse response = await iap.queryProductDetails(productIds);
-        
+        final ProductDetailsResponse response = await iap.queryProductDetails(
+          productIds,
+        );
+
         if (response.error == null && response.productDetails.isNotEmpty) {
           setState(() {
             _products = response.productDetails;
@@ -202,7 +206,7 @@ class _SubscriptionPopupPageState extends State<SubscriptionPopupPage>
 
   void _dismissPopup() {
     if (!mounted) return;
-    
+
     if (widget.onDismiss != null) {
       widget.onDismiss!();
     } else {
@@ -212,17 +216,21 @@ class _SubscriptionPopupPageState extends State<SubscriptionPopupPage>
 
   Future<void> _markPopupShown() async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setInt('subscription_popup_shown_count', 
-        (prefs.getInt('subscription_popup_shown_count') ?? 0) + 1);
-    await prefs.setInt('last_subscription_popup_timestamp', 
-        DateTime.now().millisecondsSinceEpoch);
+    await prefs.setInt(
+      'subscription_popup_shown_count',
+      (prefs.getInt('subscription_popup_shown_count') ?? 0) + 1,
+    );
+    await prefs.setInt(
+      'last_subscription_popup_timestamp',
+      DateTime.now().millisecondsSinceEpoch,
+    );
   }
 
   void _navigateToSubscription() async {
     await _markPopupShown();
-    Navigator.of(context).push(
-      MaterialPageRoute(builder: (context) => const SubscriptionPage()),
-    );
+    Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: (context) => const SubscriptionPage()));
   }
 
   // Helper method to get product price
@@ -240,7 +248,7 @@ class _SubscriptionPopupPageState extends State<SubscriptionPopupPage>
   String _getLocalizedPriceString(String productId) {
     final price = _getProductPrice(productId);
     final localizations = AppLocalizations.of(context)!;
-    
+
     if (productId == 'premium_yearly') {
       return localizations.yearPrice(price);
     } else {
@@ -253,7 +261,7 @@ class _SubscriptionPopupPageState extends State<SubscriptionPopupPage>
     final screenSize = MediaQuery.of(context).size;
     final isSmallScreen = screenSize.width < 400 || screenSize.height < 700;
     final isVerySmallScreen = screenSize.width < 350 || screenSize.height < 600;
-    
+
     return Scaffold(
       backgroundColor: Colors.black.withOpacity(0.7),
       body: FadeTransition(
@@ -265,11 +273,17 @@ class _SubscriptionPopupPageState extends State<SubscriptionPopupPage>
               child: ScaleTransition(
                 scale: _scaleAnimation,
                 child: Container(
-                  margin: EdgeInsets.all(isVerySmallScreen ? 8 : (isSmallScreen ? 12 : 16)),
-                  padding: EdgeInsets.all(isVerySmallScreen ? 12 : (isSmallScreen ? 16 : 20)),
+                  margin: EdgeInsets.all(
+                    isVerySmallScreen ? 8 : (isSmallScreen ? 12 : 16),
+                  ),
+                  padding: EdgeInsets.all(
+                    isVerySmallScreen ? 12 : (isSmallScreen ? 16 : 20),
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.white,
-                    borderRadius: BorderRadius.circular(isVerySmallScreen ? 16 : 24),
+                    borderRadius: BorderRadius.circular(
+                      isVerySmallScreen ? 16 : 24,
+                    ),
                     boxShadow: [
                       BoxShadow(
                         color: Colors.black.withOpacity(0.3),
@@ -286,118 +300,162 @@ class _SubscriptionPopupPageState extends State<SubscriptionPopupPage>
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                    // Close button
-                    Align(
-                      alignment: Alignment.topRight,
-                      child: GestureDetector(
-                        onTap: () async {
-                          await _markPopupShown();
-                          _dismissPopup();
-                        },
-                        child: Container(
-                          padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            color: Colors.grey.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(20),
+                        // Close button
+                        Align(
+                          alignment: Alignment.topRight,
+                          child: GestureDetector(
+                            onTap: () async {
+                              await _markPopupShown();
+                              _dismissPopup();
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color: Colors.grey.withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              child: const Icon(
+                                Icons.close,
+                                color: Colors.grey,
+                                size: 20,
+                              ),
+                            ),
                           ),
-                          child: const Icon(
-                            Icons.close,
-                            color: Colors.grey,
-                            size: 20,
+                        ),
+
+                        const SizedBox(height: 4),
+
+                        // App logo
+                        SizedBox(
+                          height:
+                              isVerySmallScreen
+                                  ? 80
+                                  : (isSmallScreen ? 100 : 120),
+                          child: Image.asset(
+                            'assets/logo.png',
+                            width:
+                                isVerySmallScreen
+                                    ? 80
+                                    : (isSmallScreen ? 100 : 120),
+                            height:
+                                isVerySmallScreen
+                                    ? 80
+                                    : (isSmallScreen ? 100 : 120),
+                            fit: BoxFit.contain,
                           ),
                         ),
-                      ),
-                    ),
-                    
-                    const SizedBox(height: 4),
-                    
-                    // App logo
-                    SizedBox(
-                      height: isVerySmallScreen ? 80 : (isSmallScreen ? 100 : 120),
-                      child: Image.asset(
-                        'assets/logo.png',
-                        width: isVerySmallScreen ? 80 : (isSmallScreen ? 100 : 120),
-                        height: isVerySmallScreen ? 80 : (isSmallScreen ? 100 : 120),
-                        fit: BoxFit.contain,
-                      ),
-                    ),
-                    
-                    SizedBox(height: isVerySmallScreen ? 6 : 12),
-                    
-                    // Title
-                    Text(
-                      widget.isOnboardingComplete 
-                        ? AppLocalizations.of(context)!.welcomeToYumie 
-                        : AppLocalizations.of(context)!.unlockPremiumFeatures,
-                      style: TextStyle(
-                        fontSize: isVerySmallScreen ? 16 : (isSmallScreen ? 18 : 20),
-                        fontWeight: FontWeight.bold,
-                        color: kPrimaryGreen,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                    
-                    SizedBox(height: isVerySmallScreen ? 6 : 12),
-                    
-                    // Subtitle
-                    Text(
-                      widget.isOnboardingComplete
-                        ? AppLocalizations.of(context)!.getMostOutOfHealthJourney
-                        : AppLocalizations.of(context)!.unlimitedScansAICoaching,
-                      style: TextStyle(
-                        fontSize: isVerySmallScreen ? 12 : (isSmallScreen ? 14 : 16),
-                        color: Colors.grey[700],
-                        height: 1.4,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                    
-                    SizedBox(height: isVerySmallScreen ? 10 : 16),
-                    
-                    // Features list
-                    _buildFeaturesList(isVerySmallScreen, isSmallScreen),
-                    
-                    SizedBox(height: isVerySmallScreen ? 10 : 16),
-                    
-                    // Premium buttons
-                    _buildPremiumButtons(isVerySmallScreen, isSmallScreen),
-                    
-                    // Legal links: EULA and Privacy
-                    SizedBox(height: isVerySmallScreen ? 6 : 12),
-                    Wrap(
-                      alignment: WrapAlignment.center,
-                      spacing: 12,
-                      runSpacing: 4,
-                      children: [
-                        TextButton(
-                          onPressed: () async {
-                            final url = Platform.isIOS
-                                ? 'https://www.apple.com/legal/internet-services/itunes/dev/stdeula/'
-                                : 'https://yumie.me/terms';
-                            final uri = Uri.parse(url);
-                            if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: Text(AppLocalizations.of(context)!.couldNotOpenTermsOfService)),
-                              );
-                            }
-                          },
-                          child: const Text('Terms of Use (EULA)'),
+
+                        SizedBox(height: isVerySmallScreen ? 6 : 12),
+
+                        // Title
+                        Text(
+                          widget.isOnboardingComplete
+                              ? AppLocalizations.of(context)!.welcomeToYumie
+                              : AppLocalizations.of(
+                                context,
+                              )!.unlockPremiumFeatures,
+                          style: TextStyle(
+                            fontSize:
+                                isVerySmallScreen
+                                    ? 16
+                                    : (isSmallScreen ? 18 : 20),
+                            fontWeight: FontWeight.bold,
+                            color: kPrimaryGreen,
+                          ),
+                          textAlign: TextAlign.center,
                         ),
-                        TextButton(
-                          onPressed: () async {
-                            final uri = Uri.parse('https://yumie.me/privacy');
-                            if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: Text(AppLocalizations.of(context)!.couldNotOpenPrivacyPolicy)),
-                              );
-                            }
-                          },
-                          child: Text(AppLocalizations.of(context)!.privacyPolicy),
+
+                        SizedBox(height: isVerySmallScreen ? 6 : 12),
+
+                        // Subtitle
+                        Text(
+                          widget.isOnboardingComplete
+                              ? AppLocalizations.of(
+                                context,
+                              )!.getMostOutOfHealthJourney
+                              : AppLocalizations.of(
+                                context,
+                              )!.unlimitedScansAICoaching,
+                          style: TextStyle(
+                            fontSize:
+                                isVerySmallScreen
+                                    ? 12
+                                    : (isSmallScreen ? 14 : 16),
+                            color: Colors.grey[700],
+                            height: 1.4,
+                          ),
+                          textAlign: TextAlign.center,
                         ),
-                      ],
-                    ),
-                    // Bottom spacer trimmed to avoid scrolling
-                    SizedBox(height: isVerySmallScreen ? 4 : 8),
+
+                        SizedBox(height: isVerySmallScreen ? 10 : 16),
+
+                        // Features list
+                        _buildFeaturesList(isVerySmallScreen, isSmallScreen),
+
+                        SizedBox(height: isVerySmallScreen ? 10 : 16),
+
+                        // Premium buttons
+                        _buildPremiumButtons(isVerySmallScreen, isSmallScreen),
+
+                        // Legal links: EULA and Privacy
+                        SizedBox(height: isVerySmallScreen ? 6 : 12),
+                        Wrap(
+                          alignment: WrapAlignment.center,
+                          spacing: 12,
+                          runSpacing: 4,
+                          children: [
+                            TextButton(
+                              onPressed: () async {
+                                final url =
+                                    Platform.isIOS
+                                        ? 'https://www.apple.com/legal/internet-services/itunes/dev/stdeula/'
+                                        : 'https://yumie.me/terms';
+                                final uri = Uri.parse(url);
+                                if (!await launchUrl(
+                                  uri,
+                                  mode: LaunchMode.externalApplication,
+                                )) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text(
+                                        AppLocalizations.of(
+                                          context,
+                                        )!.couldNotOpenTermsOfService,
+                                      ),
+                                    ),
+                                  );
+                                }
+                              },
+                              child: const Text('Terms of Use (EULA)'),
+                            ),
+                            TextButton(
+                              onPressed: () async {
+                                final uri = Uri.parse(
+                                  'https://yumie.me/privacy',
+                                );
+                                if (!await launchUrl(
+                                  uri,
+                                  mode: LaunchMode.externalApplication,
+                                )) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text(
+                                        AppLocalizations.of(
+                                          context,
+                                        )!.couldNotOpenPrivacyPolicy,
+                                      ),
+                                    ),
+                                  );
+                                }
+                              },
+                              child: Text(
+                                AppLocalizations.of(context)!.privacyPolicy,
+                              ),
+                            ),
+                          ],
+                        ),
+                        // Bottom spacer trimmed to avoid scrolling
+                        SizedBox(height: isVerySmallScreen ? 4 : 8),
                       ],
                     ),
                   ),
@@ -421,39 +479,43 @@ class _SubscriptionPopupPageState extends State<SubscriptionPopupPage>
     ];
 
     return Column(
-      children: features.map((feature) {
-        return Padding(
-          padding: EdgeInsets.symmetric(vertical: isVerySmallScreen ? 2 : 4),
-          child: Row(
-            children: [
-              Container(
-                width: isVerySmallScreen ? 24 : 32,
-                height: isVerySmallScreen ? 24 : 32,
-                decoration: BoxDecoration(
-                  color: kPrimaryGreen.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Center(
-                  child: Text(
-                    feature['icon']!,
-                    style: TextStyle(fontSize: isVerySmallScreen ? 12 : 16),
-                  ),
-                ),
+      children:
+          features.map((feature) {
+            return Padding(
+              padding: EdgeInsets.symmetric(
+                vertical: isVerySmallScreen ? 2 : 4,
               ),
-              SizedBox(width: isVerySmallScreen ? 8 : 12),
-              Expanded(
-                child: Text(
-                  feature['text']!,
-                  style: TextStyle(
-                    fontSize: isVerySmallScreen ? 12 : (isSmallScreen ? 13 : 15),
-                    fontWeight: FontWeight.w500,
+              child: Row(
+                children: [
+                  Container(
+                    width: isVerySmallScreen ? 24 : 32,
+                    height: isVerySmallScreen ? 24 : 32,
+                    decoration: BoxDecoration(
+                      color: kPrimaryGreen.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Center(
+                      child: Text(
+                        feature['icon']!,
+                        style: TextStyle(fontSize: isVerySmallScreen ? 12 : 16),
+                      ),
+                    ),
                   ),
-                ),
+                  SizedBox(width: isVerySmallScreen ? 8 : 12),
+                  Expanded(
+                    child: Text(
+                      feature['text']!,
+                      style: TextStyle(
+                        fontSize:
+                            isVerySmallScreen ? 12 : (isSmallScreen ? 13 : 15),
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                ],
               ),
-            ],
-          ),
-        );
-      }).toList(),
+            );
+          }).toList(),
     );
   }
 
@@ -470,9 +532,9 @@ class _SubscriptionPopupPageState extends State<SubscriptionPopupPage>
           isVerySmallScreen: isVerySmallScreen,
           isSmallScreen: isSmallScreen,
         ),
-        
+
         SizedBox(height: isVerySmallScreen ? 4 : 8),
-        
+
         // Monthly plan
         _buildPlanButton(
           title: AppLocalizations.of(context)!.monthlyPremium,
@@ -498,12 +560,14 @@ class _SubscriptionPopupPageState extends State<SubscriptionPopupPage>
   }) {
     // Show shimmer effect while loading prices
     final bool isLoadingPrice = price.contains('...') || price.contains('--');
-    
+
     return GestureDetector(
       onTap: isLoadingPrice ? null : onTap,
       child: Container(
         width: double.infinity,
-        padding: EdgeInsets.all(isVerySmallScreen ? 12 : (isSmallScreen ? 14 : 16)),
+        padding: EdgeInsets.all(
+          isVerySmallScreen ? 12 : (isSmallScreen ? 14 : 16),
+        ),
         decoration: BoxDecoration(
           color: isPopular ? kPrimaryGreen : Colors.white,
           border: Border.all(
@@ -511,15 +575,16 @@ class _SubscriptionPopupPageState extends State<SubscriptionPopupPage>
             width: isPopular ? 2 : 1,
           ),
           borderRadius: BorderRadius.circular(12),
-          boxShadow: isPopular
-              ? [
-                  BoxShadow(
-                    color: kPrimaryGreen.withOpacity(0.3),
-                    blurRadius: 8,
-                    offset: const Offset(0, 4),
-                  ),
-                ]
-              : null,
+          boxShadow:
+              isPopular
+                  ? [
+                    BoxShadow(
+                      color: kPrimaryGreen.withOpacity(0.3),
+                      blurRadius: 8,
+                      offset: const Offset(0, 4),
+                    ),
+                  ]
+                  : null,
         ),
         child: Row(
           children: [
@@ -532,7 +597,10 @@ class _SubscriptionPopupPageState extends State<SubscriptionPopupPage>
                       Text(
                         title,
                         style: TextStyle(
-                          fontSize: isVerySmallScreen ? 12 : (isSmallScreen ? 14 : 16),
+                          fontSize:
+                              isVerySmallScreen
+                                  ? 12
+                                  : (isSmallScreen ? 14 : 16),
                           fontWeight: FontWeight.bold,
                           color: isPopular ? Colors.white : Colors.black,
                         ),
@@ -561,19 +629,24 @@ class _SubscriptionPopupPageState extends State<SubscriptionPopupPage>
                     ],
                   ),
                   const SizedBox(height: 4),
-                                      Text(
+                  Text(
                     price,
                     style: TextStyle(
-                      fontSize: isVerySmallScreen ? 10 : (isSmallScreen ? 12 : 14),
-                      color: isPopular ? Colors.white.withOpacity(0.9) : Colors.grey[600],
+                      fontSize:
+                          isVerySmallScreen ? 10 : (isSmallScreen ? 12 : 14),
+                      color:
+                          isPopular
+                              ? Colors.white.withOpacity(0.9)
+                              : Colors.grey[600],
                     ),
                   ),
                   if (savings != null) ...[
                     const SizedBox(height: 2),
-                                          Text(
+                    Text(
                       savings,
                       style: TextStyle(
-                        fontSize: isVerySmallScreen ? 9 : (isSmallScreen ? 10 : 12),
+                        fontSize:
+                            isVerySmallScreen ? 9 : (isSmallScreen ? 10 : 12),
                         fontWeight: FontWeight.bold,
                         color: isPopular ? Colors.white : kPrimaryGreen,
                       ),

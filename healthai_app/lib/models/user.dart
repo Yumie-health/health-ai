@@ -12,14 +12,16 @@ class UserProfile {
   final int carbsGoal; // in grams
   final int fatGoal; // in grams
   final double targetWeight; // in kg
-  final double startingWeight; // in kg - the initial weight when user first started
+  final double
+  startingWeight; // in kg - the initial weight when user first started
   final DateTime createdAt;
   final DateTime lastUpdated;
   final String photoUrl;
   final String? waterIntake;
   final int? waterLoggedMl;
   // Additional health data for comprehensive coaching
-  final String activityLevel; // e.g., "Sedentary", "Lightly Active", "Moderately Active", "Very Active"
+  final String
+  activityLevel; // e.g., "Sedentary", "Lightly Active", "Moderately Active", "Very Active"
   final String bloodType; // e.g., "A+", "B-", "O+", etc.
   final bool isDiabetic;
 
@@ -60,7 +62,8 @@ class UserProfile {
       'carbsGoal': carbsGoal,
       'fatGoal': fatGoal,
       'targetWeight': targetWeight,
-      'targetWeightKg': targetWeight, // Save with both field names for compatibility
+      'targetWeightKg':
+          targetWeight, // Save with both field names for compatibility
       'startingWeight': startingWeight,
       'createdAt': createdAt,
       'lastUpdated': lastUpdated,
@@ -78,8 +81,9 @@ class UserProfile {
     // Handle both old field names and new field names from onboarding
     final heightValue = data['heightCm'] ?? data['height'] ?? 0;
     final weightValue = data['weightKg'] ?? data['weight'] ?? 0;
-    final targetWeightValue = data['targetWeightKg'] ?? data['targetWeight'] ?? 0;
-    
+    final targetWeightValue =
+        data['targetWeightKg'] ?? data['targetWeight'] ?? 0;
+
     return UserProfile(
       id: doc.id,
       email: data['email'] ?? '',
@@ -92,7 +96,9 @@ class UserProfile {
       carbsGoal: data['carbsGoal'] ?? 250,
       fatGoal: data['fatGoal'] ?? 70,
       targetWeight: targetWeightValue.toDouble(),
-      startingWeight: (data['startingWeight'] ?? weightValue ?? 0).toDouble(), // Default to current weight if not set
+      startingWeight:
+          (data['startingWeight'] ?? weightValue ?? 0)
+              .toDouble(), // Default to current weight if not set
       createdAt: (data['createdAt'] as Timestamp).toDate(),
       lastUpdated: (data['lastUpdated'] as Timestamp).toDate(),
       photoUrl: data['photoUrl'] ?? '',
@@ -103,4 +109,4 @@ class UserProfile {
       isDiabetic: data['isDiabetic'] ?? false,
     );
   }
-} 
+}

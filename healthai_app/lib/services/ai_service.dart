@@ -15,39 +15,57 @@ class AIService {
   static const _suggestedMealsCacheKey = 'suggested_meals_cache';
   static const _suggestedMealsCacheTimeKey = 'suggested_meals_cache_time';
 
-  Future<String?> sendMessage(String message, {String model = 'gpt-4o-mini', String language = 'en'}) async {
+  Future<String?> sendMessage(
+    String message, {
+    String model = 'gpt-4o-mini',
+    String language = 'en',
+  }) async {
     final stopwatch = Stopwatch()..start();
-    
+
     try {
-      log.info('Sending AI message', {'model': model, 'message_length': message.length, 'language': language});
-      
+      log.info('Sending AI message', {
+        'model': model,
+        'message_length': message.length,
+        'language': language,
+      });
+
       String languageInstruction = _getLanguageInstruction(language);
-      
-      final url = 'https://us-central1-yumie-maivenx02.cloudfunctions.net/openaiProxyCallable';
+
+      final url =
+          'https://us-central1-yumie-maivenx02.cloudfunctions.net/openaiProxyCallable';
       final response = await http.post(
         Uri.parse(url),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
           'model': model,
           'messages': [
-            {'role': 'system', 'content': 'You are Yumie, a friendly nutrition and wellness coach. When providing health or medical recommendations, include citations using [Source: Organization Name] format. Use reputable sources like CDC, NIH, AHA, WHO, Mayo Clinic, etc. Respond in clear, friendly, plain English. Avoid Markdown formatting (like **bold** or lists) unless the user specifically asks for it.$languageInstruction'},
+            {
+              'role': 'system',
+              'content':
+                  'You are Yumie, a friendly nutrition and wellness coach. When providing health or medical recommendations, include citations using [Source: Organization Name] format. Use reputable sources like CDC, NIH, AHA, WHO, Mayo Clinic, etc. Respond in clear, friendly, plain English. Avoid Markdown formatting (like **bold** or lists) unless the user specifically asks for it.$languageInstruction',
+            },
             {'role': 'user', 'content': message},
           ],
           'max_tokens': 1024,
           'temperature': 0.7,
         }),
       );
-      
+
       stopwatch.stop();
       log.logPerformance('AI message request', stopwatch.elapsed);
-      
+
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         final content = data['choices'][0]['message']['content'];
-        log.info('AI message response successful', {'response_length': content.length});
+        log.info('AI message response successful', {
+          'response_length': content.length,
+        });
         return content;
       } else {
-        log.error('AI message request failed', 'HTTP ${response.statusCode}: ${response.body}');
+        log.error(
+          'AI message request failed',
+          'HTTP ${response.statusCode}: ${response.body}',
+        );
         return null;
       }
     } catch (e) {
@@ -90,7 +108,8 @@ class AIService {
   }
 
   Future<String?> sendCoachMessage({
-    required List<Map<String, dynamic>> chatHistory, // [{role: 'user'/'assistant', content: ...}]
+    required List<Map<String, dynamic>>
+    chatHistory, // [{role: 'user'/'assistant', content: ...}]
     required String name,
     required int age,
     required int heightCm,
@@ -114,7 +133,7 @@ class AIService {
     String language = 'en',
   }) async {
     final stopwatch = Stopwatch()..start();
-    
+
     try {
       log.info('Sending coach message', {
         'name': name,
@@ -123,7 +142,7 @@ class AIService {
         'calories_consumed': caloriesConsumed,
         'language': language,
       });
-      
+
       final systemPrompt = buildYumiePrompt(
         name: name,
         age: age,
@@ -152,7 +171,8 @@ class AIService {
         ...chatHistory,
       ];
 
-      final url = 'https://us-central1-yumie-maivenx02.cloudfunctions.net/openaiProxyCallable';
+      final url =
+          'https://us-central1-yumie-maivenx02.cloudfunctions.net/openaiProxyCallable';
       final response = await http.post(
         Uri.parse(url),
         headers: {'Content-Type': 'application/json'},
@@ -163,17 +183,22 @@ class AIService {
           'temperature': 0.7,
         }),
       );
-      
+
       stopwatch.stop();
       log.logPerformance('Coach message request', stopwatch.elapsed);
-      
+
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         final content = data['choices'][0]['message']['content'] as String?;
-        log.info('Coach message response successful', {'response_length': content?.length ?? 0});
+        log.info('Coach message response successful', {
+          'response_length': content?.length ?? 0,
+        });
         return content;
       } else {
-        log.error('Coach message request failed', 'HTTP ${response.statusCode}: ${response.body}');
+        log.error(
+          'Coach message request failed',
+          'HTTP ${response.statusCode}: ${response.body}',
+        );
         return null;
       }
     } catch (e) {
@@ -213,13 +238,13 @@ class AIService {
     final weightLb = (weightKg * 2.20462).round();
     final startingWeightLb = (startingWeight * 2.20462).round();
     final targetWeightLb = (targetWeight * 2.20462).round();
-    
+
     String languageInstruction = _getLanguageInstruction(language);
-    
+
     // Calculate weight progress
     final weightLost = startingWeight - weightKg;
     final weightToGo = weightKg - targetWeight;
-    
+
     return '''
 You are Yumie, a friendly, expert-level virtual nutrition coach and personal health assistant. Your job is to provide clear, accurate, and supportive responses tailored to the user's COMPLETE health profile. You have access to ALL their data and can help with ANY health, nutrition, fitness, or wellness question.
 
@@ -245,8 +270,16 @@ IMPORTANT: When providing health or medical recommendations, you MUST include ci
 - Starting Weight: $startingWeightLb lb (${startingWeight.toStringAsFixed(1)}kg)
 - Current Weight: $weightLb lb (${weightKg.toStringAsFixed(1)}kg)
 - Target Weight: $targetWeightLb lb (${targetWeight.toStringAsFixed(1)}kg)
-- Progress: ${weightLost > 0 ? 'Lost ${weightLost.toStringAsFixed(1)}kg so far!' : weightLost < 0 ? 'Gained ${(-weightLost).toStringAsFixed(1)}kg since starting' : 'No weight change yet'}
-- Remaining: ${weightToGo > 0 ? '${weightToGo.toStringAsFixed(1)}kg to goal' : weightToGo < 0 ? '${(-weightToGo).toStringAsFixed(1)}kg below goal' : 'At target weight!'}
+- Progress: ${weightLost > 0
+        ? 'Lost ${weightLost.toStringAsFixed(1)}kg so far!'
+        : weightLost < 0
+        ? 'Gained ${(-weightLost).toStringAsFixed(1)}kg since starting'
+        : 'No weight change yet'}
+- Remaining: ${weightToGo > 0
+        ? '${weightToGo.toStringAsFixed(1)}kg to goal'
+        : weightToGo < 0
+        ? '${(-weightToGo).toStringAsFixed(1)}kg below goal'
+        : 'At target weight!'}
 
 🏃 ACTIVITY & LIFESTYLE:
 - Activity Level: ${activityLevel.isNotEmpty ? activityLevel : 'Not specified'}
@@ -301,7 +334,7 @@ Be encouraging, supportive, and motivating. Celebrate their progress and help th
     String language = 'en',
   }) async {
     final stopwatch = Stopwatch()..start();
-    
+
     try {
       log.info('Getting AI nutrition plan recommendation', {
         'age': age,
@@ -359,13 +392,13 @@ Provide specific food items with quantities for each meal.
 ''';
 
       final response = await sendMessage(prompt, language: language);
-      
+
       if (response != null && response.isNotEmpty) {
         log.info('AI nutrition plan received', {
           'response_length': response.length,
           'duration_ms': stopwatch.elapsedMilliseconds,
         });
-        
+
         // Return the DAILY INTAKE values that the final page expects
         return {
           'calories': calorieGoal,
@@ -377,13 +410,12 @@ Provide specific food items with quantities for each meal.
       } else {
         throw Exception('Empty AI response');
       }
-      
     } catch (e) {
       log.warning('AI nutrition plan failed, using fallback calculation', {
         'error': e.toString(),
         'duration_ms': stopwatch.elapsedMilliseconds,
       });
-      
+
       // Fallback to local calculation if AI fails
       return _getFallbackNutritionPlan(
         calorieGoal: calorieGoal,
@@ -415,7 +447,11 @@ Provide specific food items with quantities for each meal.
     };
   }
 
-  String _generateFallbackPlan(String bloodType, bool isDiabetic, int calorieGoal) {
+  String _generateFallbackPlan(
+    String bloodType,
+    bool isDiabetic,
+    int calorieGoal,
+  ) {
     final breakfastCal = (calorieGoal * 0.25).round();
     final lunchCal = (calorieGoal * 0.35).round();
     final dinnerCal = (calorieGoal * 0.30).round();
@@ -457,14 +493,18 @@ Personalized Nutrition Plan:
 ''';
   }
 
-
-
   /// Get nutritional information for a food item using AI
-  Future<Map<String, dynamic>?> getFoodNutrition(String foodName, {String language = 'en'}) async {
+  Future<Map<String, dynamic>?> getFoodNutrition(
+    String foodName, {
+    String language = 'en',
+  }) async {
     final stopwatch = Stopwatch()..start();
-    
+
     try {
-      log.info('Getting nutrition for food', {'food_name': foodName, 'language': language});
+      log.info('Getting nutrition for food', {
+        'food_name': foodName,
+        'language': language,
+      });
 
       String languageInstruction = _getLanguageInstruction(language);
 
@@ -501,11 +541,15 @@ Use credible nutrition databases and realistic portions.
 STRICT NUTRITION RULES: Ensure CALORIES ≈ 4*protein + 4*carbs + 9*fat (within ±10%). If inconsistent, adjust calories to match macros. Use realistic ranges (fresh fruits/vegetables per serving typically 20–150 kcal; nuts/seeds 150–220 kcal per 1 oz; plain cooked meats 100–300 kcal). Only return the JSON, no additional text or explanations.$languageInstruction
 ''';
 
-      final response = await sendMessage(prompt, model: 'gpt-4o-mini', language: language);
-      
+      final response = await sendMessage(
+        prompt,
+        model: 'gpt-4o-mini',
+        language: language,
+      );
+
       stopwatch.stop();
       log.logPerformance('Food nutrition lookup', stopwatch.elapsed);
-      
+
       if (response != null) {
         try {
           final data = jsonDecode(response);
@@ -527,11 +571,17 @@ STRICT NUTRITION RULES: Ensure CALORIES ≈ 4*protein + 4*carbs + 9*fat (within 
   }
 
   /// Search for food items that match the query
-  Future<List<Map<String, dynamic>>> searchFoodItems(String query, {String language = 'en'}) async {
+  Future<List<Map<String, dynamic>>> searchFoodItems(
+    String query, {
+    String language = 'en',
+  }) async {
     final stopwatch = Stopwatch()..start();
-    
+
     try {
-      log.info('Searching for food items', {'query': query, 'language': language});
+      log.info('Searching for food items', {
+        'query': query,
+        'language': language,
+      });
 
       String languageInstruction = _getLanguageInstruction(language);
 
@@ -590,17 +640,25 @@ For ingredients field:
 Do not add explanations or markdown. Only return the JSON array.$languageInstruction
 ''';
 
-      final response = await sendMessage(prompt, model: 'gpt-4o-mini', language: language);
-      
+      final response = await sendMessage(
+        prompt,
+        model: 'gpt-4o-mini',
+        language: language,
+      );
+
       stopwatch.stop();
       log.logPerformance('Food search', stopwatch.elapsed);
-      
+
       if (response != null) {
         try {
           final data = jsonDecode(response);
           final List<dynamic> results = data;
-          log.info('Food search successful', {'query': query, 'results_count': results.length});
-          final mapped = results.map((item) => Map<String, dynamic>.from(item)).toList();
+          log.info('Food search successful', {
+            'query': query,
+            'results_count': results.length,
+          });
+          final mapped =
+              results.map((item) => Map<String, dynamic>.from(item)).toList();
           return _fixNutritionCalorieConsistency(mapped);
         } catch (e) {
           log.error('Failed to parse food search JSON', e);
@@ -618,14 +676,21 @@ Do not add explanations or markdown. Only return the JSON array.$languageInstruc
   }
 
   /// Fast food search with minimal prompt for speed
-  Future<List<Map<String, dynamic>>> searchFoodItemsFast(String query, {String? foodType, String language = 'en'}) async {
+  Future<List<Map<String, dynamic>>> searchFoodItemsFast(
+    String query, {
+    String? foodType,
+    String language = 'en',
+  }) async {
     final stopwatch = Stopwatch()..start();
     try {
-
-      log.info('Fast searching for food items', {'query': query, 'food_type': foodType, 'language': language});
+      log.info('Fast searching for food items', {
+        'query': query,
+        'food_type': foodType,
+        'language': language,
+      });
 
       String languageInstruction = _getLanguageInstruction(language);
-      
+
       String foodTypeInstruction = '';
       if (foodType != null) {
         switch (foodType) {
@@ -668,7 +733,7 @@ IMPORTANT: You are searching for BEVERAGES/DRINKS only. Focus on:
             break;
         }
       }
-      
+
       String prompt = '''
 Search for "$query" and return exactly 5 results.$foodTypeInstruction
 
@@ -692,7 +757,11 @@ Example format (values per one serving):
   {"name": "Similar Item 4 (serving)", "calories": [value], "protein": [value], "carbs": [value], "fat": [value], "food_type": "meal", "ingredients": ["ingredient1", "ingredient2", "ingredient3", "ingredient4"]}
 ]$languageInstruction
 ''';
-      String? response = await sendMessage(prompt, model: 'gpt-4o-mini', language: language);
+      String? response = await sendMessage(
+        prompt,
+        model: 'gpt-4o-mini',
+        language: language,
+      );
       stopwatch.stop();
       log.logPerformance('Fast food search', stopwatch.elapsed);
       List<Map<String, dynamic>>? parsedResults;
@@ -702,14 +771,24 @@ Example format (values per one serving):
           // Retry with even stricter prompt
           String retryPrompt = '''
 List 5 foods similar to "$query".$foodTypeInstruction Correct any obvious misspelling in "$query" while keeping the same language. For each, give name (same language as the query, Title Case for English, include a serving descriptor in parentheses, never abbreviated), calories, protein, carbs, fat per ONE typical serving, food_type, and ingredients array. Use REALISTIC and ACCURATE nutritional values for each specific food item. Respond ONLY with a valid JSON array, no explanation, no text, no code block, just the array. DO NOT SAY ANYTHING ELSE. DO NOT USE MARKDOWN. JUST THE ARRAY.''';
-          response = await sendMessage(retryPrompt, model: 'gpt-4o-mini', language: language);
+          response = await sendMessage(
+            retryPrompt,
+            model: 'gpt-4o-mini',
+            language: language,
+          );
           parsedResults = response != null ? _tryParseFoodJson(response) : null;
         }
         if (parsedResults != null) {
-          log.info('Fast food search successful', {'query': query, 'results_count': parsedResults.length});
+          log.info('Fast food search successful', {
+            'query': query,
+            'results_count': parsedResults.length,
+          });
           return _fixNutritionCalorieConsistency(parsedResults);
         } else {
-          log.error('Failed to parse fast food search JSON after retry', response);
+          log.error(
+            'Failed to parse fast food search JSON after retry',
+            response,
+          );
           return [];
         }
       } else {
@@ -732,7 +811,11 @@ List 5 foods similar to "$query".$foodTypeInstruction Correct any obvious misspe
       }
     } catch (_) {}
     // Try extracting from code block
-    final codeBlockRegex = RegExp(r'```(?:json)?\s*([\s\S]*?)\s*```', multiLine: true, caseSensitive: false);
+    final codeBlockRegex = RegExp(
+      r'```(?:json)?\s*([\s\S]*?)\s*```',
+      multiLine: true,
+      caseSensitive: false,
+    );
     final match = codeBlockRegex.firstMatch(response);
     if (match != null) {
       final jsonString = match.group(1)!.trim();
@@ -759,7 +842,9 @@ List 5 foods similar to "$query".$foodTypeInstruction Correct any obvious misspe
   }
 
   // Fix obviously inconsistent nutrition by aligning calories with macros when wildly off
-  List<Map<String, dynamic>> _fixNutritionCalorieConsistency(List<Map<String, dynamic>> items) {
+  List<Map<String, dynamic>> _fixNutritionCalorieConsistency(
+    List<Map<String, dynamic>> items,
+  ) {
     const double tolerance = 0.10; // 10%
     List<Map<String, dynamic>> fixed = [];
     for (final item in items) {
@@ -770,16 +855,13 @@ List 5 foods similar to "$query".$foodTypeInstruction Correct any obvious misspe
       final double? f = _toNum(item['fat']);
       if (p != null && c != null && f != null) {
         final double kcalFromMacros = 4 * p + 4 * c + 9 * f;
-        if (cal == null || (cal > 0 && (cal - kcalFromMacros).abs() / cal > tolerance)) {
+        if (cal == null ||
+            (cal > 0 && (cal - kcalFromMacros).abs() / cal > tolerance)) {
           // Adjust calories to macro-derived value rounded sensibly
           cal = double.parse(kcalFromMacros.toStringAsFixed(0));
         }
       }
-      fixed.add({
-        ...item,
-        if (cal != null) 'calories': cal,
-        'name': name,
-      });
+      fixed.add({...item, if (cal != null) 'calories': cal, 'name': name});
     }
     return fixed;
   }
@@ -797,7 +879,11 @@ List 5 foods similar to "$query".$foodTypeInstruction Correct any obvious misspe
   }
 
   String _extractJson(String response) {
-    final codeBlockRegex = RegExp(r'```(?:json)?\s*([\s\S]*?)\s*```', multiLine: true, caseSensitive: false);
+    final codeBlockRegex = RegExp(
+      r'```(?:json)?\s*([\s\S]*?)\s*```',
+      multiLine: true,
+      caseSensitive: false,
+    );
     final match = codeBlockRegex.firstMatch(response);
     if (match != null) {
       return match.group(1)!.trim();
@@ -806,9 +892,13 @@ List 5 foods similar to "$query".$foodTypeInstruction Correct any obvious misspe
   }
 
   /// Analyze a meal image and return food name, macros, and ingredients.
-  Future<Map<String, dynamic>?> analyzeMealImage(File imageFile, {String language = 'en'}) async {
+  Future<Map<String, dynamic>?> analyzeMealImage(
+    File imageFile, {
+    String language = 'en',
+  }) async {
     try {
-      final url = 'https://us-central1-yumie-maivenx02.cloudfunctions.net/openaiProxyCallable';
+      final url =
+          'https://us-central1-yumie-maivenx02.cloudfunctions.net/openaiProxyCallable';
       final bytes = await imageFile.readAsBytes();
       final base64Image = base64Encode(bytes);
       final dataUrl = 'data:image/jpeg;base64,$base64Image';
@@ -881,8 +971,11 @@ Respond ONLY with valid JSON.$languageInstruction
                   'role': 'user',
                   'content': [
                     {'type': 'text', 'text': prompt},
-                    {'type': 'image_url', 'image_url': {'url': dataUrl}},
-                  ]
+                    {
+                      'type': 'image_url',
+                      'image_url': {'url': dataUrl},
+                    },
+                  ],
                 },
               ],
               'max_tokens': 512,
@@ -897,7 +990,10 @@ Respond ONLY with valid JSON.$languageInstruction
         final result = jsonDecode(jsonString);
         return result as Map<String, dynamic>;
       } else {
-        log.error('analyzeMealImage failed', 'HTTP ${response.statusCode}: ${response.body}');
+        log.error(
+          'analyzeMealImage failed',
+          'HTTP ${response.statusCode}: ${response.body}',
+        );
         return null;
       }
     } catch (e) {
@@ -907,7 +1003,10 @@ Respond ONLY with valid JSON.$languageInstruction
   }
 
   /// Analyze a fridge image and return a list of detected items.
-  Future<List<String>?> analyzeFridgeImage(File imageFile, {String language = 'en'}) async {
+  Future<List<String>?> analyzeFridgeImage(
+    File imageFile, {
+    String language = 'en',
+  }) async {
     final url = 'https://openaiproxycallable-jlkcfxcyrq-uc.a.run.app';
     final bytes = await imageFile.readAsBytes();
     final base64Image = base64Encode(bytes);
@@ -927,8 +1026,11 @@ You are a kitchen assistant AI. Given this photo of a fridge, return a JSON arra
             'role': 'user',
             'content': [
               {'type': 'text', 'text': prompt},
-              {'type': 'image_url', 'image_url': {'url': dataUrl}},
-            ]
+              {
+                'type': 'image_url',
+                'image_url': {'url': dataUrl},
+              },
+            ],
           },
         ],
         'max_tokens': 512,
@@ -1001,7 +1103,10 @@ CONSISTENCY RULE: Ensure CALORIES ≈ 4*protein + 4*carbs + 9*fat (within ±10%)
   }
 
   /// Get AI-powered suggested meals for a given meal period, with persistent cache
-  Future<List<Map<String, dynamic>>?> getSuggestedMeals({required String mealPeriod, String language = 'en'}) async {
+  Future<List<Map<String, dynamic>>?> getSuggestedMeals({
+    required String mealPeriod,
+    String language = 'en',
+  }) async {
     final prefs = await SharedPreferences.getInstance();
     final cacheKey = '$_suggestedMealsCacheKey${mealPeriod}_$language';
     final cacheTimeKey = '$_suggestedMealsCacheTimeKey${mealPeriod}_$language';
@@ -1016,7 +1121,9 @@ CONSISTENCY RULE: Ensure CALORIES ≈ 4*protein + 4*carbs + 9*fat (within ±10%)
         // Only use cache if still in the same period (e.g., breakfast)
         if (_isSameMealPeriod(now, cachedTime, mealPeriod)) {
           try {
-            final meals = List<Map<String, dynamic>>.from(jsonDecode(cachedData));
+            final meals = List<Map<String, dynamic>>.from(
+              jsonDecode(cachedData),
+            );
             return meals;
           } catch (_) {}
         }
@@ -1067,15 +1174,21 @@ Ensure each meal is unique and offers different nutritional benefits. Use realis
       final data = jsonDecode(response.body);
       final content = data['choices'][0]['message']['content'];
       try {
-        final codeBlockRegex = RegExp(r'```(?:json)?\s*([\s\S]*?)\s*```', multiLine: true, caseSensitive: false);
+        final codeBlockRegex = RegExp(
+          r'```(?:json)?\s*([\s\S]*?)\s*```',
+          multiLine: true,
+          caseSensitive: false,
+        );
         final match = codeBlockRegex.firstMatch(content);
-        final jsonString = match != null ? match.group(1)!.trim() : content.trim();
+        final jsonString =
+            match != null ? match.group(1)!.trim() : content.trim();
         final meals = jsonDecode(jsonString);
         if (meals is List) {
           // Fix nutrition consistency for each meal before caching
-          final fixedMeals = (meals as List)
-              .map((m) => _fixNutritionEntry(Map<String, dynamic>.from(m)))
-              .toList();
+          final fixedMeals =
+              (meals as List)
+                  .map((m) => _fixNutritionEntry(Map<String, dynamic>.from(m)))
+                  .toList();
           // Save to cache
           await prefs.setString(cacheKey, jsonEncode(fixedMeals));
           await prefs.setString(cacheTimeKey, now.toIso8601String());
@@ -1109,11 +1222,14 @@ Ensure each meal is unique and offers different nutritional benefits. Use realis
   }
 
   // Optionally, add a method to clear cache for a period (e.g., on manual refresh)
-  Future<void> clearSuggestedMealsCache(String mealPeriod, String language) async {
+  Future<void> clearSuggestedMealsCache(
+    String mealPeriod,
+    String language,
+  ) async {
     final prefs = await SharedPreferences.getInstance();
     final cacheKey = '$_suggestedMealsCacheKey${mealPeriod}_$language';
     final cacheTimeKey = '$_suggestedMealsCacheTimeKey${mealPeriod}_$language';
     await prefs.remove(cacheKey);
     await prefs.remove(cacheTimeKey);
   }
-} 
+}

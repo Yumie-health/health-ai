@@ -37,34 +37,51 @@ class _WeightAnalyticsPageState extends State<WeightAnalyticsPage> {
   Future<void> _load() async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
-    
+
     // Load user profile data - handle both old and new field names
-    final u = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
+    final u =
+        await FirebaseFirestore.instance
+            .collection('users')
+            .doc(user.uid)
+            .get();
     final data = u.data() as Map<String, dynamic>?;
-    _current = ((data?['weightKg'] ?? data?['weight']) as num?)?.toDouble() ?? 0;
-    _target = ((data?['targetWeightKg'] ?? data?['targetWeight']) as num?)?.toDouble() ?? 0;
+    _current =
+        ((data?['weightKg'] ?? data?['weight']) as num?)?.toDouble() ?? 0;
+    _target =
+        ((data?['targetWeightKg'] ?? data?['targetWeight']) as num?)
+            ?.toDouble() ??
+        0;
     _starting = (data?['startingWeight'] as num?)?.toDouble() ?? 0;
     _goal = (data?['goal'] as String?) ?? 'Maintain body weight';
-    
+
     // If starting weight is 0 or not set, use current weight as starting weight
     if (_starting == 0) {
       _starting = _current;
     }
-    
+
     // Load weight entries
-    final w = await FirebaseFirestore.instance
-        .collection('users').doc(user.uid).collection('weights')
-        .orderBy('timestamp', descending: true)
-        .limit(400)
-        .get();
-    final allEntries = w.docs
-        .map((d)=>d.data())
-        .where((m)=> (m['isDeleted'] ?? false)==false)
-        .map((m)=> _Point(((m['timestamp'] as Timestamp?)?.toDate()??DateTime.now()), (m['weight'] as num?)?.toDouble() ?? _current))
-        .toList()
-        .reversed
-        .toList();
-    
+    final w =
+        await FirebaseFirestore.instance
+            .collection('users')
+            .doc(user.uid)
+            .collection('weights')
+            .orderBy('timestamp', descending: true)
+            .limit(400)
+            .get();
+    final allEntries =
+        w.docs
+            .map((d) => d.data())
+            .where((m) => (m['isDeleted'] ?? false) == false)
+            .map(
+              (m) => _Point(
+                ((m['timestamp'] as Timestamp?)?.toDate() ?? DateTime.now()),
+                (m['weight'] as num?)?.toDouble() ?? _current,
+              ),
+            )
+            .toList()
+            .reversed
+            .toList();
+
     // Filter weight entries to only include those from the current goal period.
     // Prefer using a plan start timestamp if available (e.g., 'lastUpdated'),
     // otherwise fall back to finding the closest entry to the starting weight.
@@ -73,9 +90,14 @@ class _WeightAnalyticsPageState extends State<WeightAnalyticsPage> {
     if (allEntries.isNotEmpty) {
       if (planStartTs != null) {
         final DateTime planStart = planStartTs.toDate();
-        goalPeriodEntries = allEntries
-            .where((p) => p.time.isAtSameMomentAs(planStart) || p.time.isAfter(planStart))
-            .toList();
+        goalPeriodEntries =
+            allEntries
+                .where(
+                  (p) =>
+                      p.time.isAtSameMomentAs(planStart) ||
+                      p.time.isAfter(planStart),
+                )
+                .toList();
         // If filtering by timestamp yields nothing (rare clock issues),
         // fall back to closest-weight heuristic below
       }
@@ -91,255 +113,330 @@ class _WeightAnalyticsPageState extends State<WeightAnalyticsPage> {
           }
         }
         if (startingEntry != null) {
-          goalPeriodEntries = allEntries.where((entry) =>
-              entry.time.isAfter(startingEntry!.time) ||
-              entry.time.isAtSameMomentAs(startingEntry!.time)).toList();
+          goalPeriodEntries =
+              allEntries
+                  .where(
+                    (entry) =>
+                        entry.time.isAfter(startingEntry!.time) ||
+                        entry.time.isAtSameMomentAs(startingEntry!.time),
+                  )
+                  .toList();
         } else {
           goalPeriodEntries = allEntries;
         }
       }
     }
-    
+
     // Fallback starting weight from earliest record if not explicitly set
-    final derivedStarting = goalPeriodEntries.isNotEmpty ? goalPeriodEntries.first.value : _current;
-    
+    final derivedStarting =
+        goalPeriodEntries.isNotEmpty ? goalPeriodEntries.first.value : _current;
+
     // Debug: Check if we're using synthetic data
     final usingSynthetic = goalPeriodEntries.isEmpty;
     if (usingSynthetic) {
-      print('⚠️ Weight Analytics: Using synthetic data - no real weight entries found');
-      print('Current weight: $_current, Target: $_target, Starting: $_starting');
+      print(
+        '⚠️ Weight Analytics: Using synthetic data - no real weight entries found',
+      );
+      print(
+        'Current weight: $_current, Target: $_target, Starting: $_starting',
+      );
     } else {
-      print('✅ Weight Analytics: Using real data - ${goalPeriodEntries.length} weight entries found for current goal period');
-      print('Goal period: ${_starting.toStringAsFixed(1)} → ${_target.toStringAsFixed(1)}');
+      print(
+        '✅ Weight Analytics: Using real data - ${goalPeriodEntries.length} weight entries found for current goal period',
+      );
+      print(
+        'Goal period: ${_starting.toStringAsFixed(1)} → ${_target.toStringAsFixed(1)}',
+      );
     }
-    
-    setState((){ 
+
+    setState(() {
       _points = goalPeriodEntries; // Only use entries from current goal period
-      _starting = _starting==0? derivedStarting : _starting; 
-      _loading=false; 
+      _starting = _starting == 0 ? derivedStarting : _starting;
+      _loading = false;
     });
   }
 
-  List<_Point> _synthetic(){
+  List<_Point> _synthetic() {
     final now = DateTime.now();
     final days = 30;
-    final step = (_current - _target)/days;
-    return List.generate(days+1,(i){
-      final d = now.subtract(Duration(days: days-i));
-      return _Point(d, _current - step*i);
+    final step = (_current - _target) / days;
+    return List.generate(days + 1, (i) {
+      final d = now.subtract(Duration(days: days - i));
+      return _Point(d, _current - step * i);
     });
   }
 
-  List<_Point> _filtered(){
+  List<_Point> _filtered() {
     DateTime? start;
     final now = DateTime.now();
-    switch(_range){
-      case _Range.w1: start = now.subtract(const Duration(days: 7)); break;
-      case _Range.m1: start = now.subtract(const Duration(days: 30)); break;
-      case _Range.m3: start = now.subtract(const Duration(days: 90)); break;
-      case _Range.m6: start = now.subtract(const Duration(days: 180)); break;
-      case _Range.y1: start = now.subtract(const Duration(days: 365)); break;
-      case _Range.all: start = null; break;
-      case _Range.plan: start = now.subtract(const Duration(days: 90)); break; // show recent trend before projection
+    switch (_range) {
+      case _Range.w1:
+        start = now.subtract(const Duration(days: 7));
+        break;
+      case _Range.m1:
+        start = now.subtract(const Duration(days: 30));
+        break;
+      case _Range.m3:
+        start = now.subtract(const Duration(days: 90));
+        break;
+      case _Range.m6:
+        start = now.subtract(const Duration(days: 180));
+        break;
+      case _Range.y1:
+        start = now.subtract(const Duration(days: 365));
+        break;
+      case _Range.all:
+        start = null;
+        break;
+      case _Range.plan:
+        start = now.subtract(const Duration(days: 90));
+        break; // show recent trend before projection
     }
-    final source = start==null? _points : _points.where((p)=> p.time.isAfter(start!)).toList();
-    if(source.length<2 && _points.isNotEmpty) return [_points.first,_points.last];
+    final source =
+        start == null
+            ? _points
+            : _points.where((p) => p.time.isAfter(start!)).toList();
+    if (source.length < 2 && _points.isNotEmpty)
+      return [_points.first, _points.last];
     return source;
   }
 
   // Expected weekly from nutrition (signed): deficit -> negative, surplus -> positive
-double _expectedWeeklyFromNutrition(Map<String, dynamic>? userData, bool useMetric) {
-  if (userData == null) return 0.0;
+  double _expectedWeeklyFromNutrition(
+    Map<String, dynamic>? userData,
+    bool useMetric,
+  ) {
+    if (userData == null) return 0.0;
 
-  // Prefer an explicit weekly goal if you store one (e.g., -0.5 kg/week)
-  final weeklyGoal = (userData['weeklyRateGoal'] as num?)?.toDouble();
-  if (weeklyGoal != null) return weeklyGoal;
+    // Prefer an explicit weekly goal if you store one (e.g., -0.5 kg/week)
+    final weeklyGoal = (userData['weeklyRateGoal'] as num?)?.toDouble();
+    if (weeklyGoal != null) return weeklyGoal;
 
-  // Daily energy balance (kcal/day), negative = deficit
-  final energyBalance = (userData['dailyEnergyBalance'] as num?)?.toDouble();
-  if (energyBalance != null) {
-    final perUnit = useMetric ? 7700.0 : 3500.0; // kcal per kg or lb
-    return (energyBalance * 7.0) / perUnit;
-  }
+    // Daily energy balance (kcal/day), negative = deficit
+    final energyBalance = (userData['dailyEnergyBalance'] as num?)?.toDouble();
+    if (energyBalance != null) {
+      final perUnit = useMetric ? 7700.0 : 3500.0; // kcal per kg or lb
+      return (energyBalance * 7.0) / perUnit;
+    }
 
-  // Legacy fields
-  final calorieGoal = (userData['calorieGoal'] as num?)?.toDouble();
-  final currentCalories = (userData['currentCalories'] as num?)?.toDouble();
-  if (calorieGoal != null && calorieGoal > 0) {
-    // Handle case when currentCalories is 0 or null (no meals logged today)
-    final actualCalories = currentCalories ?? 0.0;
-    final dailyDeficit = calorieGoal - actualCalories; // >0 deficit (loss), <0 surplus (gain)
-    
-    // If no calories logged today, assume a reasonable daily intake
-    if (actualCalories == 0.0) {
-      // Assume user will eat around their goal, so small deficit
-      final assumedDeficit = useMetric ? 500.0 : 1000.0; // 500 cal deficit for kg, 1000 for lbs
+    // Legacy fields
+    final calorieGoal = (userData['calorieGoal'] as num?)?.toDouble();
+    final currentCalories = (userData['currentCalories'] as num?)?.toDouble();
+    if (calorieGoal != null && calorieGoal > 0) {
+      // Handle case when currentCalories is 0 or null (no meals logged today)
+      final actualCalories = currentCalories ?? 0.0;
+      final dailyDeficit =
+          calorieGoal - actualCalories; // >0 deficit (loss), <0 surplus (gain)
+
+      // If no calories logged today, assume a reasonable daily intake
+      if (actualCalories == 0.0) {
+        // Assume user will eat around their goal, so small deficit
+        final assumedDeficit =
+            useMetric ? 500.0 : 1000.0; // 500 cal deficit for kg, 1000 for lbs
+        final perUnit = useMetric ? 7700.0 : 3500.0;
+        final weekly = (assumedDeficit * 7.0) / perUnit;
+        final lo = useMetric ? -1.5 : -3.3;
+        final hi = useMetric ? 1.0 : 2.2;
+        return weekly.clamp(lo, hi);
+      }
+
+      // Normal calculation when calories are logged
+      if (dailyDeficit.abs() < 200) return 0.0; // avoid noisy zeros
       final perUnit = useMetric ? 7700.0 : 3500.0;
-      final weekly = (assumedDeficit * 7.0) / perUnit;
+      final weekly = (dailyDeficit * 7.0) / perUnit;
+      // keep expectations conservative
       final lo = useMetric ? -1.5 : -3.3;
-      final hi = useMetric ?  1.0 :  2.2;
+      final hi = useMetric ? 1.0 : 2.2;
       return weekly.clamp(lo, hi);
     }
-    
-    // Normal calculation when calories are logged
-    if (dailyDeficit.abs() < 200) return 0.0; // avoid noisy zeros
-    final perUnit = useMetric ? 7700.0 : 3500.0;
-    final weekly = (dailyDeficit * 7.0) / perUnit;
-    // keep expectations conservative
-    final lo = useMetric ? -1.5 : -3.3;
-    final hi = useMetric ?  1.0 :  2.2;
-    return weekly.clamp(lo, hi);
-  }
 
-  return 0.0;
-}
-
-// Robust weekly rate from weights via OLS over ~last 60 days (signed, in display units)
-double _weeklyFromWeights(List<_Point> pts, double scale) {
-  if (pts.length < 3) {
-    if (pts.length >= 2) {
-      final dDays = pts.last.time.difference(pts.first.time).inDays;
-      if (dDays >= 7) {
-        final dy = (pts.last.value - pts.first.value) * scale;
-        return (dy / dDays) * 7.0;
-      }
-    }
     return 0.0;
   }
 
-  final cutoff = DateTime.now().subtract(const Duration(days: 60));
-  final recent = pts.where((p) => p.time.isAfter(cutoff)).toList();
-  final used = recent.length >= 3 ? recent : pts;
+  // Robust weekly rate from weights via OLS over ~last 60 days (signed, in display units)
+  double _weeklyFromWeights(List<_Point> pts, double scale) {
+    if (pts.length < 3) {
+      if (pts.length >= 2) {
+        final dDays = pts.last.time.difference(pts.first.time).inDays;
+        if (dDays >= 7) {
+          final dy = (pts.last.value - pts.first.value) * scale;
+          return (dy / dDays) * 7.0;
+        }
+      }
+      return 0.0;
+    }
 
-  // Check if all entries have the same timestamp (testing scenario)
-  final allSameTime = used.every((p) => p.time.difference(used.first.time).inMinutes.abs() < 1);
-  if (allSameTime) {
-    print('⚠️ All weight entries have the same timestamp - using simple calculation');
-    // Use simple calculation based on first and last weight
-    final firstWeight = used.first.value * scale;
-    final lastWeight = used.last.value * scale;
-    final weightChange = lastWeight - firstWeight;
-    
-    // Assume entries are spread over the number of entries (minimum 1 day per entry)
-    final assumedDays = max(used.length - 1, 1);
-    final weeklyRate = (weightChange / assumedDays) * 7.0;
-    return weeklyRate; // no early clamp
+    final cutoff = DateTime.now().subtract(const Duration(days: 60));
+    final recent = pts.where((p) => p.time.isAfter(cutoff)).toList();
+    final used = recent.length >= 3 ? recent : pts;
+
+    // Check if all entries have the same timestamp (testing scenario)
+    final allSameTime = used.every(
+      (p) => p.time.difference(used.first.time).inMinutes.abs() < 1,
+    );
+    if (allSameTime) {
+      print(
+        '⚠️ All weight entries have the same timestamp - using simple calculation',
+      );
+      // Use simple calculation based on first and last weight
+      final firstWeight = used.first.value * scale;
+      final lastWeight = used.last.value * scale;
+      final weightChange = lastWeight - firstWeight;
+
+      // Assume entries are spread over the number of entries (minimum 1 day per entry)
+      final assumedDays = max(used.length - 1, 1);
+      final weeklyRate = (weightChange / assumedDays) * 7.0;
+      return weeklyRate; // no early clamp
+    }
+
+    final t0 = used.first.time;
+    final xs = <double>[];
+    final ys = <double>[];
+    for (final p in used) {
+      xs.add(p.time.difference(t0).inHours / 24.0); // days
+      ys.add(p.value * scale); // display units
+    }
+
+    final n = xs.length;
+    final meanX = xs.reduce((a, b) => a + b) / n;
+    final meanY = ys.reduce((a, b) => a + b) / n;
+
+    double num = 0, den = 0;
+    for (int i = 0; i < n; i++) {
+      final dx = xs[i] - meanX;
+      num += dx * (ys[i] - meanY);
+      den += dx * dx;
+    }
+    if (den == 0) return 0.0;
+
+    final slopePerDay = num / den;
+    final weekly = slopePerDay * 7.0; // signed
+    return weekly; // no early clamp; clamp later at display stage
   }
 
-  final t0 = used.first.time;
-  final xs = <double>[];
-  final ys = <double>[];
-  for (final p in used) {
-    xs.add(p.time.difference(t0).inHours / 24.0); // days
-    ys.add(p.value * scale);                       // display units
+  // Simple weekly rate: average change since start of current goal period
+  double _weeklyFromSinceStart(List<_Point> pts, double scale) {
+    if (pts.length < 2) return 0.0;
+    final double dy = (pts.last.value - pts.first.value) * scale; // signed
+    final double days = max(
+      1.0,
+      pts.last.time.difference(pts.first.time).inHours / 24.0,
+    );
+    return (dy / days) * 7.0; // signed per week
   }
 
-  final n = xs.length;
-  final meanX = xs.reduce((a, b) => a + b) / n;
-  final meanY = ys.reduce((a, b) => a + b) / n;
-
-  double num = 0, den = 0;
-  for (int i = 0; i < n; i++) {
-    final dx = xs[i] - meanX;
-    num += dx * (ys[i] - meanY);
-    den += dx * dx;
-  }
-  if (den == 0) return 0.0;
-
-  final slopePerDay = num / den;
-  final weekly = slopePerDay * 7.0; // signed
-  return weekly; // no early clamp; clamp later at display stage
-}
-
-// Simple weekly rate: average change since start of current goal period
-double _weeklyFromSinceStart(List<_Point> pts, double scale) {
-  if (pts.length < 2) return 0.0;
-  final double dy = (pts.last.value - pts.first.value) * scale; // signed
-  final double days = max(1.0, pts.last.time.difference(pts.first.time).inHours / 24.0);
-  return (dy / days) * 7.0; // signed per week
-}
-
-// Gentle fallback when measured trend ~0; sign points toward the goal
-double _healthyWeeklyFallback(bool useMetric, double distanceSigned) {
-  final loss = useMetric ? -0.5 : -1.0; // −0.5 kg/wk | −1 lb/wk
-  final gain = useMetric ?  0.25 :  0.5; // +0.25 kg/wk | +0.5 lb/wk
-  if (distanceSigned < 0) return loss; // need to go down
-  if (distanceSigned > 0) return gain; // need to go up
-  return 0.0;
-}
-
-Future<double> _calculateWeeklyRate(List<_Point> points, bool useMetric, double scale) async {
-  final user = FirebaseAuth.instance.currentUser;
-  if (user == null) {
-    print('❌ No user found for weekly rate calculation');
+  // Gentle fallback when measured trend ~0; sign points toward the goal
+  double _healthyWeeklyFallback(bool useMetric, double distanceSigned) {
+    final loss = useMetric ? -0.5 : -1.0; // −0.5 kg/wk | −1 lb/wk
+    final gain = useMetric ? 0.25 : 0.5; // +0.25 kg/wk | +0.5 lb/wk
+    if (distanceSigned < 0) return loss; // need to go down
+    if (distanceSigned > 0) return gain; // need to go up
     return 0.0;
   }
 
-  try {
-    final userDoc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
-    final userData = userDoc.data() as Map<String, dynamic>?;
-
-    final expected = _expectedWeeklyFromNutrition(userData, useMetric); // signed
-    final measuredOls = _weeklyFromWeights(points, scale);               // signed
-    final measuredSinceStart = _weeklyFromSinceStart(points, scale);     // signed
-
-    int spanDays = 0;
-    if (points.length >= 2) {
-      spanDays = max(0, points.last.time.difference(points.first.time).inDays);
+  Future<double> _calculateWeeklyRate(
+    List<_Point> points,
+    bool useMetric,
+    double scale,
+  ) async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      print('❌ No user found for weekly rate calculation');
+      return 0.0;
     }
-    // Treat 3+ entries as sufficient even if logged on the same day
-    // Also allow 2 points if they span at least a week
-    final hasGoodData = (points.length >= 3) || (points.length >= 2 && spanDays >= 7);
 
-    // Prefer the user's "since goal start" mental model: average since start
-    // Use OLS as a stabilizer when span is long (>=21 days) and differs a lot
-    double weekly = 0.0;
-    if (points.length >= 2) {
-      weekly = measuredSinceStart;
-      if (spanDays >= 21) {
-        // Gentle blend for long periods to reduce noise
-        weekly = (measuredSinceStart * 0.6 + measuredOls * 0.4);
+    try {
+      final userDoc =
+          await FirebaseFirestore.instance
+              .collection('users')
+              .doc(user.uid)
+              .get();
+      final userData = userDoc.data() as Map<String, dynamic>?;
+
+      final expected = _expectedWeeklyFromNutrition(
+        userData,
+        useMetric,
+      ); // signed
+      final measuredOls = _weeklyFromWeights(points, scale); // signed
+      final measuredSinceStart = _weeklyFromSinceStart(points, scale); // signed
+
+      int spanDays = 0;
+      if (points.length >= 2) {
+        spanDays = max(
+          0,
+          points.last.time.difference(points.first.time).inDays,
+        );
       }
-    } else {
-      weekly = expected; // not enough data
+      // Treat 3+ entries as sufficient even if logged on the same day
+      // Also allow 2 points if they span at least a week
+      final hasGoodData =
+          (points.length >= 3) || (points.length >= 2 && spanDays >= 7);
+
+      // Prefer the user's "since goal start" mental model: average since start
+      // Use OLS as a stabilizer when span is long (>=21 days) and differs a lot
+      double weekly = 0.0;
+      if (points.length >= 2) {
+        weekly = measuredSinceStart;
+        if (spanDays >= 21) {
+          // Gentle blend for long periods to reduce noise
+          weekly = (measuredSinceStart * 0.6 + measuredOls * 0.4);
+        }
+      } else {
+        weekly = expected; // not enough data
+      }
+
+      // Clamp more permissively so fast changes are shown but bounded
+      final lo =
+          useMetric ? -3.0 : -6.6; // allow up to ~3 kg/wk | 6.6 lb/wk loss
+      final hi =
+          useMetric ? 2.5 : 5.5; // allow up to ~2.5 kg/wk | 5.5 lb/wk gain
+      final result = weekly.clamp(lo, hi);
+
+      // Debug logging
+      print('📊 Weekly Rate Debug:');
+      print('  Points: ${points.length}, Span: ${spanDays} days');
+      print(
+        '  Measured(OLS): ${measuredOls.toStringAsFixed(2)} ${useMetric ? 'kg' : 'lbs'}/week',
+      );
+      print(
+        '  Measured(SinceStart): ${measuredSinceStart.toStringAsFixed(2)} ${useMetric ? 'kg' : 'lbs'}/week',
+      );
+      print(
+        '  Expected: ${expected.toStringAsFixed(2)} ${useMetric ? 'kg' : 'lbs'}/week',
+      );
+      print(
+        '  Weekly before clamp: ${weekly.toStringAsFixed(2)} ${useMetric ? 'kg' : 'lbs'}/week',
+      );
+      print('  Clamp range: $lo to $hi');
+      print(
+        '  Final: ${result.toStringAsFixed(2)} ${useMetric ? 'kg' : 'lbs'}/week',
+      );
+
+      return result;
+    } catch (e) {
+      print('❌ Error in weekly rate calculation: $e');
+      // Error calculating weekly rate
+      return _weeklyFromWeights(points, scale);
     }
-
-    // Clamp more permissively so fast changes are shown but bounded
-    final lo = useMetric ? -3.0 : -6.6;  // allow up to ~3 kg/wk | 6.6 lb/wk loss
-    final hi = useMetric ?  2.5 :  5.5;  // allow up to ~2.5 kg/wk | 5.5 lb/wk gain
-    final result = weekly.clamp(lo, hi);
-
-    // Debug logging
-    print('📊 Weekly Rate Debug:');
-    print('  Points: ${points.length}, Span: ${spanDays} days');
-    print('  Measured(OLS): ${measuredOls.toStringAsFixed(2)} ${useMetric ? 'kg' : 'lbs'}/week');
-    print('  Measured(SinceStart): ${measuredSinceStart.toStringAsFixed(2)} ${useMetric ? 'kg' : 'lbs'}/week');
-    print('  Expected: ${expected.toStringAsFixed(2)} ${useMetric ? 'kg' : 'lbs'}/week');
-    print('  Weekly before clamp: ${weekly.toStringAsFixed(2)} ${useMetric ? 'kg' : 'lbs'}/week');
-    print('  Clamp range: $lo to $hi');
-    print('  Final: ${result.toStringAsFixed(2)} ${useMetric ? 'kg' : 'lbs'}/week');
-
-    return result;
-  } catch (e) {
-    print('❌ Error in weekly rate calculation: $e');
-    // Error calculating weekly rate
-    return _weeklyFromWeights(points, scale);
   }
-}
 
   @override
   Widget build(BuildContext context) {
     final useMetric = context.watch<PreferencesProvider?>()?.useMetric ?? true;
-    final unit = useMetric? 'kg' : 'lbs';
-    final scale = useMetric? 1.0 : 2.20462;
+    final unit = useMetric ? 'kg' : 'lbs';
+    final scale = useMetric ? 1.0 : 2.20462;
     final theme = Theme.of(context);
     final bg = _elevatedBackground(context);
 
-    if(_loading){
+    if (_loading) {
       return Scaffold(
         backgroundColor: bg,
-        appBar: AppBar(title: Text(AppLocalizations.of(context)!.weightAnalytics), backgroundColor: Colors.transparent, elevation: 0),
-        body: const Center(child:CircularProgressIndicator())
+        appBar: AppBar(
+          title: Text(AppLocalizations.of(context)!.weightAnalytics),
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+        ),
+        body: const Center(child: CircularProgressIndicator()),
       );
     }
 
@@ -350,7 +447,7 @@ Future<double> _calculateWeeklyRate(List<_Point> points, bool useMetric, double 
 
         // Distances in scaled units
         final currentScaled = _current * scale;
-        final targetScaled  = _target  * scale;
+        final targetScaled = _target * scale;
 
         // Signed distance: positive if target above current (need to gain),
         // negative if target below current (need to lose).
@@ -365,7 +462,8 @@ Future<double> _calculateWeeklyRate(List<_Point> points, bool useMetric, double 
         double signedWeekly = weekly; // signed units/week (loss < 0, gain > 0)
 
         // Only apply healthy fallback if we have sufficient data
-        if (hasSufficientData && signedWeekly.abs() < (useMetric ? 0.05 : 0.1)) {
+        if (hasSufficientData &&
+            signedWeekly.abs() < (useMetric ? 0.05 : 0.1)) {
           signedWeekly = _healthyWeeklyFallback(useMetric, distanceToGoal);
         }
 
@@ -376,14 +474,21 @@ Future<double> _calculateWeeklyRate(List<_Point> points, bool useMetric, double 
         String? statusText; // overrides ETA text when set
         final atGoal = remainingScaled <= (useMetric ? 0.05 : 0.1);
         final goalLower = _goal.toLowerCase();
-        final nonWeightGoal = goalLower.contains('build') || goalLower.contains('maintain') || goalLower.contains('eat');
+        final nonWeightGoal =
+            goalLower.contains('build') ||
+            goalLower.contains('maintain') ||
+            goalLower.contains('eat');
         String etaReason = '';
         if (nonWeightGoal) {
-          final tolerance = useMetric ? 0.5 : 1.0; // within this of target = on track
+          final tolerance =
+              useMetric ? 0.5 : 1.0; // within this of target = on track
           if (remainingScaled <= tolerance) {
-            if (goalLower.contains('build')) statusText = AppLocalizations.of(context)!.buildingMuscle;
-            else if (goalLower.contains('maintain')) statusText = AppLocalizations.of(context)!.weightMaintained;
-            else statusText = AppLocalizations.of(context)!.eatingHealthier;
+            if (goalLower.contains('build'))
+              statusText = AppLocalizations.of(context)!.buildingMuscle;
+            else if (goalLower.contains('maintain'))
+              statusText = AppLocalizations.of(context)!.weightMaintained;
+            else
+              statusText = AppLocalizations.of(context)!.eatingHealthier;
             weeksToGoal = null; // show status only
             etaReason = 'within_tolerance_status';
           } else {
@@ -403,57 +508,66 @@ Future<double> _calculateWeeklyRate(List<_Point> points, bool useMetric, double 
             weeksToGoal = 0;
             etaReason = 'at_goal';
           } else if (!hasSufficientData) {
-            weeksToGoal = null; etaReason = 'insufficient_data';
+            weeksToGoal = null;
+            etaReason = 'insufficient_data';
           } else if (signedWeekly == 0) {
-            weeksToGoal = null; etaReason = 'zero_weekly';
+            weeksToGoal = null;
+            etaReason = 'zero_weekly';
           } else if (distanceToGoal * signedWeekly > 0) {
-            weeksToGoal = remainingScaled / signedWeekly.abs(); etaReason = 'toward_goal';
+            weeksToGoal = remainingScaled / signedWeekly.abs();
+            etaReason = 'toward_goal';
           } else {
-            weeksToGoal = null; etaReason = 'moving_away';
+            weeksToGoal = null;
+            etaReason = 'moving_away';
           }
         }
 
-        final timeText = statusText ?? (weeksToGoal == null
-            ? '—'
-            : (weeksToGoal <= 0.05 ? AppLocalizations.of(context)!.reached : _formatWeeks(weeksToGoal)));
+        final timeText =
+            statusText ??
+            (weeksToGoal == null
+                ? '—'
+                : (weeksToGoal <= 0.05
+                    ? AppLocalizations.of(context)!.reached
+                    : _formatWeeks(weeksToGoal)));
 
         // Debug log for ETA/status path
         print('⏱️ ETA Debug:');
         print('  Goal: ${_goal}');
         print('  Remaining: ${remainingScaled.toStringAsFixed(2)} ${unit}');
-        print('  Weekly(signed): ${signedWeekly.toStringAsFixed(2)} ${unit}/wk');
+        print(
+          '  Weekly(signed): ${signedWeekly.toStringAsFixed(2)} ${unit}/wk',
+        );
         print('  HasSufficientData: $hasSufficientData');
         print('  StatusText: ${statusText ?? 'null'}');
         print('  WeeksToGoal: ${weeksToGoal?.toStringAsFixed(2) ?? 'null'}');
         print('  Reason: $etaReason');
-
-
 
         // Build series from logged weights (solid) and projection (dashed)
         final List<DateTime> xDates = [];
         final List<FlSpot> actualSpots = [];
         final List<FlSpot> projSpots = [];
         final filtered = _filtered();
-        if(filtered.isNotEmpty){
+        if (filtered.isNotEmpty) {
           final startDate = filtered.first.time;
-          for(final p in filtered){
+          for (final p in filtered) {
             final x = p.time.difference(startDate).inDays.toDouble();
-            final y = p.value*scale;
+            final y = p.value * scale;
             actualSpots.add(FlSpot(x, y));
             xDates.add(p.time);
           }
         }
 
         // Projection line (dashed) based on current trend
-        if(actualSpots.isNotEmpty && weeksToGoal != null && weeksToGoal! > 0){
+        if (actualSpots.isNotEmpty && weeksToGoal != null && weeksToGoal! > 0) {
           final last = actualSpots.last;
           final startX = last.x;
           final startY = last.y;
           final perDay = weekly / 7; // Convert weekly rate to daily rate
-          int horizonDays = weeksToGoal!=null && weeksToGoal!>0
-            ? (weeksToGoal!*7).ceil()
-            : 30; // fallback to 30 days
-          for(int i=1; i<=horizonDays; i++){
+          int horizonDays =
+              weeksToGoal != null && weeksToGoal! > 0
+                  ? (weeksToGoal! * 7).ceil()
+                  : 30; // fallback to 30 days
+          for (int i = 1; i <= horizonDays; i++) {
             final x = startX + i;
             final y = startY + (perDay * i);
             projSpots.add(FlSpot(x, y));
@@ -463,7 +577,8 @@ Future<double> _calculateWeeklyRate(List<_Point> points, bool useMetric, double 
         // Total change since start of current goal period
         final totalChangeScaled = ((_current - _starting) * scale);
         final totalChangeAbsStr = totalChangeScaled.abs().toStringAsFixed(1);
-        final signedChangeStr = '${totalChangeScaled>=0? '+':'-'}$totalChangeAbsStr $unit';
+        final signedChangeStr =
+            '${totalChangeScaled >= 0 ? '+' : '-'}$totalChangeAbsStr $unit';
 
         return Scaffold(
           backgroundColor: bg,
@@ -494,22 +609,30 @@ Future<double> _calculateWeeklyRate(List<_Point> points, bool useMetric, double 
                         ),
                         // Previous Plans Button
                         FutureBuilder<DocumentSnapshot>(
-                          future: FirebaseFirestore.instance
-                              .collection('users')
-                              .doc(FirebaseAuth.instance.currentUser?.uid)
-                              .get(),
+                          future:
+                              FirebaseFirestore.instance
+                                  .collection('users')
+                                  .doc(FirebaseAuth.instance.currentUser?.uid)
+                                  .get(),
                           builder: (context, snapshot) {
                             if (snapshot.hasData) {
-                              final data = snapshot.data?.data() as Map<String, dynamic>?;
-                              final previousPlans = List<Map<String, dynamic>>.from(data?['previousPlans'] ?? []);
-                              
+                              final data =
+                                  snapshot.data?.data()
+                                      as Map<String, dynamic>?;
+                              final previousPlans =
+                                  List<Map<String, dynamic>>.from(
+                                    data?['previousPlans'] ?? [],
+                                  );
+
                               // Debug logging
                               print('🔍 Previous Plans Debug:');
-                              print('  Previous plans count: ${previousPlans.length}');
+                              print(
+                                '  Previous plans count: ${previousPlans.length}',
+                              );
                               if (previousPlans.isNotEmpty) {
                                 print('  First plan: ${previousPlans.first}');
                               }
-                              
+
                               if (previousPlans.isNotEmpty) {
                                 return IconButton(
                                   icon: const Icon(Icons.history),
@@ -517,11 +640,16 @@ Future<double> _calculateWeeklyRate(List<_Point> points, bool useMetric, double 
                                     Navigator.push(
                                       context,
                                       MaterialPageRoute(
-                                        builder: (context) => const PreviousPlansPage(),
+                                        builder:
+                                            (context) =>
+                                                const PreviousPlansPage(),
                                       ),
                                     );
                                   },
-                                  tooltip: AppLocalizations.of(context)!.viewPreviousPlans,
+                                  tooltip:
+                                      AppLocalizations.of(
+                                        context,
+                                      )!.viewPreviousPlans,
                                 );
                               }
                             }
@@ -533,61 +661,111 @@ Future<double> _calculateWeeklyRate(List<_Point> points, bool useMetric, double 
                     const SizedBox(height: 18),
 
                     // Key stats (no graph)
-                    Row(children:[
-                      Expanded(child: _InfoCard(
-                        title: AppLocalizations.of(context)!.toGoal,
-                        value: '${remainingScaled.abs().toStringAsFixed(1)} $unit',
-                        subtitle: atGoal? AppLocalizations.of(context)!.goalReached : AppLocalizations.of(context)!.remaining,
-                        highlight: true,
-                      )),
-                      const SizedBox(width: 12),
-                      Expanded(child: _InfoCard(
-                        title: AppLocalizations.of(context)!.weeklyRate,
-                        value: hasSufficientData ? '${signedWeekly.abs().toStringAsFixed(1)} $unit' : '—',
-                        subtitle: hasNoData ? AppLocalizations.of(context)!.noDataYet : 
-                                 hasSomeData ? AppLocalizations.of(context)!.needMoreData : 
-                                 (signedWeekly <= 0 ? AppLocalizations.of(context)!.weeklyLoss : AppLocalizations.of(context)!.weeklyGain),
-                      )),
-                    ]),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _InfoCard(
+                            title: AppLocalizations.of(context)!.toGoal,
+                            value:
+                                '${remainingScaled.abs().toStringAsFixed(1)} $unit',
+                            subtitle:
+                                atGoal
+                                    ? AppLocalizations.of(context)!.goalReached
+                                    : AppLocalizations.of(context)!.remaining,
+                            highlight: true,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: _InfoCard(
+                            title: AppLocalizations.of(context)!.weeklyRate,
+                            value:
+                                hasSufficientData
+                                    ? '${signedWeekly.abs().toStringAsFixed(1)} $unit'
+                                    : '—',
+                            subtitle:
+                                hasNoData
+                                    ? AppLocalizations.of(context)!.noDataYet
+                                    : hasSomeData
+                                    ? AppLocalizations.of(context)!.needMoreData
+                                    : (signedWeekly <= 0
+                                        ? AppLocalizations.of(
+                                          context,
+                                        )!.weeklyLoss
+                                        : AppLocalizations.of(
+                                          context,
+                                        )!.weeklyGain),
+                          ),
+                        ),
+                      ],
+                    ),
                     const SizedBox(height: 12),
-                    Row(children:[
-                      Expanded(child: _InfoCard(
-                        title: AppLocalizations.of(context)!.starting,
-                        value: '${(_starting*scale).toStringAsFixed(1)} $unit',
-                        subtitle: AppLocalizations.of(context)!.startingWeight,
-                      )),
-                      const SizedBox(width: 12),
-                      Expanded(child: _InfoCard(
-                        title: AppLocalizations.of(context)!.current,
-                        value: '${(_current*scale).toStringAsFixed(1)} $unit',
-                        subtitle: AppLocalizations.of(context)!.today,
-                      )),
-                    ]),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _InfoCard(
+                            title: AppLocalizations.of(context)!.starting,
+                            value:
+                                '${(_starting * scale).toStringAsFixed(1)} $unit',
+                            subtitle:
+                                AppLocalizations.of(context)!.startingWeight,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: _InfoCard(
+                            title: AppLocalizations.of(context)!.current,
+                            value:
+                                '${(_current * scale).toStringAsFixed(1)} $unit',
+                            subtitle: AppLocalizations.of(context)!.today,
+                          ),
+                        ),
+                      ],
+                    ),
                     const SizedBox(height: 12),
-                    Row(children:[
-                      Expanded(child: _InfoCard(
-                        title: AppLocalizations.of(context)!.targetLabel,
-                        value: '${(_target*scale).toStringAsFixed(1)} $unit',
-                        subtitle: AppLocalizations.of(context)!.goalWeight,
-                      )),
-                      const SizedBox(width: 12),
-                      Expanded(child: _InfoCard(
-                        title: AppLocalizations.of(context)!.eta,
-                        value: statusText != null
-                                ? '—'
-                                : (weeksToGoal==null? '—' : (weeksToGoal<=0.05? 'Reached' : _formatWeeks(weeksToGoal))),
-                        subtitle: statusText != null
-                                  ? AppLocalizations.of(context)!.onTrack
-                                  : hasNoData ? AppLocalizations.of(context)!.noDataYet : 
-                                    hasSomeData ? AppLocalizations.of(context)!.needMoreData : 
-                                    (weeksToGoal==null? AppLocalizations.of(context)!.insufficientData : _etaDateText(weeksToGoal)),
-                      )),
-                    ]),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _InfoCard(
+                            title: AppLocalizations.of(context)!.targetLabel,
+                            value:
+                                '${(_target * scale).toStringAsFixed(1)} $unit',
+                            subtitle: AppLocalizations.of(context)!.goalWeight,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: _InfoCard(
+                            title: AppLocalizations.of(context)!.eta,
+                            value:
+                                statusText != null
+                                    ? '—'
+                                    : (weeksToGoal == null
+                                        ? '—'
+                                        : (weeksToGoal <= 0.05
+                                            ? 'Reached'
+                                            : _formatWeeks(weeksToGoal))),
+                            subtitle:
+                                statusText != null
+                                    ? AppLocalizations.of(context)!.onTrack
+                                    : hasNoData
+                                    ? AppLocalizations.of(context)!.noDataYet
+                                    : hasSomeData
+                                    ? AppLocalizations.of(context)!.needMoreData
+                                    : (weeksToGoal == null
+                                        ? AppLocalizations.of(
+                                          context,
+                                        )!.insufficientData
+                                        : _etaDateText(weeksToGoal)),
+                          ),
+                        ),
+                      ],
+                    ),
                     const SizedBox(height: 18),
 
                     // Expectation text - goal-aware & conditional based on data availability
-                    hasNoData 
-                      ? Container(
+                    hasNoData
+                        ? Container(
                           padding: const EdgeInsets.all(16),
                           decoration: BoxDecoration(
                             color: const Color(0xFFF7FAFF),
@@ -596,40 +774,55 @@ Future<double> _calculateWeeklyRate(List<_Point> points, bool useMetric, double 
                           ),
                           child: Text(
                             AppLocalizations.of(context)!.startLoggingWeight,
-                            style: theme.textTheme.bodyMedium?.copyWith(height: 1.35),
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              height: 1.35,
+                            ),
                           ),
                         )
-                      : hasSomeData
+                        : hasSomeData
                         ? Container(
-                            padding: const EdgeInsets.all(16),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFFF7FAFF),
-                              borderRadius: BorderRadius.circular(16),
-                              border: Border.all(color: const Color(0xFFE5EEF9)),
-                            ),
-                            child: Text(
-                              AppLocalizations.of(context)!.logMoreWeights,
-                              style: theme.textTheme.bodyMedium?.copyWith(height: 1.35),
-                            ),
-                          )
-                        : _ExpectationBlockGoalAware(
-                            weekly: signedWeekly,
-                            unit: unit,
-                            etaText: statusText != null ? statusText! : (weeksToGoal==null? '—' : _etaDateText(weeksToGoal)),
-                            remaining: remainingScaled,
-                            goal: _goal,
-                            onTrackStatus: statusText,
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFF7FAFF),
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(color: const Color(0xFFE5EEF9)),
                           ),
+                          child: Text(
+                            AppLocalizations.of(context)!.logMoreWeights,
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              height: 1.35,
+                            ),
+                          ),
+                        )
+                        : _ExpectationBlockGoalAware(
+                          weekly: signedWeekly,
+                          unit: unit,
+                          etaText:
+                              statusText != null
+                                  ? statusText!
+                                  : (weeksToGoal == null
+                                      ? '—'
+                                      : _etaDateText(weeksToGoal)),
+                          remaining: remainingScaled,
+                          goal: _goal,
+                          onTrackStatus: statusText,
+                        ),
                     const SizedBox(height: 12),
                     // Only show expectations disclaimer if we have sufficient data
-                    hasSufficientData 
-                      ? Text(AppLocalizations.of(context)!.expectationsDisclaimer, style: theme.textTheme.bodySmall?.copyWith(color: Colors.grey[600]))
-                      : const SizedBox.shrink(),
+                    hasSufficientData
+                        ? Text(
+                          AppLocalizations.of(context)!.expectationsDisclaimer,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: Colors.grey[600],
+                          ),
+                        )
+                        : const SizedBox.shrink(),
 
                     const SizedBox(height: 18),
                     _BigDeltaCard(
                       isLoss: totalChangeScaled <= 0,
-                      valueText: '${totalChangeScaled.abs().toStringAsFixed(1)} $unit',
+                      valueText:
+                          '${totalChangeScaled.abs().toStringAsFixed(1)} $unit',
                     ),
                     const SizedBox(height: 12),
                     // References for medical guidance
@@ -639,18 +832,38 @@ Future<double> _calculateWeeklyRate(List<_Point> points, bool useMetric, double 
                         spacing: 8,
                         runSpacing: 4,
                         children: [
-                          Text(AppLocalizations.of(context)!.references, style: theme.textTheme.bodySmall?.copyWith(color: Colors.grey[700], fontWeight: FontWeight.w600)),
-                          TextButton(
-                            onPressed: () {
-                              launchUrl(Uri.parse('https://www.cdc.gov/healthyweight/assessing/bmi/index.html'), mode: LaunchMode.externalApplication);
-                            },
-                            child: Text(AppLocalizations.of(context)!.cdcAboutBmi),
+                          Text(
+                            AppLocalizations.of(context)!.references,
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: Colors.grey[700],
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
                           TextButton(
                             onPressed: () {
-                              launchUrl(Uri.parse('https://www.dietaryguidelines.gov/'), mode: LaunchMode.externalApplication);
+                              launchUrl(
+                                Uri.parse(
+                                  'https://www.cdc.gov/healthyweight/assessing/bmi/index.html',
+                                ),
+                                mode: LaunchMode.externalApplication,
+                              );
                             },
-                            child: Text(AppLocalizations.of(context)!.usdaDietaryGuidelines),
+                            child: Text(
+                              AppLocalizations.of(context)!.cdcAboutBmi,
+                            ),
+                          ),
+                          TextButton(
+                            onPressed: () {
+                              launchUrl(
+                                Uri.parse('https://www.dietaryguidelines.gov/'),
+                                mode: LaunchMode.externalApplication,
+                              );
+                            },
+                            child: Text(
+                              AppLocalizations.of(
+                                context,
+                              )!.usdaDietaryGuidelines,
+                            ),
                           ),
                         ],
                       ),
@@ -672,56 +885,89 @@ Future<double> _calculateWeeklyRate(List<_Point> points, bool useMetric, double 
   }
 
   // Delta helpers for header summary like screenshot
-  String _rangePastLabel(){
-    switch(_range){
-      case _Range.w1: return 'past week';
-      case _Range.m1: return 'past month';
-      case _Range.m3: return 'past 3 months';
-      case _Range.m6: return 'past 6 months';
-      case _Range.y1: return 'past year';
-      case _Range.all: return 'all time';
-      case _Range.plan: return 'projection';
+  String _rangePastLabel() {
+    switch (_range) {
+      case _Range.w1:
+        return 'past week';
+      case _Range.m1:
+        return 'past month';
+      case _Range.m3:
+        return 'past 3 months';
+      case _Range.m6:
+        return 'past 6 months';
+      case _Range.y1:
+        return 'past year';
+      case _Range.all:
+        return 'all time';
+      case _Range.plan:
+        return 'projection';
     }
   }
-  bool _deltaIsDown(List<_Point> data){
-    if(data.length<2) return false;
+
+  bool _deltaIsDown(List<_Point> data) {
+    if (data.length < 2) return false;
     return data.last.value <= data.first.value;
   }
-  String _deltaText(List<_Point> data, double scale, String unit){
-    if(data.length<2) return '0 $unit';
-    final change = (data.last.value - data.first.value)*scale;
-    final sign = change<0? '↓' : '↑';
+
+  String _deltaText(List<_Point> data, double scale, String unit) {
+    if (data.length < 2) return '0 $unit';
+    final change = (data.last.value - data.first.value) * scale;
+    final sign = change < 0 ? '↓' : '↑';
     return '$sign ${change.abs().toStringAsFixed(1)} $unit';
   }
 
-  String _labelSince(List<_Point> d){
-    if(d.isEmpty) return 'start';
+  String _labelSince(List<_Point> d) {
+    if (d.isEmpty) return 'start';
     final dt = d.first.time;
     return '${_month(dt.month)} ${dt.day}';
   }
-  String _month(int m){
-    const names=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-    return names[(m-1).clamp(0,11)];
+
+  String _month(int m) {
+    const names = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
+    ];
+    return names[(m - 1).clamp(0, 11)];
   }
-  String _formatWeeks(double w){
-    if(w>8) return '${(w/4).toStringAsFixed(0)} months';
+
+  String _formatWeeks(double w) {
+    if (w > 8) return '${(w / 4).toStringAsFixed(0)} months';
     return '${w.toStringAsFixed(1)} weeks';
   }
-  String _etaDateText(double? weeks){
-    if(weeks==null) return '—';
-    final days = (weeks*7).round();
+
+  String _etaDateText(double? weeks) {
+    if (weeks == null) return '—';
+    final days = (weeks * 7).round();
     final eta = DateTime.now().add(Duration(days: days));
     return '${_month(eta.month)} ${eta.day}';
   }
-  String _projectionLabel(){
-    switch(_range){
-      case _Range.w1: return '1 week';
-      case _Range.m1: return '1 month';
-      case _Range.m3: return '3 months';
-      case _Range.m6: return '6 months';
-      case _Range.y1: return '1 year';
-      case _Range.all: return 'All time';
-      case _Range.plan: return 'Plan to goal';
+
+  String _projectionLabel() {
+    switch (_range) {
+      case _Range.w1:
+        return '1 week';
+      case _Range.m1:
+        return '1 month';
+      case _Range.m3:
+        return '3 months';
+      case _Range.m6:
+        return '6 months';
+      case _Range.y1:
+        return '1 year';
+      case _Range.all:
+        return 'All time';
+      case _Range.plan:
+        return 'Plan to goal';
     }
   }
 }
@@ -735,7 +981,7 @@ class _TimeToGoalCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
-    
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
@@ -777,10 +1023,17 @@ class _TimeToGoalCard extends StatelessWidget {
   }
 }
 
-class _DeltaSummary extends StatelessWidget{
-  final String deltaText; final bool directionDown; final String rangeLabel;
-  const _DeltaSummary({required this.deltaText,required this.directionDown, required this.rangeLabel});
-  @override Widget build(BuildContext context){
+class _DeltaSummary extends StatelessWidget {
+  final String deltaText;
+  final bool directionDown;
+  final String rangeLabel;
+  const _DeltaSummary({
+    required this.deltaText,
+    required this.directionDown,
+    required this.rangeLabel,
+  });
+  @override
+  Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -788,50 +1041,128 @@ class _DeltaSummary extends StatelessWidget{
         color: const Color(0xFFF7FAFF),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: const Color(0xFFE5EEF9)),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 16, offset: const Offset(0,8))],
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 16,
+            offset: const Offset(0, 8),
+          ),
+        ],
       ),
-      child: Column(crossAxisAlignment: CrossAxisAlignment.end, children:[
-        Icon(directionDown? Icons.south : Icons.north, size: 18, color: directionDown? const Color(0xFF0DA14B): const Color(0xFF1565C0)),
-        const SizedBox(height: 4),
-        Text(deltaText, style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800, letterSpacing: -0.2)),
-        const SizedBox(height: 2),
-        Text(rangeLabel, style: theme.textTheme.bodySmall?.copyWith(color: Colors.grey[600])),
-      ]),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          Icon(
+            directionDown ? Icons.south : Icons.north,
+            size: 18,
+            color:
+                directionDown
+                    ? const Color(0xFF0DA14B)
+                    : const Color(0xFF1565C0),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            deltaText,
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.w800,
+              letterSpacing: -0.2,
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            rangeLabel,
+            style: theme.textTheme.bodySmall?.copyWith(color: Colors.grey[600]),
+          ),
+        ],
+      ),
     );
   }
 }
 
-class _InfoCard extends StatelessWidget{
-  final String title; final String value; final String subtitle; final bool highlight;
-  const _InfoCard({required this.title, required this.value, required this.subtitle, this.highlight=false});
-  @override Widget build(BuildContext context){
+class _InfoCard extends StatelessWidget {
+  final String title;
+  final String value;
+  final String subtitle;
+  final bool highlight;
+  const _InfoCard({
+    required this.title,
+    required this.value,
+    required this.subtitle,
+    this.highlight = false,
+  });
+  @override
+  Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final isDark = theme.brightness==Brightness.dark;
+    final isDark = theme.brightness == Brightness.dark;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       decoration: BoxDecoration(
-        color: highlight ? const Color(0xFFEFFAF1) : (isDark? const Color(0xFF151A22) : Colors.white),
+        color:
+            highlight
+                ? const Color(0xFFEFFAF1)
+                : (isDark ? const Color(0xFF151A22) : Colors.white),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: highlight? const Color(0xFFBEE3C2) : (isDark? Colors.white.withOpacity(0.06): Colors.black.withOpacity(0.06))),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(isDark?0.25:0.06), blurRadius: 18, offset: const Offset(0,10))],
+        border: Border.all(
+          color:
+              highlight
+                  ? const Color(0xFFBEE3C2)
+                  : (isDark
+                      ? Colors.white.withOpacity(0.06)
+                      : Colors.black.withOpacity(0.06)),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(isDark ? 0.25 : 0.06),
+            blurRadius: 18,
+            offset: const Offset(0, 10),
+          ),
+        ],
       ),
-      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children:[
-        Text(title, style: theme.textTheme.labelSmall?.copyWith(color: Colors.grey[700], letterSpacing: 0.2)),
-        const SizedBox(height: 6),
-        Text(value, style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800, letterSpacing: -0.2, color: highlight? const Color(0xFF2E7D32): null)),
-        const SizedBox(height: 4),
-        Text(subtitle, style: theme.textTheme.bodySmall?.copyWith(color: Colors.grey[600])),
-      ]),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: theme.textTheme.labelSmall?.copyWith(
+              color: Colors.grey[700],
+              letterSpacing: 0.2,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            value,
+            style: theme.textTheme.titleLarge?.copyWith(
+              fontWeight: FontWeight.w800,
+              letterSpacing: -0.2,
+              color: highlight ? const Color(0xFF2E7D32) : null,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            subtitle,
+            style: theme.textTheme.bodySmall?.copyWith(color: Colors.grey[600]),
+          ),
+        ],
+      ),
     );
   }
 }
 
-class _ExpectationBlock extends StatelessWidget{
-  final double weekly; final String unit; final String etaText; final double remaining;
-  const _ExpectationBlock({required this.weekly, required this.unit, required this.etaText, required this.remaining});
-  @override Widget build(BuildContext context){
+class _ExpectationBlock extends StatelessWidget {
+  final double weekly;
+  final String unit;
+  final String etaText;
+  final double remaining;
+  const _ExpectationBlock({
+    required this.weekly,
+    required this.unit,
+    required this.etaText,
+    required this.remaining,
+  });
+  @override
+  Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    
+
     // Handle case when weekly rate is 0 (no trend)
     if (weekly == 0.0) {
       return Container(
@@ -847,35 +1178,61 @@ class _ExpectationBlock extends StatelessWidget{
         ),
       );
     }
-    
+
     final losing = weekly < 0;
-    final dir = losing ? AppLocalizations.of(context)!.loseVerb : AppLocalizations.of(context)!.gainVerb;
+    final dir =
+        losing
+            ? AppLocalizations.of(context)!.loseVerb
+            : AppLocalizations.of(context)!.gainVerb;
     final rate = weekly.abs().toStringAsFixed(1);
     final remainingFormatted = remaining.toStringAsFixed(1);
-    
+
     // Create properly formatted expectation text using localization
     String expectationText;
     final l = AppLocalizations.of(context)!;
-    
+
     if (weekly < 0) {
       // Losing weight with actual trend data
       if (etaText == '—' || etaText == 'Reached') {
-        expectationText = l.expectationBlurb(l.loseVerb, '', rate, remainingFormatted, unit);
+        expectationText = l.expectationBlurb(
+          l.loseVerb,
+          '',
+          rate,
+          remainingFormatted,
+          unit,
+        );
       } else {
-        expectationText = l.expectationBlurb(l.loseVerb, etaText, rate, remainingFormatted, unit);
+        expectationText = l.expectationBlurb(
+          l.loseVerb,
+          etaText,
+          rate,
+          remainingFormatted,
+          unit,
+        );
       }
     } else if (weekly > 0) {
       // Gaining weight
-      expectationText = l.expectationBlurb(l.gainVerb, etaText, rate, remainingFormatted, unit);
+      expectationText = l.expectationBlurb(
+        l.gainVerb,
+        etaText,
+        rate,
+        remainingFormatted,
+        unit,
+      );
     } else {
       // No trend data available, provide estimate
       if (etaText == '—' || etaText == 'Reached') {
         expectationText = l.weightTrendNoData(remainingFormatted, unit);
       } else {
-        expectationText = l.weightTrendHealthyRate(rate, etaText, remainingFormatted, unit);
+        expectationText = l.weightTrendHealthyRate(
+          rate,
+          etaText,
+          remainingFormatted,
+          unit,
+        );
       }
     }
-    
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -891,10 +1248,23 @@ class _ExpectationBlock extends StatelessWidget{
   }
 }
 
-class _ExpectationBlockGoalAware extends StatelessWidget{
-  final double weekly; final String unit; final String etaText; final double remaining; final String goal; final String? onTrackStatus;
-  const _ExpectationBlockGoalAware({required this.weekly, required this.unit, required this.etaText, required this.remaining, required this.goal, this.onTrackStatus});
-  @override Widget build(BuildContext context){
+class _ExpectationBlockGoalAware extends StatelessWidget {
+  final double weekly;
+  final String unit;
+  final String etaText;
+  final double remaining;
+  final String goal;
+  final String? onTrackStatus;
+  const _ExpectationBlockGoalAware({
+    required this.weekly,
+    required this.unit,
+    required this.etaText,
+    required this.remaining,
+    required this.goal,
+    this.onTrackStatus,
+  });
+  @override
+  Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final goalLower = goal.toLowerCase();
 
@@ -907,39 +1277,58 @@ class _ExpectationBlockGoalAware extends StatelessWidget{
           borderRadius: BorderRadius.circular(12),
           border: Border.all(color: const Color(0xFFBEE3C2)),
         ),
-        child: Row(children:[
-          const Icon(Icons.check_circle, size: 18, color: Color(0xFF2E7D32)),
-          const SizedBox(width: 8),
-          Text(onTrackStatus!, style: theme.textTheme.bodyMedium?.copyWith(color: const Color(0xFF2E7D32), fontWeight: FontWeight.w600)),
-        ]),
+        child: Row(
+          children: [
+            const Icon(Icons.check_circle, size: 18, color: Color(0xFF2E7D32)),
+            const SizedBox(width: 8),
+            Text(
+              onTrackStatus!,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: const Color(0xFF2E7D32),
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
       );
     }
 
     // Drifted: provide guidance per goal
     if (goalLower.contains('maintain')) {
-      final txt = etaText == '—' || etaText == AppLocalizations.of(context)!.weightMaintained
-        ? AppLocalizations.of(context)!.maintenanceRangeDrifted
-        : AppLocalizations.of(context)!.trendingBackMaintenance(etaText);
+      final txt =
+          etaText == '—' ||
+                  etaText == AppLocalizations.of(context)!.weightMaintained
+              ? AppLocalizations.of(context)!.maintenanceRangeDrifted
+              : AppLocalizations.of(context)!.trendingBackMaintenance(etaText);
       return _messageContainer(theme, txt);
     }
     if (goalLower.contains('eat')) {
-      final txt = etaText == '—' || etaText == AppLocalizations.of(context)!.eatingHealthier
-        ? AppLocalizations.of(context)!.stayConsistentHealthy
-        : AppLocalizations.of(context)!.trendingBackOnTrack(etaText);
+      final txt =
+          etaText == '—' ||
+                  etaText == AppLocalizations.of(context)!.eatingHealthier
+              ? AppLocalizations.of(context)!.stayConsistentHealthy
+              : AppLocalizations.of(context)!.trendingBackOnTrack(etaText);
       return _messageContainer(theme, txt);
     }
     if (goalLower.contains('build')) {
-      final txt = etaText == '—' || etaText == AppLocalizations.of(context)!.buildingMuscle
-        ? AppLocalizations.of(context)!.strengthPhaseActive
-        : AppLocalizations.of(context)!.trendingTowardBuildGoal(etaText);
+      final txt =
+          etaText == '—' ||
+                  etaText == AppLocalizations.of(context)!.buildingMuscle
+              ? AppLocalizations.of(context)!.strengthPhaseActive
+              : AppLocalizations.of(context)!.trendingTowardBuildGoal(etaText);
       return _messageContainer(theme, txt);
     }
 
     // Default to weight goal expectation block
-    return _ExpectationBlock(weekly: weekly, unit: unit, etaText: etaText, remaining: remaining);
+    return _ExpectationBlock(
+      weekly: weekly,
+      unit: unit,
+      etaText: etaText,
+      remaining: remaining,
+    );
   }
 
-  Widget _messageContainer(ThemeData theme, String text){
+  Widget _messageContainer(ThemeData theme, String text) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -947,19 +1336,25 @@ class _ExpectationBlockGoalAware extends StatelessWidget{
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: const Color(0xFFE5EEF9)),
       ),
-      child: Text(text, style: theme.textTheme.bodyMedium?.copyWith(height: 1.35)),
+      child: Text(
+        text,
+        style: theme.textTheme.bodyMedium?.copyWith(height: 1.35),
+      ),
     );
   }
 }
 
-class _BigDeltaCard extends StatelessWidget{
-  final bool isLoss; final String valueText;
+class _BigDeltaCard extends StatelessWidget {
+  final bool isLoss;
+  final String valueText;
   const _BigDeltaCard({required this.isLoss, required this.valueText});
-  @override Widget build(BuildContext context){
+  @override
+  Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final bg = isLoss ? const Color(0xFFE3F2FD) : const Color(0xFFFDECEC);
     final border = isLoss ? const Color(0xFFBCDDF8) : const Color(0xFFF8C5C5);
-    final textColor = isLoss ? const Color(0xFF1565C0) : const Color(0xFFD32F2F);
+    final textColor =
+        isLoss ? const Color(0xFF1565C0) : const Color(0xFFD32F2F);
     final icon = isLoss ? Icons.south_east : Icons.north_east;
     return Container(
       width: double.infinity,
@@ -968,18 +1363,37 @@ class _BigDeltaCard extends StatelessWidget{
         color: bg,
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: border),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 20, offset: const Offset(0,10))],
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
+          ),
+        ],
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Row(children:[
-            Icon(icon, color: textColor, size: 28),
-            const SizedBox(width: 10),
-            Text(valueText, style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w800, color: textColor)),
-          ]),
-          Text(AppLocalizations.of(context)!.sinceGoalStart, style: theme.textTheme.bodyMedium?.copyWith(color: Colors.grey[700])),
+          Row(
+            children: [
+              Icon(icon, color: textColor, size: 28),
+              const SizedBox(width: 10),
+              Text(
+                valueText,
+                style: theme.textTheme.headlineSmall?.copyWith(
+                  fontWeight: FontWeight.w800,
+                  color: textColor,
+                ),
+              ),
+            ],
+          ),
+          Text(
+            AppLocalizations.of(context)!.sinceGoalStart,
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: Colors.grey[700],
+            ),
+          ),
         ],
       ),
     );
@@ -1032,11 +1446,12 @@ class _ModernStatCard extends StatelessWidget {
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               gradient: LinearGradient(
-                colors: isGoal 
-                  ? [const Color(0xFF34C759), const Color(0xFF7AE08A)]
-                  : isPositive 
-                    ? [const Color(0xFF64D2FF), const Color(0xFF4E8CFF)]
-                    : [const Color(0xFFFF6B6B), const Color(0xFFFF8E8E)],
+                colors:
+                    isGoal
+                        ? [const Color(0xFF34C759), const Color(0xFF7AE08A)]
+                        : isPositive
+                        ? [const Color(0xFF64D2FF), const Color(0xFF4E8CFF)]
+                        : [const Color(0xFFFF6B6B), const Color(0xFFFF8E8E)],
               ),
             ),
           ),
@@ -1045,11 +1460,13 @@ class _ModernStatCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title,
-                    style: theme.textTheme.labelSmall?.copyWith(
-                      letterSpacing: 0.4,
-                      color: theme.textTheme.bodyMedium?.color?.withOpacity(0.6),
-                    )),
+                Text(
+                  title,
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    letterSpacing: 0.4,
+                    color: theme.textTheme.bodyMedium?.color?.withOpacity(0.6),
+                  ),
+                ),
                 const SizedBox(height: 5),
                 Text(
                   value,
@@ -1064,28 +1481,31 @@ class _ModernStatCard extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
             decoration: BoxDecoration(
-              color: isGoal 
-                ? const Color(0xFF34C759).withOpacity(0.12)
-                : isPositive 
-                  ? const Color(0xFF34C759).withOpacity(0.12)
-                  : const Color(0xFFFF6B6B).withOpacity(0.12),
+              color:
+                  isGoal
+                      ? const Color(0xFF34C759).withOpacity(0.12)
+                      : isPositive
+                      ? const Color(0xFF34C759).withOpacity(0.12)
+                      : const Color(0xFFFF6B6B).withOpacity(0.12),
               borderRadius: BorderRadius.circular(999),
               border: Border.all(
-                color: isGoal 
-                  ? const Color(0xFF34C759).withOpacity(0.3)
-                  : isPositive 
-                    ? const Color(0xFF34C759).withOpacity(0.3)
-                    : const Color(0xFFFF6B6B).withOpacity(0.3),
+                color:
+                    isGoal
+                        ? const Color(0xFF34C759).withOpacity(0.3)
+                        : isPositive
+                        ? const Color(0xFF34C759).withOpacity(0.3)
+                        : const Color(0xFFFF6B6B).withOpacity(0.3),
               ),
             ),
             child: Text(
               delta,
               style: TextStyle(
-                color: isGoal 
-                  ? const Color(0xFF219653)
-                  : isPositive 
-                    ? const Color(0xFF219653)
-                    : const Color(0xFFE53E3E),
+                color:
+                    isGoal
+                        ? const Color(0xFF219653)
+                        : isPositive
+                        ? const Color(0xFF219653)
+                        : const Color(0xFFE53E3E),
                 fontWeight: FontWeight.w700,
                 fontSize: 12,
               ),
@@ -1121,7 +1541,10 @@ class _GlassChartCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
-    final border = isDark ? Colors.white.withOpacity(0.08) : Colors.black.withOpacity(0.06);
+    final border =
+        isDark
+            ? Colors.white.withOpacity(0.08)
+            : Colors.black.withOpacity(0.06);
 
     return ClipRRect(
       borderRadius: BorderRadius.circular(22),
@@ -1135,9 +1558,18 @@ class _GlassChartCard extends StatelessWidget {
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
                 stops: const [0.0, 0.5, 1.0],
-                colors: isDark
-                    ? [const Color(0xFF11151B), const Color(0xFF121824), const Color(0xFF0E121A)]
-                    : [const Color(0xFFEFF3FF), const Color(0xFFEAF0FF), const Color(0xFFE6ECFC)],
+                colors:
+                    isDark
+                        ? [
+                          const Color(0xFF11151B),
+                          const Color(0xFF121824),
+                          const Color(0xFF0E121A),
+                        ]
+                        : [
+                          const Color(0xFFEFF3FF),
+                          const Color(0xFFEAF0FF),
+                          const Color(0xFFE6ECFC),
+                        ],
               ),
             ),
           ),
@@ -1149,7 +1581,10 @@ class _GlassChartCard extends StatelessWidget {
           // Foreground with border + shadow
           Container(
             decoration: BoxDecoration(
-              color: isDark ? Colors.white.withOpacity(0.03) : Colors.white.withOpacity(0.5),
+              color:
+                  isDark
+                      ? Colors.white.withOpacity(0.03)
+                      : Colors.white.withOpacity(0.5),
               border: Border.all(color: border),
               borderRadius: BorderRadius.circular(22),
               boxShadow: [
@@ -1166,14 +1601,16 @@ class _GlassChartCard extends StatelessWidget {
               children: [
                 _RangeTabs(selected: range, onChange: onChange),
                 const SizedBox(height: 8),
-                Expanded(child: _WeightLineChart(
-                  actualSpots: actualSpots,
-                  projectedSpots: projectedSpots,
-                  dates: dates,
-                  unit: unit,
-                  range: range,
-                  target: target,
-                )),
+                Expanded(
+                  child: _WeightLineChart(
+                    actualSpots: actualSpots,
+                    projectedSpots: projectedSpots,
+                    dates: dates,
+                    unit: unit,
+                    range: range,
+                    target: target,
+                  ),
+                ),
               ],
             ),
           ),
@@ -1230,16 +1667,27 @@ class _RangeTab extends StatelessWidget {
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(999),
             border: Border.all(
-              color: isSelected ? Colors.transparent : const Color(0xFF64D2FF).withOpacity(0.5),
+              color:
+                  isSelected
+                      ? Colors.transparent
+                      : const Color(0xFF64D2FF).withOpacity(0.5),
               width: 1,
             ),
-            gradient: isSelected ? const LinearGradient(colors: [Color(0xFF64D2FF), Color(0xFF4E8CFF)]) : null,
+            gradient:
+                isSelected
+                    ? const LinearGradient(
+                      colors: [Color(0xFF64D2FF), Color(0xFF4E8CFF)],
+                    )
+                    : null,
           ),
           child: Text(
             label,
             textAlign: TextAlign.center,
             style: theme.textTheme.labelMedium?.copyWith(
-              color: isSelected ? Colors.white : theme.textTheme.bodyMedium?.color?.withOpacity(0.8),
+              color:
+                  isSelected
+                      ? Colors.white
+                      : theme.textTheme.bodyMedium?.color?.withOpacity(0.8),
               fontWeight: FontWeight.w600,
               letterSpacing: 0.2,
             ),
@@ -1271,15 +1719,30 @@ class _WeightLineChart extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final ys = [...actualSpots.map((s)=>s.y), ...projectedSpots.map((s)=>s.y)];
-    final minY = ys.isEmpty ? 0.0 : (ys.reduce((a, b) => a < b ? a : b) - 5).clamp(0.0, double.infinity);
-    final maxY = ys.isEmpty ? 1.0 : (ys.reduce((a, b) => a > b ? a : b) + 5).toDouble();
-    final bottomInterval = ((actualSpots.length + projectedSpots.length) / 5).clamp(1, 30).toDouble();
+    final ys = [
+      ...actualSpots.map((s) => s.y),
+      ...projectedSpots.map((s) => s.y),
+    ];
+    final minY =
+        ys.isEmpty
+            ? 0.0
+            : (ys.reduce((a, b) => a < b ? a : b) - 5).clamp(
+              0.0,
+              double.infinity,
+            );
+    final maxY =
+        ys.isEmpty ? 1.0 : (ys.reduce((a, b) => a > b ? a : b) + 5).toDouble();
+    final bottomInterval =
+        ((actualSpots.length + projectedSpots.length) / 5)
+            .clamp(1, 30)
+            .toDouble();
 
     return LineChart(
       LineChartData(
         minX: 0,
-        maxX: ((actualSpots.length + projectedSpots.length) - 1).toDouble().clamp(1, double.infinity),
+        maxX: ((actualSpots.length + projectedSpots.length) - 1)
+            .toDouble()
+            .clamp(1, double.infinity),
         minY: minY,
         maxY: maxY,
         backgroundColor: Colors.transparent,
@@ -1290,14 +1753,20 @@ class _WeightLineChart extends StatelessWidget {
           handleBuiltInTouches: true,
           touchSpotThreshold: 24,
           touchTooltipData: LineTouchTooltipData(
-            tooltipPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+            tooltipPadding: const EdgeInsets.symmetric(
+              horizontal: 10,
+              vertical: 8,
+            ),
             tooltipRoundedRadius: 12,
             fitInsideHorizontally: true,
             fitInsideVertically: true,
             getTooltipItems: (touchedSpots) {
               return touchedSpots.map((barSpot) {
                 final idx = barSpot.spotIndex;
-                final dt = (idx >= 0 && idx < dates.length) ? dates[idx] : DateTime.now();
+                final dt =
+                    (idx >= 0 && idx < dates.length)
+                        ? dates[idx]
+                        : DateTime.now();
                 return LineTooltipItem(
                   "${_formatDate(dt)}\n",
                   TextStyle(
@@ -1311,7 +1780,8 @@ class _WeightLineChart extends StatelessWidget {
                       style: TextStyle(
                         fontWeight: FontWeight.w600,
                         fontSize: 12.5,
-                        color: (isDark ? Colors.white : Colors.black).withOpacity(0.85),
+                        color: (isDark ? Colors.white : Colors.black)
+                            .withOpacity(0.85),
                       ),
                     ),
                   ],
@@ -1319,9 +1789,11 @@ class _WeightLineChart extends StatelessWidget {
               }).toList();
             },
             tooltipMargin: 10,
-            getTooltipColor: (_) => isDark
-                ? const Color(0xFF0F1420).withOpacity(0.9)
-                : Colors.white.withOpacity(0.96),
+            getTooltipColor:
+                (_) =>
+                    isDark
+                        ? const Color(0xFF0F1420).withOpacity(0.9)
+                        : Colors.white.withOpacity(0.96),
             showOnTopOfTheChartBoxArea: true,
           ),
         ),
@@ -1332,20 +1804,26 @@ class _WeightLineChart extends StatelessWidget {
           drawVerticalLine: true,
           horizontalInterval: 10,
           verticalInterval: bottomInterval,
-          getDrawingHorizontalLine: (value) => FlLine(
-            color: (isDark ? Colors.white : Colors.black).withOpacity(0.07),
-            strokeWidth: 1,
-          ),
-          getDrawingVerticalLine: (value) => FlLine(
-            color: (isDark ? Colors.white : Colors.black).withOpacity(0.06),
-            strokeWidth: 1,
-          ),
+          getDrawingHorizontalLine:
+              (value) => FlLine(
+                color: (isDark ? Colors.white : Colors.black).withOpacity(0.07),
+                strokeWidth: 1,
+              ),
+          getDrawingVerticalLine:
+              (value) => FlLine(
+                color: (isDark ? Colors.white : Colors.black).withOpacity(0.06),
+                strokeWidth: 1,
+              ),
         ),
 
         // Axes
         titlesData: FlTitlesData(
-          leftTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-          topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          leftTitles: const AxisTitles(
+            sideTitles: SideTitles(showTitles: false),
+          ),
+          topTitles: const AxisTitles(
+            sideTitles: SideTitles(showTitles: false),
+          ),
           rightTitles: AxisTitles(
             axisNameWidget: Padding(
               padding: const EdgeInsets.only(bottom: 0),
@@ -1353,7 +1831,9 @@ class _WeightLineChart extends StatelessWidget {
                 unit,
                 style: TextStyle(
                   fontSize: 12,
-                  color: (isDark ? Colors.white : Colors.black).withOpacity(0.55),
+                  color: (isDark ? Colors.white : Colors.black).withOpacity(
+                    0.55,
+                  ),
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -1362,17 +1842,19 @@ class _WeightLineChart extends StatelessWidget {
               showTitles: true,
               reservedSize: 42,
               interval: 10,
-              getTitlesWidget: (v, meta) => Padding(
-                padding: const EdgeInsets.only(left: 6),
-                child: Text(
-                  v.toStringAsFixed(0),
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: (isDark ? Colors.white : Colors.black).withOpacity(0.55),
-                    fontWeight: FontWeight.w600,
+              getTitlesWidget:
+                  (v, meta) => Padding(
+                    padding: const EdgeInsets.only(left: 6),
+                    child: Text(
+                      v.toStringAsFixed(0),
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: (isDark ? Colors.white : Colors.black)
+                            .withOpacity(0.55),
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
                   ),
-                ),
-              ),
             ),
           ),
           bottomTitles: AxisTitles(
@@ -1383,7 +1865,9 @@ class _WeightLineChart extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 12,
                   letterSpacing: 0.1,
-                  color: (isDark ? Colors.white : Colors.black).withOpacity(0.6),
+                  color: (isDark ? Colors.white : Colors.black).withOpacity(
+                    0.6,
+                  ),
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -1394,7 +1878,8 @@ class _WeightLineChart extends StatelessWidget {
               interval: bottomInterval,
               getTitlesWidget: (v, meta) {
                 final idx = v.toInt();
-                if (idx < 0 || idx >= dates.length) return const SizedBox.shrink();
+                if (idx < 0 || idx >= dates.length)
+                  return const SizedBox.shrink();
                 final dt = dates[idx];
                 return Padding(
                   padding: const EdgeInsets.only(top: 6),
@@ -1403,7 +1888,9 @@ class _WeightLineChart extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 12,
                       letterSpacing: 0.1,
-                      color: (isDark ? Colors.white : Colors.black).withOpacity(0.6),
+                      color: (isDark ? Colors.white : Colors.black).withOpacity(
+                        0.6,
+                      ),
                       fontWeight: FontWeight.w600,
                     ),
                   ),
@@ -1419,8 +1906,14 @@ class _WeightLineChart extends StatelessWidget {
           border: Border(
             top: BorderSide.none,
             right: BorderSide.none,
-            left: BorderSide(color: (isDark ? Colors.white : Colors.black).withOpacity(0.08), width: 1),
-            bottom: BorderSide(color: (isDark ? Colors.white : Colors.black).withOpacity(0.08), width: 1),
+            left: BorderSide(
+              color: (isDark ? Colors.white : Colors.black).withOpacity(0.08),
+              width: 1,
+            ),
+            bottom: BorderSide(
+              color: (isDark ? Colors.white : Colors.black).withOpacity(0.08),
+              width: 1,
+            ),
           ),
         ),
 
@@ -1429,7 +1922,13 @@ class _WeightLineChart extends StatelessWidget {
           // Goal line (if target is within visible range)
           if (target >= minY && target <= maxY)
             LineChartBarData(
-              spots: [FlSpot(0, target), FlSpot(((actualSpots.length + projectedSpots.length) - 1).toDouble(), target)],
+              spots: [
+                FlSpot(0, target),
+                FlSpot(
+                  ((actualSpots.length + projectedSpots.length) - 1).toDouble(),
+                  target,
+                ),
+              ],
               isCurved: false,
               barWidth: 2,
               color: const Color(0xFF34C759).withOpacity(0.6),
@@ -1439,20 +1938,23 @@ class _WeightLineChart extends StatelessWidget {
 
           // Actual weight progress line
           LineChartBarData(
-            spots: actualSpots.isEmpty ? [const FlSpot(0,0)] : actualSpots,
+            spots: actualSpots.isEmpty ? [const FlSpot(0, 0)] : actualSpots,
             isCurved: true,
             curveSmoothness: 0.23,
             barWidth: 4.2,
             isStrokeCapRound: true,
-            gradient: const LinearGradient(colors: [Color(0xFF64D2FF), Color(0xFF4E8CFF)]),
+            gradient: const LinearGradient(
+              colors: [Color(0xFF64D2FF), Color(0xFF4E8CFF)],
+            ),
             dotData: FlDotData(
               show: true,
-              getDotPainter: (s, p, bar, i) => FlDotCirclePainter(
-                radius: 3.8,
-                strokeWidth: 1.8,
-                color: const Color(0xFFEAF6FF),
-                strokeColor: const Color(0xFF4E8CFF),
-              ),
+              getDotPainter:
+                  (s, p, bar, i) => FlDotCirclePainter(
+                    radius: 3.8,
+                    strokeWidth: 1.8,
+                    color: const Color(0xFFEAF6FF),
+                    strokeColor: const Color(0xFF4E8CFF),
+                  ),
             ),
             belowBarData: BarAreaData(
               show: true,
@@ -1475,7 +1977,7 @@ class _WeightLineChart extends StatelessWidget {
               curveSmoothness: 0.23,
               barWidth: 3,
               color: Colors.grey,
-              dashArray: const [6,6],
+              dashArray: const [6, 6],
               dotData: const FlDotData(show: false),
               belowBarData: BarAreaData(show: false),
             ),
@@ -1520,7 +2022,20 @@ class _WeightLineChart extends StatelessWidget {
   }
 
   String _monthShort(int m) {
-    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const months = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
+    ];
     return months[(m - 1).clamp(0, 11)];
   }
 }
@@ -1530,5 +2045,3 @@ class _Point {
   final double value;
   _Point(this.time, this.value);
 }
-
-

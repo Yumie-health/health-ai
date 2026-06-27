@@ -35,7 +35,7 @@ class ImprovedHeightStep extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
@@ -62,9 +62,9 @@ class ImprovedHeightStep extends StatelessWidget {
             ),
           ),
         ),
-        
+
         SizedBox(height: 32),
-        
+
         // Title with animation
         FadeTransition(
           opacity: fadeAnimation,
@@ -84,19 +84,16 @@ class ImprovedHeightStep extends StatelessWidget {
                 SizedBox(height: 12),
                 Text(
                   AppLocalizations.of(context)!.helpUsCalculateYourHealthGoals,
-                  style: TextStyle(
-                    color: Colors.grey[600],
-                    fontSize: 16,
-                  ),
+                  style: TextStyle(color: Colors.grey[600], fontSize: 16),
                   textAlign: TextAlign.center,
                 ),
               ],
             ),
           ),
         ),
-        
+
         SizedBox(height: 48),
-        
+
         // Height selector with animation
         FadeTransition(
           opacity: fadeAnimation,
@@ -113,9 +110,9 @@ class ImprovedHeightStep extends StatelessWidget {
             ),
           ),
         ),
-        
+
         Spacer(),
-        
+
         // Continue button
         SizedBox(
           width: double.infinity,
@@ -125,7 +122,9 @@ class ImprovedHeightStep extends StatelessWidget {
               backgroundColor: theme.primaryColor,
               foregroundColor: Colors.white,
               padding: EdgeInsets.symmetric(vertical: 20),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
               elevation: 0,
               textStyle: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),

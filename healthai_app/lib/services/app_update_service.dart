@@ -12,12 +12,15 @@ class AppUpdateService {
 
   // Store URLs for both platforms
   // Universal iOS App Store URL (no locale or slug to avoid storefront/name issues)
-  static const String _iosAppStoreUrl = 'https://apps.apple.com/app/id6748360245';
-  static const String _androidPlayStoreUrl = 'https://play.google.com/store/apps/details?id=com.yumie.healthai';
+  static const String _iosAppStoreUrl =
+      'https://apps.apple.com/app/id6748360245';
+  static const String _androidPlayStoreUrl =
+      'https://play.google.com/store/apps/details?id=com.yumie.healthai';
 
   // API endpoint to check for updates
-  static const String _updateCheckUrl = 'https://us-central1-yumie-maivenx02.cloudfunctions.net/checkAppUpdate';
-  
+  static const String _updateCheckUrl =
+      'https://us-central1-yumie-maivenx02.cloudfunctions.net/checkAppUpdate';
+
   // For testing, you can use a GitHub raw URL:
   // static const String _updateCheckUrl = 'https://raw.githubusercontent.com/your-username/your-repo/main/app-updates.json';
 
@@ -28,7 +31,7 @@ class AppUpdateService {
       final packageInfo = await PackageInfo.fromPlatform();
       final currentVersion = packageInfo.version;
       final currentBuildNumber = packageInfo.buildNumber;
-      
+
       print('📱 User app version: $currentVersion (Build $currentBuildNumber)');
 
       // Check for updates from your backend
@@ -52,7 +55,9 @@ class AppUpdateService {
   }
 
   /// Check if the update is actually available in the app stores
-  static Future<bool> _isUpdateActuallyAvailable(AppUpdateInfo updateInfo) async {
+  static Future<bool> _isUpdateActuallyAvailable(
+    AppUpdateInfo updateInfo,
+  ) async {
     try {
       // Check if the update is marked as published in the backend
       // This prevents showing updates that haven't been published to stores yet
@@ -95,21 +100,25 @@ class AppUpdateService {
   }
 
   /// Compare versions to determine if update is needed
-  static bool _isUpdateAvailable(String currentVersion, String currentBuildNumber, AppUpdateInfo updateInfo) {
+  static bool _isUpdateAvailable(
+    String currentVersion,
+    String currentBuildNumber,
+    AppUpdateInfo updateInfo,
+  ) {
     try {
       final current = _parseVersion(currentVersion);
       final latest = _parseVersion(updateInfo.latestVersion);
-      
+
       // Compare major.minor.patch versions
       for (int i = 0; i < 3; i++) {
         if (latest[i] > current[i]) return true;
         if (latest[i] < current[i]) return false;
       }
-      
+
       // If versions are equal, check build number
       final currentBuild = int.tryParse(currentBuildNumber) ?? 0;
       final latestBuild = updateInfo.latestBuildNumber;
-      
+
       return latestBuild > currentBuild;
     } catch (e) {
       print('Error comparing versions: $e');
@@ -133,10 +142,13 @@ class AppUpdateService {
           'itms-apps://itunes.apple.com/app/id6748360245',
           _iosAppStoreUrl, // https universal
           // Search fallback (last resort)
-          'itms-apps://apps.apple.com/search?term=Yumie%20Calorie%20Tracker'
+          'itms-apps://apps.apple.com/search?term=Yumie%20Calorie%20Tracker',
         ];
         for (final u in fallbacks) {
-          final ok = await launchUrl(Uri.parse(u), mode: LaunchMode.externalApplication);
+          final ok = await launchUrl(
+            Uri.parse(u),
+            mode: LaunchMode.externalApplication,
+          );
           if (ok) return true;
         }
         return false;
@@ -157,7 +169,7 @@ class AppUpdateService {
       final lastShown = prefs.getInt('last_update_dialog_shown') ?? 0;
       final now = DateTime.now().millisecondsSinceEpoch;
       final oneDayInMs = 24 * 60 * 60 * 1000; // 24 hours
-      
+
       // Show dialog if never shown before or if more than 24 hours have passed
       return (now - lastShown) > oneDayInMs;
     } catch (e) {
@@ -170,7 +182,10 @@ class AppUpdateService {
   static Future<void> markUpdateDialogShown() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      await prefs.setInt('last_update_dialog_shown', DateTime.now().millisecondsSinceEpoch);
+      await prefs.setInt(
+        'last_update_dialog_shown',
+        DateTime.now().millisecondsSinceEpoch,
+      );
     } catch (e) {
       print('Error marking update dialog as shown: $e');
     }
@@ -225,7 +240,8 @@ class AppUpdateInfo {
       latestVersion: json['latestVersion'] ?? '',
       latestBuildNumber: json['latestBuildNumber'] ?? 0,
       title: json['title'] ?? 'Update Available',
-      description: json['description'] ?? 'A new version of Yumie is available.',
+      description:
+          json['description'] ?? 'A new version of Yumie is available.',
       isForceUpdate: json['isForceUpdate'] ?? false,
       releaseNotes: json['releaseNotes'],
       published: json['published'],

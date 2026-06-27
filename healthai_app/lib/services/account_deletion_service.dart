@@ -9,7 +9,8 @@ import '../l10n/app_localizations.dart';
 import '../main.dart';
 
 class AccountDeletionService {
-  static final AccountDeletionService _instance = AccountDeletionService._internal();
+  static final AccountDeletionService _instance =
+      AccountDeletionService._internal();
   factory AccountDeletionService() => _instance;
   AccountDeletionService._internal();
 
@@ -21,26 +22,33 @@ class AccountDeletionService {
     if (user == null) return false;
 
     try {
-      final doc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
+      final doc =
+          await FirebaseFirestore.instance
+              .collection('users')
+              .doc(user.uid)
+              .get();
       final data = doc.data();
-      
+
       if (data != null && data['scheduledForDeletion'] == true) {
         final deletionExecuteAt = data['deletionExecuteAt'] as Timestamp?;
-        
-        if (deletionExecuteAt != null && DateTime.now().isBefore(deletionExecuteAt.toDate())) {
+
+        if (deletionExecuteAt != null &&
+            DateTime.now().isBefore(deletionExecuteAt.toDate())) {
           // Account is scheduled for deletion but grace period hasn't expired
           bool? shouldReactivate = await showDialog<bool>(
             context: context,
             barrierDismissible: false,
             builder: (context) => _AccountReactivationDialog(),
           );
-          
+
           if (shouldReactivate == true) {
             await _reactivateAccount(user.uid);
             if (context.mounted) {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
-                  content: Text(AppLocalizations.of(context)!.accountReactivated),
+                  content: Text(
+                    AppLocalizations.of(context)!.accountReactivated,
+                  ),
                   backgroundColor: Colors.green,
                   duration: Duration(seconds: 3),
                 ),
@@ -53,7 +61,7 @@ class AccountDeletionService {
     } catch (e) {
       _log.error('Error checking account deletion status', e);
     }
-    
+
     return false;
   }
 
@@ -67,10 +75,13 @@ class AccountDeletionService {
         'deletionExecuteAt': FieldValue.delete(),
         'lastUpdated': FieldValue.serverTimestamp(),
       });
-      
+
       // Remove from deletion queue
-      await FirebaseFirestore.instance.collection('deletion_queue').doc(userId).delete();
-      
+      await FirebaseFirestore.instance
+          .collection('deletion_queue')
+          .doc(userId)
+          .delete();
+
       _log.info('Account reactivated successfully', {'userId': userId});
     } catch (e) {
       _log.error('Error reactivating account', e);
@@ -108,23 +119,29 @@ class AccountDeletionService {
 
       // Schedule deletion for 48 hours from now
       final deletionTime = DateTime.now().add(Duration(hours: 48));
-      
+
       // Mark account as scheduled for deletion instead of deleting immediately
-      await FirebaseFirestore.instance.collection('users').doc(user.uid).update({
-        'scheduledForDeletion': true,
-        'deletionScheduledAt': FieldValue.serverTimestamp(),
-        'deletionExecuteAt': Timestamp.fromDate(deletionTime),
-        'lastUpdated': FieldValue.serverTimestamp(),
-      });
-      
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .update({
+            'scheduledForDeletion': true,
+            'deletionScheduledAt': FieldValue.serverTimestamp(),
+            'deletionExecuteAt': Timestamp.fromDate(deletionTime),
+            'lastUpdated': FieldValue.serverTimestamp(),
+          });
+
       // Also add to a deletion queue collection for background processing
-      await FirebaseFirestore.instance.collection('deletion_queue').doc(user.uid).set({
-        'userId': user.uid,
-        'email': user.email,
-        'scheduledAt': FieldValue.serverTimestamp(),
-        'executeAt': Timestamp.fromDate(deletionTime),
-        'status': 'scheduled',
-      });
+      await FirebaseFirestore.instance
+          .collection('deletion_queue')
+          .doc(user.uid)
+          .set({
+            'userId': user.uid,
+            'email': user.email,
+            'scheduledAt': FieldValue.serverTimestamp(),
+            'executeAt': Timestamp.fromDate(deletionTime),
+            'status': 'scheduled',
+          });
 
       // Step 3: Delete device sessions
       await _deleteDeviceSessions(user.uid);
@@ -143,14 +160,13 @@ class AccountDeletionService {
       // Close loading dialog
       if (context.mounted) {
         Navigator.of(context).pop(); // Close loading dialog
-        
+
         // Navigate directly to redirect screen
         Navigator.of(context).pushAndRemoveUntil(
           MaterialPageRoute(builder: (context) => _RedirectScreen()),
           (route) => false,
         );
       }
-
     } catch (e) {
       _log.error('Account deletion failed', e);
 
@@ -160,16 +176,17 @@ class AccountDeletionService {
         // Show error dialog
         showDialog(
           context: context,
-          builder: (context) => AlertDialog(
-            title: Text(AppLocalizations.of(context)!.deletionFailed),
-            content: Text(_getErrorMessage(e)),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: Text('OK'),
+          builder:
+              (context) => AlertDialog(
+                title: Text(AppLocalizations.of(context)!.deletionFailed),
+                content: Text(_getErrorMessage(e)),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: Text('OK'),
+                  ),
+                ],
               ),
-            ],
-          ),
         );
       }
     }
@@ -178,41 +195,46 @@ class AccountDeletionService {
   // Delete all Firestore data for the user
   Future<void> _deleteFirestoreData(String userId) async {
     final batch = FirebaseFirestore.instance.batch();
-    
+
     try {
       // Delete user document
-      final userDoc = FirebaseFirestore.instance.collection('users').doc(userId);
+      final userDoc = FirebaseFirestore.instance
+          .collection('users')
+          .doc(userId);
       batch.delete(userDoc);
 
       // Delete meals subcollection
-      final mealsQuery = await FirebaseFirestore.instance
-          .collection('users')
-          .doc(userId)
-          .collection('meals')
-          .get();
-      
+      final mealsQuery =
+          await FirebaseFirestore.instance
+              .collection('users')
+              .doc(userId)
+              .collection('meals')
+              .get();
+
       for (final doc in mealsQuery.docs) {
         batch.delete(doc.reference);
       }
 
-      // Delete custom meals subcollection  
-      final customMealsQuery = await FirebaseFirestore.instance
-          .collection('users')
-          .doc(userId)
-          .collection('custom_meals')
-          .get();
-      
+      // Delete custom meals subcollection
+      final customMealsQuery =
+          await FirebaseFirestore.instance
+              .collection('users')
+              .doc(userId)
+              .collection('custom_meals')
+              .get();
+
       for (final doc in customMealsQuery.docs) {
         batch.delete(doc.reference);
       }
 
       // Delete device sessions subcollection
-      final sessionsQuery = await FirebaseFirestore.instance
-          .collection('users')
-          .doc(userId)
-          .collection('device_sessions')
-          .get();
-      
+      final sessionsQuery =
+          await FirebaseFirestore.instance
+              .collection('users')
+              .doc(userId)
+              .collection('device_sessions')
+              .get();
+
       for (final doc in sessionsQuery.docs) {
         batch.delete(doc.reference);
       }
@@ -227,24 +249,26 @@ class AccountDeletionService {
 
       for (final subcollection in subcollections) {
         try {
-          final query = await FirebaseFirestore.instance
-              .collection('users')
-              .doc(userId)
-              .collection(subcollection)
-              .get();
-          
+          final query =
+              await FirebaseFirestore.instance
+                  .collection('users')
+                  .doc(userId)
+                  .collection(subcollection)
+                  .get();
+
           for (final doc in query.docs) {
             batch.delete(doc.reference);
           }
         } catch (e) {
           // Subcollection might not exist, continue
-          _log.warning('Could not delete subcollection: $subcollection', {'error': e.toString()});
+          _log.warning('Could not delete subcollection: $subcollection', {
+            'error': e.toString(),
+          });
         }
       }
 
       await batch.commit();
       _log.info('Firestore data deleted successfully');
-
     } catch (e) {
       _log.error('Error deleting Firestore data', e);
       throw Exception('Failed to delete user data from database');
@@ -255,7 +279,7 @@ class AccountDeletionService {
   Future<void> _deleteStorageFiles(String userId) async {
     try {
       final storage = FirebaseStorage.instance;
-      
+
       // Delete user profile images
       try {
         await storage.ref('users/$userId/profile.jpg').delete();
@@ -267,7 +291,7 @@ class AccountDeletionService {
       try {
         final mealImagesRef = storage.ref('users/$userId/meals');
         final result = await mealImagesRef.listAll();
-        
+
         for (final item in result.items) {
           await item.delete();
         }
@@ -279,11 +303,11 @@ class AccountDeletionService {
       try {
         final userRef = storage.ref('users/$userId');
         final result = await userRef.listAll();
-        
+
         for (final item in result.items) {
           await item.delete();
         }
-        
+
         for (final folder in result.prefixes) {
           await _deleteStorageFolder(folder);
         }
@@ -292,7 +316,6 @@ class AccountDeletionService {
       }
 
       _log.info('Storage files deleted successfully');
-
     } catch (e) {
       _log.error('Error deleting storage files', e);
       // Don't throw here as this is not critical
@@ -303,27 +326,30 @@ class AccountDeletionService {
   Future<void> _deleteStorageFolder(Reference folderRef) async {
     try {
       final result = await folderRef.listAll();
-      
+
       for (final item in result.items) {
         await item.delete();
       }
-      
+
       for (final subfolder in result.prefixes) {
         await _deleteStorageFolder(subfolder);
       }
     } catch (e) {
-      _log.warning('Error deleting storage folder: ${folderRef.fullPath}', {'error': e.toString()});
+      _log.warning('Error deleting storage folder: ${folderRef.fullPath}', {
+        'error': e.toString(),
+      });
     }
   }
 
   // Delete device sessions
   Future<void> _deleteDeviceSessions(String userId) async {
     try {
-      final sessions = await FirebaseFirestore.instance
-          .collection('users')
-          .doc(userId)
-          .collection('device_sessions')
-          .get();
+      final sessions =
+          await FirebaseFirestore.instance
+              .collection('users')
+              .doc(userId)
+              .collection('device_sessions')
+              .get();
 
       final batch = FirebaseFirestore.instance.batch();
       for (final doc in sessions.docs) {
@@ -341,18 +367,19 @@ class AccountDeletionService {
   Future<void> _clearLocalData() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      
+
       // Save app state flags that should persist after account deletion
-      final permissionsRequested = prefs.getBool('permissions_requested') ?? false;
-      
+      final permissionsRequested =
+          prefs.getBool('permissions_requested') ?? false;
+
       // Clear all data
       await prefs.clear();
-      
+
       // Restore only permissions flag - do NOT set first_launch_completed to true
       // This ensures that after account deletion, the app will properly route to sign-in
       // and won't incorrectly show onboarding when the app is reopened
       await prefs.setBool('permissions_requested', permissionsRequested);
-      
+
       _log.info('Local data cleared successfully, permissions flag preserved');
     } catch (e) {
       _log.error('Error clearing local data', e);
@@ -366,34 +393,42 @@ class AccountDeletionService {
     } catch (e) {
       if (e is FirebaseAuthException && e.code == 'requires-recent-login') {
         _log.info('Re-authentication required, attempting automatic re-auth');
-        
+
         // For social sign-in users, we'll try to re-authenticate silently
         if (user.providerData.isNotEmpty) {
           try {
             // Try to get fresh credentials from the current provider
             final providerId = user.providerData.first.providerId;
-            
+
             if (providerId == 'google.com') {
               // For Google users, we can't silently re-authenticate
               // But since we've already deleted all data, we'll consider this successful
-              _log.info('Google user - data deleted successfully, auth account may remain');
+              _log.info(
+                'Google user - data deleted successfully, auth account may remain',
+              );
               return;
             } else if (providerId == 'apple.com') {
               // For Apple users, similar situation
-              _log.info('Apple user - data deleted successfully, auth account may remain');
+              _log.info(
+                'Apple user - data deleted successfully, auth account may remain',
+              );
               return;
             }
           } catch (reAuthError) {
-            _log.warning('Re-authentication failed, but data was deleted', {'error': reAuthError.toString()});
+            _log.warning('Re-authentication failed, but data was deleted', {
+              'error': reAuthError.toString(),
+            });
             return; // Consider successful since data is already deleted
           }
         }
-        
+
         // If we get here, consider the deletion successful since all data was deleted
-        _log.info('Account data deleted successfully, auth account deletion skipped due to recent login requirement');
+        _log.info(
+          'Account data deleted successfully, auth account deletion skipped due to recent login requirement',
+        );
         return;
       }
-      
+
       // For other errors, re-throw
       rethrow;
     }
@@ -411,7 +446,7 @@ class AccountDeletionService {
           return 'Authentication error: ${error.message ?? 'Unknown error'}';
       }
     }
-    
+
     return 'An unexpected error occurred. Please try again later or contact support if the problem persists.';
   }
 }
@@ -457,14 +492,22 @@ class _AccountDeletionDialogState extends State<_AccountDeletionDialog> {
               style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
             ),
             SizedBox(height: 8),
-            _buildDeletionItem(AppLocalizations.of(context)!.allMealLogsAndNutrition),
-            _buildDeletionItem(AppLocalizations.of(context)!.profileAndPersonalInfo),
+            _buildDeletionItem(
+              AppLocalizations.of(context)!.allMealLogsAndNutrition,
+            ),
+            _buildDeletionItem(
+              AppLocalizations.of(context)!.profileAndPersonalInfo,
+            ),
             _buildDeletionItem(AppLocalizations.of(context)!.allUploadedPhotos),
-            _buildDeletionItem(AppLocalizations.of(context)!.customMealsAndRecipes),
+            _buildDeletionItem(
+              AppLocalizations.of(context)!.customMealsAndRecipes,
+            ),
             _buildDeletionItem(AppLocalizations.of(context)!.allAppPreferences),
-            _buildDeletionItem(AppLocalizations.of(context)!.activeSessionsAllDevices),
+            _buildDeletionItem(
+              AppLocalizations.of(context)!.activeSessionsAllDevices,
+            ),
             SizedBox(height: 16),
-            
+
             // 48-hour grace period warning
             Container(
               padding: EdgeInsets.all(12),
@@ -482,7 +525,9 @@ class _AccountDeletionDialogState extends State<_AccountDeletionDialog> {
                       SizedBox(width: 8),
                       Expanded(
                         child: Text(
-                          AppLocalizations.of(context)!.accountScheduledForDeletion,
+                          AppLocalizations.of(
+                            context,
+                          )!.accountScheduledForDeletion,
                           style: TextStyle(
                             fontWeight: FontWeight.w600,
                             color: Colors.orange[700],
@@ -531,8 +576,13 @@ class _AccountDeletionDialogState extends State<_AccountDeletionDialog> {
               controller: _confirmationController,
               decoration: InputDecoration(
                 hintText: AppLocalizations.of(context)!.typeDeleteHere,
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                contentPadding: EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
+                ),
               ),
               onChanged: (_) => setState(() {}),
             ),
@@ -545,9 +595,8 @@ class _AccountDeletionDialogState extends State<_AccountDeletionDialog> {
           child: Text(AppLocalizations.of(context)!.cancel),
         ),
         ElevatedButton(
-          onPressed: _canConfirmDeletion
-              ? () => Navigator.pop(context, true)
-              : null,
+          onPressed:
+              _canConfirmDeletion ? () => Navigator.pop(context, true) : null,
           style: ElevatedButton.styleFrom(
             backgroundColor: Colors.red,
             foregroundColor: Colors.white,
@@ -565,20 +614,15 @@ class _AccountDeletionDialogState extends State<_AccountDeletionDialog> {
         children: [
           Icon(Icons.remove, color: Colors.red, size: 16),
           SizedBox(width: 8),
-          Expanded(
-            child: Text(
-              text,
-              style: TextStyle(fontSize: 13),
-            ),
-          ),
+          Expanded(child: Text(text, style: TextStyle(fontSize: 13))),
         ],
       ),
     );
   }
 
   bool get _canConfirmDeletion {
-    return _confirmationChecked && 
-           _confirmationController.text.trim() == _confirmationText;
+    return _confirmationChecked &&
+        _confirmationController.text.trim() == _confirmationText;
   }
 
   @override
@@ -629,7 +673,7 @@ class _RedirectScreenState extends State<_RedirectScreen> {
       if (mounted) {
         // Ensure user is signed out
         await FirebaseAuth.instance.signOut();
-        
+
         // After deletion, always return to AuthScreen (sign in / sign up)
         Navigator.of(context).pushAndRemoveUntil(
           MaterialPageRoute(builder: (context) => AuthScreen()),
@@ -650,10 +694,7 @@ class _RedirectScreenState extends State<_RedirectScreen> {
             SizedBox(height: 16),
             Text(
               AppLocalizations.of(context)!.accountDeleted,
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
-              ),
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
             ),
             SizedBox(height: 8),
             Text(
@@ -692,17 +733,16 @@ class _ExitScreen extends StatelessWidget {
             SizedBox(height: 16),
             Text(
               'You can now create a new account or sign in with a different account.',
-              style: TextStyle(
-                fontSize: 16,
-                color: Colors.grey[600],
-              ),
+              style: TextStyle(fontSize: 16, color: Colors.grey[600]),
               textAlign: TextAlign.center,
             ),
             SizedBox(height: 32),
             ElevatedButton(
               onPressed: () {
                 // Navigate back to main app - user should see sign-in screen
-                Navigator.of(context).pushNamedAndRemoveUntil('/', (route) => false);
+                Navigator.of(
+                  context,
+                ).pushNamedAndRemoveUntil('/', (route) => false);
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.blue,

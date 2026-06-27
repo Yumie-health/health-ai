@@ -17,7 +17,7 @@ class ProductionIntegrityService {
   // Base backoff of 3 seconds, doubles with each failure, capped
   static const Duration _baseBackoff = Duration(seconds: 3);
   static const Duration _maxBackoff = Duration(minutes: 2);
-  
+
   /// Perform a production-ready integrity check
   static Future<bool> performIntegrityCheck() async {
     try {
@@ -40,10 +40,12 @@ class ProductionIntegrityService {
 
         // 3) Exponential backoff after failures to avoid Integrity -8 throttling
         if (_consecutiveFailures > 0) {
-          final backoffMs = _baseBackoff.inMilliseconds * (1 << (_consecutiveFailures - 1));
+          final backoffMs =
+              _baseBackoff.inMilliseconds * (1 << (_consecutiveFailures - 1));
           final computed = Duration(milliseconds: backoffMs);
           final backoff = (computed > _maxBackoff) ? _maxBackoff : computed;
-          if (_lastAttemptAt != null && now.difference(_lastAttemptAt!) < backoff) {
+          if (_lastAttemptAt != null &&
+              now.difference(_lastAttemptAt!) < backoff) {
             // Still in backoff window; skip
             return false;
           }
@@ -68,7 +70,7 @@ class ProductionIntegrityService {
         }
         return isValid;
       }
-      
+
       // For non-Android platforms, return true (no integrity check needed)
       return true;
     } catch (e) {
@@ -82,10 +84,8 @@ class ProductionIntegrityService {
   static Future<bool> _verifyWithBackend(String token) async {
     try {
       final callable = _functions.httpsCallable('verifyPlayIntegrityCallable');
-      final result = await callable.call({
-        'integrityToken': token,
-      });
-      
+      final result = await callable.call({'integrityToken': token});
+
       final data = result.data as Map<String, dynamic>?;
       if (data == null) {
         return false;
@@ -93,8 +93,9 @@ class ProductionIntegrityService {
 
       // Check the verification result
       final isGenuine = data['isGenuine'] as bool? ?? false;
-      final isInstalledFromGooglePlay = data['isInstalledFromGooglePlay'] as bool? ?? false;
-      
+      final isInstalledFromGooglePlay =
+          data['isInstalledFromGooglePlay'] as bool? ?? false;
+
       return isGenuine && isInstalledFromGooglePlay;
     } catch (e) {
       print('Error verifying integrity token with backend: $e');
@@ -105,13 +106,13 @@ class ProductionIntegrityService {
   /// Check integrity before sensitive operations
   static Future<bool> checkBeforeSensitiveOperation() async {
     final isIntegrityValid = await performIntegrityCheck();
-    
+
     if (!isIntegrityValid) {
       print('Integrity check failed - app may be compromised');
       // Log the incident for monitoring
       _logIntegrityFailure();
     }
-    
+
     return isIntegrityValid;
   }
 
@@ -134,6 +135,8 @@ class ProductionIntegrityService {
   static void _logIntegrityFailure() {
     // In production, you might want to send this to your analytics service
     // or log it to Firebase Analytics
-    print('INTEGRITY_FAILURE: App integrity check failed at ${DateTime.now().toIso8601String()}');
+    print(
+      'INTEGRITY_FAILURE: App integrity check failed at ${DateTime.now().toIso8601String()}',
+    );
   }
 }
