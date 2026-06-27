@@ -7,8 +7,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class AIService {
   final _functions = FirebaseFunctions.instanceFor(region: 'us-central1');
-  late final HttpsCallable _openAiProxy =
-      _functions.httpsCallable('openaiProxyCallable');
+  late final HttpsCallable _openAiProxy = _functions.httpsCallable(
+    'openaiProxyCallable',
+  );
 
   // API key is securely stored in Firebase Functions
   static const String _apiUrl = 'https://api.openai.com/v1/chat/completions';
@@ -197,7 +198,10 @@ class AIService {
         });
         return content;
       } else {
-        log.error('Coach message request failed', 'OpenAI proxy returned no data');
+        log.error(
+          'Coach message request failed',
+          'OpenAI proxy returned no data',
+        );
         return null;
       }
     } catch (e) {
