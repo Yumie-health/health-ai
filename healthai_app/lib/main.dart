@@ -380,7 +380,8 @@ void main() async {
   // Initialize Firebase - Android will use google-services.json, iOS will use the options
   await Firebase.initializeApp();
 
-  // Initialize Firebase App Check for production security
+  // Initialize Firebase App Check — Play Integrity on Android; App Attest on iOS.
+  // TODO(iOS): Verify App Attest provider in production before iOS release (#30).
   try {
     await FirebaseAppCheck.instance.activate(
       androidProvider: AndroidProvider.playIntegrity,

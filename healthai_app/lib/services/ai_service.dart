@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'package:http/http.dart' as http;
 import 'dart:io';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'error_handler.dart';
@@ -8,12 +7,32 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class AIService {
   final _functions = FirebaseFunctions.instanceFor(region: 'us-central1');
+  late final HttpsCallable _openAiProxy =
+      _functions.httpsCallable('openaiProxyCallable');
 
   // API key is securely stored in Firebase Functions
   static const String _apiUrl = 'https://api.openai.com/v1/chat/completions';
 
   static const _suggestedMealsCacheKey = 'suggested_meals_cache';
   static const _suggestedMealsCacheTimeKey = 'suggested_meals_cache_time';
+
+  /// Single transport path for the OpenAI proxy (Auth + App Check via SDK).
+  Future<Map<String, dynamic>?> _callOpenAiProxy(
+    Map<String, dynamic> body, {
+    Duration timeout = const Duration(seconds: 35),
+  }) async {
+    try {
+      final result = await _openAiProxy.call(body).timeout(timeout);
+      final data = result.data;
+      if (data is Map) {
+        return Map<String, dynamic>.from(data);
+      }
+      return null;
+    } catch (e) {
+      log.error('OpenAI proxy call failed', e);
+      return null;
+    }
+  }
 
   Future<String?> sendMessage(
     String message, {
@@ -31,41 +50,31 @@ class AIService {
 
       String languageInstruction = _getLanguageInstruction(language);
 
-      final url =
-          'https://us-central1-yumie-maivenx02.cloudfunctions.net/openaiProxyCallable';
-      final response = await http.post(
-        Uri.parse(url),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          'model': model,
-          'messages': [
-            {
-              'role': 'system',
-              'content':
-                  'You are Yumie, a friendly nutrition and wellness coach. When providing health or medical recommendations, include citations using [Source: Organization Name] format. Use reputable sources like CDC, NIH, AHA, WHO, Mayo Clinic, etc. Respond in clear, friendly, plain English. Avoid Markdown formatting (like **bold** or lists) unless the user specifically asks for it.$languageInstruction',
-            },
-            {'role': 'user', 'content': message},
-          ],
-          'max_tokens': 1024,
-          'temperature': 0.7,
-        }),
-      );
+      final data = await _callOpenAiProxy({
+        'model': model,
+        'messages': [
+          {
+            'role': 'system',
+            'content':
+                'You are Yumie, a friendly nutrition and wellness coach. When providing health or medical recommendations, include citations using [Source: Organization Name] format. Use reputable sources like CDC, NIH, AHA, WHO, Mayo Clinic, etc. Respond in clear, friendly, plain English. Avoid Markdown formatting (like **bold** or lists) unless the user specifically asks for it.$languageInstruction',
+          },
+          {'role': 'user', 'content': message},
+        ],
+        'max_tokens': 1024,
+        'temperature': 0.7,
+      });
 
       stopwatch.stop();
       log.logPerformance('AI message request', stopwatch.elapsed);
 
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
+      if (data != null) {
         final content = data['choices'][0]['message']['content'];
         log.info('AI message response successful', {
           'response_length': content.length,
         });
         return content;
       } else {
-        log.error(
-          'AI message request failed',
-          'HTTP ${response.statusCode}: ${response.body}',
-        );
+        log.error('AI message request failed', 'OpenAI proxy returned no data');
         return null;
       }
     } catch (e) {
@@ -171,34 +180,24 @@ class AIService {
         ...chatHistory,
       ];
 
-      final url =
-          'https://us-central1-yumie-maivenx02.cloudfunctions.net/openaiProxyCallable';
-      final response = await http.post(
-        Uri.parse(url),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          'model': model,
-          'messages': messages,
-          'max_tokens': 1024,
-          'temperature': 0.7,
-        }),
-      );
+      final data = await _callOpenAiProxy({
+        'model': model,
+        'messages': messages,
+        'max_tokens': 1024,
+        'temperature': 0.7,
+      });
 
       stopwatch.stop();
       log.logPerformance('Coach message request', stopwatch.elapsed);
 
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
+      if (data != null) {
         final content = data['choices'][0]['message']['content'] as String?;
         log.info('Coach message response successful', {
           'response_length': content?.length ?? 0,
         });
         return content;
       } else {
-        log.error(
-          'Coach message request failed',
-          'HTTP ${response.statusCode}: ${response.body}',
-        );
+        log.error('Coach message request failed', 'OpenAI proxy returned no data');
         return null;
       }
     } catch (e) {
@@ -897,8 +896,6 @@ List 5 foods similar to "$query".$foodTypeInstruction Correct any obvious misspe
     String language = 'en',
   }) async {
     try {
-      final url =
-          'https://us-central1-yumie-maivenx02.cloudfunctions.net/openaiProxyCallable';
       final bytes = await imageFile.readAsBytes();
       final base64Image = base64Encode(bytes);
       final dataUrl = 'data:image/jpeg;base64,$base64Image';
@@ -959,66 +956,7 @@ CRITICAL ANALYSIS RULES:
 
 Respond ONLY with valid JSON.$languageInstruction
 ''';
-      final response = await http
-          .post(
-            Uri.parse(url),
-            headers: {'Content-Type': 'application/json'},
-            body: jsonEncode({
-              'model': 'gpt-4o-mini',
-              'messages': [
-                {'role': 'system', 'content': prompt},
-                {
-                  'role': 'user',
-                  'content': [
-                    {'type': 'text', 'text': prompt},
-                    {
-                      'type': 'image_url',
-                      'image_url': {'url': dataUrl},
-                    },
-                  ],
-                },
-              ],
-              'max_tokens': 512,
-              'temperature': 0.3,
-            }),
-          )
-          .timeout(const Duration(seconds: 35));
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        final content = data['choices'][0]['message']['content'];
-        final jsonString = _extractJson(content);
-        final result = jsonDecode(jsonString);
-        return result as Map<String, dynamic>;
-      } else {
-        log.error(
-          'analyzeMealImage failed',
-          'HTTP ${response.statusCode}: ${response.body}',
-        );
-        return null;
-      }
-    } catch (e) {
-      log.error('analyzeMealImage error', e);
-      return null;
-    }
-  }
-
-  /// Analyze a fridge image and return a list of detected items.
-  Future<List<String>?> analyzeFridgeImage(
-    File imageFile, {
-    String language = 'en',
-  }) async {
-    final url = 'https://openaiproxycallable-jlkcfxcyrq-uc.a.run.app';
-    final bytes = await imageFile.readAsBytes();
-    final base64Image = base64Encode(bytes);
-    final dataUrl = 'data:image/jpeg;base64,$base64Image';
-    String languageInstruction = _getLanguageInstruction(language);
-    final prompt = '''
-You are a kitchen assistant AI. Given this photo of a fridge, return a JSON array of all visible food items (ingredients). Use generic ingredient names. Do NOT infer quantities or servings here. Respond ONLY with a JSON array of strings.$languageInstruction
-''';
-    final response = await http.post(
-      Uri.parse(url),
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({
+      final data = await _callOpenAiProxy({
         'model': 'gpt-4o-mini',
         'messages': [
           {'role': 'system', 'content': prompt},
@@ -1035,10 +973,53 @@ You are a kitchen assistant AI. Given this photo of a fridge, return a JSON arra
         ],
         'max_tokens': 512,
         'temperature': 0.3,
-      }),
-    );
-    if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);
+      });
+      if (data != null) {
+        final content = data['choices'][0]['message']['content'];
+        final jsonString = _extractJson(content);
+        final result = jsonDecode(jsonString);
+        return result as Map<String, dynamic>;
+      } else {
+        log.error('analyzeMealImage failed', 'OpenAI proxy returned no data');
+        return null;
+      }
+    } catch (e) {
+      log.error('analyzeMealImage error', e);
+      return null;
+    }
+  }
+
+  /// Analyze a fridge image and return a list of detected items.
+  Future<List<String>?> analyzeFridgeImage(
+    File imageFile, {
+    String language = 'en',
+  }) async {
+    final bytes = await imageFile.readAsBytes();
+    final base64Image = base64Encode(bytes);
+    final dataUrl = 'data:image/jpeg;base64,$base64Image';
+    String languageInstruction = _getLanguageInstruction(language);
+    final prompt = '''
+You are a kitchen assistant AI. Given this photo of a fridge, return a JSON array of all visible food items (ingredients). Use generic ingredient names. Do NOT infer quantities or servings here. Respond ONLY with a JSON array of strings.$languageInstruction
+''';
+    final data = await _callOpenAiProxy({
+      'model': 'gpt-4o-mini',
+      'messages': [
+        {'role': 'system', 'content': prompt},
+        {
+          'role': 'user',
+          'content': [
+            {'type': 'text', 'text': prompt},
+            {
+              'type': 'image_url',
+              'image_url': {'url': dataUrl},
+            },
+          ],
+        },
+      ],
+      'max_tokens': 512,
+      'temperature': 0.3,
+    });
+    if (data != null) {
       final content = data['choices'][0]['message']['content'];
       try {
         final jsonString = _extractJson(content);
@@ -1058,7 +1039,6 @@ You are a kitchen assistant AI. Given this photo of a fridge, return a JSON arra
     required Map<String, dynamic> userProfile,
     String language = 'en',
   }) async {
-    final url = 'https://openaiproxycallable-jlkcfxcyrq-uc.a.run.app';
     String languageInstruction = _getLanguageInstruction(language);
     final prompt = '''
 You are a nutrition AI. Given this user profile: ${jsonEncode(userProfile)} and these fridge items: ${jsonEncode(fridgeItems)}, suggest a healthy meal the user can make, including:
@@ -1076,21 +1056,16 @@ Rules:
 - Use credible sources or typical values for nutrition; portions must be realistic.
 CONSISTENCY RULE: Ensure CALORIES ≈ 4*protein + 4*carbs + 9*fat (within ±10%). Adjust calories if inconsistent. Respond ONLY with valid JSON.$languageInstruction
 ''';
-    final response = await http.post(
-      Uri.parse(url),
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({
-        'model': 'gpt-4o-mini',
-        'messages': [
-          {'role': 'system', 'content': prompt},
-          {'role': 'user', 'content': prompt},
-        ],
-        'max_tokens': 512,
-        'temperature': 0.5,
-      }),
-    );
-    if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);
+    final data = await _callOpenAiProxy({
+      'model': 'gpt-4o-mini',
+      'messages': [
+        {'role': 'system', 'content': prompt},
+        {'role': 'user', 'content': prompt},
+      ],
+      'max_tokens': 512,
+      'temperature': 0.5,
+    });
+    if (data != null) {
       final content = data['choices'][0]['message']['content'];
       try {
         return jsonDecode(content);
@@ -1131,7 +1106,6 @@ CONSISTENCY RULE: Ensure CALORIES ≈ 4*protein + 4*carbs + 9*fat (within ±10%)
     }
 
     // Fetch new data if no valid cache
-    final url = 'https://openaiproxycallable-jlkcfxcyrq-uc.a.run.app';
     String languageInstruction = _getLanguageInstruction(language);
     final prompt = '''
 You are a nutrition AI. Suggest 3 healthy $mealPeriod meals with maximum diversity and variety. Each meal should be completely different from the others in terms of:
@@ -1157,21 +1131,16 @@ For each meal, provide values PER ONE SERVING:
 
 Ensure each meal is unique and offers different nutritional benefits. Use realistic serving sizes and nutrition values from credible sources. Respond ONLY with a JSON array of 3 objects, no extra text, no explanations, no markdown.$languageInstruction
 ''';
-    final response = await http.post(
-      Uri.parse(url),
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({
-        'model': 'gpt-4o-mini',
-        'messages': [
-          {'role': 'system', 'content': prompt},
-          {'role': 'user', 'content': prompt},
-        ],
-        'max_tokens': 900,
-        'temperature': 0.7,
-      }),
-    );
-    if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);
+    final data = await _callOpenAiProxy({
+      'model': 'gpt-4o-mini',
+      'messages': [
+        {'role': 'system', 'content': prompt},
+        {'role': 'user', 'content': prompt},
+      ],
+      'max_tokens': 900,
+      'temperature': 0.7,
+    });
+    if (data != null) {
       final content = data['choices'][0]['message']['content'];
       try {
         final codeBlockRegex = RegExp(
