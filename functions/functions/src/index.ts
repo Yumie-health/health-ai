@@ -11,6 +11,7 @@ import * as functions from "firebase-functions";
 import * as admin from "firebase-admin";
 import axios from "axios";
 import { defineSecret } from "firebase-functions/params";
+import { onCall, HttpsError } from "firebase-functions/v2/https";
 
 admin.initializeApp();
 
@@ -181,114 +182,133 @@ export const setAppUpdate = functions.https.onRequest(async (req, res) => {
   }
 });
 
-// OpenAI API proxy
-export const openaiProxyCallable = functions.https.onRequest(
+const PROXY_RATE_LIMIT_COLLECTION = "openai_proxy_rate_limits";
+const PROXY_RATE_LIMIT_WINDOW_MS = 60_000;
+const PROXY_RATE_LIMIT_MAX_REQUESTS = 30;
+const PROXY_MAX_TOKENS_CAP = 2048;
+
+async function assertProxyRateLimit(uid: string): Promise<void> {
+  const ref = admin.firestore().collection(PROXY_RATE_LIMIT_COLLECTION).doc(uid);
+  const now = Date.now();
+
+  await admin.firestore().runTransaction(async (transaction) => {
+    const snap = await transaction.get(ref);
+    const windowStartMs = snap.data()?.windowStartMs ?? now;
+    let count = snap.data()?.count ?? 0;
+
+    if (now - windowStartMs > PROXY_RATE_LIMIT_WINDOW_MS) {
+      transaction.set(ref, { windowStartMs: now, count: 1 });
+      return;
+    }
+
+    if (count >= PROXY_RATE_LIMIT_MAX_REQUESTS) {
+      throw new HttpsError(
+        "resource-exhausted",
+        "Rate limit exceeded. Try again later."
+      );
+    }
+
+    transaction.set(ref, { windowStartMs, count: count + 1 });
+  });
+}
+
+function capProxyMaxTokens(body: Record<string, unknown>): void {
+  const requested = body.max_tokens;
+  if (typeof requested === "number" && Number.isFinite(requested)) {
+    body.max_tokens = Math.min(requested, PROXY_MAX_TOKENS_CAP);
+  }
+}
+
+// OpenAI API proxy — callable so the mobile SDK attaches Auth + App Check tokens.
+export const openaiProxyCallable = onCall(
   {
     secrets: [openaiKey],
-    cors: true,
-    invoker: 'public'
+    enforceAppCheck: true,
+    region: "us-central1",
   },
-  async (req, res) => {
-    // Handle CORS preflight
-    res.set('Access-Control-Allow-Origin', '*');
-    res.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-    res.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-    res.set('Access-Control-Max-Age', '3600');
-
-    if (req.method === 'OPTIONS') {
-      res.status(204).send('');
-      return;
+  async (request) => {
+    if (!request.auth) {
+      throw new HttpsError(
+        "unauthenticated",
+        "Authentication required."
+      );
     }
 
-    // Only allow POST requests
-    if (req.method !== 'POST') {
-      res.status(405).send({ error: 'Method not allowed. Use POST.' });
-      return;
-    }
+    await assertProxyRateLimit(request.auth.uid);
 
     const openaiKeyValue = openaiKey.value();
     if (!openaiKeyValue) {
-      res.status(500).send({ error: 'OpenAI API key not set in secrets.' });
-      return;
-    }
-    
-    console.log('OpenAI key configured:', openaiKeyValue ? 'Yes' : 'No');
-    console.log('Request method:', req.method);
-    console.log('Request headers:', JSON.stringify(req.headers));
-    console.log('Incoming data:', JSON.stringify(req.body));
-    
-    // Validate request body
-    if (!req.body || !req.body.model || !req.body.messages) {
-      res.status(400).send({ 
-        error: 'Invalid request body. Required fields: model, messages',
-        received: req.body 
-      });
-      return;
+      throw new HttpsError(
+        "failed-precondition",
+        "OpenAI API key not configured."
+      );
     }
 
+    const reqBody = request.data as Record<string, unknown> | null;
+    if (
+      !reqBody ||
+      typeof reqBody.model !== "string" ||
+      !Array.isArray(reqBody.messages)
+    ) {
+      throw new HttpsError(
+        "invalid-argument",
+        "Invalid request body. Required fields: model, messages"
+      );
+    }
+
+    const cleanBody: Record<string, unknown> = {
+      model: reqBody.model,
+      messages: reqBody.messages,
+      max_tokens: reqBody.max_tokens,
+      temperature: reqBody.temperature,
+      stream: reqBody.stream,
+      stop: reqBody.stop,
+      presence_penalty: reqBody.presence_penalty,
+      frequency_penalty: reqBody.frequency_penalty,
+      logit_bias: reqBody.logit_bias,
+      user: reqBody.user,
+    };
+
+    Object.keys(cleanBody).forEach((key) => {
+      if (cleanBody[key] === undefined) {
+        delete cleanBody[key];
+      }
+    });
+
+    capProxyMaxTokens(cleanBody);
+
     try {
-      // Clean the request body - only send valid OpenAI fields
-      const cleanBody = {
-        model: req.body.model,
-        messages: req.body.messages,
-        max_tokens: req.body.max_tokens,
-        temperature: req.body.temperature,
-        stream: req.body.stream,
-        stop: req.body.stop,
-        presence_penalty: req.body.presence_penalty,
-        frequency_penalty: req.body.frequency_penalty,
-        logit_bias: req.body.logit_bias,
-        user: req.body.user
-      };
-      
-      // Remove undefined fields
-      Object.keys(cleanBody).forEach(key => {
-        if ((cleanBody as any)[key] === undefined) {
-          delete (cleanBody as any)[key];
-        }
-      });
-      
-      console.log('Sending clean request to OpenAI:', JSON.stringify(cleanBody, null, 2));
-      
       const response = await axios.post(
         "https://api.openai.com/v1/chat/completions",
         cleanBody,
         {
           headers: {
             "Content-Type": "application/json",
-            "Authorization": `Bearer ${openaiKeyValue.trim()}`,
+            Authorization: `Bearer ${openaiKeyValue.trim()}`,
           },
-          timeout: 30000, // 30 second timeout
+          timeout: 30000,
         }
       );
-      
-      console.log('OpenAI response status:', response.status);
-      res.status(200).send(response.data);
+
+      return response.data;
     } catch (error) {
-      console.error("OpenAI API error details:", error);
-      
       if (axios.isAxiosError(error)) {
         const statusCode = error.response?.status || 500;
-        const errorData = error.response?.data || { message: error.message };
-        
-        console.error("OpenAI API error response:", {
+        console.error("OpenAI API error", {
           status: statusCode,
-          data: errorData,
-          config: {
-            url: error.config?.url,
-            method: error.config?.method,
-            headers: error.config?.headers
-          }
+          uid: request.auth.uid,
         });
-        
-        res.status(statusCode).send({ 
-          error: errorData,
-          details: `OpenAI API request failed with status ${statusCode}`
-        });
-      } else {
-        console.error("Non-axios error:", error);
-        res.status(500).send({ error: "Internal server error while calling OpenAI API" });
+        throw new HttpsError(
+          "internal",
+          `OpenAI API request failed with status ${statusCode}`
+        );
       }
+
+      console.error("OpenAI proxy error", error);
+      throw new HttpsError(
+        "internal",
+        "Internal server error while calling OpenAI API"
+      );
     }
   }
 );
