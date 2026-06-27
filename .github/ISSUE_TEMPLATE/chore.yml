@@ -1,0 +1,72 @@
+name: Chore / maintenance
+description: Tooling, tech debt, dependencies, CI, or other non-feature work
+title: "[Chore]: "
+labels:
+  - chore
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this template for maintenance, refactoring, dependency upgrades, CI changes, and tech debt.
+
+  - type: textarea
+    id: description
+    attributes:
+      label: What needs to be done?
+      description: Describe the task and why it matters.
+    validations:
+      required: true
+
+  - type: dropdown
+    id: category
+    attributes:
+      label: Category
+      options:
+        - tech-debt
+        - dependencies
+        - ci-cd
+        - security
+        - docs
+        - refactor
+        - other
+    validations:
+      required: true
+
+  - type: dropdown
+    id: phase
+    attributes:
+      label: Target phase
+      options:
+        - phase-1
+        - phase-2
+        - N/A
+    validations:
+      required: true
+
+  - type: input
+    id: epic
+    attributes:
+      label: Parent epic (if any)
+      description: Link to epic issue, e.g. `#12`
+      placeholder: "#"
+    validations:
+      required: false
+
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      description: How do we know this is done?
+      placeholder: |
+        - [ ] …
+        - [ ] …
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: terms
+    attributes:
+      label: Checklist
+      options:
+        - label: I have searched existing issues and this is not a duplicate
+          required: true
