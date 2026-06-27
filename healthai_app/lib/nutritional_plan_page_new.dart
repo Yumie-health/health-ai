@@ -32,7 +32,11 @@ class _NutritionalPlanPageState extends State<NutritionalPlanPage> {
     setState(() => isLoading = true);
     final user = FirebaseAuth.instance.currentUser;
     if (user != null) {
-      final doc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
+      final doc =
+          await FirebaseFirestore.instance
+              .collection('users')
+              .doc(user.uid)
+              .get();
       setState(() {
         userData = Map<String, dynamic>.from(doc.data() ?? {});
         isLoading = false;
@@ -44,12 +48,12 @@ class _NutritionalPlanPageState extends State<NutritionalPlanPage> {
     final prefs = await SharedPreferences.getInstance();
     final lastGenString = prefs.getString('last_plan_generation');
     final plansCount = prefs.getInt('plans_generated_count') ?? 0;
-    
+
     if (lastGenString != null) {
       final lastGen = DateTime.parse(lastGenString);
       final now = DateTime.now();
       final daysSince = now.difference(lastGen).inDays;
-      
+
       if (daysSince >= 14) {
         // Reset counter after 14 days
         await prefs.setInt('plans_generated_count', 0);
@@ -69,21 +73,26 @@ class _NutritionalPlanPageState extends State<NutritionalPlanPage> {
 
   Future<void> _updateField(String field, dynamic value) async {
     setState(() => isLoading = true);
-    
+
     try {
       final user = FirebaseAuth.instance.currentUser;
       if (user != null) {
-        await FirebaseFirestore.instance.collection('users').doc(user.uid).update({
-          field: value,
-          'lastUpdated': FieldValue.serverTimestamp(),
-        });
-        
+        await FirebaseFirestore.instance
+            .collection('users')
+            .doc(user.uid)
+            .update({
+              field: value,
+              'lastUpdated': FieldValue.serverTimestamp(),
+            });
+
         // Reload data to reflect changes
         await _loadUserData();
-        
+
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(AppLocalizations.of(context)!.profileUpdatedSuccessfully),
+            content: Text(
+              AppLocalizations.of(context)!.profileUpdatedSuccessfully,
+            ),
             backgroundColor: kPrimaryGreen,
           ),
         );
@@ -102,21 +111,25 @@ class _NutritionalPlanPageState extends State<NutritionalPlanPage> {
   void _showGenerateNewPlan() {
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (context) => GoalChangeFlow(
-          onPlanGenerated: (planData) async {
-            Navigator.of(context).pop(); // Close goal change flow
-            
-            // Update plan generation tracking
-            final prefs = await SharedPreferences.getInstance();
-            await prefs.setString('last_plan_generation', DateTime.now().toIso8601String());
-            await prefs.setInt('plans_generated_count', plansGenerated + 1);
-            
-            _showNewPlanDisplay(planData);
-          },
-          onCancel: () {
-            Navigator.of(context).pop();
-          },
-        ),
+        builder:
+            (context) => GoalChangeFlow(
+              onPlanGenerated: (planData) async {
+                Navigator.of(context).pop(); // Close goal change flow
+
+                // Update plan generation tracking
+                final prefs = await SharedPreferences.getInstance();
+                await prefs.setString(
+                  'last_plan_generation',
+                  DateTime.now().toIso8601String(),
+                );
+                await prefs.setInt('plans_generated_count', plansGenerated + 1);
+
+                _showNewPlanDisplay(planData);
+              },
+              onCancel: () {
+                Navigator.of(context).pop();
+              },
+            ),
       ),
     );
   }
@@ -124,21 +137,24 @@ class _NutritionalPlanPageState extends State<NutritionalPlanPage> {
   void _showNewPlanDisplay(Map<String, dynamic> planData) {
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (context) => NewPlanDisplay(
-          planData: planData,
-          onComplete: () {
-            Navigator.of(context).pop(); // Close plan display
-            _loadUserData(); // Refresh the page
-            _checkPlanGenerationLimit(); // Update generation limits
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(AppLocalizations.of(context)!.maintenancePlanUpdated),
-                backgroundColor: kPrimaryGreen,
-                duration: Duration(seconds: 3),
-              ),
-            );
-          },
-        ),
+        builder:
+            (context) => NewPlanDisplay(
+              planData: planData,
+              onComplete: () {
+                Navigator.of(context).pop(); // Close plan display
+                _loadUserData(); // Refresh the page
+                _checkPlanGenerationLimit(); // Update generation limits
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(
+                      AppLocalizations.of(context)!.maintenancePlanUpdated,
+                    ),
+                    backgroundColor: kPrimaryGreen,
+                    duration: Duration(seconds: 3),
+                  ),
+                );
+              },
+            ),
       ),
     );
   }
@@ -148,7 +164,7 @@ class _NutritionalPlanPageState extends State<NutritionalPlanPage> {
     final prefs = Provider.of<PreferencesProvider>(context);
     final useMetric = prefs.useMetric;
     final localizations = AppLocalizations.of(context)!;
-    
+
     if (isLoading || userData == null) {
       return Scaffold(
         appBar: AppBar(
@@ -162,27 +178,35 @@ class _NutritionalPlanPageState extends State<NutritionalPlanPage> {
     }
 
     // Get user data - handle both old and new field names
-    final double weight = (userData!['weightKg'] ?? userData!['weight'] ?? 70).toDouble();
-    final double heightCm = (userData!['heightCm'] ?? userData!['height'] ?? 170).toDouble();
-    final double targetWeight = (userData!['targetWeightKg'] ?? userData!['targetWeight'] ?? weight).toDouble();
+    final double weight =
+        (userData!['weightKg'] ?? userData!['weight'] ?? 70).toDouble();
+    final double heightCm =
+        (userData!['heightCm'] ?? userData!['height'] ?? 170).toDouble();
+    final double targetWeight =
+        (userData!['targetWeightKg'] ?? userData!['targetWeight'] ?? weight)
+            .toDouble();
     final int age = (userData!['age'] ?? 18).toInt();
     final int calories = userData!['dailyCalorieGoal'] ?? 2000;
     final int protein = userData!['proteinGoal'] ?? 120;
     final int carbs = userData!['carbsGoal'] ?? 250;
     final int fat = userData!['fatGoal'] ?? 70;
-    
+
     // Get the current plan name
-    final String currentPlan = _getLocalizedPlanName(userData!['goal'] ?? 'Maintain body weight', localizations);
-    
+    final String currentPlan = _getLocalizedPlanName(
+      userData!['goal'] ?? 'Maintain body weight',
+      localizations,
+    );
+
     // Calculate BMI
     final double heightM = heightCm / 100.0;
     final double bmi = weight / (heightM * heightM);
-    
+
     // Unit conversions
     final double displayWeight = useMetric ? weight : (weight * 2.20462);
-    final double displayTargetWeight = useMetric ? targetWeight : (targetWeight * 2.20462);
+    final double displayTargetWeight =
+        useMetric ? targetWeight : (targetWeight * 2.20462);
     final String weightUnit = useMetric ? 'kg' : 'lb';
-    
+
     String heightDisplay;
     if (useMetric) {
       heightDisplay = '${heightCm.toStringAsFixed(1)} cm';
@@ -233,21 +257,13 @@ class _NutritionalPlanPageState extends State<NutritionalPlanPage> {
                         '${displayWeight.toStringAsFixed(1)} $weightUnit',
                         Icons.monitor_weight,
                       ),
-                      Container(
-                        height: 40,
-                        width: 1,
-                        color: Colors.grey[300],
-                      ),
+                      Container(height: 40, width: 1, color: Colors.grey[300]),
                       _buildProfileStat(
                         localizations.targetLabel,
                         '${displayTargetWeight.toStringAsFixed(1)} $weightUnit',
                         Icons.flag,
                       ),
-                      Container(
-                        height: 40,
-                        width: 1,
-                        color: Colors.grey[300],
-                      ),
+                      Container(height: 40, width: 1, color: Colors.grey[300]),
                       _buildProfileStat(
                         localizations.bmi,
                         bmi.toStringAsFixed(1),
@@ -258,9 +274,9 @@ class _NutritionalPlanPageState extends State<NutritionalPlanPage> {
                 ],
               ),
             ),
-            
+
             SizedBox(height: 24),
-            
+
             // Daily Goals Section
             Text(
               localizations.dailyCalorieGoal,
@@ -270,9 +286,9 @@ class _NutritionalPlanPageState extends State<NutritionalPlanPage> {
                 color: Colors.black87,
               ),
             ),
-            
+
             SizedBox(height: 16),
-            
+
             // Nutrition Goals Grid
             GridView.count(
               shrinkWrap: true,
@@ -288,7 +304,14 @@ class _NutritionalPlanPageState extends State<NutritionalPlanPage> {
                   'kcal',
                   Icons.local_fire_department,
                   Colors.orange,
-                  () => _showEditDialog(localizations.calorieGoal, 'dailyCalorieGoal', calories.toDouble(), 1000, 5000, 'kcal'),
+                  () => _showEditDialog(
+                    localizations.calorieGoal,
+                    'dailyCalorieGoal',
+                    calories.toDouble(),
+                    1000,
+                    5000,
+                    'kcal',
+                  ),
                 ),
                 _buildNutritionCard(
                   localizations.protein,
@@ -296,7 +319,14 @@ class _NutritionalPlanPageState extends State<NutritionalPlanPage> {
                   'g',
                   Icons.fitness_center,
                   Colors.red,
-                  () => _showEditDialog(localizations.proteinGoal, 'proteinGoal', protein.toDouble(), 40, 300, 'g'),
+                  () => _showEditDialog(
+                    localizations.proteinGoal,
+                    'proteinGoal',
+                    protein.toDouble(),
+                    40,
+                    300,
+                    'g',
+                  ),
                 ),
                 _buildNutritionCard(
                   localizations.carbs,
@@ -304,7 +334,14 @@ class _NutritionalPlanPageState extends State<NutritionalPlanPage> {
                   'g',
                   Icons.grain,
                   Colors.amber,
-                  () => _showEditDialog(localizations.carbGoal, 'carbsGoal', carbs.toDouble(), 40, 600, 'g'),
+                  () => _showEditDialog(
+                    localizations.carbGoal,
+                    'carbsGoal',
+                    carbs.toDouble(),
+                    40,
+                    600,
+                    'g',
+                  ),
                 ),
                 _buildNutritionCard(
                   localizations.fat,
@@ -312,13 +349,20 @@ class _NutritionalPlanPageState extends State<NutritionalPlanPage> {
                   'g',
                   Icons.opacity,
                   Colors.purple,
-                  () => _showEditDialog(localizations.fatGoal, 'fatGoal', fat.toDouble(), 10, 200, 'g'),
+                  () => _showEditDialog(
+                    localizations.fatGoal,
+                    'fatGoal',
+                    fat.toDouble(),
+                    10,
+                    200,
+                    'g',
+                  ),
                 ),
               ],
             ),
-            
+
             SizedBox(height: 32),
-            
+
             // Generate New Plan Button
             Container(
               width: double.infinity,
@@ -326,30 +370,26 @@ class _NutritionalPlanPageState extends State<NutritionalPlanPage> {
               child: ElevatedButton.icon(
                 onPressed: canGenerateNewPlan ? _showGenerateNewPlan : null,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: canGenerateNewPlan ? kPrimaryGreen : Colors.grey[300],
-                  foregroundColor: canGenerateNewPlan ? Colors.white : Colors.grey[600],
+                  backgroundColor:
+                      canGenerateNewPlan ? kPrimaryGreen : Colors.grey[300],
+                  foregroundColor:
+                      canGenerateNewPlan ? Colors.white : Colors.grey[600],
                   elevation: canGenerateNewPlan ? 2 : 0,
                   shadowColor: kPrimaryGreen.withOpacity(0.3),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(16),
                   ),
                 ),
-                icon: Icon(
-                  Icons.auto_awesome,
-                  size: 24,
-                ),
+                icon: Icon(Icons.auto_awesome, size: 24),
                 label: Text(
                   localizations.generateNewPlan,
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
               ),
             ),
-            
+
             SizedBox(height: 12),
-            
+
             // Plan generation info
             if (!canGenerateNewPlan)
               Container(
@@ -403,10 +443,7 @@ class _NutritionalPlanPageState extends State<NutritionalPlanPage> {
                     Expanded(
                       child: Text(
                         'You can generate ${2 - plansGenerated} more personalized plans in the next 14 days.',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: kPrimaryGreen,
-                        ),
+                        style: TextStyle(fontSize: 12, color: kPrimaryGreen),
                       ),
                     ),
                   ],
@@ -444,7 +481,14 @@ class _NutritionalPlanPageState extends State<NutritionalPlanPage> {
     );
   }
 
-  Widget _buildNutritionCard(String label, String value, String unit, IconData icon, Color color, VoidCallback onTap) {
+  Widget _buildNutritionCard(
+    String label,
+    String value,
+    String unit,
+    IconData icon,
+    Color color,
+    VoidCallback onTap,
+  ) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -507,70 +551,75 @@ class _NutritionalPlanPageState extends State<NutritionalPlanPage> {
               ),
             ),
             SizedBox(height: 4),
-            Icon(
-              Icons.edit,
-              color: Colors.grey[400],
-              size: 16,
-            ),
+            Icon(Icons.edit, color: Colors.grey[400], size: 16),
           ],
         ),
       ),
     );
   }
 
-  void _showEditDialog(String title, String field, double currentValue, double min, double max, String unit) {
+  void _showEditDialog(
+    String title,
+    String field,
+    double currentValue,
+    double min,
+    double max,
+    String unit,
+  ) {
     double tempValue = currentValue;
-    
+
     showDialog(
       context: context,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setDialogState) => AlertDialog(
-          title: Text(title),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                '${tempValue.toStringAsFixed(0)} $unit',
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  color: kPrimaryGreen,
+      builder:
+          (context) => StatefulBuilder(
+            builder:
+                (context, setDialogState) => AlertDialog(
+                  title: Text(title),
+                  content: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        '${tempValue.toStringAsFixed(0)} $unit',
+                        style: TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                          color: kPrimaryGreen,
+                        ),
+                      ),
+                      SizedBox(height: 16),
+                      Slider(
+                        value: tempValue,
+                        min: min,
+                        max: max,
+                        divisions: (max - min).toInt(),
+                        activeColor: kPrimaryGreen,
+                        onChanged: (value) {
+                          setDialogState(() {
+                            tempValue = value;
+                          });
+                        },
+                      ),
+                    ],
+                  ),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.of(context).pop(),
+                      child: Text(AppLocalizations.of(context)!.cancel),
+                    ),
+                    ElevatedButton(
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                        _updateField(field, tempValue.round());
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: kPrimaryGreen,
+                        foregroundColor: Colors.white,
+                      ),
+                      child: Text(AppLocalizations.of(context)!.save),
+                    ),
+                  ],
                 ),
-              ),
-              SizedBox(height: 16),
-              Slider(
-                value: tempValue,
-                min: min,
-                max: max,
-                divisions: (max - min).toInt(),
-                activeColor: kPrimaryGreen,
-                onChanged: (value) {
-                  setDialogState(() {
-                    tempValue = value;
-                  });
-                },
-              ),
-            ],
           ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: Text(localizations.cancel),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-                _updateField(field, tempValue.round());
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: kPrimaryGreen,
-                foregroundColor: Colors.white,
-              ),
-              child: Text(localizations.save),
-            ),
-          ],
-        ),
-      ),
     );
   }
 

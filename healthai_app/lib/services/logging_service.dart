@@ -32,7 +32,10 @@ class LoggingService {
       _logger.i(message);
     }
     if (data != null && ConsentService.instance.analyticsAllowed) {
-      _analytics.logEvent(name: 'app_info', parameters: data.cast<String, Object>());
+      _analytics.logEvent(
+        name: 'app_info',
+        parameters: data.cast<String, Object>(),
+      );
     }
   }
 
@@ -44,7 +47,10 @@ class LoggingService {
       _logger.w(message);
     }
     if (data != null && ConsentService.instance.analyticsAllowed) {
-      _analytics.logEvent(name: 'app_warning', parameters: data.cast<String, Object>());
+      _analytics.logEvent(
+        name: 'app_warning',
+        parameters: data.cast<String, Object>(),
+      );
     }
   }
 
@@ -54,10 +60,11 @@ class LoggingService {
     if (ConsentService.instance.analyticsAllowed) {
       _analytics.logEvent(
         name: 'app_error',
-        parameters: {
-          'message': message,
-          'error': error?.toString() ?? 'Unknown error',
-        }.cast<String, Object>(),
+        parameters:
+            {
+              'message': message,
+              'error': error?.toString() ?? 'Unknown error',
+            }.cast<String, Object>(),
       );
     }
   }
@@ -88,14 +95,19 @@ class LoggingService {
   }
 
   // API call logging
-  void logApiCall(String endpoint, {String? method, int? statusCode, String? error}) {
+  void logApiCall(
+    String endpoint, {
+    String? method,
+    int? statusCode,
+    String? error,
+  }) {
     final data = {
       'endpoint': endpoint,
       'method': method ?? 'GET',
       'status_code': statusCode,
       'error': error,
     };
-    
+
     if (error != null) {
       _logger.e('API Error: $endpoint - ${data.toString()}');
       // _analytics.logEvent(name: 'api_error', parameters: data.cast<String, Object>());  // Removed due to Kotlin conflicts
@@ -119,4 +131,4 @@ class LoggingService {
 }
 
 // Global logger instance
-final log = LoggingService(); 
+final log = LoggingService();

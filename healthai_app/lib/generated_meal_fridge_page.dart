@@ -5,27 +5,51 @@ import '../l10n/app_localizations.dart';
 
 class GeneratedMealFromFridgePage extends StatefulWidget {
   final Map<String, dynamic> meal;
-  const GeneratedMealFromFridgePage({Key? key, required this.meal}) : super(key: key);
+  const GeneratedMealFromFridgePage({Key? key, required this.meal})
+    : super(key: key);
 
   @override
-  State<GeneratedMealFromFridgePage> createState() => _GeneratedMealFromFridgePageState();
+  State<GeneratedMealFromFridgePage> createState() =>
+      _GeneratedMealFromFridgePageState();
 }
 
-class _GeneratedMealFromFridgePageState extends State<GeneratedMealFromFridgePage> {
-
+class _GeneratedMealFromFridgePageState
+    extends State<GeneratedMealFromFridgePage> {
   @override
   Widget build(BuildContext context) {
     final meal = widget.meal;
     final localizations = AppLocalizations.of(context)!;
     final macros = [
-      {'label': localizations.calories, 'value': meal['calories']?.toString() ?? '-', 'color': Colors.green[700] ?? Colors.green, 'icon': Icons.local_fire_department},
-      {'label': localizations.protein, 'value': '${meal['protein'] ?? '-'}g', 'color': Colors.blue[700] ?? Colors.blue, 'icon': Icons.fitness_center},
-      {'label': localizations.carbs, 'value': '${meal['carbs'] ?? '-'}g', 'color': Colors.orange[700] ?? Colors.orange, 'icon': Icons.grain},
-      {'label': localizations.fat, 'value': '${meal['fat'] ?? '-'}g', 'color': Colors.red[400] ?? Colors.red, 'icon': Icons.water_drop},
+      {
+        'label': localizations.calories,
+        'value': meal['calories']?.toString() ?? '-',
+        'color': Colors.green[700] ?? Colors.green,
+        'icon': Icons.local_fire_department,
+      },
+      {
+        'label': localizations.protein,
+        'value': '${meal['protein'] ?? '-'}g',
+        'color': Colors.blue[700] ?? Colors.blue,
+        'icon': Icons.fitness_center,
+      },
+      {
+        'label': localizations.carbs,
+        'value': '${meal['carbs'] ?? '-'}g',
+        'color': Colors.orange[700] ?? Colors.orange,
+        'icon': Icons.grain,
+      },
+      {
+        'label': localizations.fat,
+        'value': '${meal['fat'] ?? '-'}g',
+        'color': Colors.red[400] ?? Colors.red,
+        'icon': Icons.water_drop,
+      },
     ];
-    final recipe = (meal['recipe'] as List?)?.map((e) => e.toString()).toList() ?? [];
-    final ingredients = (meal['ingredients'] as List?)?.map((e) => e.toString()).toList() ?? [];
-    
+    final recipe =
+        (meal['recipe'] as List?)?.map((e) => e.toString()).toList() ?? [];
+    final ingredients =
+        (meal['ingredients'] as List?)?.map((e) => e.toString()).toList() ?? [];
+
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FA),
       appBar: AppBar(
@@ -96,12 +120,18 @@ class _GeneratedMealFromFridgePageState extends State<GeneratedMealFromFridgePag
                           height: 120,
                           decoration: BoxDecoration(
                             gradient: LinearGradient(
-                              colors: [Colors.green.withOpacity(0.1), Colors.green.withOpacity(0.05)],
+                              colors: [
+                                Colors.green.withOpacity(0.1),
+                                Colors.green.withOpacity(0.05),
+                              ],
                               begin: Alignment.topLeft,
                               end: Alignment.bottomRight,
                             ),
                             borderRadius: BorderRadius.circular(60),
-                            border: Border.all(color: Colors.green.withOpacity(0.2), width: 2),
+                            border: Border.all(
+                              color: Colors.green.withOpacity(0.2),
+                              width: 2,
+                            ),
                           ),
                           child: Icon(
                             Icons.restaurant,
@@ -125,7 +155,10 @@ class _GeneratedMealFromFridgePageState extends State<GeneratedMealFromFridgePag
                         // Preparation time if available
                         if (meal['time'] != null)
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 6,
+                            ),
                             decoration: BoxDecoration(
                               color: Colors.blue.withOpacity(0.1),
                               borderRadius: BorderRadius.circular(20),
@@ -133,7 +166,11 @@ class _GeneratedMealFromFridgePageState extends State<GeneratedMealFromFridgePag
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                Icon(Icons.access_time, size: 16, color: Colors.blue[700]),
+                                Icon(
+                                  Icons.access_time,
+                                  size: 16,
+                                  color: Colors.blue[700],
+                                ),
                                 const SizedBox(width: 4),
                                 Text(
                                   meal['time'],
@@ -149,7 +186,7 @@ class _GeneratedMealFromFridgePageState extends State<GeneratedMealFromFridgePag
                       ],
                     ),
                   ),
-                  
+
                   // Nutrition facts card
                   Container(
                     margin: const EdgeInsets.symmetric(horizontal: 20),
@@ -169,7 +206,11 @@ class _GeneratedMealFromFridgePageState extends State<GeneratedMealFromFridgePag
                       children: [
                         Row(
                           children: [
-                            Icon(Icons.analytics, color: Colors.green[700], size: 24),
+                            Icon(
+                              Icons.analytics,
+                              color: Colors.green[700],
+                              size: 24,
+                            ),
                             const SizedBox(width: 8),
                             Text(
                               'Nutrition Facts',
@@ -183,49 +224,56 @@ class _GeneratedMealFromFridgePageState extends State<GeneratedMealFromFridgePag
                         ),
                         const SizedBox(height: 16),
                         Row(
-                          children: macros.map((m) => Expanded(
-                            child: Column(
-                              children: [
-                                Container(
-                                  padding: const EdgeInsets.all(12),
-                                  decoration: BoxDecoration(
-                                    color: (m['color'] as Color).withOpacity(0.1),
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  child: Icon(
-                                    m['icon'] as IconData,
-                                    color: m['color'] as Color,
-                                    size: 24,
-                                  ),
-                                ),
-                                const SizedBox(height: 8),
-                                Text(
-                                  m['value'] as String,
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 18,
-                                    color: m['color'] as Color,
-                                  ),
-                                ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  m['label'] as String,
-                                  style: TextStyle(
-                                    color: Colors.grey[600],
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          )).toList(),
+                          children:
+                              macros
+                                  .map(
+                                    (m) => Expanded(
+                                      child: Column(
+                                        children: [
+                                          Container(
+                                            padding: const EdgeInsets.all(12),
+                                            decoration: BoxDecoration(
+                                              color: (m['color'] as Color)
+                                                  .withOpacity(0.1),
+                                              borderRadius:
+                                                  BorderRadius.circular(12),
+                                            ),
+                                            child: Icon(
+                                              m['icon'] as IconData,
+                                              color: m['color'] as Color,
+                                              size: 24,
+                                            ),
+                                          ),
+                                          const SizedBox(height: 8),
+                                          Text(
+                                            m['value'] as String,
+                                            style: TextStyle(
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 18,
+                                              color: m['color'] as Color,
+                                            ),
+                                          ),
+                                          const SizedBox(height: 4),
+                                          Text(
+                                            m['label'] as String,
+                                            style: TextStyle(
+                                              color: Colors.grey[600],
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.w500,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  )
+                                  .toList(),
                         ),
                       ],
                     ),
                   ),
-                  
+
                   const SizedBox(height: 20),
-                  
+
                   // Ingredients section
                   if (ingredients.isNotEmpty) ...[
                     Container(
@@ -247,7 +295,11 @@ class _GeneratedMealFromFridgePageState extends State<GeneratedMealFromFridgePag
                         children: [
                           Row(
                             children: [
-                              Icon(Icons.shopping_basket, color: Colors.green[700], size: 24),
+                              Icon(
+                                Icons.shopping_basket,
+                                color: Colors.green[700],
+                                size: 24,
+                              ),
                               const SizedBox(width: 8),
                               Text(
                                 localizations.ingredients,
@@ -263,30 +315,45 @@ class _GeneratedMealFromFridgePageState extends State<GeneratedMealFromFridgePag
                           Wrap(
                             spacing: 8,
                             runSpacing: 8,
-                            children: ingredients.map((ingredient) => Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                              decoration: BoxDecoration(
-                                color: Colors.green.withOpacity(0.1),
-                                borderRadius: BorderRadius.circular(12),
-                                border: Border.all(color: Colors.green.withOpacity(0.2), width: 1),
-                              ),
-                              child: Text(
-                                ingredient,
-                                style: TextStyle(
-                                  color: Colors.green[700],
-                                  fontWeight: FontWeight.w500,
-                                  fontSize: 12,
-                                ),
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            )).toList(),
+                            children:
+                                ingredients
+                                    .map(
+                                      (ingredient) => Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 12,
+                                          vertical: 8,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: Colors.green.withOpacity(0.1),
+                                          borderRadius: BorderRadius.circular(
+                                            12,
+                                          ),
+                                          border: Border.all(
+                                            color: Colors.green.withOpacity(
+                                              0.2,
+                                            ),
+                                            width: 1,
+                                          ),
+                                        ),
+                                        child: Text(
+                                          ingredient,
+                                          style: TextStyle(
+                                            color: Colors.green[700],
+                                            fontWeight: FontWeight.w500,
+                                            fontSize: 12,
+                                          ),
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ),
+                                    )
+                                    .toList(),
                           ),
                         ],
                       ),
                     ),
                     const SizedBox(height: 20),
                   ],
-                  
+
                   // Instructions section
                   Container(
                     margin: const EdgeInsets.symmetric(horizontal: 20),
@@ -307,14 +374,18 @@ class _GeneratedMealFromFridgePageState extends State<GeneratedMealFromFridgePag
                       children: [
                         Row(
                           children: [
-                            Icon(Icons.format_list_numbered, color: Colors.green[700], size: 24),
+                            Icon(
+                              Icons.format_list_numbered,
+                              color: Colors.green[700],
+                              size: 24,
+                            ),
                             const SizedBox(width: 8),
                             Text(
                               localizations.localeName.startsWith('ar')
                                   ? 'طريقة التحضير'
                                   : localizations.localeName.startsWith('es')
-                                      ? 'Cómo preparar'
-                                      : 'How to Make',
+                                  ? 'Cómo preparar'
+                                  : 'How to Make',
                               style: TextStyle(
                                 fontWeight: FontWeight.bold,
                                 fontSize: 18,
@@ -368,7 +439,7 @@ class _GeneratedMealFromFridgePageState extends State<GeneratedMealFromFridgePag
                       ],
                     ),
                   ),
-                  
+
                   const SizedBox(height: 20),
                   // References
                   Container(
@@ -390,9 +461,20 @@ class _GeneratedMealFromFridgePageState extends State<GeneratedMealFromFridgePag
                       children: [
                         Row(
                           children: [
-                            Icon(Icons.menu_book, color: Colors.green[700], size: 22),
+                            Icon(
+                              Icons.menu_book,
+                              color: Colors.green[700],
+                              size: 22,
+                            ),
                             const SizedBox(width: 8),
-                            Text('References', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.black87)),
+                            Text(
+                              'References',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                                color: Colors.black87,
+                              ),
+                            ),
                           ],
                         ),
                         const SizedBox(height: 8),
@@ -401,11 +483,21 @@ class _GeneratedMealFromFridgePageState extends State<GeneratedMealFromFridgePag
                           runSpacing: 4,
                           children: [
                             TextButton(
-                              onPressed: () => launchUrl(Uri.parse('https://fdc.nal.usda.gov/'), mode: LaunchMode.externalApplication),
+                              onPressed:
+                                  () => launchUrl(
+                                    Uri.parse('https://fdc.nal.usda.gov/'),
+                                    mode: LaunchMode.externalApplication,
+                                  ),
                               child: const Text('USDA FoodData Central'),
                             ),
                             TextButton(
-                              onPressed: () => launchUrl(Uri.parse('https://www.dietaryguidelines.gov/'), mode: LaunchMode.externalApplication),
+                              onPressed:
+                                  () => launchUrl(
+                                    Uri.parse(
+                                      'https://www.dietaryguidelines.gov/',
+                                    ),
+                                    mode: LaunchMode.externalApplication,
+                                  ),
                               child: const Text('USDA Dietary Guidelines'),
                             ),
                           ],
@@ -417,7 +509,7 @@ class _GeneratedMealFromFridgePageState extends State<GeneratedMealFromFridgePag
               ),
             ),
           ),
-          
+
           // Action buttons
           Container(
             padding: const EdgeInsets.all(20),
@@ -436,7 +528,10 @@ class _GeneratedMealFromFridgePageState extends State<GeneratedMealFromFridgePag
                 children: [
                   Expanded(
                     child: ElevatedButton(
-                      onPressed: () => Navigator.of(context).popUntil((route) => route.isFirst),
+                      onPressed:
+                          () => Navigator.of(
+                            context,
+                          ).popUntil((route) => route.isFirst),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.red[50],
                         foregroundColor: Colors.red[700],
@@ -469,17 +564,24 @@ class _GeneratedMealFromFridgePageState extends State<GeneratedMealFromFridgePag
                       onPressed: () {
                         Navigator.of(context).pushReplacement(
                           MaterialPageRoute(
-                            builder: (_) => ScanResultPage(
-                              imagePath: '',
-                              prefill: {
-                                'food_name': meal['meal_name'] ?? '',
-                                'calories': meal['calories']?.toString() ?? '',
-                                'protein': meal['protein']?.toString() ?? '',
-                                'carbs': meal['carbs']?.toString() ?? '',
-                                'fat': meal['fat']?.toString() ?? '',
-                                'ingredients': (meal['ingredients'] as List?)?.map((e) => e.toString()).toList() ?? [],
-                              },
-                            ),
+                            builder:
+                                (_) => ScanResultPage(
+                                  imagePath: '',
+                                  prefill: {
+                                    'food_name': meal['meal_name'] ?? '',
+                                    'calories':
+                                        meal['calories']?.toString() ?? '',
+                                    'protein':
+                                        meal['protein']?.toString() ?? '',
+                                    'carbs': meal['carbs']?.toString() ?? '',
+                                    'fat': meal['fat']?.toString() ?? '',
+                                    'ingredients':
+                                        (meal['ingredients'] as List?)
+                                            ?.map((e) => e.toString())
+                                            .toList() ??
+                                        [],
+                                  },
+                                ),
                           ),
                         );
                       },
@@ -487,7 +589,9 @@ class _GeneratedMealFromFridgePageState extends State<GeneratedMealFromFridgePag
                         backgroundColor: Colors.green[700],
                         foregroundColor: Colors.white,
                         padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
                         elevation: 2,
                       ),
                       child: Row(
@@ -514,4 +618,4 @@ class _GeneratedMealFromFridgePageState extends State<GeneratedMealFromFridgePag
       ),
     );
   }
-} 
+}

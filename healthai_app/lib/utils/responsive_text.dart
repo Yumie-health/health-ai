@@ -4,10 +4,10 @@ class ResponsiveText {
   static double getScaledFontSize(BuildContext context, double baseFontSize) {
     final screenWidth = MediaQuery.of(context).size.width;
     final screenHeight = MediaQuery.of(context).size.height;
-    
+
     // Calculate scale factor based on screen size
     double scaleFactor = 1.0;
-    
+
     // For very small screens (width < 320px or height < 600px)
     if (screenWidth < 320 || screenHeight < 600) {
       scaleFactor = 0.8;
@@ -24,10 +24,10 @@ class ResponsiveText {
     else if (screenWidth > 600 || screenHeight > 1000) {
       scaleFactor = 1.1;
     }
-    
+
     return baseFontSize * scaleFactor;
   }
-  
+
   static TextStyle getResponsiveTextStyle(
     BuildContext context, {
     required double baseFontSize,
@@ -46,7 +46,7 @@ class ResponsiveText {
       foreground: foreground,
     );
   }
-  
+
   static Widget responsiveText(
     BuildContext context,
     String text, {
@@ -78,7 +78,7 @@ class ResponsiveText {
       softWrap: softWrap,
     );
   }
-  
+
   static Widget fittedText(
     BuildContext context,
     String text, {

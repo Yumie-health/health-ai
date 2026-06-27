@@ -18,7 +18,8 @@ class SearchPaywallPage extends StatefulWidget {
   State<SearchPaywallPage> createState() => _SearchPaywallPageState();
 }
 
-class _SearchPaywallPageState extends State<SearchPaywallPage> with TickerProviderStateMixin {
+class _SearchPaywallPageState extends State<SearchPaywallPage>
+    with TickerProviderStateMixin {
   late AnimationController _searchController;
   late AnimationController _pulseController;
   late Animation<double> _searchAnimation;
@@ -36,21 +37,13 @@ class _SearchPaywallPageState extends State<SearchPaywallPage> with TickerProvid
       vsync: this,
     );
 
-    _searchAnimation = Tween<double>(
-      begin: 0.8,
-      end: 1.2,
-    ).animate(CurvedAnimation(
-      parent: _searchController,
-      curve: Curves.elasticOut,
-    ));
+    _searchAnimation = Tween<double>(begin: 0.8, end: 1.2).animate(
+      CurvedAnimation(parent: _searchController, curve: Curves.elasticOut),
+    );
 
-    _pulseAnimation = Tween<double>(
-      begin: 1.0,
-      end: 1.1,
-    ).animate(CurvedAnimation(
-      parent: _pulseController,
-      curve: Curves.easeInOut,
-    ));
+    _pulseAnimation = Tween<double>(begin: 1.0, end: 1.1).animate(
+      CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
+    );
 
     _searchController.forward();
     _pulseController.repeat(reverse: true);
@@ -128,16 +121,17 @@ class _SearchPaywallPageState extends State<SearchPaywallPage> with TickerProvid
                           },
                         ),
                         const SizedBox(height: 32),
-                        
+
                         // Title with gradient text effect
                         ShaderMask(
-                          shaderCallback: (bounds) => LinearGradient(
-                            colors: [
-                              Colors.white,
-                              Colors.blue.shade300,
-                              Colors.white,
-                            ],
-                          ).createShader(bounds),
+                          shaderCallback:
+                              (bounds) => LinearGradient(
+                                colors: [
+                                  Colors.white,
+                                  Colors.blue.shade300,
+                                  Colors.white,
+                                ],
+                              ).createShader(bounds),
                           child: Text(
                             AppLocalizations.of(context)!.upgradeToPremium,
                             style: const TextStyle(
@@ -150,7 +144,7 @@ class _SearchPaywallPageState extends State<SearchPaywallPage> with TickerProvid
                           ),
                         ),
                         const SizedBox(height: 16),
-                        
+
                         // Subtitle
                         Text(
                           AppLocalizations.of(context)!.getUnlimitedSearches,
@@ -171,7 +165,10 @@ class _SearchPaywallPageState extends State<SearchPaywallPage> with TickerProvid
               Expanded(
                 flex: 2,
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 24),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 32,
+                    vertical: 24,
+                  ),
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
@@ -186,10 +183,7 @@ class _SearchPaywallPageState extends State<SearchPaywallPage> with TickerProvid
                               height: 70,
                               decoration: BoxDecoration(
                                 gradient: LinearGradient(
-                                  colors: [
-                                    Colors.black,
-                                    Colors.grey.shade900,
-                                  ],
+                                  colors: [Colors.black, Colors.grey.shade900],
                                   begin: Alignment.topLeft,
                                   end: Alignment.bottomRight,
                                 ),
@@ -209,20 +203,26 @@ class _SearchPaywallPageState extends State<SearchPaywallPage> with TickerProvid
                                   onTap: () {
                                     Navigator.of(context).push(
                                       MaterialPageRoute(
-                                        builder: (context) => SubscriptionPage(),
+                                        builder:
+                                            (context) => SubscriptionPage(),
                                       ),
                                     );
                                   },
                                   child: Padding(
-                                    padding: const EdgeInsets.symmetric(horizontal: 24),
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 24,
+                                    ),
                                     child: Row(
-                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
                                       children: [
                                         Container(
                                           padding: const EdgeInsets.all(8),
                                           decoration: BoxDecoration(
                                             color: Colors.blue.withOpacity(0.2),
-                                            borderRadius: BorderRadius.circular(12),
+                                            borderRadius: BorderRadius.circular(
+                                              12,
+                                            ),
                                           ),
                                           child: Icon(
                                             Icons.workspace_premium,
@@ -232,7 +232,9 @@ class _SearchPaywallPageState extends State<SearchPaywallPage> with TickerProvid
                                         ),
                                         const SizedBox(width: 16),
                                         Text(
-                                          AppLocalizations.of(context)!.upgradePlan,
+                                          AppLocalizations.of(
+                                            context,
+                                          )!.upgradePlan,
                                           style: TextStyle(
                                             color: Colors.blue.shade300,
                                             fontSize: 20,
@@ -248,9 +250,9 @@ class _SearchPaywallPageState extends State<SearchPaywallPage> with TickerProvid
                           );
                         },
                       ),
-                      
+
                       const SizedBox(height: 32),
-                      
+
                       // Bottom action buttons
                       Row(
                         children: [
@@ -285,9 +287,9 @@ class _SearchPaywallPageState extends State<SearchPaywallPage> with TickerProvid
                               ),
                             ),
                           ),
-                          
+
                           const SizedBox(width: 16),
-                          
+
                           // Watch ad button
                           Expanded(
                             child: Container(
@@ -317,7 +319,9 @@ class _SearchPaywallPageState extends State<SearchPaywallPage> with TickerProvid
                                   onTap: () => widget.onWatchAd(context),
                                   child: Center(
                                     child: Text(
-                                      AppLocalizations.of(context)!.watchAdForSearch,
+                                      AppLocalizations.of(
+                                        context,
+                                      )!.watchAdForSearch,
                                       style: const TextStyle(
                                         color: Colors.white,
                                         fontSize: 16,

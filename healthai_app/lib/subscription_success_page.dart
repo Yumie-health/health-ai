@@ -5,25 +5,31 @@ import 'package:confetti/confetti.dart';
 class SubscriptionSuccessPage extends StatefulWidget {
   final String subscriptionType;
   final VoidCallback? onComplete;
-  
+
   const SubscriptionSuccessPage({
-    super.key, 
+    super.key,
     required this.subscriptionType,
     this.onComplete,
   });
 
   @override
-  State<SubscriptionSuccessPage> createState() => _SubscriptionSuccessPageState();
+  State<SubscriptionSuccessPage> createState() =>
+      _SubscriptionSuccessPageState();
 
   // Static method to show the animation
-  static Future<void> show(BuildContext context, String subscriptionType, {VoidCallback? onComplete}) async {
+  static Future<void> show(
+    BuildContext context,
+    String subscriptionType, {
+    VoidCallback? onComplete,
+  }) async {
     return showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (context) => SubscriptionSuccessPage(
-        subscriptionType: subscriptionType,
-        onComplete: onComplete ?? () => Navigator.of(context).pop(),
-      ),
+      builder:
+          (context) => SubscriptionSuccessPage(
+            subscriptionType: subscriptionType,
+            onComplete: onComplete ?? () => Navigator.of(context).pop(),
+          ),
     );
   }
 }
@@ -35,40 +41,40 @@ class _SubscriptionSuccessPageState extends State<SubscriptionSuccessPage>
   late AnimationController _slideController;
   late AnimationController _checkmarkController;
   late AnimationController _textController;
-  
+
   late Animation<double> _fadeAnimation;
   late Animation<double> _scaleAnimation;
   late Animation<Offset> _slideAnimation;
   late Animation<double> _checkmarkAnimation;
   late Animation<double> _textAnimation;
-  
+
   late ConfettiController _confettiController;
-  
+
   @override
   void initState() {
     super.initState();
-    
+
     // Initialize animation controllers
     _fadeController = AnimationController(
       duration: const Duration(milliseconds: 800),
       vsync: this,
     );
-    
+
     _scaleController = AnimationController(
       duration: const Duration(milliseconds: 1200),
       vsync: this,
     );
-    
+
     _slideController = AnimationController(
       duration: const Duration(milliseconds: 1000),
       vsync: this,
     );
-    
+
     _checkmarkController = AnimationController(
       duration: const Duration(milliseconds: 1500),
       vsync: this,
     );
-    
+
     _textController = AnimationController(
       duration: const Duration(milliseconds: 800),
       vsync: this,
@@ -78,45 +84,31 @@ class _SubscriptionSuccessPageState extends State<SubscriptionSuccessPage>
     _fadeAnimation = Tween<double>(
       begin: 0.0,
       end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _fadeController,
-      curve: Curves.easeOut,
-    ));
+    ).animate(CurvedAnimation(parent: _fadeController, curve: Curves.easeOut));
 
-    _scaleAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _scaleController,
-      curve: Curves.elasticOut,
-    ));
+    _scaleAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _scaleController, curve: Curves.elasticOut),
+    );
 
     _slideAnimation = Tween<Offset>(
       begin: const Offset(0, 0.5),
       end: Offset.zero,
-    ).animate(CurvedAnimation(
-      parent: _slideController,
-      curve: Curves.bounceOut,
-    ));
+    ).animate(
+      CurvedAnimation(parent: _slideController, curve: Curves.bounceOut),
+    );
 
-    _checkmarkAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _checkmarkController,
-      curve: Curves.elasticOut,
-    ));
+    _checkmarkAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _checkmarkController, curve: Curves.elasticOut),
+    );
 
-    _textAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _textController,
-      curve: Curves.easeOutBack,
-    ));
-    
+    _textAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _textController, curve: Curves.easeOutBack),
+    );
+
     // Initialize confetti
-    _confettiController = ConfettiController(duration: const Duration(seconds: 3));
+    _confettiController = ConfettiController(
+      duration: const Duration(seconds: 3),
+    );
 
     // Start animation sequence
     _startAnimationSequence();
@@ -125,22 +117,22 @@ class _SubscriptionSuccessPageState extends State<SubscriptionSuccessPage>
   void _startAnimationSequence() async {
     // Start background fade
     _fadeController.forward();
-    
+
     // Wait a bit, then start confetti
     await Future.delayed(const Duration(milliseconds: 300));
     _confettiController.play();
-    
+
     // Start main content animations
     _scaleController.forward();
     await Future.delayed(const Duration(milliseconds: 200));
     _checkmarkController.forward();
-    
+
     await Future.delayed(const Duration(milliseconds: 400));
     _slideController.forward();
-    
+
     await Future.delayed(const Duration(milliseconds: 300));
     _textController.forward();
-    
+
     // Auto-dismiss after 4 seconds
     await Future.delayed(const Duration(seconds: 4));
     if (mounted && widget.onComplete != null) {
@@ -183,7 +175,7 @@ class _SubscriptionSuccessPageState extends State<SubscriptionSuccessPage>
               ),
             ),
           ),
-          
+
           // Confetti
           Align(
             alignment: Alignment.topCenter,
@@ -209,7 +201,7 @@ class _SubscriptionSuccessPageState extends State<SubscriptionSuccessPage>
               ],
             ),
           ),
-          
+
           // Main content
           Center(
             child: ScaleTransition(
@@ -255,9 +247,9 @@ class _SubscriptionSuccessPageState extends State<SubscriptionSuccessPage>
                         ),
                       ),
                     ),
-                    
+
                     const SizedBox(height: 24),
-                    
+
                     // Thank you text
                     SlideTransition(
                       position: _slideAnimation,
@@ -274,9 +266,9 @@ class _SubscriptionSuccessPageState extends State<SubscriptionSuccessPage>
                               ),
                               textAlign: TextAlign.center,
                             ),
-                            
+
                             const SizedBox(height: 16),
-                            
+
                             Text(
                               'Welcome to ${widget.subscriptionType == 'premium_yearly' ? 'Yearly' : 'Monthly'} Premium!',
                               style: const TextStyle(
@@ -286,9 +278,9 @@ class _SubscriptionSuccessPageState extends State<SubscriptionSuccessPage>
                               ),
                               textAlign: TextAlign.center,
                             ),
-                            
+
                             const SizedBox(height: 12),
-                            
+
                             Text(
                               'You now have unlimited access to all premium features!',
                               style: TextStyle(
@@ -298,14 +290,14 @@ class _SubscriptionSuccessPageState extends State<SubscriptionSuccessPage>
                               ),
                               textAlign: TextAlign.center,
                             ),
-                            
+
                             const SizedBox(height: 24),
-                            
+
                             // Premium features list
                             _buildFeaturesList(),
-                            
+
                             const SizedBox(height: 24),
-                            
+
                             // Continue button
                             ElevatedButton(
                               onPressed: widget.onComplete,
@@ -352,29 +344,27 @@ class _SubscriptionSuccessPageState extends State<SubscriptionSuccessPage>
     ];
 
     return Column(
-      children: features.map((feature) {
-        return Padding(
-          padding: const EdgeInsets.symmetric(vertical: 4),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                feature['icon']!,
-                style: const TextStyle(fontSize: 18),
+      children:
+          features.map((feature) {
+            return Padding(
+              padding: const EdgeInsets.symmetric(vertical: 4),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(feature['icon']!, style: const TextStyle(fontSize: 18)),
+                  const SizedBox(width: 8),
+                  Text(
+                    feature['text']!,
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                      color: Colors.black87,
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(width: 8),
-              Text(
-                feature['text']!,
-                style: const TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
-                  color: Colors.black87,
-                ),
-              ),
-            ],
-          ),
-        );
-      }).toList(),
+            );
+          }).toList(),
     );
   }
 }

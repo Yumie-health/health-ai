@@ -51,7 +51,7 @@ class _ImprovedHeightSelectorState extends State<ImprovedHeightSelector>
   void _onSliderChanged(double value) {
     HapticFeedback.selectionClick();
     _bounceController.forward().then((_) => _bounceController.reverse());
-    
+
     if (widget.useMetric) {
       widget.onSelectCm(value);
     } else {
@@ -79,12 +79,12 @@ class _ImprovedHeightSelectorState extends State<ImprovedHeightSelector>
   Widget build(BuildContext context) {
     final currentHeightCm = widget.heightCm ?? 170.0;
     final currentSliderValue = _getCurrentSliderValue();
-    
+
     // Get screen size for responsive design
     final screenHeight = MediaQuery.of(context).size.height;
     final screenWidth = MediaQuery.of(context).size.width;
     final isSmallScreen = screenHeight < 700 || screenWidth < 360;
-    
+
     return Column(
       children: [
         // Unit toggle buttons (ft first, then cm)
@@ -96,27 +96,41 @@ class _ImprovedHeightSelectorState extends State<ImprovedHeightSelector>
               child: AnimatedContainer(
                 duration: Duration(milliseconds: 200),
                 decoration: BoxDecoration(
-                  color: !widget.useMetric ? Theme.of(context).primaryColor : Colors.white,
+                  color:
+                      !widget.useMetric
+                          ? Theme.of(context).primaryColor
+                          : Colors.white,
                   borderRadius: BorderRadius.circular(18),
-                  border: Border.all(color: Theme.of(context).primaryColor, width: 2),
-                  boxShadow: !widget.useMetric ? [
-                    BoxShadow(
-                      color: Theme.of(context).primaryColor.withOpacity(0.3),
-                      blurRadius: 8,
-                      offset: Offset(0, 4),
-                    ),
-                  ] : null,
+                  border: Border.all(
+                    color: Theme.of(context).primaryColor,
+                    width: 2,
+                  ),
+                  boxShadow:
+                      !widget.useMetric
+                          ? [
+                            BoxShadow(
+                              color: Theme.of(
+                                context,
+                              ).primaryColor.withOpacity(0.3),
+                              blurRadius: 8,
+                              offset: Offset(0, 4),
+                            ),
+                          ]
+                          : null,
                 ),
                 padding: EdgeInsets.symmetric(
-                  horizontal: isSmallScreen ? 16 : 20, 
-                  vertical: isSmallScreen ? 10 : 12
+                  horizontal: isSmallScreen ? 16 : 20,
+                  vertical: isSmallScreen ? 10 : 12,
                 ),
                 child: Text(
                   "ft",
                   style: TextStyle(
                     fontSize: isSmallScreen ? 16 : 18,
                     fontWeight: FontWeight.bold,
-                    color: !widget.useMetric ? Colors.white : Theme.of(context).primaryColor,
+                    color:
+                        !widget.useMetric
+                            ? Colors.white
+                            : Theme.of(context).primaryColor,
                   ),
                 ),
               ),
@@ -127,36 +141,50 @@ class _ImprovedHeightSelectorState extends State<ImprovedHeightSelector>
               child: AnimatedContainer(
                 duration: Duration(milliseconds: 200),
                 decoration: BoxDecoration(
-                  color: widget.useMetric ? Theme.of(context).primaryColor : Colors.white,
+                  color:
+                      widget.useMetric
+                          ? Theme.of(context).primaryColor
+                          : Colors.white,
                   borderRadius: BorderRadius.circular(18),
-                  border: Border.all(color: Theme.of(context).primaryColor, width: 2),
-                  boxShadow: widget.useMetric ? [
-                    BoxShadow(
-                      color: Theme.of(context).primaryColor.withOpacity(0.3),
-                      blurRadius: 8,
-                      offset: Offset(0, 4),
-                    ),
-                  ] : null,
+                  border: Border.all(
+                    color: Theme.of(context).primaryColor,
+                    width: 2,
+                  ),
+                  boxShadow:
+                      widget.useMetric
+                          ? [
+                            BoxShadow(
+                              color: Theme.of(
+                                context,
+                              ).primaryColor.withOpacity(0.3),
+                              blurRadius: 8,
+                              offset: Offset(0, 4),
+                            ),
+                          ]
+                          : null,
                 ),
                 padding: EdgeInsets.symmetric(
-                  horizontal: isSmallScreen ? 16 : 20, 
-                  vertical: isSmallScreen ? 10 : 12
+                  horizontal: isSmallScreen ? 16 : 20,
+                  vertical: isSmallScreen ? 10 : 12,
                 ),
                 child: Text(
                   "cm",
                   style: TextStyle(
                     fontSize: isSmallScreen ? 16 : 18,
                     fontWeight: FontWeight.bold,
-                    color: widget.useMetric ? Colors.white : Theme.of(context).primaryColor,
+                    color:
+                        widget.useMetric
+                            ? Colors.white
+                            : Theme.of(context).primaryColor,
                   ),
                 ),
               ),
             ),
           ],
         ),
-        
+
         SizedBox(height: isSmallScreen ? 30 : 50),
-        
+
         // Height display
         AnimatedBuilder(
           animation: _bounceAnimation,
@@ -165,8 +193,8 @@ class _ImprovedHeightSelectorState extends State<ImprovedHeightSelector>
               scale: _bounceAnimation.value,
               child: Container(
                 padding: EdgeInsets.symmetric(
-                  horizontal: isSmallScreen ? 20 : 30, 
-                  vertical: isSmallScreen ? 16 : 24
+                  horizontal: isSmallScreen ? 20 : 30,
+                  vertical: isSmallScreen ? 16 : 24,
                 ),
                 decoration: BoxDecoration(
                   color: Theme.of(context).primaryColor.withOpacity(0.1),
@@ -186,9 +214,9 @@ class _ImprovedHeightSelectorState extends State<ImprovedHeightSelector>
                 child: Column(
                   children: [
                     Text(
-                      widget.useMetric 
-                        ? "${currentHeightCm.round()} cm"
-                        : "${widget.heightFeet}'${widget.heightInches.toString().padLeft(2, '0')}\"",
+                      widget.useMetric
+                          ? "${currentHeightCm.round()} cm"
+                          : "${widget.heightFeet}'${widget.heightInches.toString().padLeft(2, '0')}\"",
                       style: TextStyle(
                         fontSize: isSmallScreen ? 32 : 42,
                         fontWeight: FontWeight.bold,
@@ -211,9 +239,9 @@ class _ImprovedHeightSelectorState extends State<ImprovedHeightSelector>
             );
           },
         ),
-        
+
         SizedBox(height: isSmallScreen ? 30 : 50),
-        
+
         // Custom beautiful slider
         Container(
           margin: EdgeInsets.symmetric(horizontal: isSmallScreen ? 20 : 30),
@@ -223,12 +251,16 @@ class _ImprovedHeightSelectorState extends State<ImprovedHeightSelector>
               SliderTheme(
                 data: SliderTheme.of(context).copyWith(
                   trackHeight: isSmallScreen ? 6.0 : 8.0,
-                  thumbShape: CustomSliderThumbShape(isSmallScreen: isSmallScreen),
+                  thumbShape: CustomSliderThumbShape(
+                    isSmallScreen: isSmallScreen,
+                  ),
                   overlayShape: RoundSliderOverlayShape(
-                    overlayRadius: isSmallScreen ? 24.0 : 20.0
+                    overlayRadius: isSmallScreen ? 24.0 : 20.0,
                   ),
                   activeTrackColor: Theme.of(context).primaryColor,
-                  inactiveTrackColor: Theme.of(context).primaryColor.withOpacity(0.2),
+                  inactiveTrackColor: Theme.of(
+                    context,
+                  ).primaryColor.withOpacity(0.2),
                   thumbColor: Theme.of(context).primaryColor,
                   overlayColor: Theme.of(context).primaryColor.withOpacity(0.2),
                 ),
@@ -236,13 +268,14 @@ class _ImprovedHeightSelectorState extends State<ImprovedHeightSelector>
                   value: currentSliderValue,
                   min: _getMinValue(),
                   max: _getMaxValue(),
-                  divisions: widget.useMetric ? 120 : 51, // 1cm or 1inch precision
+                  divisions:
+                      widget.useMetric ? 120 : 51, // 1cm or 1inch precision
                   onChanged: _onSliderChanged,
                 ),
               ),
-              
+
               SizedBox(height: isSmallScreen ? 16 : 20),
-              
+
               // Min and max labels
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -305,28 +338,31 @@ class CustomSliderThumbShape extends SliderComponentShape {
     required Size sizeWithOverflow,
   }) {
     final Canvas canvas = context.canvas;
-    
+
     // Draw outer circle (white with shadow)
-    final Paint outerPaint = Paint()
-      ..color = Colors.white
-      ..style = PaintingStyle.fill;
-    
-    final Paint shadowPaint = Paint()
-      ..color = Colors.black.withOpacity(0.1)
-      ..style = PaintingStyle.fill
-      ..maskFilter = MaskFilter.blur(BlurStyle.normal, 3);
-    
+    final Paint outerPaint =
+        Paint()
+          ..color = Colors.white
+          ..style = PaintingStyle.fill;
+
+    final Paint shadowPaint =
+        Paint()
+          ..color = Colors.black.withOpacity(0.1)
+          ..style = PaintingStyle.fill
+          ..maskFilter = MaskFilter.blur(BlurStyle.normal, 3);
+
     // Draw shadow
     canvas.drawCircle(center + Offset(0, 2), 14.0, shadowPaint);
-    
+
     // Draw outer white circle
     canvas.drawCircle(center, 14.0, outerPaint);
-    
+
     // Draw inner colored circle
-    final Paint innerPaint = Paint()
-      ..color = sliderTheme.thumbColor!
-      ..style = PaintingStyle.fill;
-    
+    final Paint innerPaint =
+        Paint()
+          ..color = sliderTheme.thumbColor!
+          ..style = PaintingStyle.fill;
+
     canvas.drawCircle(center, 10.0, innerPaint);
   }
 }

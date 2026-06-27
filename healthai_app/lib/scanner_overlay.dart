@@ -58,21 +58,29 @@ class _ScannerOverlayPainter extends CustomPainter {
     final screenRect = Rect.fromLTWH(0, 0, size.width, size.height);
 
     // Draw the semi-transparent overlay
-    final overlayPaint = Paint()
-      ..color = Colors.black.withOpacity(overlayOpacity)
-      ..style = PaintingStyle.fill;
+    final overlayPaint =
+        Paint()
+          ..color = Colors.black.withOpacity(overlayOpacity)
+          ..style = PaintingStyle.fill;
     final overlayPath = Path()..addRect(screenRect);
-    final holePath = Path()
-      ..addRRect(RRect.fromRectAndRadius(frameRect, Radius.circular(borderRadius)));
-    final combined = Path.combine(PathOperation.difference, overlayPath, holePath);
+    final holePath =
+        Path()..addRRect(
+          RRect.fromRectAndRadius(frameRect, Radius.circular(borderRadius)),
+        );
+    final combined = Path.combine(
+      PathOperation.difference,
+      overlayPath,
+      holePath,
+    );
     canvas.drawPath(combined, overlayPaint);
 
     // Draw the border
-    final borderPaint = Paint()
-      ..color = borderColor
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = borderWidth
-      ..maskFilter = MaskFilter.blur(BlurStyle.normal, 8);
+    final borderPaint =
+        Paint()
+          ..color = borderColor
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = borderWidth
+          ..maskFilter = MaskFilter.blur(BlurStyle.normal, 8);
     canvas.drawRRect(
       RRect.fromRectAndRadius(frameRect, Radius.circular(borderRadius)),
       borderPaint,
@@ -87,4 +95,4 @@ class _ScannerOverlayPainter extends CustomPainter {
         old.overlayOpacity != overlayOpacity ||
         old.frameRect != frameRect;
   }
-} 
+}

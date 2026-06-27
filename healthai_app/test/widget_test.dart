@@ -1,30 +1,18 @@
-// This is a basic Flutter widget test.
-//
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
-
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-
-import 'package:healthai_app/main.dart';
+import 'package:healthai_app/utils/validation.dart';
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
+  test('ValidationUtils.isValidEmail rejects empty input', () {
+    expect(ValidationUtils.isValidEmail(''), isFalse);
+  });
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
+  test('ValidationUtils.isValidEmail accepts well-formed address', () {
+    expect(ValidationUtils.isValidEmail('user@example.com'), isTrue);
+  });
 
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
-
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+  test('ValidationUtils.isValidAge enforces 16-120 range', () {
+    expect(ValidationUtils.isValidAge(15), isFalse);
+    expect(ValidationUtils.isValidAge(25), isTrue);
+    expect(ValidationUtils.isValidAge(121), isFalse);
   });
 }

@@ -46,4 +46,4 @@ class CustomMeal {
       userId: data['userId'] ?? '',
     );
   }
-} 
+}

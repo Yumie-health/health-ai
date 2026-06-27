@@ -41,7 +41,10 @@ class UserService {
       final data = snap.data() as Map<String, dynamic>? ?? {};
       final storedPhoto = (data['photoUrl'] as String?) ?? '';
       if (storedPhoto.isEmpty && authPhoto.isNotEmpty) {
-        await docRef.update({'photoUrl': authPhoto, 'lastUpdated': DateTime.now()});
+        await docRef.update({
+          'photoUrl': authPhoto,
+          'lastUpdated': DateTime.now(),
+        });
       }
     } catch (_) {
       // best-effort sync
@@ -102,19 +105,22 @@ class UserService {
   }
 
   // Update water intake
-  Future<void> updateWaterIntake(String waterIntake, {int? waterLoggedMl}) async {
+  Future<void> updateWaterIntake(
+    String waterIntake, {
+    int? waterLoggedMl,
+  }) async {
     final user = _auth.currentUser;
     if (user == null) throw Exception('User not authenticated');
-    
+
     final updateData = {
       'waterIntake': waterIntake,
       'lastUpdated': DateTime.now(),
     };
-    
+
     if (waterLoggedMl != null) {
       updateData['waterLoggedMl'] = waterLoggedMl;
     }
-    
+
     await _firestore.collection('users').doc(user.uid).update(updateData);
   }
-} 
+}

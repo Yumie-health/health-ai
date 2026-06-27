@@ -3,7 +3,7 @@ import 'package:flutter/foundation.dart';
 
 class NativeBillingService {
   static const MethodChannel _channel = MethodChannel('billing_channel');
-  
+
   /// Initialize the billing service
   static Future<bool> initializeBilling() async {
     try {
@@ -17,14 +17,15 @@ class NativeBillingService {
       return false;
     }
   }
-  
+
   /// Purchase a subscription
   static Future<String?> purchaseSubscription(String productId) async {
     try {
       if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
-        final String? result = await _channel.invokeMethod('purchaseSubscription', {
-          'productId': productId,
-        });
+        final String? result = await _channel.invokeMethod(
+          'purchaseSubscription',
+          {'productId': productId},
+        );
         return result;
       }
       return null;
@@ -33,7 +34,7 @@ class NativeBillingService {
       return null;
     }
   }
-  
+
   /// Restore purchases
   static Future<bool> restorePurchases() async {
     try {

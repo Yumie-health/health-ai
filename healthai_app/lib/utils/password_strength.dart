@@ -1,12 +1,6 @@
 import 'package:flutter/material.dart';
 
-enum PasswordStrength {
-  weak,
-  fair,
-  good,
-  strong,
-  veryStrong,
-}
+enum PasswordStrength { weak, fair, good, strong, veryStrong }
 
 class PasswordStrengthResult {
   final PasswordStrength strength;

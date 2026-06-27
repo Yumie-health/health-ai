@@ -7,17 +7,15 @@ class AppUpdateDialog extends StatefulWidget {
   final AppUpdateInfo updateInfo;
   final VoidCallback? onDismiss;
 
-  const AppUpdateDialog({
-    Key? key,
-    required this.updateInfo,
-    this.onDismiss,
-  }) : super(key: key);
+  const AppUpdateDialog({Key? key, required this.updateInfo, this.onDismiss})
+    : super(key: key);
 
   @override
   State<AppUpdateDialog> createState() => _AppUpdateDialogState();
 }
 
-class _AppUpdateDialogState extends State<AppUpdateDialog> with TickerProviderStateMixin {
+class _AppUpdateDialogState extends State<AppUpdateDialog>
+    with TickerProviderStateMixin {
   late AnimationController _animationController;
   late Animation<double> _scaleAnimation;
   bool _isUpdating = false;
@@ -82,7 +80,9 @@ class _AppUpdateDialogState extends State<AppUpdateDialog> with TickerProviderSt
   }
 
   Future<void> _skipUpdate() async {
-    await AppUpdateService.skipUpdateForVersion(widget.updateInfo.latestVersion);
+    await AppUpdateService.skipUpdateForVersion(
+      widget.updateInfo.latestVersion,
+    );
     await AppUpdateService.markUpdateDialogShown();
     if (mounted) {
       Navigator.of(context).pop();
@@ -95,11 +95,14 @@ class _AppUpdateDialogState extends State<AppUpdateDialog> with TickerProviderSt
     final isForceUpdate = widget.updateInfo.isForceUpdate;
 
     return WillPopScope(
-      onWillPop: () async => !isForceUpdate, // Prevent back button on force update
+      onWillPop:
+          () async => !isForceUpdate, // Prevent back button on force update
       child: ScaleTransition(
         scale: _scaleAnimation,
         child: Dialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(24),
+          ),
           child: Container(
             padding: EdgeInsets.all(24),
             decoration: BoxDecoration(
@@ -107,10 +110,7 @@ class _AppUpdateDialogState extends State<AppUpdateDialog> with TickerProviderSt
               gradient: LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
-                colors: [
-                  Colors.white,
-                  Colors.blue[50]!,
-                ],
+                colors: [Colors.white, Colors.blue[50]!],
               ),
               boxShadow: [
                 BoxShadow(
@@ -162,7 +162,7 @@ class _AppUpdateDialogState extends State<AppUpdateDialog> with TickerProviderSt
                 ),
                 SizedBox(height: 16),
 
-                                // Version info
+                // Version info
                 Container(
                   padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                   decoration: BoxDecoration(
@@ -205,14 +205,14 @@ class _AppUpdateDialogState extends State<AppUpdateDialog> with TickerProviderSt
                               borderRadius: BorderRadius.circular(12),
                             ),
                           ),
-                                                     child: Text(
-                             AppLocalizations.of(context)!.later,
-                             style: TextStyle(
-                               color: Colors.grey[600],
-                               fontWeight: FontWeight.w600,
-                               fontSize: 16,
-                             ),
-                           ),
+                          child: Text(
+                            AppLocalizations.of(context)!.later,
+                            style: TextStyle(
+                              color: Colors.grey[600],
+                              fontWeight: FontWeight.w600,
+                              fontSize: 16,
+                            ),
+                          ),
                         ),
                       ),
                       SizedBox(width: 12),
@@ -230,22 +230,25 @@ class _AppUpdateDialogState extends State<AppUpdateDialog> with TickerProviderSt
                           elevation: 0,
                           shadowColor: Colors.transparent,
                         ),
-                        child: _isUpdating
-                            ? SizedBox(
-                                height: 20,
-                                width: 20,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                        child:
+                            _isUpdating
+                                ? SizedBox(
+                                  height: 20,
+                                  width: 20,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    valueColor: AlwaysStoppedAnimation<Color>(
+                                      Colors.white,
+                                    ),
+                                  ),
+                                )
+                                : Text(
+                                  AppLocalizations.of(context)!.updateNow,
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 16,
+                                  ),
                                 ),
-                              )
-                                                         : Text(
-                                 AppLocalizations.of(context)!.updateNow,
-                                 style: TextStyle(
-                                   fontWeight: FontWeight.w600,
-                                   fontSize: 16,
-                                 ),
-                               ),
                       ),
                     ),
                   ],

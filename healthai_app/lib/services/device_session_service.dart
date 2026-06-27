@@ -35,12 +35,17 @@ class DeviceSessionInfo {
     };
   }
 
-  factory DeviceSessionInfo.fromMap(Map<String, dynamic> map, String currentDeviceId) {
+  factory DeviceSessionInfo.fromMap(
+    Map<String, dynamic> map,
+    String currentDeviceId,
+  ) {
     return DeviceSessionInfo(
       deviceId: map['deviceId'] ?? '',
       deviceName: map['deviceName'] ?? 'Unknown Device',
       platform: map['platform'] ?? 'Unknown',
-      lastActivity: DateTime.parse(map['lastActivity'] ?? DateTime.now().toIso8601String()),
+      lastActivity: DateTime.parse(
+        map['lastActivity'] ?? DateTime.now().toIso8601String(),
+      ),
       location: map['location'] ?? 'Unknown',
       isCurrentDevice: map['deviceId'] == currentDeviceId,
     );
@@ -48,13 +53,14 @@ class DeviceSessionInfo {
 }
 
 class DeviceSessionService {
-  static final DeviceSessionService _instance = DeviceSessionService._internal();
+  static final DeviceSessionService _instance =
+      DeviceSessionService._internal();
   factory DeviceSessionService() => _instance;
   DeviceSessionService._internal();
 
   static const int maxDeviceSessions = 5; // Maximum allowed concurrent sessions
   static const int sessionTimeoutDays = 30; // Sessions expire after 30 days
-  
+
   final LoggingService _log = LoggingService();
   String? _currentDeviceId;
   String? _currentDeviceName;
@@ -64,7 +70,9 @@ class DeviceSessionService {
     await _generateDeviceInfo();
     await _updateCurrentSession();
     await _cleanupExpiredSessions();
-    _log.info('Device session service initialized', {'deviceId': _currentDeviceId});
+    _log.info('Device session service initialized', {
+      'deviceId': _currentDeviceId,
+    });
   }
 
   // Generate unique device identifier and name
@@ -72,26 +80,28 @@ class DeviceSessionService {
     try {
       final deviceInfo = DeviceInfoPlugin();
       final prefs = await SharedPreferences.getInstance();
-      
+
       // Try to get existing device ID first
       _currentDeviceId = prefs.getString('device_session_id');
-      
+
       if (Platform.isAndroid) {
         final androidInfo = await deviceInfo.androidInfo;
         _currentDeviceName = '${androidInfo.brand} ${androidInfo.model}';
-        
+
         // Generate device ID if not exists
         if (_currentDeviceId == null) {
-          _currentDeviceId = '${androidInfo.id}_${DateTime.now().millisecondsSinceEpoch}';
+          _currentDeviceId =
+              '${androidInfo.id}_${DateTime.now().millisecondsSinceEpoch}';
           await prefs.setString('device_session_id', _currentDeviceId!);
         }
       } else if (Platform.isIOS) {
         final iosInfo = await deviceInfo.iosInfo;
         _currentDeviceName = '${iosInfo.name} (${iosInfo.model})';
-        
+
         // Generate device ID if not exists
         if (_currentDeviceId == null) {
-          _currentDeviceId = '${iosInfo.identifierForVendor}_${DateTime.now().millisecondsSinceEpoch}';
+          _currentDeviceId =
+              '${iosInfo.identifierForVendor}_${DateTime.now().millisecondsSinceEpoch}';
           await prefs.setString('device_session_id', _currentDeviceId!);
         }
       } else {
@@ -132,7 +142,6 @@ class DeviceSessionService {
 
       // Check for concurrent sessions and handle if needed
       await _checkConcurrentSessions();
-      
     } catch (e) {
       _log.error('Error updating current session', e);
     }
@@ -144,12 +153,13 @@ class DeviceSessionService {
     if (user == null) return;
 
     try {
-      final sessions = await FirebaseFirestore.instance
-          .collection('users')
-          .doc(user.uid)
-          .collection('device_sessions')
-          .orderBy('lastActivity', descending: true)
-          .get();
+      final sessions =
+          await FirebaseFirestore.instance
+              .collection('users')
+              .doc(user.uid)
+              .collection('device_sessions')
+              .orderBy('lastActivity', descending: true)
+              .get();
 
       if (sessions.docs.length > maxDeviceSessions) {
         // Too many sessions - show warning
@@ -169,13 +179,16 @@ class DeviceSessionService {
     if (user == null) return;
 
     try {
-      final cutoffDate = DateTime.now().subtract(Duration(days: sessionTimeoutDays));
-      final sessions = await FirebaseFirestore.instance
-          .collection('users')
-          .doc(user.uid)
-          .collection('device_sessions')
-          .where('lastActivity', isLessThan: cutoffDate.toIso8601String())
-          .get();
+      final cutoffDate = DateTime.now().subtract(
+        Duration(days: sessionTimeoutDays),
+      );
+      final sessions =
+          await FirebaseFirestore.instance
+              .collection('users')
+              .doc(user.uid)
+              .collection('device_sessions')
+              .where('lastActivity', isLessThan: cutoffDate.toIso8601String())
+              .get();
 
       // Delete expired sessions
       for (final doc in sessions.docs) {
@@ -183,7 +196,9 @@ class DeviceSessionService {
       }
 
       if (sessions.docs.isNotEmpty) {
-        _log.info('Cleaned up expired sessions', {'count': sessions.docs.length});
+        _log.info('Cleaned up expired sessions', {
+          'count': sessions.docs.length,
+        });
       }
     } catch (e) {
       _log.error('Error cleaning up expired sessions', e);
@@ -196,12 +211,13 @@ class DeviceSessionService {
     if (user == null || _currentDeviceId == null) return [];
 
     try {
-      final sessions = await FirebaseFirestore.instance
-          .collection('users')
-          .doc(user.uid)
-          .collection('device_sessions')
-          .orderBy('lastActivity', descending: true)
-          .get();
+      final sessions =
+          await FirebaseFirestore.instance
+              .collection('users')
+              .doc(user.uid)
+              .collection('device_sessions')
+              .orderBy('lastActivity', descending: true)
+              .get();
 
       return sessions.docs.map((doc) {
         return DeviceSessionInfo.fromMap(doc.data(), _currentDeviceId!);
@@ -237,11 +253,12 @@ class DeviceSessionService {
     if (user == null || _currentDeviceId == null) return;
 
     try {
-      final sessions = await FirebaseFirestore.instance
-          .collection('users')
-          .doc(user.uid)
-          .collection('device_sessions')
-          .get();
+      final sessions =
+          await FirebaseFirestore.instance
+              .collection('users')
+              .doc(user.uid)
+              .collection('device_sessions')
+              .get();
 
       int revokedCount = 0;
       for (final doc in sessions.docs) {
@@ -292,16 +309,17 @@ class DeviceSessionService {
   // Show session management dialog
   Future<void> showSessionManagementDialog(BuildContext context) async {
     final sessions = await getActiveSessions();
-    
+
     if (!context.mounted) return;
 
     showDialog(
       context: context,
-      builder: (context) => _SessionManagementDialog(
-        sessions: sessions,
-        onRevokeSession: revokeSession,
-        onRevokeAllOthers: revokeAllOtherSessions,
-      ),
+      builder:
+          (context) => _SessionManagementDialog(
+            sessions: sessions,
+            onRevokeSession: revokeSession,
+            onRevokeAllOthers: revokeAllOtherSessions,
+          ),
     );
   }
 
@@ -332,7 +350,8 @@ class _SessionManagementDialog extends StatefulWidget {
   });
 
   @override
-  State<_SessionManagementDialog> createState() => _SessionManagementDialogState();
+  State<_SessionManagementDialog> createState() =>
+      _SessionManagementDialogState();
 }
 
 class _SessionManagementDialogState extends State<_SessionManagementDialog> {
@@ -401,12 +420,18 @@ class _SessionManagementDialogState extends State<_SessionManagementDialog> {
                       child: ListTile(
                         leading: Icon(
                           _getDeviceIcon(session.platform),
-                          color: session.isCurrentDevice ? Colors.green : Colors.grey,
+                          color:
+                              session.isCurrentDevice
+                                  ? Colors.green
+                                  : Colors.grey,
                         ),
                         title: Text(
                           session.deviceName,
                           style: TextStyle(
-                            fontWeight: session.isCurrentDevice ? FontWeight.bold : FontWeight.normal,
+                            fontWeight:
+                                session.isCurrentDevice
+                                    ? FontWeight.bold
+                                    : FontWeight.normal,
                           ),
                         ),
                         subtitle: Column(
@@ -419,24 +444,38 @@ class _SessionManagementDialogState extends State<_SessionManagementDialog> {
                             ),
                           ],
                         ),
-                        trailing: session.isCurrentDevice
-                            ? Chip(
-                                label: Text(AppLocalizations.of(context)!.thisDevice, style: TextStyle(fontSize: 10)),
-                                backgroundColor: Colors.green.withOpacity(0.1),
-                                side: BorderSide(color: Colors.green.withOpacity(0.3)),
-                              )
-                            : IconButton(
-                                icon: Icon(Icons.logout, color: Colors.red),
-                                onPressed: () {
-                                  widget.onRevokeSession(session.deviceId);
-                                  setState(() {
-                                    _sessions.removeAt(index);
-                                  });
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(content: Text(AppLocalizations.of(context)!.sessionRevoked)),
-                                  );
-                                },
-                              ),
+                        trailing:
+                            session.isCurrentDevice
+                                ? Chip(
+                                  label: Text(
+                                    AppLocalizations.of(context)!.thisDevice,
+                                    style: TextStyle(fontSize: 10),
+                                  ),
+                                  backgroundColor: Colors.green.withOpacity(
+                                    0.1,
+                                  ),
+                                  side: BorderSide(
+                                    color: Colors.green.withOpacity(0.3),
+                                  ),
+                                )
+                                : IconButton(
+                                  icon: Icon(Icons.logout, color: Colors.red),
+                                  onPressed: () {
+                                    widget.onRevokeSession(session.deviceId);
+                                    setState(() {
+                                      _sessions.removeAt(index);
+                                    });
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text(
+                                          AppLocalizations.of(
+                                            context,
+                                          )!.sessionRevoked,
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                ),
                       ),
                     );
                   },
@@ -458,11 +497,18 @@ class _SessionManagementDialogState extends State<_SessionManagementDialog> {
                 _sessions.removeWhere((session) => !session.isCurrentDevice);
               });
               ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text(AppLocalizations.of(context)!.allOtherSessionsSignedOut)),
+                SnackBar(
+                  content: Text(
+                    AppLocalizations.of(context)!.allOtherSessionsSignedOut,
+                  ),
+                ),
               );
             },
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            child: Text(AppLocalizations.of(context)!.signOutAllOthers, style: TextStyle(color: Colors.white)),
+            child: Text(
+              AppLocalizations.of(context)!.signOutAllOthers,
+              style: TextStyle(color: Colors.white),
+            ),
           ),
       ],
     );

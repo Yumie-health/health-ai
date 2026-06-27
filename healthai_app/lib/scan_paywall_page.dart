@@ -18,7 +18,8 @@ class ScanPaywallPage extends StatefulWidget {
   State<ScanPaywallPage> createState() => _ScanPaywallPageState();
 }
 
-class _ScanPaywallPageState extends State<ScanPaywallPage> with TickerProviderStateMixin {
+class _ScanPaywallPageState extends State<ScanPaywallPage>
+    with TickerProviderStateMixin {
   late AnimationController _trophyController;
   late AnimationController _pulseController;
   late Animation<double> _trophyAnimation;
@@ -36,21 +37,13 @@ class _ScanPaywallPageState extends State<ScanPaywallPage> with TickerProviderSt
       vsync: this,
     );
 
-    _trophyAnimation = Tween<double>(
-      begin: 0.8,
-      end: 1.2,
-    ).animate(CurvedAnimation(
-      parent: _trophyController,
-      curve: Curves.elasticOut,
-    ));
+    _trophyAnimation = Tween<double>(begin: 0.8, end: 1.2).animate(
+      CurvedAnimation(parent: _trophyController, curve: Curves.elasticOut),
+    );
 
-    _pulseAnimation = Tween<double>(
-      begin: 1.0,
-      end: 1.1,
-    ).animate(CurvedAnimation(
-      parent: _pulseController,
-      curve: Curves.easeInOut,
-    ));
+    _pulseAnimation = Tween<double>(begin: 1.0, end: 1.1).animate(
+      CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
+    );
 
     _trophyController.forward();
     _pulseController.repeat(reverse: true);
@@ -128,16 +121,17 @@ class _ScanPaywallPageState extends State<ScanPaywallPage> with TickerProviderSt
                           },
                         ),
                         const SizedBox(height: 32),
-                        
+
                         // Title with gradient text effect
                         ShaderMask(
-                          shaderCallback: (bounds) => LinearGradient(
-                            colors: [
-                              Colors.white,
-                              Colors.amber.shade300,
-                              Colors.white,
-                            ],
-                          ).createShader(bounds),
+                          shaderCallback:
+                              (bounds) => LinearGradient(
+                                colors: [
+                                  Colors.white,
+                                  Colors.amber.shade300,
+                                  Colors.white,
+                                ],
+                              ).createShader(bounds),
                           child: Text(
                             AppLocalizations.of(context)!.upgradeToPremium,
                             style: const TextStyle(
@@ -150,7 +144,7 @@ class _ScanPaywallPageState extends State<ScanPaywallPage> with TickerProviderSt
                           ),
                         ),
                         const SizedBox(height: 16),
-                        
+
                         // Subtitle
                         Text(
                           AppLocalizations.of(context)!.getUnlimitedScans,
@@ -171,7 +165,10 @@ class _ScanPaywallPageState extends State<ScanPaywallPage> with TickerProviderSt
               Expanded(
                 flex: 2,
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 24),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 32,
+                    vertical: 24,
+                  ),
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
@@ -186,10 +183,7 @@ class _ScanPaywallPageState extends State<ScanPaywallPage> with TickerProviderSt
                               height: 70,
                               decoration: BoxDecoration(
                                 gradient: LinearGradient(
-                                  colors: [
-                                    Colors.black,
-                                    Colors.grey.shade900,
-                                  ],
+                                  colors: [Colors.black, Colors.grey.shade900],
                                   begin: Alignment.topLeft,
                                   end: Alignment.bottomRight,
                                 ),
@@ -209,20 +203,28 @@ class _ScanPaywallPageState extends State<ScanPaywallPage> with TickerProviderSt
                                   onTap: () {
                                     Navigator.of(context).push(
                                       MaterialPageRoute(
-                                        builder: (context) => SubscriptionPage(),
+                                        builder:
+                                            (context) => SubscriptionPage(),
                                       ),
                                     );
                                   },
                                   child: Padding(
-                                    padding: const EdgeInsets.symmetric(horizontal: 24),
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 24,
+                                    ),
                                     child: Row(
-                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
                                       children: [
                                         Container(
                                           padding: const EdgeInsets.all(8),
                                           decoration: BoxDecoration(
-                                            color: Colors.amber.withOpacity(0.2),
-                                            borderRadius: BorderRadius.circular(12),
+                                            color: Colors.amber.withOpacity(
+                                              0.2,
+                                            ),
+                                            borderRadius: BorderRadius.circular(
+                                              12,
+                                            ),
                                           ),
                                           child: Icon(
                                             Icons.workspace_premium,
@@ -232,7 +234,9 @@ class _ScanPaywallPageState extends State<ScanPaywallPage> with TickerProviderSt
                                         ),
                                         const SizedBox(width: 16),
                                         Text(
-                                          AppLocalizations.of(context)!.upgradePlan,
+                                          AppLocalizations.of(
+                                            context,
+                                          )!.upgradePlan,
                                           style: const TextStyle(
                                             color: Colors.amber,
                                             fontSize: 20,
@@ -248,9 +252,9 @@ class _ScanPaywallPageState extends State<ScanPaywallPage> with TickerProviderSt
                           );
                         },
                       ),
-                      
+
                       const SizedBox(height: 32),
-                      
+
                       // Bottom action buttons
                       Row(
                         children: [
@@ -285,9 +289,9 @@ class _ScanPaywallPageState extends State<ScanPaywallPage> with TickerProviderSt
                               ),
                             ),
                           ),
-                          
+
                           const SizedBox(width: 16),
-                          
+
                           // Watch ad button
                           Expanded(
                             child: Container(
@@ -317,7 +321,9 @@ class _ScanPaywallPageState extends State<ScanPaywallPage> with TickerProviderSt
                                   onTap: () => widget.onWatchAd(context),
                                   child: Center(
                                     child: Text(
-                                      AppLocalizations.of(context)!.watchAdForScan,
+                                      AppLocalizations.of(
+                                        context,
+                                      )!.watchAdForScan,
                                       style: const TextStyle(
                                         color: Colors.white,
                                         fontSize: 16,
@@ -341,4 +347,4 @@ class _ScanPaywallPageState extends State<ScanPaywallPage> with TickerProviderSt
       ),
     );
   }
-} 
+}

@@ -29,14 +29,23 @@ class _PreviousPlansPageState extends State<PreviousPlansPage> {
     if (user == null) return;
 
     try {
-      final doc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
+      final doc =
+          await FirebaseFirestore.instance
+              .collection('users')
+              .doc(user.uid)
+              .get();
       final data = doc.data() ?? {};
-      
-      final previousPlans = List<Map<String, dynamic>>.from(data['previousPlans'] ?? []);
-      
+
+      final previousPlans = List<Map<String, dynamic>>.from(
+        data['previousPlans'] ?? [],
+      );
+
       // Load weight entries for each plan period
-      final weightEntries = await _loadWeightEntriesForPlans(user.uid, previousPlans);
-      
+      final weightEntries = await _loadWeightEntriesForPlans(
+        user.uid,
+        previousPlans,
+      );
+
       setState(() {
         _previousPlans = previousPlans;
         _weightEntries = weightEntries;
@@ -50,34 +59,39 @@ class _PreviousPlansPageState extends State<PreviousPlansPage> {
   }
 
   Future<Map<String, List<Map<String, dynamic>>>> _loadWeightEntriesForPlans(
-    String userId, 
-    List<Map<String, dynamic>> plans
+    String userId,
+    List<Map<String, dynamic>> plans,
   ) async {
     final entries = <String, List<Map<String, dynamic>>>{};
-    
+
     for (final plan in plans) {
       final startDate = plan['startDate'] as Timestamp?;
       final endDate = plan['endDate'] as Timestamp?;
-      
+
       if (startDate != null && endDate != null) {
-        final planId = '${startDate.toDate().millisecondsSinceEpoch}_${endDate.toDate().millisecondsSinceEpoch}';
-        
-        final weightDocs = await FirebaseFirestore.instance
-            .collection('users').doc(userId).collection('weights')
-            .where('timestamp', isGreaterThanOrEqualTo: startDate)
-            .where('timestamp', isLessThanOrEqualTo: endDate)
-            .orderBy('timestamp', descending: false)
-            .get();
-        
-        final planEntries = weightDocs.docs
-            .map((doc) => doc.data())
-            .where((data) => (data['isDeleted'] ?? false) == false)
-            .toList();
-        
+        final planId =
+            '${startDate.toDate().millisecondsSinceEpoch}_${endDate.toDate().millisecondsSinceEpoch}';
+
+        final weightDocs =
+            await FirebaseFirestore.instance
+                .collection('users')
+                .doc(userId)
+                .collection('weights')
+                .where('timestamp', isGreaterThanOrEqualTo: startDate)
+                .where('timestamp', isLessThanOrEqualTo: endDate)
+                .orderBy('timestamp', descending: false)
+                .get();
+
+        final planEntries =
+            weightDocs.docs
+                .map((doc) => doc.data())
+                .where((data) => (data['isDeleted'] ?? false) == false)
+                .toList();
+
         entries[planId] = planEntries;
       }
     }
-    
+
     return entries;
   }
 
@@ -93,7 +107,10 @@ class _PreviousPlansPageState extends State<PreviousPlansPage> {
         appBar: AppBar(
           title: Text(
             'Previous Plans',
-            style: const TextStyle(fontWeight: FontWeight.w700, color: kPrimaryGreen),
+            style: const TextStyle(
+              fontWeight: FontWeight.w700,
+              color: kPrimaryGreen,
+            ),
           ),
           foregroundColor: kPrimaryGreen,
           backgroundColor: Colors.transparent,
@@ -109,7 +126,10 @@ class _PreviousPlansPageState extends State<PreviousPlansPage> {
         appBar: AppBar(
           title: Text(
             'Previous Plans',
-            style: const TextStyle(fontWeight: FontWeight.w700, color: kPrimaryGreen),
+            style: const TextStyle(
+              fontWeight: FontWeight.w700,
+              color: kPrimaryGreen,
+            ),
           ),
           foregroundColor: kPrimaryGreen,
           backgroundColor: Colors.transparent,
@@ -119,11 +139,7 @@ class _PreviousPlansPageState extends State<PreviousPlansPage> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(
-                Icons.history,
-                size: 64,
-                color: Colors.grey[400],
-              ),
+              Icon(Icons.history, size: 64, color: Colors.grey[400]),
               const SizedBox(height: 16),
               Text(
                 'No Previous Plans',
@@ -199,15 +215,18 @@ class _PreviousPlansPageState extends State<PreviousPlansPage> {
     );
   }
 
-  List<Map<String, dynamic>> _getWeightEntriesForPlan(Map<String, dynamic> plan) {
+  List<Map<String, dynamic>> _getWeightEntriesForPlan(
+    Map<String, dynamic> plan,
+  ) {
     final startDate = plan['startDate'] as Timestamp?;
     final endDate = plan['endDate'] as Timestamp?;
-    
+
     if (startDate != null && endDate != null) {
-      final planId = '${startDate.toDate().millisecondsSinceEpoch}_${endDate.toDate().millisecondsSinceEpoch}';
+      final planId =
+          '${startDate.toDate().millisecondsSinceEpoch}_${endDate.toDate().millisecondsSinceEpoch}';
       return _weightEntries[planId] ?? [];
     }
-    
+
     return [];
   }
 
@@ -232,23 +251,25 @@ class _PreviousPlanCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
-    
+
     final startDate = plan['startDate'] as Timestamp?;
     final endDate = plan['endDate'] as Timestamp?;
     final startingWeight = (plan['startingWeight'] as num?)?.toDouble() ?? 0.0;
     final targetWeight = (plan['targetWeight'] as num?)?.toDouble() ?? 0.0;
     final goal = plan['goal'] as String? ?? 'Unknown Goal';
     final status = plan['status'] as String? ?? 'completed';
-    
-    final startWeightDisplay = useMetric ? startingWeight : (startingWeight * 2.20462);
-    final targetWeightDisplay = useMetric ? targetWeight : (targetWeight * 2.20462);
+
+    final startWeightDisplay =
+        useMetric ? startingWeight : (startingWeight * 2.20462);
+    final targetWeightDisplay =
+        useMetric ? targetWeight : (targetWeight * 2.20462);
     final unit = useMetric ? 'kg' : 'lbs';
-    
+
     // Calculate weight change
     final weightChange = targetWeightDisplay - startWeightDisplay;
     final weightChangeAbs = weightChange.abs();
     final isLoss = weightChange < 0;
-    
+
     // Calculate duration
     String durationText = 'Unknown';
     if (startDate != null && endDate != null) {
@@ -288,7 +309,10 @@ class _PreviousPlanCard extends StatelessWidget {
                 children: [
                   Icon(
                     isLoss ? Icons.trending_down : Icons.trending_up,
-                    color: isLoss ? const Color(0xFF34C759) : const Color(0xFFFF6B6B),
+                    color:
+                        isLoss
+                            ? const Color(0xFF34C759)
+                            : const Color(0xFFFF6B6B),
                     size: 20,
                   ),
                   const SizedBox(width: 8),
@@ -301,11 +325,15 @@ class _PreviousPlanCard extends StatelessWidget {
                     ),
                   ),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
-                      color: status == 'completed' 
-                          ? const Color(0xFF34C759).withOpacity(0.1)
-                          : const Color(0xFFFF6B6B).withOpacity(0.1),
+                      color:
+                          status == 'completed'
+                              ? const Color(0xFF34C759).withOpacity(0.1)
+                              : const Color(0xFFFF6B6B).withOpacity(0.1),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Text(
@@ -313,9 +341,10 @@ class _PreviousPlanCard extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
-                        color: status == 'completed' 
-                            ? const Color(0xFF34C759)
-                            : const Color(0xFFFF6B6B),
+                        color:
+                            status == 'completed'
+                                ? const Color(0xFF34C759)
+                                : const Color(0xFFFF6B6B),
                       ),
                     ),
                   ),
@@ -326,7 +355,10 @@ class _PreviousPlanCard extends StatelessWidget {
                 '${startWeightDisplay.toStringAsFixed(1)} $unit → ${targetWeightDisplay.toStringAsFixed(1)} $unit',
                 style: theme.textTheme.titleLarge?.copyWith(
                   fontWeight: FontWeight.w700,
-                  color: isLoss ? const Color(0xFF34C759) : const Color(0xFFFF6B6B),
+                  color:
+                      isLoss
+                          ? const Color(0xFF34C759)
+                          : const Color(0xFFFF6B6B),
                 ),
               ),
               const SizedBox(height: 4),
@@ -466,10 +498,10 @@ class _PreviousPlanCard extends StatelessWidget {
               final weight = (entry['weight'] as num?)?.toDouble() ?? 0.0;
               final timestamp = entry['timestamp'] as Timestamp?;
               final date = timestamp?.toDate() ?? DateTime.now();
-              
+
               final weightDisplay = useMetric ? weight : (weight * 2.20462);
               final unit = useMetric ? 'kg' : 'lbs';
-              
+
               return Container(
                 width: 80,
                 margin: const EdgeInsets.only(right: 8),
@@ -528,15 +560,13 @@ class _NutritionCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    
+
     return Container(
       padding: const EdgeInsets.all(8),
       decoration: BoxDecoration(
         color: color.withOpacity(0.1),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(
-          color: color.withOpacity(0.3),
-        ),
+        border: Border.all(color: color.withOpacity(0.3)),
       ),
       child: Column(
         children: [

@@ -13,7 +13,8 @@ class Meal {
   final List<String> ingredients;
   final String? imageUrl;
   final String? foodType; // ingredient, meal, drink
-  final int? quantity; // count for ingredients, servings for meals, fluid ounces for drinks
+  final int?
+  quantity; // count for ingredients, servings for meals, fluid ounces for drinks
   final String? quantityUnit; // "count", "servings", "fl oz"
 
   Meal({
@@ -57,14 +58,17 @@ class Meal {
   factory Meal.fromFirestore(DocumentSnapshot doc) {
     Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
     // Defensive: skip meals with missing or empty required fields
-    if (data['name'] == null || data['name'].toString().trim().isEmpty ||
-        data['userId'] == null || data['userId'].toString().trim().isEmpty ||
+    if (data['name'] == null ||
+        data['name'].toString().trim().isEmpty ||
+        data['userId'] == null ||
+        data['userId'].toString().trim().isEmpty ||
         data['timestamp'] == null) {
       throw Exception('Invalid meal data: missing required fields');
     }
     final Timestamp? serverTs = data['serverTimestamp'] as Timestamp?;
     final Timestamp? clientTs = data['timestamp'] as Timestamp?;
-    final DateTime resolvedTs = (serverTs ?? clientTs ?? Timestamp.now()).toDate();
+    final DateTime resolvedTs =
+        (serverTs ?? clientTs ?? Timestamp.now()).toDate();
     return Meal(
       id: doc.id,
       name: data['name'] ?? '',
@@ -75,11 +79,15 @@ class Meal {
       timestamp: resolvedTs,
       mealType: data['mealType'] ?? '',
       userId: data['userId'] ?? '',
-      ingredients: (data['ingredients'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? [],
+      ingredients:
+          (data['ingredients'] as List<dynamic>?)
+              ?.map((e) => e.toString())
+              .toList() ??
+          [],
       imageUrl: data['imageUrl'] as String?,
       foodType: data['foodType'] as String?,
       quantity: data['quantity'] as int?,
       quantityUnit: data['quantityUnit'] as String?,
     );
   }
-} 
+}

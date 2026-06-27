@@ -19,7 +19,8 @@ class SubscriptionPage extends StatefulWidget {
   State<SubscriptionPage> createState() => _SubscriptionPageState();
 }
 
-class _SubscriptionPageState extends State<SubscriptionPage> with WidgetsBindingObserver {
+class _SubscriptionPageState extends State<SubscriptionPage>
+    with WidgetsBindingObserver {
   final InAppPurchase _iap = InAppPurchase.instance;
   final Set<String> _kProductIds = {'premium_monthly', 'premium_yearly'};
   List<ProductDetails> _products = [];
@@ -27,14 +28,14 @@ class _SubscriptionPageState extends State<SubscriptionPage> with WidgetsBinding
   bool _isProcessingPayment = false;
   String? _errorMessage;
   bool _isPremium = false;
-  
+
   // Stream management
   StreamSubscription<List<PurchaseDetails>>? _purchaseSubscription;
-  
+
   // State management
   bool _isInitialized = false;
   Set<String> _pendingPurchases = {};
-  
+
   // User interaction tracking
   String? _selectedProductId;
   bool _userInitiatedRestore = false;
@@ -52,20 +53,29 @@ class _SubscriptionPageState extends State<SubscriptionPage> with WidgetsBinding
         msg.contains('cancelled');
   }
 
-  
   Future<void> _openUrl(String url, {String? fallbackError}) async {
     try {
       final uri = Uri.parse(url);
       final ok = await launchUrl(uri, mode: LaunchMode.externalApplication);
       if (!ok && mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(fallbackError ?? AppLocalizations.of(context)!.unknownErrorOccurred)),
+          SnackBar(
+            content: Text(
+              fallbackError ??
+                  AppLocalizations.of(context)!.unknownErrorOccurred,
+            ),
+          ),
         );
       }
     } catch (_) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(fallbackError ?? AppLocalizations.of(context)!.unknownErrorOccurred)),
+          SnackBar(
+            content: Text(
+              fallbackError ??
+                  AppLocalizations.of(context)!.unknownErrorOccurred,
+            ),
+          ),
         );
       }
     }
@@ -81,7 +91,7 @@ class _SubscriptionPageState extends State<SubscriptionPage> with WidgetsBinding
   Future<void> _initialize() async {
     await _checkPremiumStatus();
     await _initializeIAP();
-    
+
     // Set up purchase stream listener AFTER initialization
     _purchaseSubscription = _iap.purchaseStream.listen(
       _onPurchaseUpdated,
@@ -98,7 +108,7 @@ class _SubscriptionPageState extends State<SubscriptionPage> with WidgetsBinding
         }
       },
     );
-    
+
     setState(() => _isInitialized = true);
   }
 
@@ -106,7 +116,9 @@ class _SubscriptionPageState extends State<SubscriptionPage> with WidgetsBinding
   void didChangeAppLifecycleState(AppLifecycleState state) {
     super.didChangeAppLifecycleState(state);
     // Handle app returning from background during purchase
-    if (state == AppLifecycleState.resumed && _isProcessingPayment && _selectedProductId != null) {
+    if (state == AppLifecycleState.resumed &&
+        _isProcessingPayment &&
+        _selectedProductId != null) {
       // Don't show cancelled message - let the purchase stream handle the result
       // The purchase could be successful, restored, or cancelled
       print('App resumed while processing payment');
@@ -128,7 +140,6 @@ class _SubscriptionPageState extends State<SubscriptionPage> with WidgetsBinding
       if (mounted) {
         setState(() => _isPremium = isPremium);
       }
-
     } catch (e) {
       print('Error checking premium status: $e');
     }
@@ -137,7 +148,7 @@ class _SubscriptionPageState extends State<SubscriptionPage> with WidgetsBinding
   Future<void> _initializeIAP() async {
     try {
       final bool available = await _iap.isAvailable();
-      
+
       if (!available) {
         setState(() {
           _isLoading = false;
@@ -147,13 +158,16 @@ class _SubscriptionPageState extends State<SubscriptionPage> with WidgetsBinding
       }
 
       // Query products
-      final ProductDetailsResponse response = await _iap.queryProductDetails(_kProductIds);
-      
+      final ProductDetailsResponse response = await _iap.queryProductDetails(
+        _kProductIds,
+      );
+
       if (response.error != null) {
         print('Product query error: ${response.error}');
         setState(() {
           _isLoading = false;
-          _errorMessage = 'Failed to load subscription products. Please try again.';
+          _errorMessage =
+              'Failed to load subscription products. Please try again.';
         });
         return;
       }
@@ -162,9 +176,10 @@ class _SubscriptionPageState extends State<SubscriptionPage> with WidgetsBinding
         print('No products found');
         setState(() {
           _isLoading = false;
-          _errorMessage = Platform.isIOS 
-            ? 'Subscription products not available. Please ensure the app is properly configured.'
-            : 'Subscription products not available.';
+          _errorMessage =
+              Platform.isIOS
+                  ? 'Subscription products not available. Please ensure the app is properly configured.'
+                  : 'Subscription products not available.';
         });
         return;
       }
@@ -173,7 +188,7 @@ class _SubscriptionPageState extends State<SubscriptionPage> with WidgetsBinding
         _products = response.productDetails;
         _isLoading = false;
       });
-      
+
       print('Loaded ${_products.length} products');
     } catch (e) {
       print('IAP initialization error: $e');
@@ -186,82 +201,96 @@ class _SubscriptionPageState extends State<SubscriptionPage> with WidgetsBinding
 
   void _onPurchaseUpdated(List<PurchaseDetails> purchases) async {
     if (!_isInitialized) return; // Ignore events during initialization
-    
+
     for (final purchase in purchases) {
       print('Purchase update: ${purchase.productID} - ${purchase.status}');
-      print('_isProcessingPayment: $_isProcessingPayment, _selectedProductId: $_selectedProductId');
-      
+      print(
+        '_isProcessingPayment: $_isProcessingPayment, _selectedProductId: $_selectedProductId',
+      );
+
       // Track pending purchases
       if (purchase.status == PurchaseStatus.pending) {
         _pendingPurchases.add(purchase.productID);
         continue;
       }
-      
+
       // Remove from pending when resolved
       _pendingPurchases.remove(purchase.productID);
-      
+
       switch (purchase.status) {
         case PurchaseStatus.purchased:
           await _handlePurchaseSuccess(purchase);
           break;
-          
+
         case PurchaseStatus.restored:
           if (_userInitiatedRestore) {
             await _handleRestoreSuccess(purchase);
           } else if (_isProcessingPayment) {
             // This is a restored purchase that came from a buy attempt
-            print('Purchase attempt returned restored status - BLOCKING automatic restore');
+            print(
+              'Purchase attempt returned restored status - BLOCKING automatic restore',
+            );
             // DO NOT grant premium for automatic restores to prevent cross-account access
             if (purchase.pendingCompletePurchase) {
               await _iap.completePurchase(purchase);
             }
           } else {
             // Automatic restore (not user-initiated) - just complete it but don't grant premium
-            print('⚠️ AUTOMATIC RESTORE BLOCKED - preventing cross-account premium access');
+            print(
+              '⚠️ AUTOMATIC RESTORE BLOCKED - preventing cross-account premium access',
+            );
             if (purchase.pendingCompletePurchase) {
               await _iap.completePurchase(purchase);
             }
           }
           break;
-          
+
         case PurchaseStatus.error:
         case PurchaseStatus.canceled:
           await _handlePurchaseError(purchase);
           break;
-          
+
         default:
           break;
       }
     }
   }
 
-  Future<void> _handlePurchaseSuccess(PurchaseDetails purchase, {bool isFromRestore = false}) async {
+  Future<void> _handlePurchaseSuccess(
+    PurchaseDetails purchase, {
+    bool isFromRestore = false,
+  }) async {
     try {
       // Cancel timeout timer since purchase succeeded
       _purchaseTimeoutTimer?.cancel();
-      
+
       // Validate receipt if on iOS
       if (Platform.isIOS) {
-        final isValid = await ReceiptValidationService.validateReceipt(purchase);
+        final isValid = await ReceiptValidationService.validateReceipt(
+          purchase,
+        );
         if (!isValid) {
           print('Receipt validation failed but allowing purchase to proceed');
         }
       }
-      
+
       // Save subscription - passing isRestore flag to prevent cross-account issues
-      await ReceiptValidationService.saveValidatedSubscription(purchase, isRestore: isFromRestore);
-      
+      await ReceiptValidationService.saveValidatedSubscription(
+        purchase,
+        isRestore: isFromRestore,
+      );
+
       // Complete purchase
       if (purchase.pendingCompletePurchase) {
         await _iap.completePurchase(purchase);
       }
-      
+
       // Update UI
       setState(() {
         _isProcessingPayment = false;
         _selectedProductId = null;
       });
-      
+
       // Show success ONLY for actual purchases, not restores
       if (mounted && !isFromRestore) {
         SubscriptionSuccessPage.show(
@@ -298,22 +327,27 @@ class _SubscriptionPageState extends State<SubscriptionPage> with WidgetsBinding
   Future<void> _handleRestoreSuccess(PurchaseDetails purchase) async {
     try {
       // CRITICAL: Pass isRestore=true to prevent cross-account premium access
-      await ReceiptValidationService.saveValidatedSubscription(purchase, isRestore: true);
-      
+      await ReceiptValidationService.saveValidatedSubscription(
+        purchase,
+        isRestore: true,
+      );
+
       // Complete purchase
       if (purchase.pendingCompletePurchase) {
         await _iap.completePurchase(purchase);
       }
-      
+
       // Check if premium was actually restored
       await _checkPremiumStatus();
-      
+
       // Since restore is now blocked, show appropriate message
       if (mounted) {
         setState(() => _isProcessingPayment = false);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Cannot restore purchases from a different account. Please use the account that originally purchased.'),
+            content: Text(
+              'Cannot restore purchases from a different account. Please use the account that originally purchased.',
+            ),
             backgroundColor: Colors.orange,
             duration: Duration(seconds: 4),
           ),
@@ -327,17 +361,17 @@ class _SubscriptionPageState extends State<SubscriptionPage> with WidgetsBinding
   Future<void> _handlePurchaseError(PurchaseDetails purchase) async {
     // Cancel timeout timer
     _purchaseTimeoutTimer?.cancel();
-    
+
     // Complete the purchase to clear it
     if (purchase.pendingCompletePurchase) {
       await _iap.completePurchase(purchase);
     }
-    
+
     setState(() {
       _isProcessingPayment = false;
       _selectedProductId = null;
     });
-    
+
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -354,10 +388,10 @@ class _SubscriptionPageState extends State<SubscriptionPage> with WidgetsBinding
       _isProcessingPayment = true;
       _selectedProductId = product.id;
     });
-    
+
     // Cancel any existing timer
     _purchaseTimeoutTimer?.cancel();
-    
+
     // Set a timeout to stop spinning if nothing happens
     _purchaseTimeoutTimer = Timer(Duration(seconds: 30), () {
       if (_isProcessingPayment && mounted) {
@@ -374,12 +408,12 @@ class _SubscriptionPageState extends State<SubscriptionPage> with WidgetsBinding
         );
       }
     });
-    
+
     try {
       // For iOS: First clear ALL pending transactions
       if (Platform.isIOS) {
         print('Clearing pending transactions before purchase...');
-        
+
         // Create a temporary subscription to drain the queue
         final tempSub = _iap.purchaseStream.listen((purchases) {
           for (final purchase in purchases) {
@@ -388,20 +422,20 @@ class _SubscriptionPageState extends State<SubscriptionPage> with WidgetsBinding
             }
           }
         });
-        
+
         // Give it a moment to process
         await Future.delayed(Duration(milliseconds: 500));
         tempSub.cancel();
       }
-      
+
       print('Attempting to purchase: ${product.id}');
       final purchaseParam = PurchaseParam(productDetails: product);
-      
+
       // For subscriptions, use buyNonConsumable
       final result = await _iap.buyNonConsumable(purchaseParam: purchaseParam);
-      
+
       print('Purchase initiation result: $result');
-      
+
       if (!result) {
         // Purchase initiation failed
         setState(() {
@@ -426,14 +460,12 @@ class _SubscriptionPageState extends State<SubscriptionPage> with WidgetsBinding
         _selectedProductId = null;
       });
       if (!mounted) return;
-      final friendly = _isUserCancelledError(e)
-          ? 'Purchase cancelled'
-          : 'Purchase error. Please try again.';
+      final friendly =
+          _isUserCancelledError(e)
+              ? 'Purchase cancelled'
+              : 'Purchase error. Please try again.';
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(friendly),
-          backgroundColor: kWarningRed,
-        ),
+        SnackBar(content: Text(friendly), backgroundColor: kWarningRed),
       );
     }
   }
@@ -443,21 +475,21 @@ class _SubscriptionPageState extends State<SubscriptionPage> with WidgetsBinding
       _isProcessingPayment = true;
       _userInitiatedRestore = true;
     });
-    
+
     try {
       await _iap.restorePurchases();
-      
+
       // Wait for restore to complete
       Future.delayed(Duration(seconds: 3), () async {
         if (mounted) {
           // Check if we're premium now
           await _checkPremiumStatus();
-          
+
           setState(() {
             _isProcessingPayment = false;
             _userInitiatedRestore = false;
           });
-          
+
           if (!_isPremium) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
@@ -492,7 +524,7 @@ class _SubscriptionPageState extends State<SubscriptionPage> with WidgetsBinding
     final price = product.price;
     final lengthLabel = isYearly ? '1 year' : '1 month';
     final perUnit = isYearly ? '/year' : '/month';
-    
+
     return Card(
       margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       elevation: 4,
@@ -509,9 +541,9 @@ class _SubscriptionPageState extends State<SubscriptionPage> with WidgetsBinding
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  product.id == 'premium_monthly' 
-                    ? AppLocalizations.of(context)!.yumiePremiumMonthly 
-                    : AppLocalizations.of(context)!.yumiePremiumYearly,
+                  product.id == 'premium_monthly'
+                      ? AppLocalizations.of(context)!.yumiePremiumMonthly
+                      : AppLocalizations.of(context)!.yumiePremiumYearly,
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
@@ -536,9 +568,9 @@ class _SubscriptionPageState extends State<SubscriptionPage> with WidgetsBinding
                 Text(
                   perUnit,
                   style: const TextStyle(
-                    fontSize: 14, 
-                    color: Colors.black54, 
-                    fontWeight: FontWeight.w600
+                    fontSize: 14,
+                    color: Colors.black54,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
               ],
@@ -556,20 +588,24 @@ class _SubscriptionPageState extends State<SubscriptionPage> with WidgetsBinding
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                onPressed: (_isProcessingPayment || _selectedProductId == product.id) 
-                  ? null 
-                  : () => _buy(product),
+                onPressed:
+                    (_isProcessingPayment || _selectedProductId == product.id)
+                        ? null
+                        : () => _buy(product),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: kPrimaryGreen,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                   padding: EdgeInsets.symmetric(vertical: 16),
                 ),
-                child: (_isProcessingPayment && _selectedProductId == product.id)
-                    ? CircularProgressIndicator(color: Colors.white)
-                    : Text(
-                        AppLocalizations.of(context)!.subscribe, 
-                        style: TextStyle(fontSize: 18, color: Colors.white)
-                      ),
+                child:
+                    (_isProcessingPayment && _selectedProductId == product.id)
+                        ? CircularProgressIndicator(color: Colors.white)
+                        : Text(
+                          AppLocalizations.of(context)!.subscribe,
+                          style: TextStyle(fontSize: 18, color: Colors.white),
+                        ),
               ),
             ),
           ],
@@ -582,9 +618,10 @@ class _SubscriptionPageState extends State<SubscriptionPage> with WidgetsBinding
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(_isPremium 
-          ? AppLocalizations.of(context)!.premiumStatus 
-          : AppLocalizations.of(context)!.upgradeToPremium
+        title: Text(
+          _isPremium
+              ? AppLocalizations.of(context)!.premiumStatus
+              : AppLocalizations.of(context)!.upgradeToPremium,
         ),
         backgroundColor: kPrimaryGreen,
         foregroundColor: Colors.white,
@@ -597,13 +634,14 @@ class _SubscriptionPageState extends State<SubscriptionPage> with WidgetsBinding
             ),
         ],
       ),
-      body: _isPremium
-          ? _buildPremiumStatusView()
-          : _isLoading
+      body:
+          _isPremium
+              ? _buildPremiumStatusView()
+              : _isLoading
               ? Center(child: CircularProgressIndicator(color: kPrimaryGreen))
               : _errorMessage != null
-                  ? _buildErrorView()
-                  : _buildSubscriptionOptions(),
+              ? _buildErrorView()
+              : _buildSubscriptionOptions(),
     );
   }
 
@@ -627,11 +665,7 @@ class _SubscriptionPageState extends State<SubscriptionPage> with WidgetsBinding
             ),
             child: Column(
               children: [
-                Icon(
-                  Icons.workspace_premium,
-                  size: 64,
-                  color: Colors.white,
-                ),
+                Icon(Icons.workspace_premium, size: 64, color: Colors.white),
                 SizedBox(height: 16),
                 Text(
                   AppLocalizations.of(context)!.unlockPremiumFeatures,
@@ -645,10 +679,7 @@ class _SubscriptionPageState extends State<SubscriptionPage> with WidgetsBinding
                 SizedBox(height: 8),
                 Text(
                   AppLocalizations.of(context)!.upgradeDescription,
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: Colors.white70,
-                  ),
+                  style: TextStyle(fontSize: 16, color: Colors.white70),
                   textAlign: TextAlign.center,
                 ),
               ],
@@ -665,11 +696,26 @@ class _SubscriptionPageState extends State<SubscriptionPage> with WidgetsBinding
             ),
           ),
           SizedBox(height: 12),
-          _buildFeatureItem(Icons.camera_alt, AppLocalizations.of(context)!.unlimitedFoodScans),
-          _buildFeatureItem(Icons.search, AppLocalizations.of(context)!.unlimitedFoodSearches),
-          _buildFeatureItem(Icons.chat, AppLocalizations.of(context)!.unlimitedAICoachMessages),
-          _buildFeatureItem(Icons.insights, AppLocalizations.of(context)!.dailyHealthInsights),
-          _buildFeatureItem(Icons.workspace_premium, AppLocalizations.of(context)!.noAdvertisements),
+          _buildFeatureItem(
+            Icons.camera_alt,
+            AppLocalizations.of(context)!.unlimitedFoodScans,
+          ),
+          _buildFeatureItem(
+            Icons.search,
+            AppLocalizations.of(context)!.unlimitedFoodSearches,
+          ),
+          _buildFeatureItem(
+            Icons.chat,
+            AppLocalizations.of(context)!.unlimitedAICoachMessages,
+          ),
+          _buildFeatureItem(
+            Icons.insights,
+            AppLocalizations.of(context)!.dailyHealthInsights,
+          ),
+          _buildFeatureItem(
+            Icons.workspace_premium,
+            AppLocalizations.of(context)!.noAdvertisements,
+          ),
           SizedBox(height: 24),
           // Subscription plans
           Text(
@@ -686,10 +732,7 @@ class _SubscriptionPageState extends State<SubscriptionPage> with WidgetsBinding
           // Terms and conditions
           Text(
             AppLocalizations.of(context)!.bySubscribing,
-            style: TextStyle(
-              fontSize: 12,
-              color: Colors.grey[600],
-            ),
+            style: TextStyle(fontSize: 12, color: Colors.grey[600]),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 8),
@@ -700,19 +743,27 @@ class _SubscriptionPageState extends State<SubscriptionPage> with WidgetsBinding
               runSpacing: 4,
               children: [
                 TextButton(
-                  onPressed: () => _openUrl(
-                    Platform.isIOS
-                        ? 'https://www.apple.com/legal/internet-services/itunes/dev/stdeula/'
-                        : 'https://yumie.me/terms',
-                    fallbackError: AppLocalizations.of(context)!.couldNotOpenTermsOfService,
-                  ),
+                  onPressed:
+                      () => _openUrl(
+                        Platform.isIOS
+                            ? 'https://www.apple.com/legal/internet-services/itunes/dev/stdeula/'
+                            : 'https://yumie.me/terms',
+                        fallbackError:
+                            AppLocalizations.of(
+                              context,
+                            )!.couldNotOpenTermsOfService,
+                      ),
                   child: Text(AppLocalizations.of(context)!.termsOfUseEula),
                 ),
                 TextButton(
-                  onPressed: () => _openUrl(
-                    'https://yumie.me/privacy',
-                    fallbackError: AppLocalizations.of(context)!.couldNotOpenPrivacyPolicy,
-                  ),
+                  onPressed:
+                      () => _openUrl(
+                        'https://yumie.me/privacy',
+                        fallbackError:
+                            AppLocalizations.of(
+                              context,
+                            )!.couldNotOpenPrivacyPolicy,
+                      ),
                   child: Text(AppLocalizations.of(context)!.privacyPolicy),
                 ),
               ],
@@ -728,19 +779,9 @@ class _SubscriptionPageState extends State<SubscriptionPage> with WidgetsBinding
       padding: EdgeInsets.symmetric(vertical: 4),
       child: Row(
         children: [
-          Icon(
-            icon,
-            color: kPrimaryGreen,
-            size: 20,
-          ),
+          Icon(icon, color: kPrimaryGreen, size: 20),
           SizedBox(width: 12),
-          Text(
-            text,
-            style: TextStyle(
-              fontSize: 16,
-              color: Colors.black87,
-            ),
-          ),
+          Text(text, style: TextStyle(fontSize: 16, color: Colors.black87)),
         ],
       ),
     );
@@ -809,22 +850,34 @@ class _SubscriptionPageState extends State<SubscriptionPage> with WidgetsBinding
                     ),
                   ),
                   SizedBox(height: 16),
-                  _buildFeatureItem(Icons.camera_alt, AppLocalizations.of(context)!.unlimitedFoodScans),
-                  _buildFeatureItem(Icons.search, AppLocalizations.of(context)!.unlimitedFoodSearches),
-                  _buildFeatureItem(Icons.chat, AppLocalizations.of(context)!.unlimitedAICoachMessages),
-                  _buildFeatureItem(Icons.insights, AppLocalizations.of(context)!.dailyHealthInsights),
-                  _buildFeatureItem(Icons.workspace_premium, AppLocalizations.of(context)!.noAdvertisements),
+                  _buildFeatureItem(
+                    Icons.camera_alt,
+                    AppLocalizations.of(context)!.unlimitedFoodScans,
+                  ),
+                  _buildFeatureItem(
+                    Icons.search,
+                    AppLocalizations.of(context)!.unlimitedFoodSearches,
+                  ),
+                  _buildFeatureItem(
+                    Icons.chat,
+                    AppLocalizations.of(context)!.unlimitedAICoachMessages,
+                  ),
+                  _buildFeatureItem(
+                    Icons.insights,
+                    AppLocalizations.of(context)!.dailyHealthInsights,
+                  ),
+                  _buildFeatureItem(
+                    Icons.workspace_premium,
+                    AppLocalizations.of(context)!.noAdvertisements,
+                  ),
                 ],
               ),
             ),
-
           ],
         ),
       ),
     );
   }
-
-
 
   Widget _buildErrorView() {
     return Center(
@@ -833,11 +886,7 @@ class _SubscriptionPageState extends State<SubscriptionPage> with WidgetsBinding
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              Icons.error_outline,
-              size: 64,
-              color: kWarningRed,
-            ),
+            Icon(Icons.error_outline, size: 64, color: kWarningRed),
             SizedBox(height: 16),
             Text(
               AppLocalizations.of(context)!.subscriptionError,
@@ -849,11 +898,9 @@ class _SubscriptionPageState extends State<SubscriptionPage> with WidgetsBinding
             ),
             SizedBox(height: 8),
             Text(
-              _errorMessage ?? AppLocalizations.of(context)!.unknownErrorOccurred,
-              style: TextStyle(
-                fontSize: 16,
-                color: Colors.grey[600],
-              ),
+              _errorMessage ??
+                  AppLocalizations.of(context)!.unknownErrorOccurred,
+              style: TextStyle(fontSize: 16, color: Colors.grey[600]),
               textAlign: TextAlign.center,
             ),
             SizedBox(height: 24),
@@ -867,10 +914,15 @@ class _SubscriptionPageState extends State<SubscriptionPage> with WidgetsBinding
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: kPrimaryGreen,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
                 padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
               ),
-              child: Text(AppLocalizations.of(context)!.retry, style: TextStyle(color: Colors.white)),
+              child: Text(
+                AppLocalizations.of(context)!.retry,
+                style: TextStyle(color: Colors.white),
+              ),
             ),
           ],
         ),

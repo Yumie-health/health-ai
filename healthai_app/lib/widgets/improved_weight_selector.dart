@@ -52,7 +52,7 @@ class _ImprovedWeightSelectorState extends State<ImprovedWeightSelector>
   void _onSliderChanged(double value) {
     HapticFeedback.selectionClick();
     _bounceController.forward().then((_) => _bounceController.reverse());
-    
+
     if (widget.useMetric) {
       widget.onSelectKg(value);
       // Update lb value
@@ -78,7 +78,7 @@ class _ImprovedWeightSelectorState extends State<ImprovedWeightSelector>
   void _changeWeight(double delta) {
     HapticFeedback.selectionClick();
     _bounceController.forward().then((_) => _bounceController.reverse());
-    
+
     if (widget.useMetric) {
       final newWeight = (widget.weightKg ?? 70.0) + delta;
       final clampedWeight = newWeight.clamp(_getMinValue(), _getMaxValue());
@@ -123,84 +123,114 @@ class _ImprovedWeightSelectorState extends State<ImprovedWeightSelector>
   Widget build(BuildContext context) {
     final currentWeightKg = widget.weightKg ?? 70.0;
     final currentSliderValue = _getCurrentSliderValue();
-    
+
     // Get screen size for responsive design
     final screenHeight = MediaQuery.of(context).size.height;
     final screenWidth = MediaQuery.of(context).size.width;
     final isSmallScreen = screenHeight < 700 || screenWidth < 360;
-    
+
     return Column(
       children: [
         // Unit toggle buttons (lb first, then kg) - completely hidden when locked by height
-        if (false) Row( // Always hide since units are locked by height selection
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            GestureDetector(
-              onTap: () => widget.onUnitToggle?.call(false),
-              child: AnimatedContainer(
-                duration: Duration(milliseconds: 200),
-                decoration: BoxDecoration(
-                  color: !widget.useMetric ? Theme.of(context).primaryColor : Colors.white,
-                  borderRadius: BorderRadius.circular(18),
-                  border: Border.all(color: Theme.of(context).primaryColor, width: 2),
-                  boxShadow: !widget.useMetric ? [
-                    BoxShadow(
-                      color: Theme.of(context).primaryColor.withOpacity(0.3),
-                      blurRadius: 8,
-                      offset: Offset(0, 4),
+        if (false)
+          Row(
+            // Always hide since units are locked by height selection
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              GestureDetector(
+                onTap: () => widget.onUnitToggle?.call(false),
+                child: AnimatedContainer(
+                  duration: Duration(milliseconds: 200),
+                  decoration: BoxDecoration(
+                    color:
+                        !widget.useMetric
+                            ? Theme.of(context).primaryColor
+                            : Colors.white,
+                    borderRadius: BorderRadius.circular(18),
+                    border: Border.all(
+                      color: Theme.of(context).primaryColor,
+                      width: 2,
                     ),
-                  ] : null,
-                ),
-                padding: EdgeInsets.symmetric(
-                  horizontal: isSmallScreen ? 16 : 20, 
-                  vertical: isSmallScreen ? 10 : 12
-                ),
-                child: Text(
-                  "lb",
-                  style: TextStyle(
-                    fontSize: isSmallScreen ? 16 : 18,
-                    fontWeight: FontWeight.bold,
-                    color: !widget.useMetric ? Colors.white : Theme.of(context).primaryColor,
+                    boxShadow:
+                        !widget.useMetric
+                            ? [
+                              BoxShadow(
+                                color: Theme.of(
+                                  context,
+                                ).primaryColor.withOpacity(0.3),
+                                blurRadius: 8,
+                                offset: Offset(0, 4),
+                              ),
+                            ]
+                            : null,
+                  ),
+                  padding: EdgeInsets.symmetric(
+                    horizontal: isSmallScreen ? 16 : 20,
+                    vertical: isSmallScreen ? 10 : 12,
+                  ),
+                  child: Text(
+                    "lb",
+                    style: TextStyle(
+                      fontSize: isSmallScreen ? 16 : 18,
+                      fontWeight: FontWeight.bold,
+                      color:
+                          !widget.useMetric
+                              ? Colors.white
+                              : Theme.of(context).primaryColor,
+                    ),
                   ),
                 ),
               ),
-            ),
-            SizedBox(width: isSmallScreen ? 12 : 16),
-            GestureDetector(
-              onTap: () => widget.onUnitToggle?.call(true),
-              child: AnimatedContainer(
-                duration: Duration(milliseconds: 200),
-                decoration: BoxDecoration(
-                  color: widget.useMetric ? Theme.of(context).primaryColor : Colors.white,
-                  borderRadius: BorderRadius.circular(18),
-                  border: Border.all(color: Theme.of(context).primaryColor, width: 2),
-                  boxShadow: widget.useMetric ? [
-                    BoxShadow(
-                      color: Theme.of(context).primaryColor.withOpacity(0.3),
-                      blurRadius: 8,
-                      offset: Offset(0, 4),
+              SizedBox(width: isSmallScreen ? 12 : 16),
+              GestureDetector(
+                onTap: () => widget.onUnitToggle?.call(true),
+                child: AnimatedContainer(
+                  duration: Duration(milliseconds: 200),
+                  decoration: BoxDecoration(
+                    color:
+                        widget.useMetric
+                            ? Theme.of(context).primaryColor
+                            : Colors.white,
+                    borderRadius: BorderRadius.circular(18),
+                    border: Border.all(
+                      color: Theme.of(context).primaryColor,
+                      width: 2,
                     ),
-                  ] : null,
-                ),
-                padding: EdgeInsets.symmetric(
-                  horizontal: isSmallScreen ? 16 : 20, 
-                  vertical: isSmallScreen ? 10 : 12
-                ),
-                child: Text(
-                  "kg",
-                  style: TextStyle(
-                    fontSize: isSmallScreen ? 16 : 18,
-                    fontWeight: FontWeight.bold,
-                    color: widget.useMetric ? Colors.white : Theme.of(context).primaryColor,
+                    boxShadow:
+                        widget.useMetric
+                            ? [
+                              BoxShadow(
+                                color: Theme.of(
+                                  context,
+                                ).primaryColor.withOpacity(0.3),
+                                blurRadius: 8,
+                                offset: Offset(0, 4),
+                              ),
+                            ]
+                            : null,
+                  ),
+                  padding: EdgeInsets.symmetric(
+                    horizontal: isSmallScreen ? 16 : 20,
+                    vertical: isSmallScreen ? 10 : 12,
+                  ),
+                  child: Text(
+                    "kg",
+                    style: TextStyle(
+                      fontSize: isSmallScreen ? 16 : 18,
+                      fontWeight: FontWeight.bold,
+                      color:
+                          widget.useMetric
+                              ? Colors.white
+                              : Theme.of(context).primaryColor,
+                    ),
                   ),
                 ),
               ),
-            ),
-          ],
-        ),
-        
+            ],
+          ),
+
         SizedBox(height: isSmallScreen ? 30 : 50),
-        
+
         // Weight display
         AnimatedBuilder(
           animation: _bounceAnimation,
@@ -209,8 +239,8 @@ class _ImprovedWeightSelectorState extends State<ImprovedWeightSelector>
               scale: _bounceAnimation.value,
               child: Container(
                 padding: EdgeInsets.symmetric(
-                  horizontal: isSmallScreen ? 20 : 30, 
-                  vertical: isSmallScreen ? 16 : 24
+                  horizontal: isSmallScreen ? 20 : 30,
+                  vertical: isSmallScreen ? 16 : 24,
                 ),
                 decoration: BoxDecoration(
                   color: Theme.of(context).primaryColor.withOpacity(0.1),
@@ -230,9 +260,9 @@ class _ImprovedWeightSelectorState extends State<ImprovedWeightSelector>
                 child: Column(
                   children: [
                     Text(
-                      widget.useMetric 
-                        ? "${currentWeightKg.toStringAsFixed(1)} kg"
-                        : "${widget.weightLb.toStringAsFixed(1)} lb",
+                      widget.useMetric
+                          ? "${currentWeightKg.toStringAsFixed(1)} kg"
+                          : "${widget.weightLb.toStringAsFixed(1)} lb",
                       style: TextStyle(
                         fontSize: isSmallScreen ? 32 : 42,
                         fontWeight: FontWeight.bold,
@@ -255,9 +285,9 @@ class _ImprovedWeightSelectorState extends State<ImprovedWeightSelector>
             );
           },
         ),
-        
+
         SizedBox(height: isSmallScreen ? 30 : 50),
-        
+
         // Slider with buttons
         Container(
           margin: EdgeInsets.symmetric(horizontal: isSmallScreen ? 20 : 30),
@@ -267,12 +297,16 @@ class _ImprovedWeightSelectorState extends State<ImprovedWeightSelector>
               SliderTheme(
                 data: SliderTheme.of(context).copyWith(
                   trackHeight: isSmallScreen ? 6.0 : 8.0,
-                  thumbShape: CustomSliderThumbShape(isSmallScreen: isSmallScreen),
+                  thumbShape: CustomSliderThumbShape(
+                    isSmallScreen: isSmallScreen,
+                  ),
                   overlayShape: RoundSliderOverlayShape(
-                    overlayRadius: isSmallScreen ? 24.0 : 20.0
+                    overlayRadius: isSmallScreen ? 24.0 : 20.0,
                   ),
                   activeTrackColor: Theme.of(context).primaryColor,
-                  inactiveTrackColor: Theme.of(context).primaryColor.withOpacity(0.2),
+                  inactiveTrackColor: Theme.of(
+                    context,
+                  ).primaryColor.withOpacity(0.2),
                   thumbColor: Theme.of(context).primaryColor,
                   overlayColor: Theme.of(context).primaryColor.withOpacity(0.1),
                 ),
@@ -280,13 +314,14 @@ class _ImprovedWeightSelectorState extends State<ImprovedWeightSelector>
                   value: currentSliderValue,
                   min: _getMinValue(),
                   max: _getMaxValue(),
-                  divisions: widget.useMetric ? 340 : 748, // 0.5kg or 0.5lbs precision
+                  divisions:
+                      widget.useMetric ? 340 : 748, // 0.5kg or 0.5lbs precision
                   onChanged: _onSliderChanged,
                 ),
               ),
-              
+
               SizedBox(height: isSmallScreen ? 16 : 20),
-              
+
               // Buttons below slider
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -303,12 +338,16 @@ class _ImprovedWeightSelectorState extends State<ImprovedWeightSelector>
                         color: Theme.of(context).primaryColor.withOpacity(0.1),
                         borderRadius: BorderRadius.circular(20),
                         border: Border.all(
-                          color: Theme.of(context).primaryColor.withOpacity(0.3),
+                          color: Theme.of(
+                            context,
+                          ).primaryColor.withOpacity(0.3),
                           width: 2,
                         ),
                         boxShadow: [
                           BoxShadow(
-                            color: Theme.of(context).primaryColor.withOpacity(0.1),
+                            color: Theme.of(
+                              context,
+                            ).primaryColor.withOpacity(0.1),
                             blurRadius: 8,
                             offset: Offset(0, 2),
                           ),
@@ -321,7 +360,7 @@ class _ImprovedWeightSelectorState extends State<ImprovedWeightSelector>
                       ),
                     ),
                   ),
-                  
+
                   // Increase button
                   GestureDetector(
                     onTap: () => _changeWeight(0.5),
@@ -334,12 +373,16 @@ class _ImprovedWeightSelectorState extends State<ImprovedWeightSelector>
                         color: Theme.of(context).primaryColor.withOpacity(0.1),
                         borderRadius: BorderRadius.circular(20),
                         border: Border.all(
-                          color: Theme.of(context).primaryColor.withOpacity(0.3),
+                          color: Theme.of(
+                            context,
+                          ).primaryColor.withOpacity(0.3),
                           width: 2,
                         ),
                         boxShadow: [
                           BoxShadow(
-                            color: Theme.of(context).primaryColor.withOpacity(0.1),
+                            color: Theme.of(
+                              context,
+                            ).primaryColor.withOpacity(0.1),
                             blurRadius: 8,
                             offset: Offset(0, 2),
                           ),
@@ -354,9 +397,9 @@ class _ImprovedWeightSelectorState extends State<ImprovedWeightSelector>
                   ),
                 ],
               ),
-              
+
               SizedBox(height: isSmallScreen ? 16 : 20),
-              
+
               // Increment labels
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -413,28 +456,31 @@ class CustomSliderThumbShape extends SliderComponentShape {
     required Size sizeWithOverflow,
   }) {
     final Canvas canvas = context.canvas;
-    
+
     // Draw outer circle (white with shadow)
-    final Paint outerPaint = Paint()
-      ..color = Colors.white
-      ..style = PaintingStyle.fill;
-    
-    final Paint shadowPaint = Paint()
-      ..color = Colors.black.withOpacity(0.1)
-      ..style = PaintingStyle.fill
-      ..maskFilter = MaskFilter.blur(BlurStyle.normal, 3);
-    
+    final Paint outerPaint =
+        Paint()
+          ..color = Colors.white
+          ..style = PaintingStyle.fill;
+
+    final Paint shadowPaint =
+        Paint()
+          ..color = Colors.black.withOpacity(0.1)
+          ..style = PaintingStyle.fill
+          ..maskFilter = MaskFilter.blur(BlurStyle.normal, 3);
+
     // Draw shadow
     canvas.drawCircle(center + Offset(0, 2), 14.0, shadowPaint);
-    
+
     // Draw outer white circle
     canvas.drawCircle(center, 14.0, outerPaint);
-    
+
     // Draw inner colored circle
-    final Paint innerPaint = Paint()
-      ..color = sliderTheme.thumbColor!
-      ..style = PaintingStyle.fill;
-    
+    final Paint innerPaint =
+        Paint()
+          ..color = sliderTheme.thumbColor!
+          ..style = PaintingStyle.fill;
+
     canvas.drawCircle(center, 10.0, innerPaint);
   }
 }

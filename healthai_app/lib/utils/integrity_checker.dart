@@ -2,7 +2,6 @@ import 'package:flutter/foundation.dart';
 import '../services/production_integrity_service.dart';
 
 class IntegrityChecker {
-
   /// Perform a complete integrity check
   static Future<bool> performIntegrityCheck() async {
     return await ProductionIntegrityService.performIntegrityCheck();

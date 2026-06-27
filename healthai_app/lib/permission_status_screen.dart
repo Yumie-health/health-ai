@@ -71,238 +71,266 @@ class _PermissionStatusScreenState extends State<PermissionStatusScreen> {
         backgroundColor: kPrimaryGreen,
         foregroundColor: Colors.white,
       ),
-      body: _isLoading
-          ? Center(
-              child: CircularProgressIndicator(
-                valueColor: AlwaysStoppedAnimation<Color>(kPrimaryGreen),
-              ),
-            )
-          : RefreshIndicator(
-              onRefresh: _loadPermissionStatuses,
-              child: ListView(
-                padding: const EdgeInsets.all(16),
-                children: [
-                  // Header
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: kPrimaryGreen.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Icon(Icons.info_outline, color: kPrimaryGreen),
-                            SizedBox(width: 8),
-                            Text(
-                              AppLocalizations.of(context)!.permissionStatus,
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                                color: kPrimaryGreen,
-                              ),
-                            ),
-                          ],
-                        ),
-                        SizedBox(height: 8),
-                        Text(
-                          AppLocalizations.of(context)!.manageAppPermissions,
-                          style: TextStyle(
-                            color: Colors.grey[600],
-                            fontSize: 14,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  SizedBox(height: 24),
-
-                  // Permission List
-                  ..._permissions.map((permission) {
-                    final status = _permissionStatuses[permission] ?? ph.PermissionStatus.denied;
-                    final isGranted = status.isGranted;
-                    final isPermanentlyDenied = status.isPermanentlyDenied;
-
-                    return Container(
-                      margin: const EdgeInsets.only(bottom: 12),
+      body:
+          _isLoading
+              ? Center(
+                child: CircularProgressIndicator(
+                  valueColor: AlwaysStoppedAnimation<Color>(kPrimaryGreen),
+                ),
+              )
+              : RefreshIndicator(
+                onRefresh: _loadPermissionStatuses,
+                child: ListView(
+                  padding: const EdgeInsets.all(16),
+                  children: [
+                    // Header
+                    Container(
+                      padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        color: kPrimaryGreen.withOpacity(0.1),
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: _getStatusColor(status).withOpacity(0.3),
-                          width: 1,
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.05),
-                            blurRadius: 4,
-                            offset: const Offset(0, 2),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Icon(Icons.info_outline, color: kPrimaryGreen),
+                              SizedBox(width: 8),
+                              Text(
+                                AppLocalizations.of(context)!.permissionStatus,
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                  color: kPrimaryGreen,
+                                ),
+                              ),
+                            ],
+                          ),
+                          SizedBox(height: 8),
+                          Text(
+                            AppLocalizations.of(context)!.manageAppPermissions,
+                            style: TextStyle(
+                              color: Colors.grey[600],
+                              fontSize: 14,
+                            ),
                           ),
                         ],
                       ),
-                      child: Padding(
-                        padding: const EdgeInsets.all(16),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              children: [
-                                Container(
-                                  width: 40,
-                                  height: 40,
-                                  decoration: BoxDecoration(
-                                    color: _getStatusColor(status).withOpacity(0.1),
-                                    borderRadius: BorderRadius.circular(8),
+                    ),
+                    SizedBox(height: 24),
+
+                    // Permission List
+                    ..._permissions.map((permission) {
+                      final status =
+                          _permissionStatuses[permission] ??
+                          ph.PermissionStatus.denied;
+                      final isGranted = status.isGranted;
+                      final isPermanentlyDenied = status.isPermanentlyDenied;
+
+                      return Container(
+                        margin: const EdgeInsets.only(bottom: 12),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: _getStatusColor(status).withOpacity(0.3),
+                            width: 1,
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.05),
+                              blurRadius: 4,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.all(16),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Container(
+                                    width: 40,
+                                    height: 40,
+                                    decoration: BoxDecoration(
+                                      color: _getStatusColor(
+                                        status,
+                                      ).withOpacity(0.1),
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: Icon(
+                                      PermissionService.getPermissionIcon(
+                                        permission,
+                                      ),
+                                      color: _getStatusColor(status),
+                                      size: 20,
+                                    ),
                                   ),
-                                  child: Icon(
-                                    PermissionService.getPermissionIcon(permission),
-                                    color: _getStatusColor(status),
-                                    size: 20,
+                                  SizedBox(width: 12),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          PermissionService.getPermissionName(
+                                            permission,
+                                            context,
+                                          ),
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.w600,
+                                            fontSize: 16,
+                                            color: Colors.grey[800],
+                                          ),
+                                        ),
+                                        SizedBox(height: 4),
+                                        Text(
+                                          _getPermissionDescription(permission),
+                                          style: TextStyle(
+                                            color: Colors.grey[600],
+                                            fontSize: 14,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
                                   ),
-                                ),
-                                SizedBox(width: 12),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        PermissionService.getPermissionName(permission, context),
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.w600,
-                                          fontSize: 16,
-                                          color: Colors.grey[800],
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 8,
+                                      vertical: 4,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: _getStatusColor(
+                                        status,
+                                      ).withOpacity(0.1),
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    child: Text(
+                                      PermissionService.getPermissionStatusText(
+                                        status,
+                                      ),
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w500,
+                                        color: _getStatusColor(status),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              if (!isGranted) ...[
+                                SizedBox(height: 12),
+                                Row(
+                                  children: [
+                                    if (!isPermanentlyDenied)
+                                      Expanded(
+                                        child: OutlinedButton(
+                                          onPressed:
+                                              () => _requestPermission(
+                                                permission,
+                                              ),
+                                          style: OutlinedButton.styleFrom(
+                                            foregroundColor: kPrimaryGreen,
+                                            side: BorderSide(
+                                              color: kPrimaryGreen,
+                                            ),
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(8),
+                                            ),
+                                          ),
+                                          child: Text(
+                                            AppLocalizations.of(
+                                              context,
+                                            )!.grantPermission,
+                                          ),
                                         ),
                                       ),
-                                      SizedBox(height: 4),
-                                      Text(
-                                        _getPermissionDescription(permission),
-                                        style: TextStyle(
-                                          color: Colors.grey[600],
-                                          fontSize: 14,
+                                    if (isPermanentlyDenied) ...[
+                                      SizedBox(width: 8),
+                                      Expanded(
+                                        child: OutlinedButton(
+                                          onPressed: _openAppSettings,
+                                          style: OutlinedButton.styleFrom(
+                                            foregroundColor: kWarningRed,
+                                            side: BorderSide(
+                                              color: kWarningRed,
+                                            ),
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(8),
+                                            ),
+                                          ),
+                                          child: Text('Open Settings'),
                                         ),
                                       ),
                                     ],
-                                  ),
-                                ),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 8,
-                                    vertical: 4,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: _getStatusColor(status).withOpacity(0.1),
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  child: Text(
-                                    PermissionService.getPermissionStatusText(status),
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w500,
-                                      color: _getStatusColor(status),
-                                    ),
-                                  ),
+                                  ],
                                 ),
                               ],
-                            ),
-                            if (!isGranted) ...[
-                              SizedBox(height: 12),
-                              Row(
-                                children: [
-                                  if (!isPermanentlyDenied)
-                                    Expanded(
-                                      child: OutlinedButton(
-                                        onPressed: () => _requestPermission(permission),
-                                        style: OutlinedButton.styleFrom(
-                                          foregroundColor: kPrimaryGreen,
-                                          side: BorderSide(color: kPrimaryGreen),
-                                          shape: RoundedRectangleBorder(
-                                            borderRadius: BorderRadius.circular(8),
-                                          ),
-                                        ),
-                                        child: Text(AppLocalizations.of(context)!.grantPermission),
-                                      ),
-                                    ),
-                                  if (isPermanentlyDenied) ...[
-                                    SizedBox(width: 8),
-                                    Expanded(
-                                      child: OutlinedButton(
-                                        onPressed: _openAppSettings,
-                                        style: OutlinedButton.styleFrom(
-                                          foregroundColor: kWarningRed,
-                                          side: BorderSide(color: kWarningRed),
-                                          shape: RoundedRectangleBorder(
-                                            borderRadius: BorderRadius.circular(8),
-                                          ),
-                                        ),
-                                        child: Text('Open Settings'),
-                                      ),
-                                    ),
-                                  ],
-                                ],
+                            ],
+                          ),
+                        ),
+                      );
+                    }).toList(),
+
+                    // Footer
+                    SizedBox(height: 24),
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.grey[50],
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Icon(Icons.help_outline, color: Colors.grey[600]),
+                              SizedBox(width: 8),
+                              Text(
+                                'Need Help?',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.grey[800],
+                                ),
                               ),
                             ],
-                          ],
-                        ),
+                          ),
+                          SizedBox(height: 8),
+                          Text(
+                            'If permissions are permanently denied, you can enable them in your device settings.',
+                            style: TextStyle(
+                              color: Colors.grey[600],
+                              fontSize: 14,
+                            ),
+                          ),
+                          SizedBox(height: 12),
+                          SizedBox(
+                            width: double.infinity,
+                            child: OutlinedButton(
+                              onPressed: _openAppSettings,
+                              style: OutlinedButton.styleFrom(
+                                foregroundColor: kPrimaryGreen,
+                                side: BorderSide(color: kPrimaryGreen),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                              ),
+                              child: Text('Open Device Settings'),
+                            ),
+                          ),
+                        ],
                       ),
-                    );
-                  }).toList(),
-
-                  // Footer
-                  SizedBox(height: 24),
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: Colors.grey[50],
-                      borderRadius: BorderRadius.circular(12),
                     ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Icon(Icons.help_outline, color: Colors.grey[600]),
-                            SizedBox(width: 8),
-                            Text(
-                              'Need Help?',
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w600,
-                                color: Colors.grey[800],
-                              ),
-                            ),
-                          ],
-                        ),
-                        SizedBox(height: 8),
-                        Text(
-                          'If permissions are permanently denied, you can enable them in your device settings.',
-                          style: TextStyle(
-                            color: Colors.grey[600],
-                            fontSize: 14,
-                          ),
-                        ),
-                        SizedBox(height: 12),
-                        SizedBox(
-                          width: double.infinity,
-                          child: OutlinedButton(
-                            onPressed: _openAppSettings,
-                            style: OutlinedButton.styleFrom(
-                              foregroundColor: kPrimaryGreen,
-                              side: BorderSide(color: kPrimaryGreen),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                            ),
-                            child: Text('Open Device Settings'),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
     );
   }
 

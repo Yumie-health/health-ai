@@ -70,25 +70,31 @@ class _NumericTextFieldState extends State<_NumericTextField> {
       keyboardType: TextInputType.number,
       enabled: widget.enabled,
       onChanged: widget.onChanged,
-      decoration: (widget.decoration ?? InputDecoration(
-        hintText: widget.hintText,
-        contentPadding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
-        filled: true,
-        fillColor: kPrimaryGreen.withOpacity(0.07),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
-          borderSide: BorderSide.none,
-        ),
-      )).copyWith(
-        suffixIcon: _isFocused
-            ? IconButton(
-                icon: Icon(Icons.check, color: kPrimaryGreen, size: 20),
-                onPressed: _onCheckmarkTap,
-                padding: EdgeInsets.zero,
-                constraints: BoxConstraints(minWidth: 40, minHeight: 40),
-              )
-            : null,
-      ),
+      decoration: (widget.decoration ??
+              InputDecoration(
+                hintText: widget.hintText,
+                contentPadding: const EdgeInsets.symmetric(
+                  vertical: 10,
+                  horizontal: 12,
+                ),
+                filled: true,
+                fillColor: kPrimaryGreen.withOpacity(0.07),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(14),
+                  borderSide: BorderSide.none,
+                ),
+              ))
+          .copyWith(
+            suffixIcon:
+                _isFocused
+                    ? IconButton(
+                      icon: Icon(Icons.check, color: kPrimaryGreen, size: 20),
+                      onPressed: _onCheckmarkTap,
+                      padding: EdgeInsets.zero,
+                      constraints: BoxConstraints(minWidth: 40, minHeight: 40),
+                    )
+                    : null,
+          ),
     );
   }
 }
@@ -96,7 +102,8 @@ class _NumericTextFieldState extends State<_NumericTextField> {
 class ScanResultPage extends StatefulWidget {
   final String imagePath;
   final Map<String, dynamic>? prefill;
-  const ScanResultPage({Key? key, required this.imagePath, this.prefill}) : super(key: key);
+  const ScanResultPage({Key? key, required this.imagePath, this.prefill})
+    : super(key: key);
 
   @override
   State<ScanResultPage> createState() => _ScanResultPageState();
@@ -104,7 +111,7 @@ class ScanResultPage extends StatefulWidget {
 
 class _ScanResultPageState extends State<ScanResultPage> {
   bool _scanStarted = false;
-  
+
   String _getLocalizedUnit(String unit) {
     final localizations = AppLocalizations.of(context)!;
     switch (unit.toLowerCase()) {
@@ -121,6 +128,7 @@ class _ScanResultPageState extends State<ScanResultPage> {
         return unit;
     }
   }
+
   final TextEditingController _foodNameController = TextEditingController();
   final TextEditingController _caloriesController = TextEditingController();
   final TextEditingController _proteinController = TextEditingController();
@@ -153,7 +161,8 @@ class _ScanResultPageState extends State<ScanResultPage> {
       _proteinController.text = p['protein']?.toString() ?? '';
       _carbsController.text = p['carbs']?.toString() ?? '';
       _fatController.text = p['fat']?.toString() ?? '';
-      _ingredients = (p['ingredients'] as List?)?.map((e) => e.toString()).toList() ?? [];
+      _ingredients =
+          (p['ingredients'] as List?)?.map((e) => e.toString()).toList() ?? [];
       _isLoadingAI = false;
     }
   }
@@ -170,7 +179,7 @@ class _ScanResultPageState extends State<ScanResultPage> {
   void _autoSelectMealType() {
     final now = DateTime.now();
     final hour = now.hour;
-    
+
     if (hour >= 5 && hour < 11) {
       _selectedMealType = 'breakfast';
     } else if (hour >= 11 && hour < 16) {
@@ -212,14 +221,15 @@ class _ScanResultPageState extends State<ScanResultPage> {
   Future<void> _showQuantityDialog() async {
     final result = await showDialog<Map<String, dynamic>>(
       context: context,
-      builder: (context) => QuantitySelectionDialog(
-        foodName: _foodNameController.text.trim(),
-        foodType: _selectedFoodType,
-        baseCalories: int.tryParse(_caloriesController.text.trim()) ?? 0,
-        baseProtein: int.tryParse(_proteinController.text.trim()) ?? 0,
-        baseCarbs: int.tryParse(_carbsController.text.trim()) ?? 0,
-        baseFat: int.tryParse(_fatController.text.trim()) ?? 0,
-      ),
+      builder:
+          (context) => QuantitySelectionDialog(
+            foodName: _foodNameController.text.trim(),
+            foodType: _selectedFoodType,
+            baseCalories: int.tryParse(_caloriesController.text.trim()) ?? 0,
+            baseProtein: int.tryParse(_proteinController.text.trim()) ?? 0,
+            baseCarbs: int.tryParse(_carbsController.text.trim()) ?? 0,
+            baseFat: int.tryParse(_fatController.text.trim()) ?? 0,
+          ),
     );
 
     if (result != null) {
@@ -250,97 +260,100 @@ class _ScanResultPageState extends State<ScanResultPage> {
       await showDialog(
         context: context,
         barrierDismissible: false,
-        builder: (context) => Dialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
-          child: Container(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  Color(0xFFE8F5E9),
-                  Color(0xFFF1F8E9),
-                ],
+        builder:
+            (context) => Dialog(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(28),
               ),
-              borderRadius: BorderRadius.circular(28),
-            ),
-            child: Padding(
-              padding: EdgeInsets.symmetric(horizontal: 28, vertical: 32),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  TweenAnimationBuilder<double>(
-                    tween: Tween(begin: 0.85, end: 1.15),
-                    duration: Duration(seconds: 3),
-                    curve: Curves.easeInOut,
-                    builder: (context, value, child) {
-                      return Transform.scale(
-                        scale: value,
-                        child: Container(
-                          width: 90,
-                          height: 90,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: kPrimaryGreen.withOpacity(0.13),
-                          ),
-                          child: Center(
-                            child: Text(
-                              '🧘‍♀️',
-                              style: TextStyle(fontSize: 48),
+              child: Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [Color(0xFFE8F5E9), Color(0xFFF1F8E9)],
+                  ),
+                  borderRadius: BorderRadius.circular(28),
+                ),
+                child: Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 28, vertical: 32),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      TweenAnimationBuilder<double>(
+                        tween: Tween(begin: 0.85, end: 1.15),
+                        duration: Duration(seconds: 3),
+                        curve: Curves.easeInOut,
+                        builder: (context, value, child) {
+                          return Transform.scale(
+                            scale: value,
+                            child: Container(
+                              width: 90,
+                              height: 90,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: kPrimaryGreen.withOpacity(0.13),
+                              ),
+                              child: Center(
+                                child: Text(
+                                  '🧘‍♀️',
+                                  style: TextStyle(fontSize: 48),
+                                ),
+                              ),
+                            ),
+                          );
+                        },
+                        onEnd: () {
+                          (context as Element).markNeedsBuild();
+                        },
+                      ),
+                      SizedBox(height: 24),
+                      Text(
+                        AppLocalizations.of(context)!.momentOfCalm,
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: kPrimaryGreen,
+                          fontSize: 26,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 0.2,
+                        ),
+                      ),
+                      SizedBox(height: 18),
+                      Text(
+                        AppLocalizations.of(context)!.practiceMindfulEating,
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: 17,
+                          color: Colors.black87,
+                          height: 1.5,
+                        ),
+                      ),
+                      SizedBox(height: 32),
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton(
+                          onPressed: () => Navigator.of(context).pop(),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: kPrimaryGreen,
+                            foregroundColor: Colors.white,
+                            padding: EdgeInsets.symmetric(vertical: 16),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            elevation: 0,
+                            textStyle: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w600,
                             ),
                           ),
+                          child: Text('Continue'),
                         ),
-                      );
-                    },
-                    onEnd: () {
-                      (context as Element).markNeedsBuild();
-                    },
-                  ),
-                  SizedBox(height: 24),
-                  Text(
-                    AppLocalizations.of(context)!.momentOfCalm,
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: kPrimaryGreen,
-                      fontSize: 26,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 0.2,
-                    ),
-                  ),
-                  SizedBox(height: 18),
-                  Text(
-                    AppLocalizations.of(context)!.practiceMindfulEating,
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 17,
-                      color: Colors.black87,
-                      height: 1.5,
-                    ),
-                  ),
-                  SizedBox(height: 32),
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: () => Navigator.of(context).pop(),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: kPrimaryGreen,
-                        foregroundColor: Colors.white,
-                        padding: EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        elevation: 0,
-                        textStyle: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
                       ),
-                      child: Text('Continue'),
-                    ),
+                    ],
                   ),
-                ],
+                ),
               ),
             ),
-          ),
-        ),
       );
     }
     onContinue();
@@ -358,7 +371,9 @@ class _ScanResultPageState extends State<ScanResultPage> {
       if (widget.imagePath.isNotEmpty && File(widget.imagePath).existsSync()) {
         final file = File(widget.imagePath);
         final fileName = 'meal_${DateTime.now().millisecondsSinceEpoch}.jpg';
-        final ref = FirebaseStorage.instance.ref().child('meal_images/${user.uid}/$fileName');
+        final ref = FirebaseStorage.instance.ref().child(
+          'meal_images/${user.uid}/$fileName',
+        );
         final uploadTask = await ref.putFile(file);
         if (uploadTask.state == TaskState.success) {
           imageUrl = await ref.getDownloadURL();
@@ -385,7 +400,9 @@ class _ScanResultPageState extends State<ScanResultPage> {
         quantityUnit: _quantityUnit,
       );
       await MealService().addMeal(meal);
-      setState(() { _ingredients.clear(); });
+      setState(() {
+        _ingredients.clear();
+      });
       if (mounted) {
         await _showCalmPopupIfNeeded(() {
           Navigator.of(context).popUntil((route) => route.isFirst);
@@ -410,15 +427,24 @@ class _ScanResultPageState extends State<ScanResultPage> {
   }
 
   Future<void> _runAIMealScan() async {
-    setState(() { _isLoadingAI = true; _error = null; });
+    setState(() {
+      _isLoadingAI = true;
+      _error = null;
+    });
     final aiService = AIService();
     // Use UI locale to avoid stale stored language
     final language = Localizations.localeOf(context).languageCode;
     Map<String, dynamic>? result;
     try {
-      result = await aiService.analyzeMealImage(File(widget.imagePath), language: language);
+      result = await aiService.analyzeMealImage(
+        File(widget.imagePath),
+        language: language,
+      );
     } catch (e) {
-      setState(() { _isLoadingAI = false; _error = 'Scan failed. Please try again.'; });
+      setState(() {
+        _isLoadingAI = false;
+        _error = 'Scan failed. Please try again.';
+      });
       return;
     }
 
@@ -433,18 +459,20 @@ class _ScanResultPageState extends State<ScanResultPage> {
         _proteinController.text = r['protein']?.toString() ?? '';
         _carbsController.text = r['carbs']?.toString() ?? '';
         _fatController.text = r['fat']?.toString() ?? '';
-        _ingredients = (r['ingredients'] as List?)?.map((e) => e.toString()).toList() ?? [];
-        
+        _ingredients =
+            (r['ingredients'] as List?)?.map((e) => e.toString()).toList() ??
+            [];
+
         // Store food type from AI analysis and update UI
         _foodType = r['food_type']?.toString();
         if (_foodType != null) {
           // Update the selected food type in UI based on AI analysis
           _selectedFoodType = _foodType!;
-          
+
           // Extract quantity from food name (e.g., "3 ripe bananas" -> quantity = 3)
           String foodName = r['food_name']?.toString() ?? '';
           int extractedQuantity = _extractQuantityFromName(foodName);
-          
+
           // Set quantity and unit based on food type
           switch (_foodType) {
             case 'ingredient':
@@ -456,28 +484,34 @@ class _ScanResultPageState extends State<ScanResultPage> {
               _quantityUnit = 'servings';
               break;
             case 'drink':
-              _quantity = extractedQuantity > 0 ? extractedQuantity : 8; // Default 8 fl oz for drinks
+              _quantity =
+                  extractedQuantity > 0
+                      ? extractedQuantity
+                      : 8; // Default 8 fl oz for drinks
               _quantityUnit = 'fl oz';
               break;
             default:
               _quantity = extractedQuantity > 0 ? extractedQuantity : 1;
               _quantityUnit = 'servings';
           }
-          
+
           // Adjust calories based on quantity for drinks
           if (_foodType == 'drink' && _quantityUnit == 'fl oz') {
             final baseCalories = int.tryParse(_caloriesController.text) ?? 0;
             final baseServing = 8; // 8 fl oz base serving
-            final adjustedCalories = (baseCalories * _quantity! / baseServing).round();
+            final adjustedCalories =
+                (baseCalories * _quantity! / baseServing).round();
             _caloriesController.text = adjustedCalories.toString();
           }
         }
-        
+
         _isLoadingAI = false;
       });
     } else {
       if (!mounted) return;
-      setState(() { _isLoadingAI = false; });
+      setState(() {
+        _isLoadingAI = false;
+      });
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(AppLocalizations.of(context)!.nothingFoundInScan),
@@ -501,36 +535,44 @@ class _ScanResultPageState extends State<ScanResultPage> {
   Widget _buildMealTypeTabs(Map<String, String> mealTypeLabels) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-      children: _mealTypes.map((type) {
-        final selected = _selectedMealType == type;
-        final color = selected ? kPrimaryGreen : Colors.grey[200];
-        final textColor = selected ? Colors.white : Colors.grey[600];
-        return Expanded(
-          child: GestureDetector(
-            onTap: () => setState(() => _selectedMealType = type),
-            child: AnimatedContainer(
-              duration: Duration(milliseconds: 180),
-              padding: const EdgeInsets.symmetric(vertical: 12),
-              decoration: BoxDecoration(
-                color: color,
-                borderRadius: BorderRadius.circular(18),
-                boxShadow: selected
-                    ? [BoxShadow(color: kPrimaryGreen.withOpacity(0.08), blurRadius: 8, offset: Offset(0, 2))]
-                    : [],
-              ),
-              child: Center(
-                child: ResponsiveText.responsiveText(
-                  context,
-                  mealTypeLabels[type]!,
-                  baseFontSize: 18,
-                  fontWeight: FontWeight.w600,
-                  color: textColor,
+      children:
+          _mealTypes.map((type) {
+            final selected = _selectedMealType == type;
+            final color = selected ? kPrimaryGreen : Colors.grey[200];
+            final textColor = selected ? Colors.white : Colors.grey[600];
+            return Expanded(
+              child: GestureDetector(
+                onTap: () => setState(() => _selectedMealType = type),
+                child: AnimatedContainer(
+                  duration: Duration(milliseconds: 180),
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  decoration: BoxDecoration(
+                    color: color,
+                    borderRadius: BorderRadius.circular(18),
+                    boxShadow:
+                        selected
+                            ? [
+                              BoxShadow(
+                                color: kPrimaryGreen.withOpacity(0.08),
+                                blurRadius: 8,
+                                offset: Offset(0, 2),
+                              ),
+                            ]
+                            : [],
+                  ),
+                  child: Center(
+                    child: ResponsiveText.responsiveText(
+                      context,
+                      mealTypeLabels[type]!,
+                      baseFontSize: 18,
+                      fontWeight: FontWeight.w600,
+                      color: textColor,
+                    ),
+                  ),
                 ),
               ),
-            ),
-          ),
-        );
-      }).toList(),
+            );
+          }).toList(),
     );
   }
 
@@ -538,9 +580,17 @@ class _ScanResultPageState extends State<ScanResultPage> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
       children: [
-        _buildFoodTypeButton('ingredient', '🥕', AppLocalizations.of(context)!.ingredient),
+        _buildFoodTypeButton(
+          'ingredient',
+          '🥕',
+          AppLocalizations.of(context)!.ingredient,
+        ),
         _buildFoodTypeButton('meal', '🍽️', AppLocalizations.of(context)!.meal),
-        _buildFoodTypeButton('drink', '🥤', AppLocalizations.of(context)!.drink),
+        _buildFoodTypeButton(
+          'drink',
+          '🥤',
+          AppLocalizations.of(context)!.drink,
+        ),
       ],
     );
   }
@@ -549,7 +599,7 @@ class _ScanResultPageState extends State<ScanResultPage> {
     final selected = _selectedFoodType == type;
     final color = selected ? kPrimaryGreen : Colors.grey[200];
     final textColor = selected ? Colors.white : Colors.grey[600];
-    
+
     return Expanded(
       child: GestureDetector(
         onTap: () => setState(() => _selectedFoodType = type),
@@ -560,9 +610,16 @@ class _ScanResultPageState extends State<ScanResultPage> {
           decoration: BoxDecoration(
             color: color,
             borderRadius: BorderRadius.circular(16),
-            boxShadow: selected
-                ? [BoxShadow(color: kPrimaryGreen.withOpacity(0.08), blurRadius: 8, offset: Offset(0, 2))]
-                : [],
+            boxShadow:
+                selected
+                    ? [
+                      BoxShadow(
+                        color: kPrimaryGreen.withOpacity(0.08),
+                        blurRadius: 8,
+                        offset: Offset(0, 2),
+                      ),
+                    ]
+                    : [],
           ),
           child: Column(
             children: [
@@ -589,12 +646,13 @@ class _ScanResultPageState extends State<ScanResultPage> {
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
-        leading: Navigator.of(context).canPop()
-            ? IconButton(
-                icon: Icon(Icons.arrow_back, color: Colors.black),
-                onPressed: () => Navigator.of(context).pop(),
-              )
-            : null,
+        leading:
+            Navigator.of(context).canPop()
+                ? IconButton(
+                  icon: Icon(Icons.arrow_back, color: Colors.black),
+                  onPressed: () => Navigator.of(context).pop(),
+                )
+                : null,
         actions: [
           Padding(
             padding: const EdgeInsets.only(right: 8),
@@ -606,274 +664,366 @@ class _ScanResultPageState extends State<ScanResultPage> {
                 children: [
                   Icon(Icons.refresh, color: Colors.green, size: 22),
                   const SizedBox(width: 4),
-                  Text(AppLocalizations.of(context)!.retakeScan, style: TextStyle(color: Colors.green, fontWeight: FontWeight.w600, fontSize: 15)),
+                  Text(
+                    AppLocalizations.of(context)!.retakeScan,
+                    style: TextStyle(
+                      color: Colors.green,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 15,
+                    ),
+                  ),
                 ],
               ),
             ),
           ),
         ],
-        title: Text(AppLocalizations.of(context)!.reviewMeal, style: TextStyle(color: Colors.black)),
+        title: Text(
+          AppLocalizations.of(context)!.reviewMeal,
+          style: TextStyle(color: Colors.black),
+        ),
         centerTitle: true,
       ),
-      body: _isLoadingAI
-        ? Center(
-            child: Lottie.asset(
-              'assets/animations/AI Loading spinner..json',
-              width: 100,
-              height: 100,
-            ),
-          )
-        : Column(
-        children: [
-          // Image preview (only if imagePath is not empty)
-          if (widget.imagePath.isNotEmpty)
-          Container(
-            width: double.infinity,
-            color: Colors.black,
-            height: 220,
-            child: Stack(
-              children: [
-                Positioned.fill(
-                  child: Image.file(
-                    File(widget.imagePath),
-                    fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) => Center(child: Text('Failed to load image', style: TextStyle(color: Colors.white))),
-                  ),
+      body:
+          _isLoadingAI
+              ? Center(
+                child: Lottie.asset(
+                  'assets/animations/AI Loading spinner..json',
+                  width: 100,
+                  height: 100,
                 ),
-                Positioned.fill(
-                  child: Container(
-                    color: Colors.black.withOpacity(0.25),
-                  ),
-                ),
-                Center(
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.white.withOpacity(0.85),
-                      foregroundColor: Colors.black,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
-                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                    ),
-                    onPressed: () {
-                      showDialog(
-                        context: context,
-                        builder: (_) => Dialog(
-                          backgroundColor: Colors.black,
-                          child: InteractiveViewer(
-                            child: Image.file(File(widget.imagePath)),
-                          ),
-                        ),
-                      );
-                    },
-                    child: Text(AppLocalizations.of(context)!.previewFullImage, style: TextStyle(fontWeight: FontWeight.bold)),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Expanded(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+              )
+              : Column(
                 children: [
-                  // Meal type and food type selection
-                  Column(
-                    children: [
-                      _buildMealTypeTabs(_mealTypeLabels),
-                      const SizedBox(height: 16),
-                      _buildFoodTypeButtons(),
-                    ],
-                  ),
-                  const SizedBox(height: 24),
-                  ResponsiveText.responsiveText(
-                    context,
-                    AppLocalizations.of(context)!.foodNameLabel,
-                    baseFontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
-                  const SizedBox(height: 8),
-                  TextField(
-                    controller: _foodNameController,
-                    decoration: InputDecoration(
-                      hintText: AppLocalizations.of(context)!.searchOrEnterFoodName,
-                      filled: true,
-                      fillColor: const Color(0xFFF5F5F5),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(14),
-                        borderSide: BorderSide.none,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 18),
-                  // Quantity section
-                  Row(
-                    children: [
-                      Expanded(
-                        child: ResponsiveText.responsiveText(
-                          context,
-                          AppLocalizations.of(context)!.quantity,
-                          baseFontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      GestureDetector(
-                        onTap: _showQuantityDialog,
-                        child: Container(
-                          padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                          decoration: BoxDecoration(
-                            color: kPrimaryGreen.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: kPrimaryGreen.withOpacity(0.3)),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              ResponsiveText.responsiveText(
-                                context,
-                                '${_quantity ?? 1} ${_getLocalizedUnit(_quantityUnit ?? 'servings')}',
-                                baseFontSize: 16,
-                                color: kPrimaryGreen,
-                                fontWeight: FontWeight.w600,
-                              ),
-                              SizedBox(width: 8),
-                              Icon(Icons.edit, color: kPrimaryGreen, size: 18),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 18),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: _macroField('Calories', _caloriesController, color: Colors.green[700]!, suffix: ''),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: _macroField('Protein (g)', _proteinController, color: Colors.blue[700]!, suffix: 'g'),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: _macroField('Carbs (g)', _carbsController, color: Colors.orange[700]!, suffix: 'g'),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: _macroField('Fat (g)', _fatController, color: Colors.red[400]!, suffix: 'g'),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 18),
-                  ResponsiveText.responsiveText(
-                    context,
-                    AppLocalizations.of(context)!.ingredients,
-                    baseFontSize: 17,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.green,
-                  ),
-                  const SizedBox(height: 8),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: TextField(
-                          controller: _ingredientController,
-                          decoration: InputDecoration(
-                            hintText: AppLocalizations.of(context)!.addIngredient,
-                            filled: true,
-                            fillColor: const Color(0xFFF5F5F5),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(14),
-                              borderSide: BorderSide.none,
+                  // Image preview (only if imagePath is not empty)
+                  if (widget.imagePath.isNotEmpty)
+                    Container(
+                      width: double.infinity,
+                      color: Colors.black,
+                      height: 220,
+                      child: Stack(
+                        children: [
+                          Positioned.fill(
+                            child: Image.file(
+                              File(widget.imagePath),
+                              fit: BoxFit.cover,
+                              errorBuilder:
+                                  (context, error, stackTrace) => Center(
+                                    child: Text(
+                                      'Failed to load image',
+                                      style: TextStyle(color: Colors.white),
+                                    ),
+                                  ),
                             ),
                           ),
-                        ),
+                          Positioned.fill(
+                            child: Container(
+                              color: Colors.black.withOpacity(0.25),
+                            ),
+                          ),
+                          Center(
+                            child: ElevatedButton(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.white.withOpacity(0.85),
+                                foregroundColor: Colors.black,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(22),
+                                ),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 24,
+                                  vertical: 12,
+                                ),
+                              ),
+                              onPressed: () {
+                                showDialog(
+                                  context: context,
+                                  builder:
+                                      (_) => Dialog(
+                                        backgroundColor: Colors.black,
+                                        child: InteractiveViewer(
+                                          child: Image.file(
+                                            File(widget.imagePath),
+                                          ),
+                                        ),
+                                      ),
+                                );
+                              },
+                              child: Text(
+                                AppLocalizations.of(context)!.previewFullImage,
+                                style: TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
-                      IconButton(
-                        icon: Icon(Icons.add, color: Colors.green),
-                        onPressed: _addIngredient,
+                    ),
+                  Expanded(
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.all(20),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Meal type and food type selection
+                          Column(
+                            children: [
+                              _buildMealTypeTabs(_mealTypeLabels),
+                              const SizedBox(height: 16),
+                              _buildFoodTypeButtons(),
+                            ],
+                          ),
+                          const SizedBox(height: 24),
+                          ResponsiveText.responsiveText(
+                            context,
+                            AppLocalizations.of(context)!.foodNameLabel,
+                            baseFontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          const SizedBox(height: 8),
+                          TextField(
+                            controller: _foodNameController,
+                            decoration: InputDecoration(
+                              hintText:
+                                  AppLocalizations.of(
+                                    context,
+                                  )!.searchOrEnterFoodName,
+                              filled: true,
+                              fillColor: const Color(0xFFF5F5F5),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(14),
+                                borderSide: BorderSide.none,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 18),
+                          // Quantity section
+                          Row(
+                            children: [
+                              Expanded(
+                                child: ResponsiveText.responsiveText(
+                                  context,
+                                  AppLocalizations.of(context)!.quantity,
+                                  baseFontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              GestureDetector(
+                                onTap: _showQuantityDialog,
+                                child: Container(
+                                  padding: EdgeInsets.symmetric(
+                                    horizontal: 16,
+                                    vertical: 8,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: kPrimaryGreen.withOpacity(0.1),
+                                    borderRadius: BorderRadius.circular(12),
+                                    border: Border.all(
+                                      color: kPrimaryGreen.withOpacity(0.3),
+                                    ),
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      ResponsiveText.responsiveText(
+                                        context,
+                                        '${_quantity ?? 1} ${_getLocalizedUnit(_quantityUnit ?? 'servings')}',
+                                        baseFontSize: 16,
+                                        color: kPrimaryGreen,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                      SizedBox(width: 8),
+                                      Icon(
+                                        Icons.edit,
+                                        color: kPrimaryGreen,
+                                        size: 18,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 18),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: _macroField(
+                                  'Calories',
+                                  _caloriesController,
+                                  color: Colors.green[700]!,
+                                  suffix: '',
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: _macroField(
+                                  'Protein (g)',
+                                  _proteinController,
+                                  color: Colors.blue[700]!,
+                                  suffix: 'g',
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 12),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: _macroField(
+                                  'Carbs (g)',
+                                  _carbsController,
+                                  color: Colors.orange[700]!,
+                                  suffix: 'g',
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: _macroField(
+                                  'Fat (g)',
+                                  _fatController,
+                                  color: Colors.red[400]!,
+                                  suffix: 'g',
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 18),
+                          ResponsiveText.responsiveText(
+                            context,
+                            AppLocalizations.of(context)!.ingredients,
+                            baseFontSize: 17,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.green,
+                          ),
+                          const SizedBox(height: 8),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: TextField(
+                                  controller: _ingredientController,
+                                  decoration: InputDecoration(
+                                    hintText:
+                                        AppLocalizations.of(
+                                          context,
+                                        )!.addIngredient,
+                                    filled: true,
+                                    fillColor: const Color(0xFFF5F5F5),
+                                    border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(14),
+                                      borderSide: BorderSide.none,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              IconButton(
+                                icon: Icon(Icons.add, color: Colors.green),
+                                onPressed: _addIngredient,
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                          if (_ingredients.isNotEmpty)
+                            Wrap(
+                              spacing: 8,
+                              children: List.generate(
+                                _ingredients.length,
+                                (i) => Chip(
+                                  label: Text(_ingredients[i]),
+                                  onDeleted: () => _removeIngredient(i),
+                                ),
+                              ),
+                            ),
+                          if (_error != null)
+                            Padding(
+                              padding: const EdgeInsets.only(top: 12),
+                              child: Text(
+                                _error!,
+                                style: const TextStyle(color: Colors.red),
+                              ),
+                            ),
+                          // Add extra padding at bottom to ensure content doesn't get hidden behind fixed buttons
+                          const SizedBox(height: 100),
+                        ],
                       ),
-                    ],
+                    ),
                   ),
-                  const SizedBox(height: 8),
-                  if (_ingredients.isNotEmpty)
-                    Wrap(
-                      spacing: 8,
-                      children: List.generate(_ingredients.length, (i) => Chip(
-                        label: Text(_ingredients[i]),
-                        onDeleted: () => _removeIngredient(i),
-                      )),
+                  // Fixed bottom buttons that are always visible and device-aware
+                  Container(
+                    padding: EdgeInsets.only(
+                      left: 20,
+                      right: 20,
+                      top: 16,
+                      bottom: MediaQuery.of(context).padding.bottom + 16,
                     ),
-                  if (_error != null)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 12),
-                      child: Text(_error!, style: const TextStyle(color: Colors.red)),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.1),
+                          blurRadius: 8,
+                          offset: Offset(0, -2),
+                        ),
+                      ],
                     ),
-                  // Add extra padding at bottom to ensure content doesn't get hidden behind fixed buttons
-                  const SizedBox(height: 100),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: ElevatedButton(
+                            onPressed: _isSaving ? null : _discard,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.red,
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(14),
+                              ),
+                            ),
+                            child: Text(AppLocalizations.of(context)!.discard),
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: ElevatedButton(
+                            onPressed:
+                                _isSaving ||
+                                        _foodNameController.text.trim().isEmpty
+                                    ? null
+                                    : _saveMeal,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.green,
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(14),
+                              ),
+                            ),
+                            child:
+                                _isSaving
+                                    ? const SizedBox(
+                                      height: 22,
+                                      width: 22,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        color: Colors.white,
+                                      ),
+                                    )
+                                    : Text(
+                                      AppLocalizations.of(context)!.saveMeal,
+                                    ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ],
               ),
-            ),
-          ),
-          // Fixed bottom buttons that are always visible and device-aware
-          Container(
-            padding: EdgeInsets.only(
-              left: 20,
-              right: 20,
-              top: 16,
-              bottom: MediaQuery.of(context).padding.bottom + 16,
-            ),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.1),
-                  blurRadius: 8,
-                  offset: Offset(0, -2),
-                ),
-              ],
-            ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: ElevatedButton(
-                    onPressed: _isSaving ? null : _discard,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.red,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                    ),
-                    child: Text(AppLocalizations.of(context)!.discard),
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: ElevatedButton(
-                    onPressed: _isSaving || _foodNameController.text.trim().isEmpty ? null : _saveMeal,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.green,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                    ),
-                    child: _isSaving
-                        ? const SizedBox(height: 22, width: 22, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                        : Text(AppLocalizations.of(context)!.saveMeal),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
     );
   }
 
-  Widget _macroField(String label, TextEditingController controller, {required Color color, String suffix = ''}) {
+  Widget _macroField(
+    String label,
+    TextEditingController controller, {
+    required Color color,
+    String suffix = '',
+  }) {
     final localizations = AppLocalizations.of(context)!;
     String localizedLabel = label;
     if (label == 'Calories') localizedLabel = localizations.calories;
@@ -885,7 +1035,11 @@ class _ScanResultPageState extends State<ScanResultPage> {
       children: [
         Row(
           children: [
-            Container(width: 8, height: 8, decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
+            Container(
+              width: 8,
+              height: 8,
+              decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+            ),
             const SizedBox(width: 6),
             ResponsiveText.responsiveText(
               context,
@@ -912,4 +1066,4 @@ class _ScanResultPageState extends State<ScanResultPage> {
       ],
     );
   }
-} 
+}

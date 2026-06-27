@@ -17,50 +17,60 @@ class BirthdayService {
     if (user == null) return;
 
     try {
-      final doc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
+      final doc =
+          await FirebaseFirestore.instance
+              .collection('users')
+              .doc(user.uid)
+              .get();
       final data = doc.data();
-      
-      if (data != null && data['birthMonth'] != null && data['birthDay'] != null) {
+
+      if (data != null &&
+          data['birthMonth'] != null &&
+          data['birthDay'] != null) {
         final int birthMonth = data['birthMonth'];
         final int birthDay = data['birthDay'];
         final int storedAge = data['age'] ?? 18;
         final int? lastCelebrationYear = data['lastBirthdayCelebrationYear'];
-        
+
         final now = DateTime.now();
         final isBirthday = (now.month == birthMonth && now.day == birthDay);
-        
+
         if (isBirthday) {
           // Check if we already celebrated this year (using Firestore, not SharedPreferences)
           if (lastCelebrationYear != now.year) {
             // Check if user signed up today (on their birthday)
             final createdAt = data['createdAt'] as Timestamp?;
-            final isSignupDay = createdAt != null && 
+            final isSignupDay =
+                createdAt != null &&
                 createdAt.toDate().year == now.year &&
                 createdAt.toDate().month == now.month &&
                 createdAt.toDate().day == now.day;
-            
+
             // Calculate correct age to display
             int displayAge = storedAge;
             if (!isSignupDay) {
               // Only increment age if it's not the signup day
               displayAge = storedAge + 1;
             }
-            
+
             // Show birthday celebration
             await _showBirthdayDialog(context, displayAge);
-            
+
             // Update Firestore with the celebration year and potentially new age
             final updateData = {
               'lastBirthdayCelebrationYear': now.year,
               'lastUpdated': FieldValue.serverTimestamp(),
             };
-            
+
             // Only update age if it's not the signup day
             if (!isSignupDay) {
               updateData['age'] = displayAge;
             }
-            
-            await FirebaseFirestore.instance.collection('users').doc(user.uid).update(updateData);
+
+            await FirebaseFirestore.instance
+                .collection('users')
+                .doc(user.uid)
+                .update(updateData);
           }
         }
       }
@@ -138,7 +148,9 @@ class _BirthdayDialogState extends State<_BirthdayDialog>
         ),
         // Dialog
         Dialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(24),
+          ),
           child: ScaleTransition(
             scale: _scaleAnimation,
             child: Container(
@@ -148,20 +160,14 @@ class _BirthdayDialogState extends State<_BirthdayDialog>
                 gradient: LinearGradient(
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
-                  colors: [
-                    Colors.orange[50]!,
-                    Colors.pink[50]!,
-                  ],
+                  colors: [Colors.orange[50]!, Colors.pink[50]!],
                 ),
               ),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   // Birthday emoji
-                  Text(
-                    '🎂',
-                    style: TextStyle(fontSize: 64),
-                  ),
+                  Text('🎂', style: TextStyle(fontSize: 64)),
                   SizedBox(height: 16),
                   // Happy birthday title
                   Text(
@@ -176,7 +182,9 @@ class _BirthdayDialogState extends State<_BirthdayDialog>
                   SizedBox(height: 12),
                   // Birthday message
                   Text(
-                    AppLocalizations.of(context)!.birthdayMessage(widget.newAge),
+                    AppLocalizations.of(
+                      context,
+                    )!.birthdayMessage(widget.newAge),
                     style: TextStyle(
                       fontSize: 16,
                       color: Colors.black87,

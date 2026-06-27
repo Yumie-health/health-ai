@@ -7,4 +7,4 @@ const Color kAccentYellow = Color(0xFFFFEB3B); // Bright yellow
 const Color kSecondaryBlue = Color(0xFF2196F3); // Cool blue
 const Color kBackgroundWhite = Color(0xFFFFFFFF); // Clean white
 const Color kWarningRed = Color(0xFFFF7043); // Orange/Red for warnings
-const Color kContainerGrey = Color(0xFFF5F5F5); // Light grey for containers 
+const Color kContainerGrey = Color(0xFFF5F5F5); // Light grey for containers

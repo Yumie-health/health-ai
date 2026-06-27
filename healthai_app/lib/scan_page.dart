@@ -43,7 +43,8 @@ class _ScanPageState extends State<ScanPage> {
   bool _isDecoding = false;
   RewardedAd? _rewardedAd;
   bool _isRewardedAdLoaded = false;
-  bool _showBarcodeError = false; // shows red error under the frame when not recognized
+  bool _showBarcodeError =
+      false; // shows red error under the frame when not recognized
   String? _cameraError; // To track camera initialization errors
   bool _isRetryingCamera = false;
 
@@ -53,14 +54,15 @@ class _ScanPageState extends State<ScanPage> {
     _initCamera();
     _prepareAds();
   }
+
   Future<void> _prepareAds() async {
     // Ads are already preloaded at app startup for FAST SCAN experience
     // Just check if we need to load additional ads
     if (!mounted) return;
-    
+
     // Load ad in background for next scan (non-blocking)
     _loadRewardedAd(() {});
-    
+
     // Also preload ad when paywall might be shown
     _preloadAdForPaywall();
   }
@@ -72,7 +74,7 @@ class _ScanPageState extends State<ScanPage> {
     final lastScanDate = prefs.getString('lastScanDate');
     final scansToday = prefs.getInt('scansToday') ?? 0;
     final todayStr = '${today.year}-${today.month}-${today.day}';
-    
+
     // If user has already scanned today, preload ad for next scan
     if (lastScanDate == todayStr && scansToday >= 1) {
       _loadRewardedAd(() {});
@@ -80,7 +82,9 @@ class _ScanPageState extends State<ScanPage> {
   }
 
   void _onBarcodeModeChanged(bool enabled) {
-    setState(() { _isBarcodeMode = enabled; });
+    setState(() {
+      _isBarcodeMode = enabled;
+    });
     // Disable live scanning on iOS to prevent crashes
     if (Platform.isIOS) {
       _stopBarcodeStream();
@@ -101,7 +105,7 @@ class _ScanPageState extends State<ScanPage> {
   Future<void> _startBarcodeStream() async {
     // Disable live barcode scanning on iOS to prevent crashes
     if (Platform.isIOS) return;
-    
+
     if (!_isCameraInitialized || !_controller.value.isInitialized) return;
     _barcodeService ??= BarcodeScannerService();
     if (_controller.value.isStreamingImages) return;
@@ -110,15 +114,23 @@ class _ScanPageState extends State<ScanPage> {
       _isDecoding = true;
       try {
         const rotation = InputImageRotation.rotation0deg;
-        final code = await _barcodeService!.processCameraImage(image, rotation: rotation);
+        final code = await _barcodeService!.processCameraImage(
+          image,
+          rotation: rotation,
+        );
         if (code != null && mounted) {
           await _onBarcodeDetected(code);
         } else {
           if (mounted) {
-            setState(() { _showBarcodeError = true; });
+            setState(() {
+              _showBarcodeError = true;
+            });
             // Hide error after a short delay to avoid persistent red text
             Future.delayed(const Duration(seconds: 2), () {
-              if (mounted) setState(() { _showBarcodeError = false; });
+              if (mounted)
+                setState(() {
+                  _showBarcodeError = false;
+                });
             });
           }
         }
@@ -128,20 +140,21 @@ class _ScanPageState extends State<ScanPage> {
     });
   }
 
-
-
   Future<void> _onBarcodeDetected(String code) async {
     _stopBarcodeStream();
-    final lookup = ProductLookupService(userAgent: 'Yumie/1.0 (contact@yumie.app)');
+    final lookup = ProductLookupService(
+      userAgent: 'Yumie/1.0 (contact@yumie.app)',
+    );
     final res = await lookup.fetchByBarcode(code);
     if (!mounted) return;
-    if (!res.found) { return; }
+    if (!res.found) {
+      return;
+    }
     final p = res.product!;
     await Navigator.of(context).push(
       MaterialPageRoute(builder: (_) => ScanResultProductPage(product: p)),
     );
   }
-
 
   @override
   void dispose() {
@@ -159,7 +172,7 @@ class _ScanPageState extends State<ScanPage> {
         _cameraError = null;
         _isRetryingCamera = true;
       });
-      
+
       _cameras = await availableCameras();
       if (_cameras.isEmpty) {
         print('No cameras available');
@@ -171,10 +184,14 @@ class _ScanPageState extends State<ScanPage> {
         }
         return;
       }
-      
-      _controller = CameraController(_cameras[0], ResolutionPreset.high, enableAudio: false);
+
+      _controller = CameraController(
+        _cameras[0],
+        ResolutionPreset.high,
+        enableAudio: false,
+      );
       await _controller.initialize();
-      
+
       if (mounted) {
         setState(() {
           _isCameraInitialized = true;
@@ -186,24 +203,26 @@ class _ScanPageState extends State<ScanPage> {
       print('Camera error: ${e.code} - ${e.description}');
       if (mounted) {
         String errorMessage = 'Camera initialization failed';
-        
+
         // Handle specific camera errors
         switch (e.code) {
           case 'CameraAccessDenied':
           case 'CameraAccessDeniedWithoutPrompt':
           case 'CameraAccessRestricted':
-            errorMessage = 'Camera access denied. Please enable camera permissions in Settings.';
+            errorMessage =
+                'Camera access denied. Please enable camera permissions in Settings.';
             break;
           case 'AudioAccessDenied':
           case 'AudioAccessDeniedWithoutPrompt':
           case 'AudioAccessRestricted':
             // We don't need audio, but iOS might still require it
-            errorMessage = 'Microphone access denied. Please enable permissions in Settings.';
+            errorMessage =
+                'Microphone access denied. Please enable permissions in Settings.';
             break;
           default:
             errorMessage = 'Camera error: ${e.description ?? e.code}';
         }
-        
+
         setState(() {
           _cameraError = errorMessage;
           _isRetryingCamera = false;
@@ -229,7 +248,7 @@ class _ScanPageState extends State<ScanPage> {
     if (isPremium) {
       return false; // Premium users don't see paywall
     }
-    
+
     final prefs = await SharedPreferences.getInstance();
     final today = DateTime.now();
     final lastScanDate = prefs.getString('lastScanDate');
@@ -247,9 +266,10 @@ class _ScanPageState extends State<ScanPage> {
     final prefs = await SharedPreferences.getInstance();
     final scansToday = prefs.getInt('scansToday') ?? 0;
     await prefs.setInt('scansToday', scansToday + 1);
-    
+
     // Preload ad for next scan if user might need it
-    if (scansToday >= 0) { // After first scan, preload for next one
+    if (scansToday >= 0) {
+      // After first scan, preload for next one
       _loadRewardedAd(() {});
     }
   }
@@ -264,24 +284,38 @@ class _ScanPageState extends State<ScanPage> {
       final code = await _barcodeService!.processFilePath(file.path);
       if (!mounted) return;
       if (code == null) {
-        setState(() { _showBarcodeError = true; });
+        setState(() {
+          _showBarcodeError = true;
+        });
         Future.delayed(const Duration(seconds: 2), () {
-          if (mounted) setState(() { _showBarcodeError = false; });
+          if (mounted)
+            setState(() {
+              _showBarcodeError = false;
+            });
         });
         return;
       }
-      final lookup = ProductLookupService(userAgent: 'Yumie/1.0 (contact@yumie.app)');
+      final lookup = ProductLookupService(
+        userAgent: 'Yumie/1.0 (contact@yumie.app)',
+      );
       final res = await lookup.fetchByBarcode(code);
       if (!mounted) return;
       if (!res.found) {
-        setState(() { _showBarcodeError = true; });
+        setState(() {
+          _showBarcodeError = true;
+        });
         Future.delayed(const Duration(seconds: 2), () {
-          if (mounted) setState(() { _showBarcodeError = false; });
+          if (mounted)
+            setState(() {
+              _showBarcodeError = false;
+            });
         });
         return;
       }
       await Navigator.of(context).push(
-        MaterialPageRoute(builder: (_) => ScanResultProductPage(product: res.product!)),
+        MaterialPageRoute(
+          builder: (_) => ScanResultProductPage(product: res.product!),
+        ),
       );
       return;
     }
@@ -290,38 +324,42 @@ class _ScanPageState extends State<ScanPage> {
     if (showPaywall) {
       // Ensure ad is loaded before showing paywall
       if (!_isRewardedAdLoaded || _rewardedAd == null) {
-        await Future.delayed(Duration(milliseconds: 500)); // Give ad a moment to load
+        await Future.delayed(
+          Duration(milliseconds: 500),
+        ); // Give ad a moment to load
       }
-      
+
       if (!mounted) return;
       await Navigator.of(context).push(
         MaterialPageRoute(
-          builder: (_) => ScanPaywallPage(
-            onUpgrade: () {
-              Navigator.of(context).pop();
-            },
-            onWatchAd: (paywallContext) async {
-              await _showRewardedAd(paywallContext, () async {
-                await _incrementScanCount();
-                if (_isFridgeMode) {
-                  Navigator.of(paywallContext).pushReplacement(
-                    MaterialPageRoute(
-                      builder: (_) => ScanResultFridgePage(imagePath: file.path),
-                    ),
-                  );
-                } else {
-                  Navigator.of(paywallContext).pushReplacement(
-                    MaterialPageRoute(
-                      builder: (_) => ScanResultPage(imagePath: file.path),
-                    ),
-                  );
-                }
-              });
-            },
-            onDiscard: () {
-              Navigator.of(context).popUntil((route) => route.isFirst);
-            },
-          ),
+          builder:
+              (_) => ScanPaywallPage(
+                onUpgrade: () {
+                  Navigator.of(context).pop();
+                },
+                onWatchAd: (paywallContext) async {
+                  await _showRewardedAd(paywallContext, () async {
+                    await _incrementScanCount();
+                    if (_isFridgeMode) {
+                      Navigator.of(paywallContext).pushReplacement(
+                        MaterialPageRoute(
+                          builder:
+                              (_) => ScanResultFridgePage(imagePath: file.path),
+                        ),
+                      );
+                    } else {
+                      Navigator.of(paywallContext).pushReplacement(
+                        MaterialPageRoute(
+                          builder: (_) => ScanResultPage(imagePath: file.path),
+                        ),
+                      );
+                    }
+                  });
+                },
+                onDiscard: () {
+                  Navigator.of(context).popUntil((route) => route.isFirst);
+                },
+              ),
         ),
       );
       return;
@@ -336,9 +374,7 @@ class _ScanPageState extends State<ScanPage> {
       );
     } else {
       Navigator.of(context).push(
-        MaterialPageRoute(
-          builder: (_) => ScanResultPage(imagePath: file.path),
-        ),
+        MaterialPageRoute(builder: (_) => ScanResultPage(imagePath: file.path)),
       );
     }
   }
@@ -346,7 +382,9 @@ class _ScanPageState extends State<ScanPage> {
   void _toggleFlash() async {
     if (!_isCameraInitialized || !_controller.value.isInitialized) return;
     _isFlashOn = !_isFlashOn;
-    await _controller.setFlashMode(_isFlashOn ? FlashMode.torch : FlashMode.off);
+    await _controller.setFlashMode(
+      _isFlashOn ? FlashMode.torch : FlashMode.off,
+    );
     setState(() {});
   }
 
@@ -357,7 +395,9 @@ class _ScanPageState extends State<ScanPage> {
       _barcodeService ??= BarcodeScannerService();
       final code = await _barcodeService!.processFilePath(picked.path);
       if (!mounted) return;
-      if (code == null) { return; }
+      if (code == null) {
+        return;
+      }
       await _onBarcodeDetected(code);
       return;
     }
@@ -371,32 +411,36 @@ class _ScanPageState extends State<ScanPage> {
       if (!mounted) return;
       await Navigator.of(context).push(
         MaterialPageRoute(
-          builder: (_) => ScanPaywallPage(
-            onUpgrade: () {
-              Navigator.of(context).pop();
-            },
-            onWatchAd: (paywallContext) async {
-              await _showRewardedAd(paywallContext, () async {
-                await _incrementScanCount();
-                if (_isFridgeMode) {
-                  Navigator.of(paywallContext).pushReplacement(
-                    MaterialPageRoute(
-                      builder: (_) => ScanResultFridgePage(imagePath: picked.path),
-                    ),
-                  );
-                } else {
-                  Navigator.of(paywallContext).pushReplacement(
-                    MaterialPageRoute(
-                      builder: (_) => ScanResultPage(imagePath: picked.path),
-                    ),
-                  );
-                }
-              });
-            },
-            onDiscard: () {
-              Navigator.of(context).popUntil((route) => route.isFirst);
-            },
-          ),
+          builder:
+              (_) => ScanPaywallPage(
+                onUpgrade: () {
+                  Navigator.of(context).pop();
+                },
+                onWatchAd: (paywallContext) async {
+                  await _showRewardedAd(paywallContext, () async {
+                    await _incrementScanCount();
+                    if (_isFridgeMode) {
+                      Navigator.of(paywallContext).pushReplacement(
+                        MaterialPageRoute(
+                          builder:
+                              (_) =>
+                                  ScanResultFridgePage(imagePath: picked.path),
+                        ),
+                      );
+                    } else {
+                      Navigator.of(paywallContext).pushReplacement(
+                        MaterialPageRoute(
+                          builder:
+                              (_) => ScanResultPage(imagePath: picked.path),
+                        ),
+                      );
+                    }
+                  });
+                },
+                onDiscard: () {
+                  Navigator.of(context).popUntil((route) => route.isFirst);
+                },
+              ),
         ),
       );
       return;
@@ -428,10 +472,12 @@ class _ScanPageState extends State<ScanPage> {
       onAdLoaded();
       return;
     }
-    
+
     print('Loading rewarded ad with unit ID: $adUnitId');
-    print('Consent status - can request ads: ${ConsentService.instance.userConsentedPersonalizedAds}');
-    
+    print(
+      'Consent status - can request ads: ${ConsentService.instance.userConsentedPersonalizedAds}',
+    );
+
     RewardedAd.load(
       adUnitId: adUnitId,
       request: ConsentService.instance.buildAdRequest(),
@@ -447,13 +493,16 @@ class _ScanPageState extends State<ScanPage> {
           print('Error code: ${error.code}');
           _isRewardedAdLoaded = false;
           _rewardedAd = null;
-          
+
           // If production ad failed, try test ad as fallback
           if (adUnitId == AdConfig.rewardedAdUnitId) {
             print('Production ad failed, trying test ad as fallback');
             Future.delayed(Duration(seconds: 2), () {
               if (mounted && !_isRewardedAdLoaded) {
-                _loadRewardedAdWithFallback(AdConfig.testRewardedAdUnitId, onAdLoaded);
+                _loadRewardedAdWithFallback(
+                  AdConfig.testRewardedAdUnitId,
+                  onAdLoaded,
+                );
               }
             });
           } else {
@@ -461,7 +510,10 @@ class _ScanPageState extends State<ScanPage> {
             Future.delayed(Duration(seconds: 5), () {
               if (mounted && !_isRewardedAdLoaded) {
                 print('Retrying ad load after failure');
-                _loadRewardedAdWithFallback(AdConfig.rewardedAdUnitId, onAdLoaded);
+                _loadRewardedAdWithFallback(
+                  AdConfig.rewardedAdUnitId,
+                  onAdLoaded,
+                );
               }
             });
           }
@@ -470,7 +522,10 @@ class _ScanPageState extends State<ScanPage> {
     );
   }
 
-  Future<void> _showRewardedAd(BuildContext context, VoidCallback onRewardEarned) async {
+  Future<void> _showRewardedAd(
+    BuildContext context,
+    VoidCallback onRewardEarned,
+  ) async {
     if (_isRewardedAdLoaded && _rewardedAd != null) {
       _rewardedAd!.fullScreenContentCallback = FullScreenContentCallback(
         onAdDismissedFullScreenContent: (ad) {
@@ -484,12 +539,14 @@ class _ScanPageState extends State<ScanPage> {
           _isRewardedAdLoaded = false;
           _rewardedAd = null;
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(AppLocalizations.of(context)!.adFailedToShow)),
+            SnackBar(
+              content: Text(AppLocalizations.of(context)!.adFailedToShow),
+            ),
           );
           _loadRewardedAd(() {});
         },
       );
-      
+
       try {
         await _rewardedAd!.show(
           onUserEarnedReward: (ad, reward) {
@@ -505,7 +562,7 @@ class _ScanPageState extends State<ScanPage> {
     } else {
       // Ad is not ready - show loading and wait for it to load
       print('Ad not ready, showing loading and waiting for ad to load');
-      
+
       // Show loading indicator
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -514,7 +571,10 @@ class _ScanPageState extends State<ScanPage> {
               SizedBox(
                 width: 20,
                 height: 20,
-                child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: Colors.white,
+                ),
               ),
               SizedBox(width: 16),
               Text('Loading ad...'),
@@ -523,32 +583,32 @@ class _ScanPageState extends State<ScanPage> {
           duration: Duration(seconds: 30), // Long duration while we wait
         ),
       );
-      
+
       // Try to load ad and wait for it
       bool adLoaded = false;
       int attempts = 0;
       const maxAttempts = 3;
-      
+
       while (!adLoaded && attempts < maxAttempts && mounted) {
         attempts++;
         print('Attempting to load ad, attempt $attempts');
-        
+
         _loadRewardedAd(() {
           adLoaded = true;
           print('Ad loaded successfully on attempt $attempts');
         });
-        
+
         // Wait a bit before next attempt
         if (!adLoaded && attempts < maxAttempts) {
           await Future.delayed(Duration(seconds: 2));
         }
       }
-      
+
       // Clear loading message
       if (mounted) {
         ScaffoldMessenger.of(context).clearSnackBars();
       }
-      
+
       if (adLoaded && _isRewardedAdLoaded && _rewardedAd != null) {
         // Now show the ad
         _rewardedAd!.fullScreenContentCallback = FullScreenContentCallback(
@@ -563,12 +623,14 @@ class _ScanPageState extends State<ScanPage> {
             _isRewardedAdLoaded = false;
             _rewardedAd = null;
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(AppLocalizations.of(context)!.adFailedToShow)),
+              SnackBar(
+                content: Text(AppLocalizations.of(context)!.adFailedToShow),
+              ),
             );
             _loadRewardedAd(() {});
           },
         );
-        
+
         try {
           await _rewardedAd!.show(
             onUserEarnedReward: (ad, reward) {
@@ -577,7 +639,9 @@ class _ScanPageState extends State<ScanPage> {
           );
         } catch (e) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(AppLocalizations.of(context)!.adFailedToShow)),
+            SnackBar(
+              content: Text(AppLocalizations.of(context)!.adFailedToShow),
+            ),
           );
           onRewardEarned(); // Continue anyway
         }
@@ -602,233 +666,307 @@ class _ScanPageState extends State<ScanPage> {
       children: [
         Scaffold(
           backgroundColor: Colors.black,
-          body: _isCameraInitialized
-              ? LayoutBuilder(
-                  builder: (context, constraints) {
-                    double frameWidth, frameHeight;
-                    if (_isBarcodeMode) {
-                      frameWidth = constraints.maxWidth * 0.90;
-                      // Make barcode box taller vertically
-                      frameHeight = frameWidth * 0.45;
-                    } else if (_isFridgeMode) {
-                      frameWidth = constraints.maxWidth * 0.92;
-                      // Make the fridge box taller so it extends further downward
-                      frameHeight = constraints.maxHeight * 0.58;
-                    } else {
-                      frameWidth = constraints.maxWidth * 0.7;
-                      frameHeight = frameWidth;
-                    }
-                    final double frameLeft = (constraints.maxWidth - frameWidth) / 2;
-                    double frameTop = (constraints.maxHeight - frameHeight) / 2;
-                    // Keep the frame just above the mode buttons/camera cluster
-                    const double modeButtonsBottom = 120; // Y offset of the button row
-                    const double cameraButtonBottom = 40; // Camera button bottom inset
-                    const double totalBottomSpace = modeButtonsBottom + 40; // Extra padding so the frame sits above
-                    final double maxFrameBottom = constraints.maxHeight - totalBottomSpace;
-                    final double maxFrameTop = maxFrameBottom - frameHeight;
-                    final double overlap = (frameTop + frameHeight) - maxFrameBottom;
-                    if (overlap > 0) {
-                      frameTop = (frameTop - overlap).clamp(0.0, frameTop);
-                    }
-                    // For fridge mode, bias the frame to sit closer to the buttons (relative placement)
-                    if (_isFridgeMode) {
-                      // Target the frame bottom to be a fixed margin above the buttons
-                      final double desiredBottom = maxFrameBottom - 48; // 12px gap above buttons
-                      final double desiredTop = (desiredBottom - frameHeight).clamp(0.0, maxFrameTop);
-                      frameTop = desiredTop;
-                    }
-                    final frameRect = Rect.fromLTWH(frameLeft, frameTop, frameWidth, frameHeight);
-                    return Stack(
-                      children: [
-                        Positioned.fill(child: CameraPreview(_controller)),
-                        Positioned.fill(
-                          child: ScannerOverlay(
-                            borderRadius: _frameBorderRadius,
-                            frameRect: frameRect,
-                            // Use a single consistent color; remove red/orange/green cues
-                            borderColor: Colors.greenAccent,
-                            overlayOpacity: 0.7,
-                          ),
-                        ),
-                        // X button at top left
-                        Positioned(
-                          top: 0,
-                          left: 0,
-                          child: SafeArea(
-                            child: IconButton(
-                              icon: Icon(Icons.close, color: Colors.white, size: 32),
-                              onPressed: () => Navigator.of(context).pop(),
+          body:
+              _isCameraInitialized
+                  ? LayoutBuilder(
+                    builder: (context, constraints) {
+                      double frameWidth, frameHeight;
+                      if (_isBarcodeMode) {
+                        frameWidth = constraints.maxWidth * 0.90;
+                        // Make barcode box taller vertically
+                        frameHeight = frameWidth * 0.45;
+                      } else if (_isFridgeMode) {
+                        frameWidth = constraints.maxWidth * 0.92;
+                        // Make the fridge box taller so it extends further downward
+                        frameHeight = constraints.maxHeight * 0.58;
+                      } else {
+                        frameWidth = constraints.maxWidth * 0.7;
+                        frameHeight = frameWidth;
+                      }
+                      final double frameLeft =
+                          (constraints.maxWidth - frameWidth) / 2;
+                      double frameTop =
+                          (constraints.maxHeight - frameHeight) / 2;
+                      // Keep the frame just above the mode buttons/camera cluster
+                      const double modeButtonsBottom =
+                          120; // Y offset of the button row
+                      const double cameraButtonBottom =
+                          40; // Camera button bottom inset
+                      const double totalBottomSpace =
+                          modeButtonsBottom +
+                          40; // Extra padding so the frame sits above
+                      final double maxFrameBottom =
+                          constraints.maxHeight - totalBottomSpace;
+                      final double maxFrameTop = maxFrameBottom - frameHeight;
+                      final double overlap =
+                          (frameTop + frameHeight) - maxFrameBottom;
+                      if (overlap > 0) {
+                        frameTop = (frameTop - overlap).clamp(0.0, frameTop);
+                      }
+                      // For fridge mode, bias the frame to sit closer to the buttons (relative placement)
+                      if (_isFridgeMode) {
+                        // Target the frame bottom to be a fixed margin above the buttons
+                        final double desiredBottom =
+                            maxFrameBottom - 48; // 12px gap above buttons
+                        final double desiredTop = (desiredBottom - frameHeight)
+                            .clamp(0.0, maxFrameTop);
+                        frameTop = desiredTop;
+                      }
+                      final frameRect = Rect.fromLTWH(
+                        frameLeft,
+                        frameTop,
+                        frameWidth,
+                        frameHeight,
+                      );
+                      return Stack(
+                        children: [
+                          Positioned.fill(child: CameraPreview(_controller)),
+                          Positioned.fill(
+                            child: ScannerOverlay(
+                              borderRadius: _frameBorderRadius,
+                              frameRect: frameRect,
+                              // Use a single consistent color; remove red/orange/green cues
+                              borderColor: Colors.greenAccent,
+                              overlayOpacity: 0.7,
                             ),
                           ),
-                        ),
-                        // Mode buttons positioned just above the camera button
-                        Positioned(
-                          bottom: 120, // Position above the camera button
-                          left: 0,
-                          right: 0,
-                          child: SafeArea(
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                _buildModeButton(AppLocalizations.of(context)!.scan, (!_isFridgeMode && !_isBarcodeMode), () {
-                                  setState(() { _isFridgeMode = false; });
-                                  _onBarcodeModeChanged(false);
-                                }),
-                                const SizedBox(width: 12),
-                                _buildModeButton(AppLocalizations.of(context)!.fridge, _isFridgeMode, () {
-                                  setState(() { _isFridgeMode = true; });
-                                  _onBarcodeModeChanged(false);
-                                }),
-                                const SizedBox(width: 12),
-                                _buildModeButton(AppLocalizations.of(context)!.barcode, _isBarcodeMode, () {
-                                  setState(() { _isFridgeMode = false; });
-                                  _onBarcodeModeChanged(true);
-                                }),
-                              ],
-                            ),
-                          ),
-                        ),
-                        // Instruction overlay just above the frame
-                        Positioned(
-                          top: frameRect.top - 64,
-                          left: 0,
-                          right: 0,
-                          child: Center(
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
-                              decoration: BoxDecoration(
-                                color: Colors.black.withOpacity(0.55),
-                                borderRadius: BorderRadius.circular(22),
-                              ),
-                              child: Text(
-                                _isBarcodeMode
-                                  ? AppLocalizations.of(context)!.placeBarcodeInFrame
-                                  : (_isFridgeMode
-                                      ? AppLocalizations.of(context)!.placeFridgeInFrame
-                                      : AppLocalizations.of(context)!.placeFoodInFrame),
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w600,
-                                  letterSpacing: 0.1,
-                                ),
-                                textAlign: TextAlign.center,
-                              ),
-                            ),
-                          ),
-                        ),
-                        // Error message under the frame for barcode not recognized
-                        if (_isBarcodeMode)
+                          // X button at top left
                           Positioned(
-                            top: frameRect.bottom + 8,
+                            top: 0,
+                            left: 0,
+                            child: SafeArea(
+                              child: IconButton(
+                                icon: Icon(
+                                  Icons.close,
+                                  color: Colors.white,
+                                  size: 32,
+                                ),
+                                onPressed: () => Navigator.of(context).pop(),
+                              ),
+                            ),
+                          ),
+                          // Mode buttons positioned just above the camera button
+                          Positioned(
+                            bottom: 120, // Position above the camera button
                             left: 0,
                             right: 0,
-                            child: AnimatedOpacity(
-                              opacity: _showBarcodeError ? 1.0 : 0.0,
-                              duration: const Duration(milliseconds: 200),
-                              child: Center(
+                            child: SafeArea(
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  _buildModeButton(
+                                    AppLocalizations.of(context)!.scan,
+                                    (!_isFridgeMode && !_isBarcodeMode),
+                                    () {
+                                      setState(() {
+                                        _isFridgeMode = false;
+                                      });
+                                      _onBarcodeModeChanged(false);
+                                    },
+                                  ),
+                                  const SizedBox(width: 12),
+                                  _buildModeButton(
+                                    AppLocalizations.of(context)!.fridge,
+                                    _isFridgeMode,
+                                    () {
+                                      setState(() {
+                                        _isFridgeMode = true;
+                                      });
+                                      _onBarcodeModeChanged(false);
+                                    },
+                                  ),
+                                  const SizedBox(width: 12),
+                                  _buildModeButton(
+                                    AppLocalizations.of(context)!.barcode,
+                                    _isBarcodeMode,
+                                    () {
+                                      setState(() {
+                                        _isFridgeMode = false;
+                                      });
+                                      _onBarcodeModeChanged(true);
+                                    },
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                          // Instruction overlay just above the frame
+                          Positioned(
+                            top: frameRect.top - 64,
+                            left: 0,
+                            right: 0,
+                            child: Center(
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 24,
+                                  vertical: 10,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: Colors.black.withOpacity(0.55),
+                                  borderRadius: BorderRadius.circular(22),
+                                ),
                                 child: Text(
-                                  'Barcode not in frame!',
-                                  style: const TextStyle(color: Colors.redAccent, fontSize: 14, fontWeight: FontWeight.w700),
+                                  _isBarcodeMode
+                                      ? AppLocalizations.of(
+                                        context,
+                                      )!.placeBarcodeInFrame
+                                      : (_isFridgeMode
+                                          ? AppLocalizations.of(
+                                            context,
+                                          )!.placeFridgeInFrame
+                                          : AppLocalizations.of(
+                                            context,
+                                          )!.placeFoodInFrame),
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
+                                    letterSpacing: 0.1,
+                                  ),
+                                  textAlign: TextAlign.center,
                                 ),
                               ),
                             ),
                           ),
-                        _buildBottomButtons(),
-                      ],
-                    );
-                  },
-                )
-              : Center(
-                  child: _cameraError != null
-                      ? Container(
-                          padding: const EdgeInsets.all(24),
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(
-                                Icons.camera_alt_outlined,
-                                size: 64,
-                                color: Colors.white54,
-                              ),
-                              const SizedBox(height: 24),
-                              Text(
-                                'Camera Not Available',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.bold,
+                          // Error message under the frame for barcode not recognized
+                          if (_isBarcodeMode)
+                            Positioned(
+                              top: frameRect.bottom + 8,
+                              left: 0,
+                              right: 0,
+                              child: AnimatedOpacity(
+                                opacity: _showBarcodeError ? 1.0 : 0.0,
+                                duration: const Duration(milliseconds: 200),
+                                child: Center(
+                                  child: Text(
+                                    'Barcode not in frame!',
+                                    style: const TextStyle(
+                                      color: Colors.redAccent,
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  ),
                                 ),
                               ),
-                              const SizedBox(height: 16),
-                              Text(
-                                _cameraError!,
-                                style: TextStyle(
-                                  color: Colors.white70,
-                                  fontSize: 16,
-                                ),
-                                textAlign: TextAlign.center,
-                              ),
-                              const SizedBox(height: 32),
-                              if (_cameraError!.contains('permissions') || _cameraError!.contains('denied'))
-                                Column(
-                                  children: [
-                                    ElevatedButton.icon(
-                                      onPressed: () => AppSettings.openAppSettings(),
-                                      icon: Icon(Icons.settings),
-                                      label: Text('Open Settings'),
-                                      style: ElevatedButton.styleFrom(
-                                        backgroundColor: Colors.blue,
-                                        foregroundColor: Colors.white,
-                                        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(8),
+                            ),
+                          _buildBottomButtons(),
+                        ],
+                      );
+                    },
+                  )
+                  : Center(
+                    child:
+                        _cameraError != null
+                            ? Container(
+                              padding: const EdgeInsets.all(24),
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    Icons.camera_alt_outlined,
+                                    size: 64,
+                                    color: Colors.white54,
+                                  ),
+                                  const SizedBox(height: 24),
+                                  Text(
+                                    'Camera Not Available',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 16),
+                                  Text(
+                                    _cameraError!,
+                                    style: TextStyle(
+                                      color: Colors.white70,
+                                      fontSize: 16,
+                                    ),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                  const SizedBox(height: 32),
+                                  if (_cameraError!.contains('permissions') ||
+                                      _cameraError!.contains('denied'))
+                                    Column(
+                                      children: [
+                                        ElevatedButton.icon(
+                                          onPressed:
+                                              () =>
+                                                  AppSettings.openAppSettings(),
+                                          icon: Icon(Icons.settings),
+                                          label: Text('Open Settings'),
+                                          style: ElevatedButton.styleFrom(
+                                            backgroundColor: Colors.blue,
+                                            foregroundColor: Colors.white,
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: 24,
+                                              vertical: 12,
+                                            ),
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(8),
+                                            ),
+                                          ),
                                         ),
+                                        const SizedBox(height: 12),
+                                      ],
+                                    ),
+                                  ElevatedButton.icon(
+                                    onPressed:
+                                        _isRetryingCamera ? null : _initCamera,
+                                    icon:
+                                        _isRetryingCamera
+                                            ? SizedBox(
+                                              width: 20,
+                                              height: 20,
+                                              child: CircularProgressIndicator(
+                                                strokeWidth: 2,
+                                                valueColor:
+                                                    AlwaysStoppedAnimation<
+                                                      Color
+                                                    >(Colors.white),
+                                              ),
+                                            )
+                                            : Icon(Icons.refresh),
+                                    label: Text(
+                                      _isRetryingCamera
+                                          ? 'Retrying...'
+                                          : 'Retry',
+                                    ),
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: Colors.green,
+                                      foregroundColor: Colors.white,
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 24,
+                                        vertical: 12,
+                                      ),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(8),
                                       ),
                                     ),
-                                    const SizedBox(height: 12),
-                                  ],
-                                ),
-                              ElevatedButton.icon(
-                                onPressed: _isRetryingCamera ? null : _initCamera,
-                                icon: _isRetryingCamera
-                                    ? SizedBox(
-                                        width: 20,
-                                        height: 20,
-                                        child: CircularProgressIndicator(
-                                          strokeWidth: 2,
-                                          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                                        ),
-                                      )
-                                    : Icon(Icons.refresh),
-                                label: Text(_isRetryingCamera ? 'Retrying...' : 'Retry'),
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.green,
-                                  foregroundColor: Colors.white,
-                                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(8),
                                   ),
-                                ),
-                              ),
-                              const SizedBox(height: 16),
-                              TextButton(
-                                onPressed: () => Navigator.of(context).pop(),
-                                child: Text(
-                                  'Go Back',
-                                  style: TextStyle(
-                                    color: Colors.white70,
-                                    fontSize: 16,
+                                  const SizedBox(height: 16),
+                                  TextButton(
+                                    onPressed:
+                                        () => Navigator.of(context).pop(),
+                                    child: Text(
+                                      'Go Back',
+                                      style: TextStyle(
+                                        color: Colors.white70,
+                                        fontSize: 16,
+                                      ),
+                                    ),
                                   ),
-                                ),
+                                ],
                               ),
-                            ],
-                          ),
-                        )
-                      : CircularProgressIndicator(
-                              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                            )
+                            : CircularProgressIndicator(
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                Colors.white,
+                              ),
                             ),
-                ),
+                  ),
         ),
         ValueListenableBuilder<bool>(
           valueListenable: ConnectivityService.instance.online,
@@ -844,39 +982,79 @@ class _ScanPageState extends State<ScanPage> {
                     decoration: BoxDecoration(
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(16),
-                      boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.08), blurRadius: 12, offset: Offset(0, 6))],
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.08),
+                          blurRadius: 12,
+                          offset: Offset(0, 6),
+                        ),
+                      ],
                     ),
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(Icons.wifi_off_rounded, size: 48, color: Colors.redAccent),
+                        Icon(
+                          Icons.wifi_off_rounded,
+                          size: 48,
+                          color: Colors.redAccent,
+                        ),
                         const SizedBox(height: 12),
-                        Text('No internet', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700), textAlign: TextAlign.center),
+                        Text(
+                          'No internet',
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.w700,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
                         const SizedBox(height: 8),
-                        Text('Please connect to use this feature. You can still log meals offline and they will sync when you are back online.',
-                            style: TextStyle(fontSize: 15, color: Colors.black54, height: 1.4), textAlign: TextAlign.center),
+                        Text(
+                          'Please connect to use this feature. You can still log meals offline and they will sync when you are back online.',
+                          style: TextStyle(
+                            fontSize: 15,
+                            color: Colors.black54,
+                            height: 1.4,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
                         const SizedBox(height: 16),
                         Row(
                           children: [
                             Expanded(
                               child: OutlinedButton.icon(
-                                onPressed: () => Navigator.of(context).popUntil((route) => route.isFirst),
+                                onPressed:
+                                    () => Navigator.of(
+                                      context,
+                                    ).popUntil((route) => route.isFirst),
                                 icon: Icon(Icons.home),
                                 label: Text('Home'),
-                                style: OutlinedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 12)),
+                                style: OutlinedButton.styleFrom(
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 12,
+                                  ),
+                                ),
                               ),
                             ),
                             const SizedBox(width: 12),
                             Expanded(
                               child: ElevatedButton.icon(
-                                onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const LogMealPage())),
+                                onPressed:
+                                    () => Navigator.of(context).push(
+                                      MaterialPageRoute(
+                                        builder: (_) => const LogMealPage(),
+                                      ),
+                                    ),
                                 icon: Icon(Icons.restaurant_menu),
                                 label: Text('Log a meal'),
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: Colors.green,
                                   foregroundColor: Colors.white,
-                                  padding: const EdgeInsets.symmetric(vertical: 12),
-                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 12,
+                                  ),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
                                 ),
                               ),
                             ),
@@ -925,15 +1103,15 @@ class _ScanPageState extends State<ScanPage> {
                     color: Colors.white,
                     border: Border.all(color: Colors.white, width: 4),
                   ),
-                  child: Icon(
-                    Icons.camera_alt,
-                    color: Colors.black,
-                    size: 36,
-                  ),
+                  child: Icon(Icons.camera_alt, color: Colors.black, size: 36),
                 ),
               ),
               IconButton(
-                icon: const Icon(Icons.photo_library, color: Colors.white, size: 32),
+                icon: const Icon(
+                  Icons.photo_library,
+                  color: Colors.white,
+                  size: 32,
+                ),
                 onPressed: _uploadFromGallery,
               ),
             ],
@@ -963,4 +1141,4 @@ class _ScanPageState extends State<ScanPage> {
       ),
     );
   }
-} 
+}

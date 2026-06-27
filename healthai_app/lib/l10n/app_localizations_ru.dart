@@ -39,25 +39,29 @@ class AppLocalizationsRu extends AppLocalizations {
   String get mealLoggingPrompts => 'Напоминания о записи приемов пищи';
 
   @override
-  String get mealLoggingPromptsSubtitle => 'Получайте напоминания о записи приемов пищи';
+  String get mealLoggingPromptsSubtitle =>
+      'Получайте напоминания о записи приемов пищи';
 
   @override
   String get waterIntakeReminders => 'Напоминания о потреблении воды';
 
   @override
-  String get waterIntakeRemindersSubtitle => 'Получайте напоминания о питье воды';
+  String get waterIntakeRemindersSubtitle =>
+      'Получайте напоминания о питье воды';
 
   @override
   String get mindfulWalksReminders => 'Напоминания о осознанных прогулках';
 
   @override
-  String get mindfulWalksRemindersSubtitle => 'Получайте напоминания о осознанной прогулке';
+  String get mindfulWalksRemindersSubtitle =>
+      'Получайте напоминания о осознанной прогулке';
 
   @override
   String get momentOfCalmAfterMeals => 'Момент спокойствия после еды';
 
   @override
-  String get momentOfCalmAfterMealsSubtitle => 'Показывать успокаивающий всплывающий экран после записи приема пищи';
+  String get momentOfCalmAfterMealsSubtitle =>
+      'Показывать успокаивающий всплывающий экран после записи приема пищи';
 
   @override
   String get welcomeBack => 'С возвращением!';
@@ -66,31 +70,37 @@ class AppLocalizationsRu extends AppLocalizations {
   String get trackNutritionToday => 'Давайте отслеживать ваше питание сегодня';
 
   @override
-  String get subtitleAfternoon => 'Идеальное время записать обед и сохранить баланс.';
+  String get subtitleAfternoon =>
+      'Идеальное время записать обед и сохранить баланс.';
 
   @override
-  String get subtitleEvening => 'Держитесь плана этим вечером — запишите свои приёмы пищи.';
+  String get subtitleEvening =>
+      'Держитесь плана этим вечером — запишите свои приёмы пищи.';
 
   @override
-  String get subtitleNight => 'Подведите итоги дня — не забудьте записать сегодняшние приёмы пищи.';
+  String get subtitleNight =>
+      'Подведите итоги дня — не забудьте записать сегодняшние приёмы пищи.';
 
   @override
   String get streakNearEndingTitle => 'Сохрани свою серию 🔥';
 
   @override
-  String get streakNearEndingBody => 'Ваша серия скоро закончится. Запишите приём пищи сегодня, чтобы сохранить её!';
+  String get streakNearEndingBody =>
+      'Ваша серия скоро закончится. Запишите приём пищи сегодня, чтобы сохранить её!';
 
   @override
   String get streakNearEndingTitle2 => 'Почти у цели! 🔥';
 
   @override
-  String get streakNearEndingBody2 => 'Осталось всего пару часов. Запишите приём пищи, чтобы спасти серию!';
+  String get streakNearEndingBody2 =>
+      'Осталось всего пару часов. Запишите приём пищи, чтобы спасти серию!';
 
   @override
   String get streakEndedTitle => 'Серия закончилась';
 
   @override
-  String get streakEndedBody => 'Ваша серия закончилась. Запишите приём пищи, чтобы начать заново и восстановить её!';
+  String get streakEndedBody =>
+      'Ваша серия закончилась. Запишите приём пищи, чтобы начать заново и восстановить её!';
 
   @override
   String get streakActive => 'Серия активна';
@@ -111,13 +121,15 @@ class AppLocalizationsRu extends AppLocalizations {
   String get startedOn => 'Началась';
 
   @override
-  String get logMealToStartStreak => 'Запишите приём пищи сегодня, чтобы начать серию';
+  String get logMealToStartStreak =>
+      'Запишите приём пищи сегодня, чтобы начать серию';
 
   @override
   String get nutritionSummary => 'Сводка по питанию';
 
   @override
-  String get setCalorieAndMacroGoals => 'Установите цели по калориям и макронутриентам на странице План питания.';
+  String get setCalorieAndMacroGoals =>
+      'Установите цели по калориям и макронутриентам на странице План питания.';
 
   @override
   String get protein => 'Белок';
@@ -156,7 +168,8 @@ class AppLocalizationsRu extends AppLocalizations {
   String get viewAll => 'Все';
 
   @override
-  String get noMealsLoggedForThisDay => 'Нет записей о приемах пищи за этот день.';
+  String get noMealsLoggedForThisDay =>
+      'Нет записей о приемах пищи за этот день.';
 
   @override
   String get nutritionalPlan => 'План питания';
@@ -198,7 +211,8 @@ class AppLocalizationsRu extends AppLocalizations {
   String get sinceStart => 'с начала';
 
   @override
-  String get expectationsDisclaimer => 'Эти ожидания основаны на вашей недавней тенденции и могут измениться по мере записи новых весов.';
+  String get expectationsDisclaimer =>
+      'Эти ожидания основаны на вашей недавней тенденции и могут измениться по мере записи новых весов.';
 
   @override
   String get loseVerb => 'снижать';
@@ -207,7 +221,13 @@ class AppLocalizationsRu extends AppLocalizations {
   String get gainVerb => 'набирать';
 
   @override
-  String expectationBlurb(Object direction, Object eta, Object rate, Object remaining, Object unit) {
+  String expectationBlurb(
+    Object direction,
+    Object eta,
+    Object rate,
+    Object remaining,
+    Object unit,
+  ) {
     return 'Согласно вашей недавней тенденции, вы на пути $direction примерно $rate $unit в неделю. В таком темпе потребуется примерно $eta, чтобы достичь цели. Осталось $remaining $unit.';
   }
 
@@ -230,13 +250,15 @@ class AppLocalizationsRu extends AppLocalizations {
   String get comingSoon => 'Скоро!';
 
   @override
-  String get ratingOnGoogleAvailableAfterRelease => 'Оценка в Google будет доступна после выпуска.';
+  String get ratingOnGoogleAvailableAfterRelease =>
+      'Оценка в Google будет доступна после выпуска.';
 
   @override
   String get shareWithFriends => 'Поделиться с друзьями';
 
   @override
-  String get sharingAvailableAfterRelease => 'Обмен будет доступен после выпуска.';
+  String get sharingAvailableAfterRelease =>
+      'Обмен будет доступен после выпуска.';
 
   @override
   String get resetPassword => 'Сбросить пароль';
@@ -269,7 +291,8 @@ class AppLocalizationsRu extends AppLocalizations {
   String get apiDocumentation => 'Документация API';
 
   @override
-  String get needAssistanceContactSupport => 'Нужна помощь? Свяжитесь с нашей службой поддержки:';
+  String get needAssistanceContactSupport =>
+      'Нужна помощь? Свяжитесь с нашей службой поддержки:';
 
   @override
   String get testWebURL => 'Тестовая веб-ссылка';
@@ -296,13 +319,15 @@ class AppLocalizationsRu extends AppLocalizations {
   String get momentOfCalm => 'Момент спокойствия';
 
   @override
-  String get practiceMindfulEating => 'Найдите момент, чтобы оценить вашу еду и практиковать осознанное питание.';
+  String get practiceMindfulEating =>
+      'Найдите момент, чтобы оценить вашу еду и практиковать осознанное питание.';
 
   @override
   String get howOldAreYou => 'Сколько вам лет?';
 
   @override
-  String get personalizeExperience => 'Это помогает нам персонализировать ваш опыт';
+  String get personalizeExperience =>
+      'Это помогает нам персонализировать ваш опыт';
 
   @override
   String get failedToOpenStore => 'Failed to open app store';
@@ -329,25 +354,29 @@ class AppLocalizationsRu extends AppLocalizations {
   String get yourGoalWeight => 'Ваш целевой вес';
 
   @override
-  String get setRealisticGoal => 'Установите реалистичную цель для вашего путешествия';
+  String get setRealisticGoal =>
+      'Установите реалистичную цель для вашего путешествия';
 
   @override
   String get allSet => 'Вы готовы! 🎉';
 
   @override
-  String get personalizedNutritionPlan => 'Вот ваш персонализированный план питания. Добро пожаловать в ваше путешествие к здоровью с Yumie!';
+  String get personalizedNutritionPlan =>
+      'Вот ваш персонализированный план питания. Добро пожаловать в ваше путешествие к здоровью с Yumie!';
 
   @override
   String get whatIsYourBloodType => 'Какая у вас группа крови?';
 
   @override
-  String get personalizeHealthInsights => 'Это помогает нам персонализировать ваши инсайты о здоровье.';
+  String get personalizeHealthInsights =>
+      'Это помогает нам персонализировать ваши инсайты о здоровье.';
 
   @override
   String get whatIsYourSex => 'Какой у вас пол?';
 
   @override
-  String get personalizeNutritionPlan => 'Это помогает нам персонализировать ваш план питания.';
+  String get personalizeNutritionPlan =>
+      'Это помогает нам персонализировать ваш план питания.';
 
   @override
   String get home => 'Главная';
@@ -401,7 +430,8 @@ class AppLocalizationsRu extends AppLocalizations {
   String get clearChat => 'Очистить чат';
 
   @override
-  String get coachWelcome => 'Привет! Я Yumie, ваш тренер по питанию. Как я могу помочь вам сегодня?\n\nСпросите Yumie о здоровых рецептах, планах питания или советах по питанию!';
+  String get coachWelcome =>
+      'Привет! Я Yumie, ваш тренер по питанию. Как я могу помочь вам сегодня?\n\nСпросите Yumie о здоровых рецептах, планах питания или советах по питанию!';
 
   @override
   String get refreshInsight => 'Обновить инсайт';
@@ -503,7 +533,8 @@ class AppLocalizationsRu extends AppLocalizations {
   String get bloodType => 'Группа крови';
 
   @override
-  String get bloodTypeOptional => 'Группа крови является необязательной и не влияет на отслеживание калорий или рекомендации.';
+  String get bloodTypeOptional =>
+      'Группа крови является необязательной и не влияет на отслеживание калорий или рекомендации.';
 
   @override
   String get areYouDiabetic => 'У вас диабет?';
@@ -512,7 +543,8 @@ class AppLocalizationsRu extends AppLocalizations {
   String get healthAwarenessUpdated => 'Осведомленность о здоровье обновлена!';
 
   @override
-  String get takeMomentToAppreciate => 'Найдите момент, чтобы оценить свою еду и практиковать осознанное питание.';
+  String get takeMomentToAppreciate =>
+      'Найдите момент, чтобы оценить свою еду и практиковать осознанное питание.';
 
   @override
   String get continueButton => 'Продолжить';
@@ -668,10 +700,12 @@ class AppLocalizationsRu extends AppLocalizations {
   String get upgradeToPremium => 'Обновить до Premium';
 
   @override
-  String get getUnlimitedScans => 'Получите неограниченные сканирования и многое другое!';
+  String get getUnlimitedScans =>
+      'Получите неограниченные сканирования и многое другое!';
 
   @override
-  String get getUnlimitedSearches => 'Получите неограниченные поиски и многое другое!';
+  String get getUnlimitedSearches =>
+      'Получите неограниченные поиски и многое другое!';
 
   @override
   String get upgradePlan => 'Обновить план';
@@ -820,10 +854,12 @@ class AppLocalizationsRu extends AppLocalizations {
   String get unlockPremiumFeatures => 'Разблокировать премиум функции';
 
   @override
-  String get getMostOutOfHealthJourney => 'Получите максимум от вашего пути к здоровью с неограниченным доступом!';
+  String get getMostOutOfHealthJourney =>
+      'Получите максимум от вашего пути к здоровью с неограниченным доступом!';
 
   @override
-  String get unlimitedScansAICoaching => 'Разблокируйте неограниченные сканирования, ИИ-коучинг и персонализированные планы питания!';
+  String get unlimitedScansAICoaching =>
+      'Разблокируйте неограниченные сканирования, ИИ-коучинг и персонализированные планы питания!';
 
   @override
   String get subscribe => 'Подписаться';
@@ -835,13 +871,15 @@ class AppLocalizationsRu extends AppLocalizations {
   String get managePermissions => 'Управление разрешениями';
 
   @override
-  String get cameraNotificationsAndMore => 'Камера, уведомления и многое другое';
+  String get cameraNotificationsAndMore =>
+      'Камера, уведомления и многое другое';
 
   @override
   String get deleteMeal => 'Удалить прием пищи';
 
   @override
-  String get areYouSureDeleteMeal => 'Вы уверены, что хотите удалить этот прием пищи?';
+  String get areYouSureDeleteMeal =>
+      'Вы уверены, что хотите удалить этот прием пищи?';
 
   @override
   String get unknown => 'Неизвестно';
@@ -877,10 +915,12 @@ class AppLocalizationsRu extends AppLocalizations {
   String get googleSignInHelp => 'Помощь по входу через Google';
 
   @override
-  String get couldNotOpenTermsOfService => 'Не удалось открыть условия использования';
+  String get couldNotOpenTermsOfService =>
+      'Не удалось открыть условия использования';
 
   @override
-  String get couldNotOpenPrivacyPolicy => 'Не удалось открыть политику конфиденциальности';
+  String get couldNotOpenPrivacyPolicy =>
+      'Не удалось открыть политику конфиденциальности';
 
   @override
   String get errorSavingProfile => 'Ошибка сохранения профиля';
@@ -904,7 +944,8 @@ class AppLocalizationsRu extends AppLocalizations {
   String get addLog => 'Добавить запись';
 
   @override
-  String get unableToShareAtThisTime => 'Не удается поделиться в данный момент. Попробуйте еще раз.';
+  String get unableToShareAtThisTime =>
+      'Не удается поделиться в данный момент. Попробуйте еще раз.';
 
   @override
   String get failedToUpdatePhoto => 'Не удалось обновить фото';
@@ -958,31 +999,36 @@ class AppLocalizationsRu extends AppLocalizations {
   String get permissionStatus => 'Статус разрешений';
 
   @override
-  String get manageAppPermissions => 'Управляйте разрешениями приложения, чтобы все функции работали правильно';
+  String get manageAppPermissions =>
+      'Управляйте разрешениями приложения, чтобы все функции работали правильно';
 
   @override
   String get camera => 'Камера';
 
   @override
-  String get scanFoodItems => 'Сканировать продукты питания и делать фотографии приемов пищи';
+  String get scanFoodItems =>
+      'Сканировать продукты питания и делать фотографии приемов пищи';
 
   @override
   String get photoLibrary => 'Фотографии';
 
   @override
-  String get saveScannedImages => 'Сохранять отсканированные изображения и выбирать фотографии';
+  String get saveScannedImages =>
+      'Сохранять отсканированные изображения и выбирать фотографии';
 
   @override
   String get notifications => 'Уведомления';
 
   @override
-  String get sendMealReminders => 'Отправлять напоминания о приемах пищи и предупреждения о здоровье';
+  String get sendMealReminders =>
+      'Отправлять напоминания о приемах пищи и предупреждения о здоровье';
 
   @override
   String get needHelp => 'Нужна помощь?';
 
   @override
-  String get permanentlyDeniedHelp => 'Если разрешения постоянно отклонены, вы можете включить их в настройках устройства';
+  String get permanentlyDeniedHelp =>
+      'Если разрешения постоянно отклонены, вы можете включить их в настройках устройства';
 
   @override
   String get openDeviceSettings => 'Открыть настройки устройства';
@@ -1048,10 +1094,12 @@ class AppLocalizationsRu extends AppLocalizations {
   String get subscribeForDailyInsights => 'Подписаться на ежедневные инсайты';
 
   @override
-  String get getPersonalizedHealthInsights => 'Получайте персонализированные инсайты о здоровье на основе вашего полного профиля';
+  String get getPersonalizedHealthInsights =>
+      'Получайте персонализированные инсайты о здоровье на основе вашего полного профиля';
 
   @override
-  String get upgradeDescription => 'Получите неограниченные сканирования, поиски и инсайты на базе ИИ';
+  String get upgradeDescription =>
+      'Получите неограниченные сканирования, поиски и инсайты на базе ИИ';
 
   @override
   String get unlimitedFoodScans => 'Неограниченные сканирования продуктов';
@@ -1084,19 +1132,23 @@ class AppLocalizationsRu extends AppLocalizations {
   String get water => 'Вода';
 
   @override
-  String get resetPasswordDescription => 'Ссылка для сброса пароля будет отправлена на ваш email';
+  String get resetPasswordDescription =>
+      'Ссылка для сброса пароля будет отправлена на ваш email';
 
   @override
   String get deleteAccount => 'Удалить аккаунт';
 
   @override
-  String get deleteAccountDescription => 'Навсегда удалить ваш аккаунт и все данные';
+  String get deleteAccountDescription =>
+      'Навсегда удалить ваш аккаунт и все данные';
 
   @override
-  String get confirmDeleteAccount => 'Вы уверены, что хотите удалить ваш аккаунт?';
+  String get confirmDeleteAccount =>
+      'Вы уверены, что хотите удалить ваш аккаунт?';
 
   @override
-  String get deleteAccountWarning => 'Это действие нельзя отменить. Все ваши данные, включая приемы пищи, прогресс и настройки, будут навсегда удалены.';
+  String get deleteAccountWarning =>
+      'Это действие нельзя отменить. Все ваши данные, включая приемы пищи, прогресс и настройки, будут навсегда удалены.';
 
   @override
   String get typeDeleteToConfirm => 'Введите \"УДАЛИТЬ\" для подтверждения';
@@ -1114,7 +1166,8 @@ class AppLocalizationsRu extends AppLocalizations {
   String get totalNutrition => 'Общее питание';
 
   @override
-  String get unlockUnlimitedScans => 'Разблокировать неограниченные сканирования, ИИ-коучинг и\nперсонализированные планы питания';
+  String get unlockUnlimitedScans =>
+      'Разблокировать неограниченные сканирования, ИИ-коучинг и\nперсонализированные планы питания';
 
   @override
   String get unlimitedFoodScanning => 'Неограниченное сканирование продуктов';
@@ -1154,13 +1207,15 @@ class AppLocalizationsRu extends AppLocalizations {
   String get noPurchasesFound => 'Предыдущие покупки не найдены';
 
   @override
-  String get restoreFailed => 'Не удалось восстановить покупки. Попробуйте еще раз.';
+  String get restoreFailed =>
+      'Не удалось восстановить покупки. Попробуйте еще раз.';
 
   @override
   String get restoreInProgress => 'Восстановление покупок...';
 
   @override
-  String get bySubscribing => 'Подписываясь, вы соглашаетесь с нашими Условиями использования и Политикой конфиденциальности. Подписки автоматически продлеваются, если не отменены';
+  String get bySubscribing =>
+      'Подписываясь, вы соглашаетесь с нашими Условиями использования и Политикой конфиденциальности. Подписки автоматически продлеваются, если не отменены';
 
   @override
   String get permissionsComplete => 'Разрешения завершены!';
@@ -1169,10 +1224,12 @@ class AppLocalizationsRu extends AppLocalizations {
   String get whyWeAskForPermissions => 'Почему мы запрашиваем разрешения';
 
   @override
-  String get permissionsWhyBody => 'Мы используем камеру для сканирования продуктов и штрих‑кодов, получаем доступ к фотографиям при загрузке изображений и отправляем уведомления, чтобы напоминать вам записывать приёмы пищи и пить воду.';
+  String get permissionsWhyBody =>
+      'Мы используем камеру для сканирования продуктов и штрих‑кодов, получаем доступ к фотографиям при загрузке изображений и отправляем уведомления, чтобы напоминать вам записывать приёмы пищи и пить воду.';
 
   @override
-  String get permissionsNextScreen => 'На следующем экране появятся системные запросы на доступ. Вы можете изменить это в Настройках в любое время.';
+  String get permissionsNextScreen =>
+      'На следующем экране появятся системные запросы на доступ. Вы можете изменить это в Настройках в любое время.';
 
   @override
   String get references => 'Ссылки:';
@@ -1196,7 +1253,8 @@ class AppLocalizationsRu extends AppLocalizations {
   String get selectLanguageTitle => 'Выбрать язык';
 
   @override
-  String get chooseYourPreferredLanguage => 'Выберите предпочитаемый язык для приложения';
+  String get chooseYourPreferredLanguage =>
+      'Выберите предпочитаемый язык для приложения';
 
   @override
   String get languageChangedTo => 'Язык изменен на';
@@ -1253,22 +1311,28 @@ class AppLocalizationsRu extends AppLocalizations {
   String get requiresAtLeast8Characters => 'Требуется минимум 8 символов';
 
   @override
-  String get tooManySignInAttempts => 'Слишком много попыток входа. Попробуйте позже.';
+  String get tooManySignInAttempts =>
+      'Слишком много попыток входа. Попробуйте позже.';
 
   @override
-  String get tooManySignUpAttempts => 'Слишком много попыток регистрации. Попробуйте позже.';
+  String get tooManySignUpAttempts =>
+      'Слишком много попыток регистрации. Попробуйте позже.';
 
   @override
-  String get tooManyPasswordResetRequests => 'Слишком много запросов на сброс пароля. Попробуйте позже.';
+  String get tooManyPasswordResetRequests =>
+      'Слишком много запросов на сброс пароля. Попробуйте позже.';
 
   @override
-  String get multipleFailedSignInAttempts => 'Множественные неудачные попытки входа';
+  String get multipleFailedSignInAttempts =>
+      'Множественные неудачные попытки входа';
 
   @override
-  String get excessivePasswordResetRequests => 'Чрезмерные запросы на сброс пароля';
+  String get excessivePasswordResetRequests =>
+      'Чрезмерные запросы на сброс пароля';
 
   @override
-  String get suspiciousActivityDetected => 'Обнаружена подозрительная активность';
+  String get suspiciousActivityDetected =>
+      'Обнаружена подозрительная активность';
 
   @override
   String get riskLevelMedium => 'СРЕДНИЙ';
@@ -1280,7 +1344,8 @@ class AppLocalizationsRu extends AppLocalizations {
   String get welcomeToYumiePermissions => 'Добро пожаловать в Yumie';
 
   @override
-  String get provideBestExperience => 'Чтобы предоставить вам лучший опыт, нам нужно несколько разрешений';
+  String get provideBestExperience =>
+      'Чтобы предоставить вам лучший опыт, нам нужно несколько разрешений';
 
   @override
   String get grantPermissions => 'Предоставить разрешения';
@@ -1310,7 +1375,8 @@ class AppLocalizationsRu extends AppLocalizations {
   String get password => 'Пароль';
 
   @override
-  String get agreeToTerms => 'и Условия использования Я принимаю Политику конфиденциальности';
+  String get agreeToTerms =>
+      'и Условия использования Я принимаю Политику конфиденциальности';
 
   @override
   String get alreadyHaveAccount => 'Уже есть аккаунт?';
@@ -1322,7 +1388,8 @@ class AppLocalizationsRu extends AppLocalizations {
   String get signUp => 'Зарегистрироваться';
 
   @override
-  String get signInToAccessAccount => 'Войдите, чтобы получить доступ к вашему аккаунту';
+  String get signInToAccessAccount =>
+      'Войдите, чтобы получить доступ к вашему аккаунту';
 
   @override
   String get forgotPassword => 'Забыли пароль?';
@@ -1346,7 +1413,8 @@ class AppLocalizationsRu extends AppLocalizations {
   String get resetPasswordTitle => 'Сбросить пароль';
 
   @override
-  String get enterEmailForReset => 'Введите ваш email адрес для получения ссылки сброса пароля';
+  String get enterEmailForReset =>
+      'Введите ваш email адрес для получения ссылки сброса пароля';
 
   @override
   String get emailAddress => 'Email адрес';
@@ -1358,13 +1426,16 @@ class AppLocalizationsRu extends AppLocalizations {
   String get deleteAccountTitle => 'Удалить аккаунт';
 
   @override
-  String get deleteAccountWarningTitle => 'Это действие необратимо и не может быть отменено';
+  String get deleteAccountWarningTitle =>
+      'Это действие необратимо и не может быть отменено';
 
   @override
-  String get deleteAccountDataList => 'Когда вы удалите ваш аккаунт, мы навсегда удалим:';
+  String get deleteAccountDataList =>
+      'Когда вы удалите ваш аккаунт, мы навсегда удалим:';
 
   @override
-  String get allMealLogsAndNutrition => 'Все ваши записи о приемах пищи и данные о питании';
+  String get allMealLogsAndNutrition =>
+      'Все ваши записи о приемах пищи и данные о питании';
 
   @override
   String get profileAndPersonalInfo => 'Ваш профиль и личная информация';
@@ -1373,7 +1444,8 @@ class AppLocalizationsRu extends AppLocalizations {
   String get allUploadedPhotos => 'Все загруженные фотографии и файлы';
 
   @override
-  String get customMealsAndRecipes => 'Ваши индивидуальные приемы пищи и рецепты';
+  String get customMealsAndRecipes =>
+      'Ваши индивидуальные приемы пищи и рецепты';
 
   @override
   String get allAppPreferences => 'Все настройки и предпочтения приложения';
@@ -1382,10 +1454,12 @@ class AppLocalizationsRu extends AppLocalizations {
   String get activeSessionsAllDevices => 'Активные сессии на всех устройствах';
 
   @override
-  String get exportDataWarning => 'Убедитесь, что экспортировали любые данные, которые хотите сохранить, прежде чем продолжить';
+  String get exportDataWarning =>
+      'Убедитесь, что экспортировали любые данные, которые хотите сохранить, прежде чем продолжить';
 
   @override
-  String get understandActionPermanent => 'Я понимаю, что это действие необратимо';
+  String get understandActionPermanent =>
+      'Я понимаю, что это действие необратимо';
 
   @override
   String get typeDeleteHere => 'Введите УДАЛИТЬ здесь';
@@ -1397,10 +1471,12 @@ class AppLocalizationsRu extends AppLocalizations {
   String get noSecurityAlertsFound => 'Нет предупреждений безопасности';
 
   @override
-  String get yourAccountLooksGood => 'Ваш аккаунт выглядит хорошо! Подозрительная активность не обнаружена.';
+  String get yourAccountLooksGood =>
+      'Ваш аккаунт выглядит хорошо! Подозрительная активность не обнаружена.';
 
   @override
-  String get manageActiveSessionsAcrossDevices => 'Управляйте вашими активными сессиями на разных устройствах';
+  String get manageActiveSessionsAcrossDevices =>
+      'Управляйте вашими активными сессиями на разных устройствах';
 
   @override
   String get noActiveSessionsFound => 'Активные сессии не найдены';
@@ -1444,7 +1520,12 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
-  String weightTrendHealthyRate(Object eta, Object rate, Object remaining, Object unit) {
+  String weightTrendHealthyRate(
+    Object eta,
+    Object rate,
+    Object remaining,
+    Object unit,
+  ) {
     return 'Здоровый темп: $rate$unit/нед.';
   }
 
@@ -1452,22 +1533,26 @@ class AppLocalizationsRu extends AppLocalizations {
   String get accountSuccessfullyDeleted => 'Аккаунт успешно удален';
 
   @override
-  String get pleaseCloseAndRestartApp => 'Пожалуйста, закройте и перезапустите приложение для продолжения.';
+  String get pleaseCloseAndRestartApp =>
+      'Пожалуйста, закройте и перезапустите приложение для продолжения.';
 
   @override
   String get exportData => 'Экспорт Данных';
 
   @override
-  String get exportDataDescription => 'Экспортировать все ваши данные в файл PDF';
+  String get exportDataDescription =>
+      'Экспортировать все ваши данные в файл PDF';
 
   @override
   String get exportComplete => 'Экспорт Завершен';
 
   @override
-  String get exportCompleteMessage => 'Ваши данные были успешно экспортированы!';
+  String get exportCompleteMessage =>
+      'Ваши данные были успешно экспортированы!';
 
   @override
-  String get exportCompleteDescription => 'PDF файл был сохранен на вашем устройстве и может быть поделен или просмотрен.';
+  String get exportCompleteDescription =>
+      'PDF файл был сохранен на вашем устройстве и может быть поделен или просмотрен.';
 
   @override
   String get exportFailed => 'Экспорт Не Удался';
@@ -1485,19 +1570,22 @@ class AppLocalizationsRu extends AppLocalizations {
   String get cameraAccess => 'Доступ к камере';
 
   @override
-  String get cameraAccessMessage => 'Yumie нужен доступ к камере для сканирования продуктов питания и помощи в точном ведении записей о приемах пищи.';
+  String get cameraAccessMessage =>
+      'Yumie нужен доступ к камере для сканирования продуктов питания и помощи в точном ведении записей о приемах пищи.';
 
   @override
   String get photoLibraryAccess => 'Доступ к библиотеке фотографий';
 
   @override
-  String get photoLibraryAccessMessage => 'Yumie нужен доступ к вашей библиотеке фотографий для сохранения отсканированных изображений и выбора фотографий для записи приемов пищи.';
+  String get photoLibraryAccessMessage =>
+      'Yumie нужен доступ к вашей библиотеке фотографий для сохранения отсканированных изображений и выбора фотографий для записи приемов пищи.';
 
   @override
   String get notificationAccess => 'Доступ к уведомлениям';
 
   @override
-  String get notificationAccessMessage => 'Yumie нужен доступ к уведомлениям для отправки напоминаний о приемах пищи, предупреждений о потреблении воды и подсказок для осознанных прогулок.';
+  String get notificationAccessMessage =>
+      'Yumie нужен доступ к уведомлениям для отправки напоминаний о приемах пищи, предупреждений о потреблении воды и подсказок для осознанных прогулок.';
 
   @override
   String get notNow => 'Не сейчас';
@@ -1506,13 +1594,15 @@ class AppLocalizationsRu extends AppLocalizations {
   String get permissionsCompleted => 'Разрешения завершены!';
 
   @override
-  String get allPermissionsGranted => 'Все разрешения предоставлены! Вы готовы использовать Yumie.';
+  String get allPermissionsGranted =>
+      'Все разрешения предоставлены! Вы готовы использовать Yumie.';
 
   @override
   String get whatIsYourMainGoal => 'Какова ваша основная цель?';
 
   @override
-  String get chooseGoalDescription => 'Выберите цель, которая лучше всего соответствует вашему пути';
+  String get chooseGoalDescription =>
+      'Выберите цель, которая лучше всего соответствует вашему пути';
 
   @override
   String get loseBodyWeight => 'Похудеть';
@@ -1530,10 +1620,12 @@ class AppLocalizationsRu extends AppLocalizations {
   String get maintainBodyWeight => 'Поддерживать вес тела';
 
   @override
-  String get setRealisticGoalForJourney => 'Установите реалистичную цель для вашего пути';
+  String get setRealisticGoalForJourney =>
+      'Установите реалистичную цель для вашего пути';
 
   @override
-  String get targetWeightSetToCurrent => 'Ваш целевой вес установлен на ваш текущий вес';
+  String get targetWeightSetToCurrent =>
+      'Ваш целевой вес установлен на ваш текущий вес';
 
   @override
   String get iAcceptThe => 'Я принимаю';
@@ -1554,7 +1646,8 @@ class AppLocalizationsRu extends AppLocalizations {
   String get whatMotivatesYou => 'Что вас мотивирует?';
 
   @override
-  String get chooseWhatDrivesYou => 'Выберите, что движет вами для достижения целей';
+  String get chooseWhatDrivesYou =>
+      'Выберите, что движет вами для достижения целей';
 
   @override
   String get feelEnergeticEveryDay => 'Чувствовать энергию каждый день';
@@ -1575,7 +1668,8 @@ class AppLocalizationsRu extends AppLocalizations {
   String get caloriesLeft => 'калорий осталось';
 
   @override
-  String get thisHelpsUsPersonalizeNutrition => 'Это помогает нам персонализировать ваш план питания';
+  String get thisHelpsUsPersonalizeNutrition =>
+      'Это помогает нам персонализировать ваш план питания';
 
   @override
   String get male => 'Мужской';
@@ -1587,7 +1681,8 @@ class AppLocalizationsRu extends AppLocalizations {
   String get other => 'Другой';
 
   @override
-  String get thisHelpsUsPersonalizeExperience => 'Это помогает нам персонализировать ваш опыт';
+  String get thisHelpsUsPersonalizeExperience =>
+      'Это помогает нам персонализировать ваш опыт';
 
   @override
   String get older => 'Старше';
@@ -1623,10 +1718,12 @@ class AppLocalizationsRu extends AppLocalizations {
   String get dueToCurrentAnswers => 'Из-за текущих ответов';
 
   @override
-  String get remindersWouldYouLike => 'Какие напоминания вы хотели бы получать?';
+  String get remindersWouldYouLike =>
+      'Какие напоминания вы хотели бы получать?';
 
   @override
-  String get yumieIsCookingUp => 'Yumie готовит ваш персонализированный план питания...';
+  String get yumieIsCookingUp =>
+      'Yumie готовит ваш персонализированный план питания...';
 
   @override
   String get yourAllSet => 'Вы готовы!';
@@ -1755,7 +1852,8 @@ class AppLocalizationsRu extends AppLocalizations {
   String get youAreAllSet => 'Вы готовы!';
 
   @override
-  String get welcomeToYourHealthJourney => 'Добро пожаловать в ваше путешествие к здоровью';
+  String get welcomeToYourHealthJourney =>
+      'Добро пожаловать в ваше путешествие к здоровью';
 
   @override
   String get letsGetStarted => 'Давайте начнем!';
@@ -1839,7 +1937,8 @@ class AppLocalizationsRu extends AppLocalizations {
   String get internetConnectionRequired => 'Требуется подключение к интернету';
 
   @override
-  String get pleaseCheckConnection => 'Пожалуйста, проверьте ваше интернет-соединение';
+  String get pleaseCheckConnection =>
+      'Пожалуйста, проверьте ваше интернет-соединение';
 
   @override
   String get restartOnboarding => 'Перезапустить онбординг';
@@ -1905,13 +2004,16 @@ class AppLocalizationsRu extends AppLocalizations {
   String get openSettings => 'Открыть настройки';
 
   @override
-  String get notificationsForMealLogging => 'Уведомления для напоминаний о записи приемов пищи';
+  String get notificationsForMealLogging =>
+      'Уведомления для напоминаний о записи приемов пищи';
 
   @override
-  String get notificationsForWaterIntake => 'Уведомления для напоминаний о потреблении воды';
+  String get notificationsForWaterIntake =>
+      'Уведомления для напоминаний о потреблении воды';
 
   @override
-  String get notificationsForMindfulWalk => 'Уведомления для напоминаний об осознанных прогулках';
+  String get notificationsForMindfulWalk =>
+      'Уведомления для напоминаний об осознанных прогулках';
 
   @override
   String get increment => 'Увеличить';
@@ -1920,28 +2022,35 @@ class AppLocalizationsRu extends AppLocalizations {
   String get enterNewName => 'Введите новое имя';
 
   @override
-  String get readOurPrivacyPolicy => 'Прочитайте нашу политику конфиденциальности';
+  String get readOurPrivacyPolicy =>
+      'Прочитайте нашу политику конфиденциальности';
 
   @override
   String get readOurTermsOfService => 'Прочитайте наши условия использования';
 
   @override
-  String get helpUsCalculateYourHealthGoals => 'Помогите нам рассчитать ваши цели здоровья';
+  String get helpUsCalculateYourHealthGoals =>
+      'Помогите нам рассчитать ваши цели здоровья';
 
   @override
-  String get thisHelpsUsTrackYourProgress => 'Это помогает нам отслеживать ваш прогресс';
+  String get thisHelpsUsTrackYourProgress =>
+      'Это помогает нам отслеживать ваш прогресс';
 
   @override
-  String get setARealisticGoalForYourJourney => 'Установите реалистичную цель для вашего пути';
+  String get setARealisticGoalForYourJourney =>
+      'Установите реалистичную цель для вашего пути';
 
   @override
-  String get thisHelpsUsPersonalizeYourPlan => 'Это помогает нам персонализировать ваш план';
+  String get thisHelpsUsPersonalizeYourPlan =>
+      'Это помогает нам персонализировать ваш план';
 
   @override
-  String get stayingHydratedIsKeyToYourHealth => 'Поддержание водного баланса - ключ к вашему здоровью';
+  String get stayingHydratedIsKeyToYourHealth =>
+      'Поддержание водного баланса - ключ к вашему здоровью';
 
   @override
-  String get yourFitnessProfileDueToYourAnswers => 'Ваш фитнес профиль из-за ваших ответов';
+  String get yourFitnessProfileDueToYourAnswers =>
+      'Ваш фитнес профиль из-за ваших ответов';
 
   @override
   String get currentBMI => 'Текущий ИМТ';
@@ -1962,7 +2071,8 @@ class AppLocalizationsRu extends AppLocalizations {
   String get waterIntakeLabel => 'Потребление воды';
 
   @override
-  String get heresYourPersonalizedNutritionPlan => 'Вот ваш персонализированный план питания. Добро пожаловать в ваше путешествие к здоровью с Yumie';
+  String get heresYourPersonalizedNutritionPlan =>
+      'Вот ваш персонализированный план питания. Добро пожаловать в ваше путешествие к здоровью с Yumie';
 
   @override
   String get caloriesGoal => 'Цель по калориям';
@@ -1995,13 +2105,16 @@ class AppLocalizationsRu extends AppLocalizations {
   String get chickenKatsuRiceBowl => 'Рисовая чаша с курицей кацу';
 
   @override
-  String get yourTargetWeightIsSetToCurrent => 'Ваш целевой вес установлен на ваш текущий вес';
+  String get yourTargetWeightIsSetToCurrent =>
+      'Ваш целевой вес установлен на ваш текущий вес';
 
   @override
-  String get couldNotGenerateYourPlan => 'Не удалось создать ваш план. Попробуйте снова.';
+  String get couldNotGenerateYourPlan =>
+      'Не удалось создать ваш план. Попробуйте снова.';
 
   @override
-  String get somethingWentWrongRestart => 'Что-то пошло не так. Пожалуйста, перезапустите процесс онбординга.';
+  String get somethingWentWrongRestart =>
+      'Что-то пошло не так. Пожалуйста, перезапустите процесс онбординга.';
 
   @override
   String get yourBMI => 'Ваш ИМТ:';
@@ -2019,7 +2132,8 @@ class AppLocalizationsRu extends AppLocalizations {
   String get aiDetectingFoodItems => 'ИИ обнаруживает продукты питания';
 
   @override
-  String get tryClearerPhoto => 'Попробуйте сделать более четкое фото вашего холодильника';
+  String get tryClearerPhoto =>
+      'Попробуйте сделать более четкое фото вашего холодильника';
 
   @override
   String get generating => 'Генерируем...';
@@ -2046,7 +2160,8 @@ class AppLocalizationsRu extends AppLocalizations {
   String get reviewAdPreferences => 'Просмотр настроек рекламы';
 
   @override
-  String get privacyOptionsNotAvailable => 'Параметры конфиденциальности недоступны в вашем регионе.';
+  String get privacyOptionsNotAvailable =>
+      'Параметры конфиденциальности недоступны в вашем регионе.';
 
   @override
   String get consentFlowCompleted => 'Процесс согласия завершен!';
@@ -2070,7 +2185,8 @@ class AppLocalizationsRu extends AppLocalizations {
   String get showLess => 'Показать меньше';
 
   @override
-  String get noSavedCustomMeals => 'У вас нет сохраненных пользовательских блюд.';
+  String get noSavedCustomMeals =>
+      'У вас нет сохраненных пользовательских блюд.';
 
   @override
   String get savedCustomMealsPlus => 'Сохраненные пользовательские блюда +';
@@ -2091,7 +2207,8 @@ class AppLocalizationsRu extends AppLocalizations {
   String get youReachedGoalWeight => 'Вы достигли целевого веса!';
 
   @override
-  String get switchToMaintenancePlan => 'Пора перейти на план поддержания веса!';
+  String get switchToMaintenancePlan =>
+      'Пора перейти на план поддержания веса!';
 
   @override
   String get letsDoIt => 'ПОЕХАЛИ!';
@@ -2103,10 +2220,12 @@ class AppLocalizationsRu extends AppLocalizations {
   String get generatingMaintenancePlan => 'Генерируем план поддержания...';
 
   @override
-  String get maintenancePlanUpdated => '🎉 Ваш план питания обновлён для поддержания веса!';
+  String get maintenancePlanUpdated =>
+      '🎉 Ваш план питания обновлён для поддержания веса!';
 
   @override
-  String get failedToGenerateMaintenancePlan => 'Не удалось создать план поддержания. Повторите попытку.';
+  String get failedToGenerateMaintenancePlan =>
+      'Не удалось создать план поддержания. Повторите попытку.';
 
   @override
   String get heresYourMaintenancePlan => 'Вот ваш новый план поддержания!';
@@ -2124,7 +2243,8 @@ class AppLocalizationsRu extends AppLocalizations {
   String get whatsYourNewTargetWeight => 'Какой новый целевой вес?';
 
   @override
-  String get yumieGeneratingNewPlan => 'Yumie генерирует ваш новый персональный план...';
+  String get yumieGeneratingNewPlan =>
+      'Yumie генерирует ваш новый персональный план...';
 
   @override
   String get yourNewPlanReady => 'Ваш новый план готов!';
@@ -2136,7 +2256,8 @@ class AppLocalizationsRu extends AppLocalizations {
   String get generateNewPlan => 'Сгенерировать новый план';
 
   @override
-  String get planGenerationLimitReached => 'Вы использовали 2 генерации планов за этот период.';
+  String get planGenerationLimitReached =>
+      'Вы использовали 2 генерации планов за этот период.';
 
   @override
   String get waterGoal => 'Цель по воде';
@@ -2161,7 +2282,8 @@ class AppLocalizationsRu extends AppLocalizations {
   String get planDeclined => 'План отклонён';
 
   @override
-  String get accountDeletionWarning => 'Ваш аккаунт будет удалён через 48 часов. Если вы войдёте в этот аккаунт в течение 48 часов, он будет реактивирован и удаление отменено.';
+  String get accountDeletionWarning =>
+      'Ваш аккаунт будет удалён через 48 часов. Если вы войдёте в этот аккаунт в течение 48 часов, он будет реактивирован и удаление отменено.';
 
   @override
   String get accountScheduledForDeletion => 'Аккаунт запланирован к удалению';
@@ -2170,7 +2292,8 @@ class AppLocalizationsRu extends AppLocalizations {
   String get reactivateAccount => 'Реактивировать Аккаунт';
 
   @override
-  String get accountReactivated => 'Добро пожаловать обратно! Ваш аккаунт был реактивирован.';
+  String get accountReactivated =>
+      'Добро пожаловать обратно! Ваш аккаунт был реактивирован.';
 
   @override
   String get accountDeletionCancelled => 'Удаление аккаунта отменено.';
@@ -2179,22 +2302,26 @@ class AppLocalizationsRu extends AppLocalizations {
   String get emailVerificationRequired => 'Требуется Подтверждение Email';
 
   @override
-  String get pleaseVerifyEmail => 'Пожалуйста, подтвердите ваш email адрес для продолжения';
+  String get pleaseVerifyEmail =>
+      'Пожалуйста, подтвердите ваш email адрес для продолжения';
 
   @override
-  String get verificationEmailSent => 'Мы отправили ссылку подтверждения на ваш email. Пожалуйста, проверьте вашу почту и нажмите на ссылку для подтверждения.';
+  String get verificationEmailSent =>
+      'Мы отправили ссылку подтверждения на ваш email. Пожалуйста, проверьте вашу почту и нажмите на ссылку для подтверждения.';
 
   @override
   String get waitingForVerification => 'Ожидание подтверждения email...';
 
   @override
-  String get checkYourEmail => 'Проверьте ваш email и нажмите на ссылку подтверждения';
+  String get checkYourEmail =>
+      'Проверьте ваш email и нажмите на ссылку подтверждения';
 
   @override
   String get resendVerificationEmail => 'Переотправить Email Подтверждения';
 
   @override
-  String get verificationLinkAlreadySent => 'Ссылка подтверждения уже отправлена на этот email. Проверьте почту или подождите несколько минут.';
+  String get verificationLinkAlreadySent =>
+      'Ссылка подтверждения уже отправлена на этот email. Проверьте почту или подождите несколько минут.';
 
   @override
   String get emailVerified => 'Email успешно подтверждён!';
@@ -2209,16 +2336,19 @@ class AppLocalizationsRu extends AppLocalizations {
   String get continueToApp => 'Продолжить в Приложении';
 
   @override
-  String get failedToSendVerificationEmail => 'Ошибка отправки email подтверждения';
+  String get failedToSendVerificationEmail =>
+      'Ошибка отправки email подтверждения';
 
   @override
-  String get failedToResendVerificationEmail => 'Ошибка повторной отправки email';
+  String get failedToResendVerificationEmail =>
+      'Ошибка повторной отправки email';
 
   @override
   String get errorCheckingVerification => 'Ошибка проверки подтверждения';
 
   @override
-  String get helloIAmYumie => 'Привет, я Yumie! Запишите приём пищи, чтобы начать свою серию сегодня!';
+  String get helloIAmYumie =>
+      'Привет, я Yumie! Запишите приём пищи, чтобы начать свою серию сегодня!';
 
   @override
   String get happyBirthday => '🎉 С Днём Рождения!';
@@ -2238,16 +2368,20 @@ class AppLocalizationsRu extends AppLocalizations {
   String get accountAlreadyExists => 'Аккаунт уже существует';
 
   @override
-  String get accountExistsMessage => 'Аккаунт с этим email адресом уже существует. Хотите войти вместо этого?';
+  String get accountExistsMessage =>
+      'Аккаунт с этим email адресом уже существует. Хотите войти вместо этого?';
 
   @override
-  String get accountUsesDifferentSignIn => 'Аккаунт использует другой способ входа';
+  String get accountUsesDifferentSignIn =>
+      'Аккаунт использует другой способ входа';
 
   @override
-  String get emailSignedUpWithGoogle => 'Этот email уже зарегистрирован с Google. Пожалуйста, используйте \"Войти через Google\" вместо этого.';
+  String get emailSignedUpWithGoogle =>
+      'Этот email уже зарегистрирован с Google. Пожалуйста, используйте \"Войти через Google\" вместо этого.';
 
   @override
-  String get emailSignedUpWithPassword => 'Этот email уже зарегистрирован с email и паролем. Пожалуйста, войдите, используя ваш пароль.';
+  String get emailSignedUpWithPassword =>
+      'Этот email уже зарегистрирован с email и паролем. Пожалуйста, войдите, используя ваш пароль.';
 
   @override
   String get useGoogleSignIn => 'Использовать вход через Google';
@@ -2318,13 +2452,15 @@ class AppLocalizationsRu extends AppLocalizations {
   String get yourWeightJourney => 'Ваш Путь Веса';
 
   @override
-  String get trackProgressThroughGoals => 'Отслеживайте свой прогресс через разные цели';
+  String get trackProgressThroughGoals =>
+      'Отслеживайте свой прогресс через разные цели';
 
   @override
   String get noPreviousPlans => 'Нет Предыдущих Планов';
 
   @override
-  String get previousPlansWillAppear => 'Ваши предыдущие планы появятся здесь, когда вы измените цели.';
+  String get previousPlansWillAppear =>
+      'Ваши предыдущие планы появятся здесь, когда вы измените цели.';
 
   @override
   String get completed => 'Завершено';
@@ -2339,7 +2475,8 @@ class AppLocalizationsRu extends AppLocalizations {
   String get weightEntries => 'Записи Веса';
 
   @override
-  String get noWeightEntriesRecorded => 'Не записано записей веса в этот период';
+  String get noWeightEntriesRecorded =>
+      'Не записано записей веса в этот период';
 
   @override
   String get months => 'месяцы';
@@ -2351,7 +2488,8 @@ class AppLocalizationsRu extends AppLocalizations {
   String get failedToSavePlan => 'Не удалось сохранить план. Попробуйте снова.';
 
   @override
-  String get failedToGeneratePlan => 'Не удалось создать план. Попробуйте снова.';
+  String get failedToGeneratePlan =>
+      'Не удалось создать план. Попробуйте снова.';
 
   @override
   String get updateTargetAndRecalculate => 'Обновить Цель и Пересчитать';
@@ -2363,22 +2501,28 @@ class AppLocalizationsRu extends AppLocalizations {
   String get saveAndRecalculate => 'Сохранить и Пересчитать';
 
   @override
-  String get targetUpdatedAndPlanRecalculated => 'Цель обновлена и план пересчитан';
+  String get targetUpdatedAndPlanRecalculated =>
+      'Цель обновлена и план пересчитан';
 
   @override
-  String get recalculateNote => 'Мы пересчитаем калории и макросы для этой новой цели. Вы все еще можете создать совершенно новый ИИ план позже.';
+  String get recalculateNote =>
+      'Мы пересчитаем калории и макросы для этой новой цели. Вы все еще можете создать совершенно новый ИИ план позже.';
 
   @override
-  String get startLoggingWeight => 'Начните записывать свой вес, чтобы увидеть тенденции вашего прогресса.';
+  String get startLoggingWeight =>
+      'Начните записывать свой вес, чтобы увидеть тенденции вашего прогресса.';
 
   @override
-  String get logMoreWeights => 'Записывайте больше весов, чтобы увидеть вашу тенденцию.';
+  String get logMoreWeights =>
+      'Записывайте больше весов, чтобы увидеть вашу тенденцию.';
 
   @override
-  String get weightTrendFlat => 'Ваша тенденция веса в настоящее время плоская. Записывайте больше записей веса, чтобы увидеть тенденцию вашего прогресса.';
+  String get weightTrendFlat =>
+      'Ваша тенденция веса в настоящее время плоская. Записывайте больше записей веса, чтобы увидеть тенденцию вашего прогресса.';
 
   @override
-  String get maintenanceRangeDrifted => 'Ваш вес отклонился от диапазона поддержания. Записывайте больше записей для оценки времени возврата к вашему весу.';
+  String get maintenanceRangeDrifted =>
+      'Ваш вес отклонился от диапазона поддержания. Записывайте больше записей для оценки времени возврата к вашему весу.';
 
   @override
   String trendingBackMaintenance(String eta) {
@@ -2386,7 +2530,8 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
-  String get stayConsistentHealthy => 'Оставайтесь последовательными со здоровыми выборами; по мере поступления большего количества данных мы оценим время возврата к вашему здоровому диапазону.';
+  String get stayConsistentHealthy =>
+      'Оставайтесь последовательными со здоровыми выборами; по мере поступления большего количества данных мы оценим время возврата к вашему здоровому диапазону.';
 
   @override
   String trendingBackOnTrack(String eta) {
@@ -2394,7 +2539,8 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
-  String get strengthPhaseActive => 'Фаза силы активна. Поддерживайте белок и тренировки последовательно; временная шкала появится по мере роста данных.';
+  String get strengthPhaseActive =>
+      'Фаза силы активна. Поддерживайте белок и тренировки последовательно; временная шкала появится по мере роста данных.';
 
   @override
   String trendingTowardBuildGoal(String eta) {
@@ -2414,5 +2560,6 @@ class AppLocalizationsRu extends AppLocalizations {
   String get planToGoal => 'План к Цели';
 
   @override
-  String get cameraInitializationError => 'Ошибка инициализации камеры. Проверьте разрешения камеры.';
+  String get cameraInitializationError =>
+      'Ошибка инициализации камеры. Проверьте разрешения камеры.';
 }

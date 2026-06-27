@@ -39,25 +39,29 @@ class AppLocalizationsHi extends AppLocalizations {
   String get mealLoggingPrompts => 'भोजन लॉगिंग प्रॉम्प्ट्स';
 
   @override
-  String get mealLoggingPromptsSubtitle => 'अपने भोजन को लॉग करने के लिए अनुस्मारक प्राप्त करें';
+  String get mealLoggingPromptsSubtitle =>
+      'अपने भोजन को लॉग करने के लिए अनुस्मारक प्राप्त करें';
 
   @override
   String get waterIntakeReminders => 'पानी पीने के अनुस्मारक';
 
   @override
-  String get waterIntakeRemindersSubtitle => 'पानी पीने के लिए अनुस्मारक प्राप्त करें';
+  String get waterIntakeRemindersSubtitle =>
+      'पानी पीने के लिए अनुस्मारक प्राप्त करें';
 
   @override
   String get mindfulWalksReminders => 'सचेत चलने के अनुस्मारक';
 
   @override
-  String get mindfulWalksRemindersSubtitle => 'सचेत चलने के लिए अनुस्मारक प्राप्त करें';
+  String get mindfulWalksRemindersSubtitle =>
+      'सचेत चलने के लिए अनुस्मारक प्राप्त करें';
 
   @override
   String get momentOfCalmAfterMeals => 'भोजन के बाद शांति का क्षण';
 
   @override
-  String get momentOfCalmAfterMealsSubtitle => 'भोजन लॉग करने के बाद शांतिदायक पॉपअप दिखाएं';
+  String get momentOfCalmAfterMealsSubtitle =>
+      'भोजन लॉग करने के बाद शांतिदायक पॉपअप दिखाएं';
 
   @override
   String get welcomeBack => 'वापसी पर स्वागत है!';
@@ -66,31 +70,37 @@ class AppLocalizationsHi extends AppLocalizations {
   String get trackNutritionToday => 'आज आपके पोषण को ट्रैक करते हैं';
 
   @override
-  String get subtitleAfternoon => 'दोपहर का खाना लॉग करने और संतुलित रहने का बढ़िया समय है।';
+  String get subtitleAfternoon =>
+      'दोपहर का खाना लॉग करने और संतुलित रहने का बढ़िया समय है।';
 
   @override
-  String get subtitleEvening => 'शाम को भी ट्रैक पर रहें — अपनी मील्स लॉग करें।';
+  String get subtitleEvening =>
+      'शाम को भी ट्रैक पर रहें — अपनी मील्स लॉग करें।';
 
   @override
-  String get subtitleNight => 'दिन का समापन करें — आज की मील्स लॉग करना न भूलें।';
+  String get subtitleNight =>
+      'दिन का समापन करें — आज की मील्स लॉग करना न भूलें।';
 
   @override
   String get streakNearEndingTitle => 'अपनी स्ट्रीक बनाए रखें 🔥';
 
   @override
-  String get streakNearEndingBody => 'आपकी स्ट्रीक खत्म होने वाली है। आज एक मील लॉग करें और इसे जारी रखें!';
+  String get streakNearEndingBody =>
+      'आपकी स्ट्रीक खत्म होने वाली है। आज एक मील लॉग करें और इसे जारी रखें!';
 
   @override
   String get streakNearEndingTitle2 => 'बस थोड़ी देर और! 🔥';
 
   @override
-  String get streakNearEndingBody2 => 'सिर्फ कुछ घंटे बचे हैं। अपनी स्ट्रीक बचाने के लिए एक मील लॉग करें!';
+  String get streakNearEndingBody2 =>
+      'सिर्फ कुछ घंटे बचे हैं। अपनी स्ट्रीक बचाने के लिए एक मील लॉग करें!';
 
   @override
   String get streakEndedTitle => 'स्ट्रीक समाप्त';
 
   @override
-  String get streakEndedBody => 'आपकी स्ट्रीक समाप्त हो गई। फिर से शुरू करने और बनाने के लिए एक मील लॉग करें!';
+  String get streakEndedBody =>
+      'आपकी स्ट्रीक समाप्त हो गई। फिर से शुरू करने और बनाने के लिए एक मील लॉग करें!';
 
   @override
   String get streakActive => 'स्ट्रीक सक्रिय';
@@ -111,13 +121,15 @@ class AppLocalizationsHi extends AppLocalizations {
   String get startedOn => 'आरंभ हुआ';
 
   @override
-  String get logMealToStartStreak => 'अपनी स्ट्रीक शुरू करने के लिए आज एक मील लॉग करें';
+  String get logMealToStartStreak =>
+      'अपनी स्ट्रीक शुरू करने के लिए आज एक मील लॉग करें';
 
   @override
   String get nutritionSummary => 'पोषण सारांश';
 
   @override
-  String get setCalorieAndMacroGoals => 'पोषण योजना पेज में अपने कैलोरी और मैक्रो लक्ष्य सेट करें।';
+  String get setCalorieAndMacroGoals =>
+      'पोषण योजना पेज में अपने कैलोरी और मैक्रो लक्ष्य सेट करें।';
 
   @override
   String get protein => 'प्रोटीन';
@@ -156,7 +168,8 @@ class AppLocalizationsHi extends AppLocalizations {
   String get viewAll => 'सभी देखें';
 
   @override
-  String get noMealsLoggedForThisDay => 'इस दिन के लिए कोई भोजन लॉग नहीं किया गया।';
+  String get noMealsLoggedForThisDay =>
+      'इस दिन के लिए कोई भोजन लॉग नहीं किया गया।';
 
   @override
   String get nutritionalPlan => 'पोषण योजना';
@@ -198,7 +211,8 @@ class AppLocalizationsHi extends AppLocalizations {
   String get sinceStart => 'शुरुआत से';
 
   @override
-  String get expectationsDisclaimer => 'ये अपेक्षाएं आपके हाल के रुझान पर आधारित हैं और नए वजन दर्ज करने पर बदल सकती हैं।';
+  String get expectationsDisclaimer =>
+      'ये अपेक्षाएं आपके हाल के रुझान पर आधारित हैं और नए वजन दर्ज करने पर बदल सकती हैं।';
 
   @override
   String get loseVerb => 'कम';
@@ -207,7 +221,13 @@ class AppLocalizationsHi extends AppLocalizations {
   String get gainVerb => 'बढ़';
 
   @override
-  String expectationBlurb(Object direction, Object eta, Object rate, Object remaining, Object unit) {
+  String expectationBlurb(
+    Object direction,
+    Object eta,
+    Object rate,
+    Object remaining,
+    Object unit,
+  ) {
     return 'हाल की प्रवृत्ति के आधार पर, आप प्रति सप्ताह लगभग $rate $unit $direction करने की राह पर हैं। इस गति से लक्ष्य तक पहुँचने में लगभग $eta लगेंगे। आपके पास $remaining $unit शेष है।';
   }
 
@@ -230,13 +250,15 @@ class AppLocalizationsHi extends AppLocalizations {
   String get comingSoon => 'जल्द आ रहा है!';
 
   @override
-  String get ratingOnGoogleAvailableAfterRelease => 'Google पर रेटिंग रिलीज़ के बाद उपलब्ध होगी।';
+  String get ratingOnGoogleAvailableAfterRelease =>
+      'Google पर रेटिंग रिलीज़ के बाद उपलब्ध होगी।';
 
   @override
   String get shareWithFriends => 'दोस्तों के साथ साझा करें';
 
   @override
-  String get sharingAvailableAfterRelease => 'साझा करना रिलीज़ के बाद उपलब्ध होगा।';
+  String get sharingAvailableAfterRelease =>
+      'साझा करना रिलीज़ के बाद उपलब्ध होगा।';
 
   @override
   String get resetPassword => 'पासवर्ड रीसेट करें';
@@ -269,7 +291,8 @@ class AppLocalizationsHi extends AppLocalizations {
   String get apiDocumentation => 'API दस्तावेज़ीकरण';
 
   @override
-  String get needAssistanceContactSupport => 'सहायता की आवश्यकता है? हमारी समर्थन टीम से संपर्क करें:';
+  String get needAssistanceContactSupport =>
+      'सहायता की आवश्यकता है? हमारी समर्थन टीम से संपर्क करें:';
 
   @override
   String get testWebURL => 'टेस्ट वेब URL';
@@ -281,7 +304,8 @@ class AppLocalizationsHi extends AppLocalizations {
   String get logOut => 'लॉग आउट';
 
   @override
-  String get areYouSureYouWantToLogOut => 'क्या आप वाकई लॉग आउट करना चाहते हैं?';
+  String get areYouSureYouWantToLogOut =>
+      'क्या आप वाकई लॉग आउट करना चाहते हैं?';
 
   @override
   String get no => 'नहीं';
@@ -296,13 +320,15 @@ class AppLocalizationsHi extends AppLocalizations {
   String get momentOfCalm => 'शांति का क्षण';
 
   @override
-  String get practiceMindfulEating => 'अपने भोजन की सराहना करने और सचेत भोजन का अभ्यास करने के लिए एक क्षण लें।';
+  String get practiceMindfulEating =>
+      'अपने भोजन की सराहना करने और सचेत भोजन का अभ्यास करने के लिए एक क्षण लें।';
 
   @override
   String get howOldAreYou => 'आपकी उम्र क्या है?';
 
   @override
-  String get personalizeExperience => 'यह हमें आपके अनुभव को व्यक्तिगत बनाने में मदद करता है';
+  String get personalizeExperience =>
+      'यह हमें आपके अनुभव को व्यक्तिगत बनाने में मदद करता है';
 
   @override
   String get failedToOpenStore => 'Failed to open app store';
@@ -329,25 +355,29 @@ class AppLocalizationsHi extends AppLocalizations {
   String get yourGoalWeight => 'आपका लक्ष्य वजन';
 
   @override
-  String get setRealisticGoal => 'अपनी यात्रा के लिए एक यथार्थवादी लक्ष्य निर्धारित करें';
+  String get setRealisticGoal =>
+      'अपनी यात्रा के लिए एक यथार्थवादी लक्ष्य निर्धारित करें';
 
   @override
   String get allSet => 'आप तैयार हैं! 🎉';
 
   @override
-  String get personalizedNutritionPlan => 'यहाँ आपकी व्यक्तिगत पोषण योजना है। Yumie के साथ अपनी स्वास्थ्य यात्रा में स्वागत है!';
+  String get personalizedNutritionPlan =>
+      'यहाँ आपकी व्यक्तिगत पोषण योजना है। Yumie के साथ अपनी स्वास्थ्य यात्रा में स्वागत है!';
 
   @override
   String get whatIsYourBloodType => 'आपका रक्त समूह क्या है?';
 
   @override
-  String get personalizeHealthInsights => 'यह हमें आपके स्वास्थ्य अंतर्दृष्टि को व्यक्तिगत बनाने में मदद करता है।';
+  String get personalizeHealthInsights =>
+      'यह हमें आपके स्वास्थ्य अंतर्दृष्टि को व्यक्तिगत बनाने में मदद करता है।';
 
   @override
   String get whatIsYourSex => 'आपका लिंग क्या है?';
 
   @override
-  String get personalizeNutritionPlan => 'यह हमें आपकी पोषण योजना को व्यक्तिगत बनाने में मदद करता है।';
+  String get personalizeNutritionPlan =>
+      'यह हमें आपकी पोषण योजना को व्यक्तिगत बनाने में मदद करता है।';
 
   @override
   String get home => 'होम';
@@ -401,7 +431,8 @@ class AppLocalizationsHi extends AppLocalizations {
   String get clearChat => 'चैट साफ़ करें';
 
   @override
-  String get coachWelcome => 'नमस्ते! मैं Yumie हूँ, आपका पोषण कोच। आज मैं आपकी कैसे मदद कर सकता हूँ?\n\nस्वस्थ व्यंजनों, भोजन योजनाओं, या पोषण टिप्स के बारे में Yumie से पूछें!';
+  String get coachWelcome =>
+      'नमस्ते! मैं Yumie हूँ, आपका पोषण कोच। आज मैं आपकी कैसे मदद कर सकता हूँ?\n\nस्वस्थ व्यंजनों, भोजन योजनाओं, या पोषण टिप्स के बारे में Yumie से पूछें!';
 
   @override
   String get refreshInsight => 'अंतर्दृष्टि रिफ्रेश करें';
@@ -503,7 +534,8 @@ class AppLocalizationsHi extends AppLocalizations {
   String get bloodType => 'रक्त समूह';
 
   @override
-  String get bloodTypeOptional => 'रक्त समूह वैकल्पिक है और कैलोरी ट्रैकिंग या सिफारिशों को प्रभावित नहीं करता है।';
+  String get bloodTypeOptional =>
+      'रक्त समूह वैकल्पिक है और कैलोरी ट्रैकिंग या सिफारिशों को प्रभावित नहीं करता है।';
 
   @override
   String get areYouDiabetic => 'क्या आप मधुमेही हैं?';
@@ -512,7 +544,8 @@ class AppLocalizationsHi extends AppLocalizations {
   String get healthAwarenessUpdated => 'स्वास्थ्य जागरूकता अपडेट की गई!';
 
   @override
-  String get takeMomentToAppreciate => 'अपने भोजन की सराहना करने और सचेत भोजन का अभ्यास करने के लिए एक क्षण लें।';
+  String get takeMomentToAppreciate =>
+      'अपने भोजन की सराहना करने और सचेत भोजन का अभ्यास करने के लिए एक क्षण लें।';
 
   @override
   String get continueButton => 'जारी रखें';
@@ -587,7 +620,8 @@ class AppLocalizationsHi extends AppLocalizations {
   String get placeFoodInFrame => 'भोजन को फ्रेम के अंदर रखें';
 
   @override
-  String get placeBarcodeInFrame => 'बारकोड को फ्रेम में रखें और कैमरा पर टैप करें';
+  String get placeBarcodeInFrame =>
+      'बारकोड को फ्रेम में रखें और कैमरा पर टैप करें';
 
   @override
   String get placeFridgeInFrame => 'फ्रिज को फ्रेम के अंदर संरेखित करें';
@@ -820,10 +854,12 @@ class AppLocalizationsHi extends AppLocalizations {
   String get unlockPremiumFeatures => 'प्रीमियम सुविधाएं अनलॉक करें';
 
   @override
-  String get getMostOutOfHealthJourney => 'असीमित पहुंच के साथ अपनी स्वास्थ्य यात्रा से सर्वाधिक लाभ प्राप्त करें!';
+  String get getMostOutOfHealthJourney =>
+      'असीमित पहुंच के साथ अपनी स्वास्थ्य यात्रा से सर्वाधिक लाभ प्राप्त करें!';
 
   @override
-  String get unlimitedScansAICoaching => 'असीमित स्कैन, एआई कोचिंग, और व्यक्तिगत भोजन योजनाएं अनलॉक करें!';
+  String get unlimitedScansAICoaching =>
+      'असीमित स्कैन, एआई कोचिंग, और व्यक्तिगत भोजन योजनाएं अनलॉक करें!';
 
   @override
   String get subscribe => 'सदस्यता लें';
@@ -904,7 +940,8 @@ class AppLocalizationsHi extends AppLocalizations {
   String get addLog => 'लॉग जोड़ें';
 
   @override
-  String get unableToShareAtThisTime => 'इस समय साझा नहीं कर सकते। कृपया पुनः प्रयास करें।';
+  String get unableToShareAtThisTime =>
+      'इस समय साझा नहीं कर सकते। कृपया पुनः प्रयास करें।';
 
   @override
   String get failedToUpdatePhoto => 'फ़ोटो अपडेट करने में विफल';
@@ -916,7 +953,8 @@ class AppLocalizationsHi extends AppLocalizations {
   String get failedToUpdateName => 'नाम अपडेट करने में विफल';
 
   @override
-  String get profileUpdatedSuccessfully => 'प्रोफ़ाइल सफलतापूर्वक अपडेट किया गया';
+  String get profileUpdatedSuccessfully =>
+      'प्रोफ़ाइल सफलतापूर्वक अपडेट किया गया';
 
   @override
   String get errorUpdatingProfile => 'प्रोफ़ाइल अपडेट करने में त्रुटि';
@@ -958,7 +996,8 @@ class AppLocalizationsHi extends AppLocalizations {
   String get permissionStatus => 'अनुमति स्थिति';
 
   @override
-  String get manageAppPermissions => 'सभी सुविधाओं के सही काम करने के लिए ऐप अनुमतियां प्रबंधित करें';
+  String get manageAppPermissions =>
+      'सभी सुविधाओं के सही काम करने के लिए ऐप अनुमतियां प्रबंधित करें';
 
   @override
   String get camera => 'कैमरा';
@@ -982,7 +1021,8 @@ class AppLocalizationsHi extends AppLocalizations {
   String get needHelp => 'सहायता चाहिए?';
 
   @override
-  String get permanentlyDeniedHelp => 'यदि अनुमतियां स्थायी रूप से अस्वीकृत हैं, तो आप उन्हें अपनी डिवाइस सेटिंग्स में सक्षम कर सकते हैं';
+  String get permanentlyDeniedHelp =>
+      'यदि अनुमतियां स्थायी रूप से अस्वीकृत हैं, तो आप उन्हें अपनी डिवाइस सेटिंग्स में सक्षम कर सकते हैं';
 
   @override
   String get openDeviceSettings => 'डिवाइस सेटिंग्स खोलें';
@@ -1045,13 +1085,16 @@ class AppLocalizationsHi extends AppLocalizations {
   String get messages => 'संदेश';
 
   @override
-  String get subscribeForDailyInsights => 'दैनिक अंतर्दृष्टि के लिए सदस्यता लें';
+  String get subscribeForDailyInsights =>
+      'दैनिक अंतर्दृष्टि के लिए सदस्यता लें';
 
   @override
-  String get getPersonalizedHealthInsights => 'अपने पूर्ण प्रोफ़ाइल के आधार पर व्यक्तिगत स्वास्थ्य अंतर्दृष्टि प्राप्त करें';
+  String get getPersonalizedHealthInsights =>
+      'अपने पूर्ण प्रोफ़ाइल के आधार पर व्यक्तिगत स्वास्थ्य अंतर्दृष्टि प्राप्त करें';
 
   @override
-  String get upgradeDescription => 'असीमित स्कैन, खोज, और एआई-संचालित अंतर्दृष्टि प्राप्त करें';
+  String get upgradeDescription =>
+      'असीमित स्कैन, खोज, और एआई-संचालित अंतर्दृष्टि प्राप्त करें';
 
   @override
   String get unlimitedFoodScans => 'असीमित भोजन स्कैन';
@@ -1084,19 +1127,22 @@ class AppLocalizationsHi extends AppLocalizations {
   String get water => 'पानी';
 
   @override
-  String get resetPasswordDescription => 'पासवर्ड रीसेट लिंक आपके ईमेल पर भेजा जाएगा';
+  String get resetPasswordDescription =>
+      'पासवर्ड रीसेट लिंक आपके ईमेल पर भेजा जाएगा';
 
   @override
   String get deleteAccount => 'खाता हटाएं';
 
   @override
-  String get deleteAccountDescription => 'अपना खाता और सभी डेटा स्थायी रूप से हटाएं';
+  String get deleteAccountDescription =>
+      'अपना खाता और सभी डेटा स्थायी रूप से हटाएं';
 
   @override
   String get confirmDeleteAccount => 'क्या आप वाकई अपना खाता हटाना चाहते हैं?';
 
   @override
-  String get deleteAccountWarning => 'यह कार्रवाई पूर्ववत नहीं की जा सकती। आपका सभी डेटा जिसमें भोजन, प्रगति और सेटिंग्स शामिल हैं, स्थायी रूप से हटा दिया जाएगा।';
+  String get deleteAccountWarning =>
+      'यह कार्रवाई पूर्ववत नहीं की जा सकती। आपका सभी डेटा जिसमें भोजन, प्रगति और सेटिंग्स शामिल हैं, स्थायी रूप से हटा दिया जाएगा।';
 
   @override
   String get typeDeleteToConfirm => 'पुष्टि के लिए \"DELETE\" टाइप करें';
@@ -1114,7 +1160,8 @@ class AppLocalizationsHi extends AppLocalizations {
   String get totalNutrition => 'कुल पोषण';
 
   @override
-  String get unlockUnlimitedScans => 'असीमित स्कैन, एआई कोचिंग, और\nव्यक्तिगत भोजन योजनाएं अनलॉक करें';
+  String get unlockUnlimitedScans =>
+      'असीमित स्कैन, एआई कोचिंग, और\nव्यक्तिगत भोजन योजनाएं अनलॉक करें';
 
   @override
   String get unlimitedFoodScanning => 'असीमित भोजन स्कैनिंग';
@@ -1154,13 +1201,15 @@ class AppLocalizationsHi extends AppLocalizations {
   String get noPurchasesFound => 'कोई पिछली खरीदारी नहीं मिली';
 
   @override
-  String get restoreFailed => 'खरीदारी पुनर्स्थापित करने में विफल। कृपया पुनः प्रयास करें।';
+  String get restoreFailed =>
+      'खरीदारी पुनर्स्थापित करने में विफल। कृपया पुनः प्रयास करें।';
 
   @override
   String get restoreInProgress => 'खरीदारी पुनर्स्थापित की जा रही है...';
 
   @override
-  String get bySubscribing => 'सदस्यता लेने से, आप हमारी सेवा की शर्तों और गोपनीयता नीति से सहमत होते हैं। सदस्यताएं स्वचालित रूप से नवीनीकृत होती हैं जब तक कि रद्द न की जाएं';
+  String get bySubscribing =>
+      'सदस्यता लेने से, आप हमारी सेवा की शर्तों और गोपनीयता नीति से सहमत होते हैं। सदस्यताएं स्वचालित रूप से नवीनीकृत होती हैं जब तक कि रद्द न की जाएं';
 
   @override
   String get permissionsComplete => 'अनुमतियां पूरी!';
@@ -1169,10 +1218,12 @@ class AppLocalizationsHi extends AppLocalizations {
   String get whyWeAskForPermissions => 'हम अनुमतियाँ क्यों माँगते हैं';
 
   @override
-  String get permissionsWhyBody => 'हम अनुभव बेहतर करने के लिए कैमरा, सूचनाएँ और वैकल्पिक स्थान का उपयोग करते हैं।';
+  String get permissionsWhyBody =>
+      'हम अनुभव बेहतर करने के लिए कैमरा, सूचनाएँ और वैकल्पिक स्थान का उपयोग करते हैं।';
 
   @override
-  String get permissionsNextScreen => 'अगली स्क्रीन पर आप अनुमतियाँ सक्षम कर सकते हैं।';
+  String get permissionsNextScreen =>
+      'अगली स्क्रीन पर आप अनुमतियाँ सक्षम कर सकते हैं।';
 
   @override
   String get references => 'संदर्भ';
@@ -1253,13 +1304,16 @@ class AppLocalizationsHi extends AppLocalizations {
   String get requiresAtLeast8Characters => 'कम से कम 8 अक्षर आवश्यक हैं';
 
   @override
-  String get tooManySignInAttempts => 'बहुत अधिक साइन-इन प्रयास। कृपया बाद में पुनः प्रयास करें।';
+  String get tooManySignInAttempts =>
+      'बहुत अधिक साइन-इन प्रयास। कृपया बाद में पुनः प्रयास करें।';
 
   @override
-  String get tooManySignUpAttempts => 'बहुत अधिक साइन-अप प्रयास। कृपया बाद में पुनः प्रयास करें।';
+  String get tooManySignUpAttempts =>
+      'बहुत अधिक साइन-अप प्रयास। कृपया बाद में पुनः प्रयास करें।';
 
   @override
-  String get tooManyPasswordResetRequests => 'बहुत अधिक पासवर्ड रीसेट अनुरोध। कृपया बाद में पुनः प्रयास करें।';
+  String get tooManyPasswordResetRequests =>
+      'बहुत अधिक पासवर्ड रीसेट अनुरोध। कृपया बाद में पुनः प्रयास करें।';
 
   @override
   String get multipleFailedSignInAttempts => 'कई असफल साइन-इन प्रयास';
@@ -1280,7 +1334,8 @@ class AppLocalizationsHi extends AppLocalizations {
   String get welcomeToYumiePermissions => 'Yumie में आपका स्वागत है';
 
   @override
-  String get provideBestExperience => 'आपको सर्वोत्तम अनुभव प्रदान करने के लिए, हमें कुछ अनुमतियों की आवश्यकता है';
+  String get provideBestExperience =>
+      'आपको सर्वोत्तम अनुभव प्रदान करने के लिए, हमें कुछ अनुमतियों की आवश्यकता है';
 
   @override
   String get grantPermissions => 'अनुमतियां दें';
@@ -1310,7 +1365,8 @@ class AppLocalizationsHi extends AppLocalizations {
   String get password => 'पासवर्ड';
 
   @override
-  String get agreeToTerms => 'और सेवा की शर्तें मैं गोपनीयता नीति स्वीकार करता हूं';
+  String get agreeToTerms =>
+      'और सेवा की शर्तें मैं गोपनीयता नीति स्वीकार करता हूं';
 
   @override
   String get alreadyHaveAccount => 'पहले से ही खाता है?';
@@ -1322,7 +1378,8 @@ class AppLocalizationsHi extends AppLocalizations {
   String get signUp => 'साइन अप';
 
   @override
-  String get signInToAccessAccount => 'अपने खाते तक पहुंचने के लिए साइन इन करें';
+  String get signInToAccessAccount =>
+      'अपने खाते तक पहुंचने के लिए साइन इन करें';
 
   @override
   String get forgotPassword => 'पासवर्ड भूल गए?';
@@ -1346,7 +1403,8 @@ class AppLocalizationsHi extends AppLocalizations {
   String get resetPasswordTitle => 'पासवर्ड रीसेट करें';
 
   @override
-  String get enterEmailForReset => 'पासवर्ड रीसेट लिंक प्राप्त करने के लिए अपना ईमेल पता दर्ज करें';
+  String get enterEmailForReset =>
+      'पासवर्ड रीसेट लिंक प्राप्त करने के लिए अपना ईमेल पता दर्ज करें';
 
   @override
   String get emailAddress => 'ईमेल पता';
@@ -1358,10 +1416,12 @@ class AppLocalizationsHi extends AppLocalizations {
   String get deleteAccountTitle => 'खाता हटाएं';
 
   @override
-  String get deleteAccountWarningTitle => 'यह कार्रवाई स्थायी है और पूर्ववत नहीं की जा सकती';
+  String get deleteAccountWarningTitle =>
+      'यह कार्रवाई स्थायी है और पूर्ववत नहीं की जा सकती';
 
   @override
-  String get deleteAccountDataList => 'जब आप अपना खाता हटाते हैं, तो हम स्थायी रूप से हटा देंगे:';
+  String get deleteAccountDataList =>
+      'जब आप अपना खाता हटाते हैं, तो हम स्थायी रूप से हटा देंगे:';
 
   @override
   String get allMealLogsAndNutrition => 'आपके सभी भोजन लॉग और पोषण डेटा';
@@ -1382,10 +1442,12 @@ class AppLocalizationsHi extends AppLocalizations {
   String get activeSessionsAllDevices => 'सभी डिवाइस पर सक्रिय सत्र';
 
   @override
-  String get exportDataWarning => 'आगे बढ़ने से पहले सुनिश्चित करें कि आप जो डेटा रखना चाहते हैं उसे निर्यात कर लें';
+  String get exportDataWarning =>
+      'आगे बढ़ने से पहले सुनिश्चित करें कि आप जो डेटा रखना चाहते हैं उसे निर्यात कर लें';
 
   @override
-  String get understandActionPermanent => 'मैं समझता हूं कि यह कार्रवाई स्थायी है';
+  String get understandActionPermanent =>
+      'मैं समझता हूं कि यह कार्रवाई स्थायी है';
 
   @override
   String get typeDeleteHere => 'यहाँ DELETE टाइप करें';
@@ -1397,10 +1459,12 @@ class AppLocalizationsHi extends AppLocalizations {
   String get noSecurityAlertsFound => 'कोई सुरक्षा अलर्ट नहीं';
 
   @override
-  String get yourAccountLooksGood => 'आपका खाता अच्छा लग रहा है! कोई संदिग्ध गतिविधि नहीं मिली।';
+  String get yourAccountLooksGood =>
+      'आपका खाता अच्छा लग रहा है! कोई संदिग्ध गतिविधि नहीं मिली।';
 
   @override
-  String get manageActiveSessionsAcrossDevices => 'विभिन्न डिवाइस पर अपने सक्रिय सत्र प्रबंधित करें';
+  String get manageActiveSessionsAcrossDevices =>
+      'विभिन्न डिवाइस पर अपने सक्रिय सत्र प्रबंधित करें';
 
   @override
   String get noActiveSessionsFound => 'कोई सक्रिय सत्र नहीं मिला';
@@ -1444,7 +1508,12 @@ class AppLocalizationsHi extends AppLocalizations {
   }
 
   @override
-  String weightTrendHealthyRate(Object eta, Object rate, Object remaining, Object unit) {
+  String weightTrendHealthyRate(
+    Object eta,
+    Object rate,
+    Object remaining,
+    Object unit,
+  ) {
     return 'सप्ताह में 0.5 $unit की स्वस्थ दर पर, आप लगभग $eta में अपने लक्ष्य तक पहुंच सकते हैं। आपके पास $remaining $unit शेष है। अपना व्यक्तिगत रुझान देखने के लिए वजन प्रविष्टियां लॉग करें।';
   }
 
@@ -1452,22 +1521,26 @@ class AppLocalizationsHi extends AppLocalizations {
   String get accountSuccessfullyDeleted => 'खाता सफलतापूर्वक हटा दिया गया';
 
   @override
-  String get pleaseCloseAndRestartApp => 'जारी रखने के लिए कृपया ऐप बंद करें और पुनः प्रारंभ करें।';
+  String get pleaseCloseAndRestartApp =>
+      'जारी रखने के लिए कृपया ऐप बंद करें और पुनः प्रारंभ करें।';
 
   @override
   String get exportData => 'डेटा निर्यात करें';
 
   @override
-  String get exportDataDescription => 'सभी डेटा को PDF फ़ाइल के रूप में निर्यात करें';
+  String get exportDataDescription =>
+      'सभी डेटा को PDF फ़ाइल के रूप में निर्यात करें';
 
   @override
   String get exportComplete => 'निर्यात पूर्ण';
 
   @override
-  String get exportCompleteMessage => 'आपका डेटा सफलतापूर्वक निर्यात किया गया है!';
+  String get exportCompleteMessage =>
+      'आपका डेटा सफलतापूर्वक निर्यात किया गया है!';
 
   @override
-  String get exportCompleteDescription => 'PDF फ़ाइल आपके डिवाइस पर सहेजी गई है और इसे साझा या देखा जा सकता है।';
+  String get exportCompleteDescription =>
+      'PDF फ़ाइल आपके डिवाइस पर सहेजी गई है और इसे साझा या देखा जा सकता है।';
 
   @override
   String get exportFailed => 'निर्यात विफल';
@@ -1485,19 +1558,22 @@ class AppLocalizationsHi extends AppLocalizations {
   String get cameraAccess => 'कैमरा पहुंच';
 
   @override
-  String get cameraAccessMessage => 'Yumie को भोजन आइटम स्कैन करने और आपको अपने भोजन को सटीक रूप से लॉग करने में मदद करने के लिए कैमरा पहुंच की आवश्यकता है।';
+  String get cameraAccessMessage =>
+      'Yumie को भोजन आइटम स्कैन करने और आपको अपने भोजन को सटीक रूप से लॉग करने में मदद करने के लिए कैमरा पहुंच की आवश्यकता है।';
 
   @override
   String get photoLibraryAccess => 'फोटो लाइब्रेरी पहुंच';
 
   @override
-  String get photoLibraryAccessMessage => 'Yumie को स्कैन की गई छवियों को सहेजने और भोजन लॉगिंग के लिए फोटो चुनने के लिए आपकी फोटो लाइब्रेरी तक पहुंच की आवश्यकता है।';
+  String get photoLibraryAccessMessage =>
+      'Yumie को स्कैन की गई छवियों को सहेजने और भोजन लॉगिंग के लिए फोटो चुनने के लिए आपकी फोटो लाइब्रेरी तक पहुंच की आवश्यकता है।';
 
   @override
   String get notificationAccess => 'सूचना पहुंच';
 
   @override
-  String get notificationAccessMessage => 'Yumie को आपको भोजन अनुस्मारक, पानी का सेवन अलर्ट, और सचेत चलने के संकेत भेजने के लिए सूचना पहुंच की आवश्यकता है।';
+  String get notificationAccessMessage =>
+      'Yumie को आपको भोजन अनुस्मारक, पानी का सेवन अलर्ट, और सचेत चलने के संकेत भेजने के लिए सूचना पहुंच की आवश्यकता है।';
 
   @override
   String get notNow => 'अभी नहीं';
@@ -1506,13 +1582,15 @@ class AppLocalizationsHi extends AppLocalizations {
   String get permissionsCompleted => 'अनुमतियां पूरी!';
 
   @override
-  String get allPermissionsGranted => 'सभी अनुमतियां दी गईं! आप Yumie का उपयोग करने के लिए तैयार हैं।';
+  String get allPermissionsGranted =>
+      'सभी अनुमतियां दी गईं! आप Yumie का उपयोग करने के लिए तैयार हैं।';
 
   @override
   String get whatIsYourMainGoal => 'आपका मुख्य लक्ष्य क्या है?';
 
   @override
-  String get chooseGoalDescription => 'अपनी यात्रा के साथ सबसे अच्छी तरह से जुड़ने वाला लक्ष्य चुनें';
+  String get chooseGoalDescription =>
+      'अपनी यात्रा के साथ सबसे अच्छी तरह से जुड़ने वाला लक्ष्य चुनें';
 
   @override
   String get loseBodyWeight => 'शरीर का वजन कम करें';
@@ -1530,10 +1608,12 @@ class AppLocalizationsHi extends AppLocalizations {
   String get maintainBodyWeight => 'शरीर का वजन बनाए रखें';
 
   @override
-  String get setRealisticGoalForJourney => 'अपनी यात्रा के लिए एक यथार्थवादी लक्ष्य निर्धारित करें';
+  String get setRealisticGoalForJourney =>
+      'अपनी यात्रा के लिए एक यथार्थवादी लक्ष्य निर्धारित करें';
 
   @override
-  String get targetWeightSetToCurrent => 'आपका लक्ष्य वजन आपके वर्तमान वजन पर सेट किया गया है';
+  String get targetWeightSetToCurrent =>
+      'आपका लक्ष्य वजन आपके वर्तमान वजन पर सेट किया गया है';
 
   @override
   String get iAcceptThe => 'मैं स्वीकार करता हूं';
@@ -1548,19 +1628,22 @@ class AppLocalizationsHi extends AppLocalizations {
   String get yourEmailExample => 'आपका.ईमेल@उदाहरण.com';
 
   @override
-  String get byContinuingYouAgreeToOur => 'जारी रखने से, आप हमारी सहमति देते हैं';
+  String get byContinuingYouAgreeToOur =>
+      'जारी रखने से, आप हमारी सहमति देते हैं';
 
   @override
   String get whatMotivatesYou => 'आपको क्या प्रेरित करता है?';
 
   @override
-  String get chooseWhatDrivesYou => 'अपने लक्ष्यों को प्राप्त करने के लिए आपको क्या प्रेरित करता है वह चुनें';
+  String get chooseWhatDrivesYou =>
+      'अपने लक्ष्यों को प्राप्त करने के लिए आपको क्या प्रेरित करता है वह चुनें';
 
   @override
   String get feelEnergeticEveryDay => 'हर दिन ऊर्जावान महसूस करें';
 
   @override
-  String get achievePersonalMilestone => 'एक व्यक्तिगत मील का पत्थर प्राप्त करें';
+  String get achievePersonalMilestone =>
+      'एक व्यक्तिगत मील का पत्थर प्राप्त करें';
 
   @override
   String get boostMyConfidence => 'मेरा आत्मविश्वास बढ़ाएं';
@@ -1575,7 +1658,8 @@ class AppLocalizationsHi extends AppLocalizations {
   String get caloriesLeft => 'कैलोरी बची';
 
   @override
-  String get thisHelpsUsPersonalizeNutrition => 'यह हमें आपकी पोषण योजना को व्यक्तिगत बनाने में मदद करता है';
+  String get thisHelpsUsPersonalizeNutrition =>
+      'यह हमें आपकी पोषण योजना को व्यक्तिगत बनाने में मदद करता है';
 
   @override
   String get male => 'पुरुष';
@@ -1587,7 +1671,8 @@ class AppLocalizationsHi extends AppLocalizations {
   String get other => 'अन्य';
 
   @override
-  String get thisHelpsUsPersonalizeExperience => 'यह हमें आपके अनुभव को व्यक्तिगत बनाने में मदद करता है';
+  String get thisHelpsUsPersonalizeExperience =>
+      'यह हमें आपके अनुभव को व्यक्तिगत बनाने में मदद करता है';
 
   @override
   String get older => 'बड़ा';
@@ -1623,10 +1708,12 @@ class AppLocalizationsHi extends AppLocalizations {
   String get dueToCurrentAnswers => 'वर्तमान उत्तरों के कारण';
 
   @override
-  String get remindersWouldYouLike => 'कौन से अनुस्मारक आप प्राप्त करना चाहते हैं?';
+  String get remindersWouldYouLike =>
+      'कौन से अनुस्मारक आप प्राप्त करना चाहते हैं?';
 
   @override
-  String get yumieIsCookingUp => 'Yumie आपकी व्यक्तिगत पोषण योजना तैयार कर रहा है...';
+  String get yumieIsCookingUp =>
+      'Yumie आपकी व्यक्तिगत पोषण योजना तैयार कर रहा है...';
 
   @override
   String get yourAllSet => 'आप तैयार हैं!';
@@ -1755,7 +1842,8 @@ class AppLocalizationsHi extends AppLocalizations {
   String get youAreAllSet => 'आप तैयार हैं!';
 
   @override
-  String get welcomeToYourHealthJourney => 'अपनी स्वास्थ्य यात्रा में आपका स्वागत है';
+  String get welcomeToYourHealthJourney =>
+      'अपनी स्वास्थ्य यात्रा में आपका स्वागत है';
 
   @override
   String get letsGetStarted => 'चलिए शुरू करते हैं!';
@@ -1779,7 +1867,8 @@ class AppLocalizationsHi extends AppLocalizations {
   String get subscriptionRequired => 'सदस्यता आवश्यक';
 
   @override
-  String get upgradeToUnlock => 'सभी सुविधाओं को अनलॉक करने के लिए अपग्रेड करें';
+  String get upgradeToUnlock =>
+      'सभी सुविधाओं को अनलॉक करने के लिए अपग्रेड करें';
 
   @override
   String get startFreeTrial => 'मुफ्त परीक्षण शुरू करें';
@@ -1905,13 +1994,16 @@ class AppLocalizationsHi extends AppLocalizations {
   String get openSettings => 'सेटिंग्स खोलें';
 
   @override
-  String get notificationsForMealLogging => 'भोजन लॉगिंग अनुस्मारक के लिए सूचनाएं';
+  String get notificationsForMealLogging =>
+      'भोजन लॉगिंग अनुस्मारक के लिए सूचनाएं';
 
   @override
-  String get notificationsForWaterIntake => 'पानी का सेवन अनुस्मारक के लिए सूचनाएं';
+  String get notificationsForWaterIntake =>
+      'पानी का सेवन अनुस्मारक के लिए सूचनाएं';
 
   @override
-  String get notificationsForMindfulWalk => 'सचेत चलने के अनुस्मारक के लिए सूचनाएं';
+  String get notificationsForMindfulWalk =>
+      'सचेत चलने के अनुस्मारक के लिए सूचनाएं';
 
   @override
   String get increment => 'वृद्धि';
@@ -1926,22 +2018,28 @@ class AppLocalizationsHi extends AppLocalizations {
   String get readOurTermsOfService => 'हमारी सेवा की शर्तें पढ़ें';
 
   @override
-  String get helpUsCalculateYourHealthGoals => 'हमें आपके स्वास्थ्य लक्ष्यों की गणना करने में मदद करें';
+  String get helpUsCalculateYourHealthGoals =>
+      'हमें आपके स्वास्थ्य लक्ष्यों की गणना करने में मदद करें';
 
   @override
-  String get thisHelpsUsTrackYourProgress => 'यह हमें आपकी प्रगति ट्रैक करने में मदद करता है';
+  String get thisHelpsUsTrackYourProgress =>
+      'यह हमें आपकी प्रगति ट्रैक करने में मदद करता है';
 
   @override
-  String get setARealisticGoalForYourJourney => 'अपनी यात्रा के लिए एक यथार्थवादी लक्ष्य निर्धारित करें';
+  String get setARealisticGoalForYourJourney =>
+      'अपनी यात्रा के लिए एक यथार्थवादी लक्ष्य निर्धारित करें';
 
   @override
-  String get thisHelpsUsPersonalizeYourPlan => 'यह हमें आपकी योजना को व्यक्तिगत बनाने में मदद करता है';
+  String get thisHelpsUsPersonalizeYourPlan =>
+      'यह हमें आपकी योजना को व्यक्तिगत बनाने में मदद करता है';
 
   @override
-  String get stayingHydratedIsKeyToYourHealth => 'हाइड्रेटेड रहना आपके स्वास्थ्य की कुंजी है';
+  String get stayingHydratedIsKeyToYourHealth =>
+      'हाइड्रेटेड रहना आपके स्वास्थ्य की कुंजी है';
 
   @override
-  String get yourFitnessProfileDueToYourAnswers => 'आपके उत्तरों के कारण आपका फिटनेस प्रोफ़ाइल';
+  String get yourFitnessProfileDueToYourAnswers =>
+      'आपके उत्तरों के कारण आपका फिटनेस प्रोफ़ाइल';
 
   @override
   String get currentBMI => 'वर्तमान बीएमआई';
@@ -1962,7 +2060,8 @@ class AppLocalizationsHi extends AppLocalizations {
   String get waterIntakeLabel => 'पानी का सेवन';
 
   @override
-  String get heresYourPersonalizedNutritionPlan => 'यहाँ आपकी व्यक्तिगत पोषण योजना है। Yumie के साथ अपनी स्वास्थ्य यात्रा में स्वागत है';
+  String get heresYourPersonalizedNutritionPlan =>
+      'यहाँ आपकी व्यक्तिगत पोषण योजना है। Yumie के साथ अपनी स्वास्थ्य यात्रा में स्वागत है';
 
   @override
   String get caloriesGoal => 'कैलोरी लक्ष्य';
@@ -1995,13 +2094,16 @@ class AppLocalizationsHi extends AppLocalizations {
   String get chickenKatsuRiceBowl => 'चिकन कात्सु राइस बाउल';
 
   @override
-  String get yourTargetWeightIsSetToCurrent => 'आपका लक्ष्य वजन आपके वर्तमान वजन पर सेट किया गया है';
+  String get yourTargetWeightIsSetToCurrent =>
+      'आपका लक्ष्य वजन आपके वर्तमान वजन पर सेट किया गया है';
 
   @override
-  String get couldNotGenerateYourPlan => 'आपकी योजना उत्पन्न नहीं कर सके। कृपया पुनः प्रयास करें।';
+  String get couldNotGenerateYourPlan =>
+      'आपकी योजना उत्पन्न नहीं कर सके। कृपया पुनः प्रयास करें।';
 
   @override
-  String get somethingWentWrongRestart => 'कुछ गलत हो गया। कृपया ऑनबोर्डिंग प्रक्रिया पुनः प्रारंभ करें।';
+  String get somethingWentWrongRestart =>
+      'कुछ गलत हो गया। कृपया ऑनबोर्डिंग प्रक्रिया पुनः प्रारंभ करें।';
 
   @override
   String get yourBMI => 'आपका बीएमआई:';
@@ -2019,7 +2121,8 @@ class AppLocalizationsHi extends AppLocalizations {
   String get aiDetectingFoodItems => 'एआई खाद्य वस्तुओं का पता लगा रहा है';
 
   @override
-  String get tryClearerPhoto => 'अपनी फ्रिज की स्पष्ट तस्वीर लेने का प्रयास करें';
+  String get tryClearerPhoto =>
+      'अपनी फ्रिज की स्पष्ट तस्वीर लेने का प्रयास करें';
 
   @override
   String get generating => 'उत्पन्न कर रहा है...';
@@ -2046,7 +2149,8 @@ class AppLocalizationsHi extends AppLocalizations {
   String get reviewAdPreferences => 'अपनी विज्ञापन प्राथमिकताएं देखें';
 
   @override
-  String get privacyOptionsNotAvailable => 'आपके क्षेत्र में गोपनीयता विकल्प उपलब्ध नहीं हैं।';
+  String get privacyOptionsNotAvailable =>
+      'आपके क्षेत्र में गोपनीयता विकल्प उपलब्ध नहीं हैं।';
 
   @override
   String get consentFlowCompleted => 'सहमति प्रक्रिया पूरी हुई!';
@@ -2055,10 +2159,12 @@ class AppLocalizationsHi extends AppLocalizations {
   String get appleSignInFailed => 'Apple साइन-इन विफल';
 
   @override
-  String get adFailedToShow => 'विज्ञापन दिखाने में विफल। कृपया पुनः प्रयास करें।';
+  String get adFailedToShow =>
+      'विज्ञापन दिखाने में विफल। कृपया पुनः प्रयास करें।';
 
   @override
-  String get adNotLoadedYet => 'विज्ञापन अभी तक लोड नहीं हुआ। कृपया पुनः प्रयास करें।';
+  String get adNotLoadedYet =>
+      'विज्ञापन अभी तक लोड नहीं हुआ। कृपया पुनः प्रयास करें।';
 
   @override
   String get errorRequestingPermissions => 'अनुमतियां मांगने में त्रुटि';
@@ -2091,7 +2197,8 @@ class AppLocalizationsHi extends AppLocalizations {
   String get youReachedGoalWeight => 'आपने अपना लक्ष्य वजन हासिल कर लिया है!';
 
   @override
-  String get switchToMaintenancePlan => 'अब जब आपने अपना लक्ष्य वजन हासिल कर लिया है, आइए अपने पोषण योजना को वजन बनाए रखने के लिए बदलते हैं!';
+  String get switchToMaintenancePlan =>
+      'अब जब आपने अपना लक्ष्य वजन हासिल कर लिया है, आइए अपने पोषण योजना को वजन बनाए रखने के लिए बदलते हैं!';
 
   @override
   String get letsDoIt => 'चलिए करते हैं!';
@@ -2103,10 +2210,12 @@ class AppLocalizationsHi extends AppLocalizations {
   String get generatingMaintenancePlan => 'आपकी रखरखाव योजना बनाई जा रही है...';
 
   @override
-  String get maintenancePlanUpdated => '🎉 आपकी पोषण योजना वजन रखरखाव के लिए अपडेट कर दी गई है!';
+  String get maintenancePlanUpdated =>
+      '🎉 आपकी पोषण योजना वजन रखरखाव के लिए अपडेट कर दी गई है!';
 
   @override
-  String get failedToGenerateMaintenancePlan => 'रखरखाव योजना बनाने में विफल। कृपया पुनः प्रयास करें।';
+  String get failedToGenerateMaintenancePlan =>
+      'रखरखाव योजना बनाने में विफल। कृपया पुनः प्रयास करें।';
 
   @override
   String get heresYourMaintenancePlan => 'यहाँ आपकी नई रखरखाव योजना है!';
@@ -2124,7 +2233,8 @@ class AppLocalizationsHi extends AppLocalizations {
   String get whatsYourNewTargetWeight => 'आपका नया लक्ष्य वजन क्या है?';
 
   @override
-  String get yumieGeneratingNewPlan => 'Yumie आपकी नई व्यक्तिगत योजना बना रहा है...';
+  String get yumieGeneratingNewPlan =>
+      'Yumie आपकी नई व्यक्तिगत योजना बना रहा है...';
 
   @override
   String get yourNewPlanReady => 'आपकी नई योजना तैयार है!';
@@ -2136,7 +2246,8 @@ class AppLocalizationsHi extends AppLocalizations {
   String get generateNewPlan => 'नया प्लान बनाएं';
 
   @override
-  String get planGenerationLimitReached => 'आपने इस अवधि के लिए अपने 2 प्लान जेनरेशन का उपयोग किया है।';
+  String get planGenerationLimitReached =>
+      'आपने इस अवधि के लिए अपने 2 प्लान जेनरेशन का उपयोग किया है।';
 
   @override
   String get waterGoal => 'पानी का लक्ष्य';
@@ -2161,7 +2272,8 @@ class AppLocalizationsHi extends AppLocalizations {
   String get planDeclined => 'योजना अस्वीकार की गई';
 
   @override
-  String get accountDeletionWarning => 'आपका खाता 48 घंटों में हटा दिया जाएगा। यदि आप 48 घंटों के भीतर वापस लॉग इन करते हैं, तो आपका खाता पुन: सक्रिय हो जाएगा।';
+  String get accountDeletionWarning =>
+      'आपका खाता 48 घंटों में हटा दिया जाएगा। यदि आप 48 घंटों के भीतर वापस लॉग इन करते हैं, तो आपका खाता पुन: सक्रिय हो जाएगा।';
 
   @override
   String get accountScheduledForDeletion => 'खाता हटाने के लिए निर्धारित';
@@ -2170,7 +2282,8 @@ class AppLocalizationsHi extends AppLocalizations {
   String get reactivateAccount => 'खाता पुन: सक्रिय करें';
 
   @override
-  String get accountReactivated => 'वापस आपका स्वागत है! आपका खाता पुन: सक्रिय हो गया है।';
+  String get accountReactivated =>
+      'वापस आपका स्वागत है! आपका खाता पुन: सक्रिय हो गया है।';
 
   @override
   String get accountDeletionCancelled => 'खाता हटाना रद्द कर दिया गया है।';
@@ -2179,10 +2292,12 @@ class AppLocalizationsHi extends AppLocalizations {
   String get emailVerificationRequired => 'ईमेल सत्यापन आवश्यक';
 
   @override
-  String get pleaseVerifyEmail => 'जारी रखने के लिए कृपया अपने ईमेल पते को सत्यापित करें';
+  String get pleaseVerifyEmail =>
+      'जारी रखने के लिए कृपया अपने ईमेल पते को सत्यापित करें';
 
   @override
-  String get verificationEmailSent => 'हमने आपके ईमेल पर एक सत्यापन लिंक भेजा है। कृपया अपने इनबॉक्स को जाँचें और अपने खाते को सत्यापित करने के लिए लिंक पर क्लिक करें।';
+  String get verificationEmailSent =>
+      'हमने आपके ईमेल पर एक सत्यापन लिंक भेजा है। कृपया अपने इनबॉक्स को जाँचें और अपने खाते को सत्यापित करने के लिए लिंक पर क्लिक करें।';
 
   @override
   String get waitingForVerification => 'ईमेल सत्यापन का इंतजार कर रहे हैं...';
@@ -2194,13 +2309,15 @@ class AppLocalizationsHi extends AppLocalizations {
   String get resendVerificationEmail => 'सत्यापन ईमेल पुन: भेजें';
 
   @override
-  String get verificationLinkAlreadySent => 'इस ईमेल पते पर पहले से ही एक सत्यापन लिंक भेजा जा चुका है। कृपया अपने इनबॉक्स को जाँचें या नया लिंक मांगने से पहले कुछ मिनट प्रतीक्षा करें।';
+  String get verificationLinkAlreadySent =>
+      'इस ईमेल पते पर पहले से ही एक सत्यापन लिंक भेजा जा चुका है। कृपया अपने इनबॉक्स को जाँचें या नया लिंक मांगने से पहले कुछ मिनट प्रतीक्षा करें।';
 
   @override
   String get emailVerified => 'ईमेल सफलतापूर्वक सत्यापित हुआ!';
 
   @override
-  String get emailNotVerified => 'ईमेल अभी तक सत्यापित नहीं हुआ। कृपया अपने इनबॉक्स को जाँचें।';
+  String get emailNotVerified =>
+      'ईमेल अभी तक सत्यापित नहीं हुआ। कृपया अपने इनबॉक्स को जाँचें।';
 
   @override
   String get changeEmail => 'ईमेल बदलें';
@@ -2212,13 +2329,15 @@ class AppLocalizationsHi extends AppLocalizations {
   String get failedToSendVerificationEmail => 'सत्यापन ईमेल भेजने में विफल';
 
   @override
-  String get failedToResendVerificationEmail => 'सत्यापन ईमेल पुन: भेजने में विफल';
+  String get failedToResendVerificationEmail =>
+      'सत्यापन ईमेल पुन: भेजने में विफल';
 
   @override
   String get errorCheckingVerification => 'सत्यापन जाँचने में त्रुटि';
 
   @override
-  String get helloIAmYumie => 'नमस्ते, मैं यूमी हूँ! आज अपनी लकीर शुरू करने के लिए एक भोजन लॉग करें!';
+  String get helloIAmYumie =>
+      'नमस्ते, मैं यूमी हूँ! आज अपनी लकीर शुरू करने के लिए एक भोजन लॉग करें!';
 
   @override
   String get happyBirthday => '🎉 जन्मदिन मुबारक!';
@@ -2238,16 +2357,20 @@ class AppLocalizationsHi extends AppLocalizations {
   String get accountAlreadyExists => 'खाता पहले से मौजूद है';
 
   @override
-  String get accountExistsMessage => 'इस ईमेल पते के साथ एक खाता पहले से मौजूद है। क्या आप इसके बजाय साइन इन करना चाहते हैं?';
+  String get accountExistsMessage =>
+      'इस ईमेल पते के साथ एक खाता पहले से मौजूद है। क्या आप इसके बजाय साइन इन करना चाहते हैं?';
 
   @override
-  String get accountUsesDifferentSignIn => 'खाता अलग साइन-इन विधि का उपयोग करता है';
+  String get accountUsesDifferentSignIn =>
+      'खाता अलग साइन-इन विधि का उपयोग करता है';
 
   @override
-  String get emailSignedUpWithGoogle => 'यह ईमेल पहले से ही Google के साथ पंजीकृत है। कृपया इसके बजाय \"Google के साथ साइन इन करें\" का उपयोग करें।';
+  String get emailSignedUpWithGoogle =>
+      'यह ईमेल पहले से ही Google के साथ पंजीकृत है। कृपया इसके बजाय \"Google के साथ साइन इन करें\" का उपयोग करें।';
 
   @override
-  String get emailSignedUpWithPassword => 'यह ईमेल पहले से ही ईमेल और पासवर्ड के साथ पंजीकृत है। कृपया अपने पासवर्ड का उपयोग करके साइन इन करें।';
+  String get emailSignedUpWithPassword =>
+      'यह ईमेल पहले से ही ईमेल और पासवर्ड के साथ पंजीकृत है। कृपया अपने पासवर्ड का उपयोग करके साइन इन करें।';
 
   @override
   String get useGoogleSignIn => 'Google साइन-इन का उपयोग करें';
@@ -2318,13 +2441,15 @@ class AppLocalizationsHi extends AppLocalizations {
   String get yourWeightJourney => 'आपकी वजन यात्रा';
 
   @override
-  String get trackProgressThroughGoals => 'विभिन्न लक्ष्यों के माध्यम से अपनी प्रगति ट्रैक करें';
+  String get trackProgressThroughGoals =>
+      'विभिन्न लक्ष्यों के माध्यम से अपनी प्रगति ट्रैक करें';
 
   @override
   String get noPreviousPlans => 'कोई पिछली योजना नहीं';
 
   @override
-  String get previousPlansWillAppear => 'जब आप लक्ष्य बदलेंगे तो आपकी पिछली योजनाएं यहां दिखाई देंगी।';
+  String get previousPlansWillAppear =>
+      'जब आप लक्ष्य बदलेंगे तो आपकी पिछली योजनाएं यहां दिखाई देंगी।';
 
   @override
   String get completed => 'पूर्ण';
@@ -2339,7 +2464,8 @@ class AppLocalizationsHi extends AppLocalizations {
   String get weightEntries => 'वजन प्रविष्टियां';
 
   @override
-  String get noWeightEntriesRecorded => 'इस अवधि के दौरान कोई वजन प्रविष्टि दर्ज नहीं की गई';
+  String get noWeightEntriesRecorded =>
+      'इस अवधि के दौरान कोई वजन प्रविष्टि दर्ज नहीं की गई';
 
   @override
   String get months => 'महीने';
@@ -2348,13 +2474,16 @@ class AppLocalizationsHi extends AppLocalizations {
   String get unknownGoal => 'अज्ञात लक्ष्य';
 
   @override
-  String get failedToSavePlan => 'योजना सहेजने में विफल। कृपया पुनः प्रयास करें।';
+  String get failedToSavePlan =>
+      'योजना सहेजने में विफल। कृपया पुनः प्रयास करें।';
 
   @override
-  String get failedToGeneratePlan => 'योजना बनाने में विफल। कृपया पुनः प्रयास करें।';
+  String get failedToGeneratePlan =>
+      'योजना बनाने में विफल। कृपया पुनः प्रयास करें।';
 
   @override
-  String get updateTargetAndRecalculate => 'लक्ष्य अपडेट करें और पुनः गणना करें';
+  String get updateTargetAndRecalculate =>
+      'लक्ष्य अपडेट करें और पुनः गणना करें';
 
   @override
   String get neverMind => 'कोई बात नहीं';
@@ -2363,22 +2492,27 @@ class AppLocalizationsHi extends AppLocalizations {
   String get saveAndRecalculate => 'सहेजें और पुनः गणना करें';
 
   @override
-  String get targetUpdatedAndPlanRecalculated => 'लक्ष्य अपडेट किया गया और योजना पुनः गणना की गई';
+  String get targetUpdatedAndPlanRecalculated =>
+      'लक्ष्य अपडेट किया गया और योजना पुनः गणना की गई';
 
   @override
-  String get recalculateNote => 'हम इस नए लक्ष्य के लिए कैलोरी और मैक्रो की पुनः गणना करेंगे। आप बाद में एक बिल्कुल नई AI योजना भी बना सकते हैं।';
+  String get recalculateNote =>
+      'हम इस नए लक्ष्य के लिए कैलोरी और मैक्रो की पुनः गणना करेंगे। आप बाद में एक बिल्कुल नई AI योजना भी बना सकते हैं।';
 
   @override
-  String get startLoggingWeight => 'अपनी प्रगति की प्रवृत्तियों को देखने के लिए अपना वजन लॉग करना शुरू करें।';
+  String get startLoggingWeight =>
+      'अपनी प्रगति की प्रवृत्तियों को देखने के लिए अपना वजन लॉग करना शुरू करें।';
 
   @override
   String get logMoreWeights => 'अपनी प्रवृत्ति देखने के लिए अधिक वजन लॉग करें।';
 
   @override
-  String get weightTrendFlat => 'आपकी वजन प्रवृत्ति वर्तमान में सपाट है। अपनी प्रगति की प्रवृत्ति देखने के लिए अधिक वजन प्रविष्टियां लॉग करें।';
+  String get weightTrendFlat =>
+      'आपकी वजन प्रवृत्ति वर्तमान में सपाट है। अपनी प्रगति की प्रवृत्ति देखने के लिए अधिक वजन प्रविष्टियां लॉग करें।';
 
   @override
-  String get maintenanceRangeDrifted => 'आपका वजन रखरखाव सीमा से हट गया है। अपने वजन पर वापस आने का समय अनुमानित करने के लिए अधिक प्रविष्टियां लॉग करें।';
+  String get maintenanceRangeDrifted =>
+      'आपका वजन रखरखाव सीमा से हट गया है। अपने वजन पर वापस आने का समय अनुमानित करने के लिए अधिक प्रविष्टियां लॉग करें।';
 
   @override
   String trendingBackMaintenance(String eta) {
@@ -2386,7 +2520,8 @@ class AppLocalizationsHi extends AppLocalizations {
   }
 
   @override
-  String get stayConsistentHealthy => 'स्वस्थ विकल्पों के साथ निरंतर रहें; जैसे-जैसे अधिक डेटा आएगा हम आपकी स्वस्थ सीमा में वापस आने का समय अनुमानित करेंगे।';
+  String get stayConsistentHealthy =>
+      'स्वस्थ विकल्पों के साथ निरंतर रहें; जैसे-जैसे अधिक डेटा आएगा हम आपकी स्वस्थ सीमा में वापस आने का समय अनुमानित करेंगे।';
 
   @override
   String trendingBackOnTrack(String eta) {
@@ -2394,7 +2529,8 @@ class AppLocalizationsHi extends AppLocalizations {
   }
 
   @override
-  String get strengthPhaseActive => 'शक्ति चरण सक्रिय है। प्रोटीन और प्रशिक्षण को निरंतर रखें; डेटा बढ़ने के साथ टाइमलाइन दिखाई देगी।';
+  String get strengthPhaseActive =>
+      'शक्ति चरण सक्रिय है। प्रोटीन और प्रशिक्षण को निरंतर रखें; डेटा बढ़ने के साथ टाइमलाइन दिखाई देगी।';
 
   @override
   String trendingTowardBuildGoal(String eta) {
@@ -2414,5 +2550,6 @@ class AppLocalizationsHi extends AppLocalizations {
   String get planToGoal => 'लक्ष्य की योजना';
 
   @override
-  String get cameraInitializationError => 'कैमरा प्रारंभीकरण विफल हुआ। कृपया कैमरा अनुमतियाँ जांचें।';
+  String get cameraInitializationError =>
+      'कैमरा प्रारंभीकरण विफल हुआ। कृपया कैमरा अनुमतियाँ जांचें।';
 }

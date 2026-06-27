@@ -58,7 +58,7 @@ class PasswordStrengthIndicator extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const SizedBox(height: 8),
-        
+
         // Strength meter
         Row(
           children: [
@@ -96,28 +96,32 @@ class PasswordStrengthIndicator extends StatelessWidget {
         // Suggestions
         if (showSuggestions && result.suggestions.isNotEmpty) ...[
           const SizedBox(height: 8),
-          ...result.suggestions.take(3).map((suggestion) => Padding(
-            padding: const EdgeInsets.only(bottom: 4),
-            child: Row(
-              children: [
-                Icon(
-                  Icons.info_outline,
-                  size: 12,
-                  color: Colors.grey[600],
-                ),
-                const SizedBox(width: 6),
-                Expanded(
-                  child: Text(
-                    _translateSuggestion(context, suggestion),
-                    style: TextStyle(
-                      fontSize: 11,
-                      color: Colors.grey[600],
-                    ),
+          ...result.suggestions
+              .take(3)
+              .map(
+                (suggestion) => Padding(
+                  padding: const EdgeInsets.only(bottom: 4),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.info_outline,
+                        size: 12,
+                        color: Colors.grey[600],
+                      ),
+                      const SizedBox(width: 6),
+                      Expanded(
+                        child: Text(
+                          _translateSuggestion(context, suggestion),
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: Colors.grey[600],
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-              ],
-            ),
-          )),
+              ),
         ],
 
         // Requirements checklist (compact version)
@@ -131,22 +135,10 @@ class PasswordStrengthIndicator extends StatelessWidget {
 
   Widget _buildRequirementsGrid(String password) {
     final requirements = [
-      {
-        'text': '8+ chars',
-        'met': password.length >= 8,
-      },
-      {
-        'text': 'Upper',
-        'met': password.contains(RegExp(r'[A-Z]')),
-      },
-      {
-        'text': 'Lower', 
-        'met': password.contains(RegExp(r'[a-z]')),
-      },
-      {
-        'text': 'Number',
-        'met': password.contains(RegExp(r'[0-9]')),
-      },
+      {'text': '8+ chars', 'met': password.length >= 8},
+      {'text': 'Upper', 'met': password.contains(RegExp(r'[A-Z]'))},
+      {'text': 'Lower', 'met': password.contains(RegExp(r'[a-z]'))},
+      {'text': 'Number', 'met': password.contains(RegExp(r'[0-9]'))},
       {
         'text': 'Special',
         'met': password.contains(RegExp(r'[!@#$%^&*(),.?":{}|<>]')),
@@ -156,10 +148,15 @@ class PasswordStrengthIndicator extends StatelessWidget {
     return Wrap(
       spacing: 8,
       runSpacing: 4,
-      children: requirements.map((req) => _buildRequirementChip(
-        req['text'] as String,
-        req['met'] as bool,
-      )).toList(),
+      children:
+          requirements
+              .map(
+                (req) => _buildRequirementChip(
+                  req['text'] as String,
+                  req['met'] as bool,
+                ),
+              )
+              .toList(),
     );
   }
 
@@ -167,10 +164,14 @@ class PasswordStrengthIndicator extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
       decoration: BoxDecoration(
-        color: met ? Colors.green.withOpacity(0.1) : Colors.grey.withOpacity(0.1),
+        color:
+            met ? Colors.green.withOpacity(0.1) : Colors.grey.withOpacity(0.1),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: met ? Colors.green.withOpacity(0.3) : Colors.grey.withOpacity(0.3),
+          color:
+              met
+                  ? Colors.green.withOpacity(0.3)
+                  : Colors.grey.withOpacity(0.3),
           width: 1,
         ),
       ),

@@ -45,7 +45,9 @@ class SecurityEvent {
   factory SecurityEvent.fromMap(Map<String, dynamic> map) {
     return SecurityEvent(
       eventType: map['eventType'] ?? '',
-      timestamp: DateTime.parse(map['timestamp'] ?? DateTime.now().toIso8601String()),
+      timestamp: DateTime.parse(
+        map['timestamp'] ?? DateTime.now().toIso8601String(),
+      ),
       userId: map['userId'],
       email: map['email'],
       deviceInfo: map['deviceInfo'] ?? '',
@@ -75,7 +77,8 @@ class SuspiciousActivityAlert {
 }
 
 class SecurityMonitoringService {
-  static final SecurityMonitoringService _instance = SecurityMonitoringService._internal();
+  static final SecurityMonitoringService _instance =
+      SecurityMonitoringService._internal();
   factory SecurityMonitoringService() => _instance;
   SecurityMonitoringService._internal();
 
@@ -86,8 +89,10 @@ class SecurityMonitoringService {
   // Suspicious activity thresholds
   static const int maxFailedSignInsPerHour = 5;
   static const int maxPasswordResetPerDay = 10;
-  static const int suspiciousDeviceThreshold = 3; // Different devices in short time
-  static const int unusualLocationThreshold = 2; // Different locations in short time
+  static const int suspiciousDeviceThreshold =
+      3; // Different devices in short time
+  static const int unusualLocationThreshold =
+      2; // Different locations in short time
 
   // Initialize security monitoring
   Future<void> initialize() async {
@@ -101,21 +106,23 @@ class SecurityMonitoringService {
     try {
       final deviceInfo = DeviceInfoPlugin();
       final prefs = await SharedPreferences.getInstance();
-      
+
       _deviceId = prefs.getString('device_security_id');
 
       if (Platform.isAndroid) {
         final androidInfo = await deviceInfo.androidInfo;
-        _deviceInfo = '${androidInfo.brand} ${androidInfo.model} (Android ${androidInfo.version.release})';
-        
+        _deviceInfo =
+            '${androidInfo.brand} ${androidInfo.model} (Android ${androidInfo.version.release})';
+
         if (_deviceId == null) {
           _deviceId = androidInfo.id;
           await prefs.setString('device_security_id', _deviceId!);
         }
       } else if (Platform.isIOS) {
         final iosInfo = await deviceInfo.iosInfo;
-        _deviceInfo = '${iosInfo.name} ${iosInfo.model} (iOS ${iosInfo.systemVersion})';
-        
+        _deviceInfo =
+            '${iosInfo.name} ${iosInfo.model} (iOS ${iosInfo.systemVersion})';
+
         if (_deviceId == null) {
           _deviceId = iosInfo.identifierForVendor ?? 'unknown';
           await prefs.setString('device_security_id', _deviceId!);
@@ -168,7 +175,6 @@ class SecurityMonitoringService {
         'email': email,
         'successful': successful,
       });
-
     } catch (e) {
       _log.error('Error recording security event', e);
     }
@@ -179,14 +185,14 @@ class SecurityMonitoringService {
     try {
       final prefs = await SharedPreferences.getInstance();
       final eventsJson = prefs.getStringList('security_events') ?? [];
-      
+
       eventsJson.add(jsonEncode(event.toMap()));
-      
+
       // Keep only last 100 events locally
       if (eventsJson.length > 100) {
         eventsJson.removeRange(0, eventsJson.length - 100);
       }
-      
+
       await prefs.setStringList('security_events', eventsJson);
     } catch (e) {
       _log.error('Error storing event locally', e);
@@ -194,7 +200,10 @@ class SecurityMonitoringService {
   }
 
   // Store event in Firestore
-  Future<void> _storeEventInFirestore(SecurityEvent event, String userId) async {
+  Future<void> _storeEventInFirestore(
+    SecurityEvent event,
+    String userId,
+  ) async {
     try {
       await FirebaseFirestore.instance
           .collection('users')
@@ -211,9 +220,9 @@ class SecurityMonitoringService {
     try {
       final prefs = await SharedPreferences.getInstance();
       final eventsJson = prefs.getStringList('security_events') ?? [];
-      
+
       final cutoffTime = DateTime.now().subtract(Duration(hours: hours));
-      
+
       return eventsJson
           .map((json) => SecurityEvent.fromMap(jsonDecode(json)))
           .where((event) => event.timestamp.isAfter(cutoffTime))
@@ -230,60 +239,97 @@ class SecurityMonitoringService {
       final alerts = <SuspiciousActivityAlert>[];
 
       // Check for multiple failed sign-ins
-      if (currentEvent.eventType == 'sign_in_attempt' && !currentEvent.successful) {
+      if (currentEvent.eventType == 'sign_in_attempt' &&
+          !currentEvent.successful) {
         final recentEvents = await _getRecentLocalEvents(1);
-        final failedSignIns = recentEvents
-            .where((e) => e.eventType == 'sign_in_attempt' && !e.successful && e.email == currentEvent.email)
-            .length;
+        final failedSignIns =
+            recentEvents
+                .where(
+                  (e) =>
+                      e.eventType == 'sign_in_attempt' &&
+                      !e.successful &&
+                      e.email == currentEvent.email,
+                )
+                .length;
 
         if (failedSignIns >= maxFailedSignInsPerHour) {
-          alerts.add(SuspiciousActivityAlert(
-            alertType: 'repeated_failed_signins',
-            title: 'Multiple Failed Sign-in Attempts',
-            description: 'Detected $failedSignIns failed sign-in attempts for ${currentEvent.email} in the last hour.',
-            timestamp: DateTime.now(),
-            relatedEvents: recentEvents.where((e) => e.email == currentEvent.email).toList(),
-            riskLevel: failedSignIns > 10 ? 'high' : 'medium',
-          ));
+          alerts.add(
+            SuspiciousActivityAlert(
+              alertType: 'repeated_failed_signins',
+              title: 'Multiple Failed Sign-in Attempts',
+              description:
+                  'Detected $failedSignIns failed sign-in attempts for ${currentEvent.email} in the last hour.',
+              timestamp: DateTime.now(),
+              relatedEvents:
+                  recentEvents
+                      .where((e) => e.email == currentEvent.email)
+                      .toList(),
+              riskLevel: failedSignIns > 10 ? 'high' : 'medium',
+            ),
+          );
         }
       }
 
       // Check for unusual device activity
-      if (currentEvent.eventType == 'sign_in_attempt' && currentEvent.successful) {
+      if (currentEvent.eventType == 'sign_in_attempt' &&
+          currentEvent.successful) {
         final recentEvents = await _getRecentLocalEvents(24);
-        final uniqueDevices = recentEvents
-            .where((e) => e.eventType == 'sign_in_attempt' && e.successful && e.email == currentEvent.email)
-            .map((e) => e.deviceInfo)
-            .toSet();
+        final uniqueDevices =
+            recentEvents
+                .where(
+                  (e) =>
+                      e.eventType == 'sign_in_attempt' &&
+                      e.successful &&
+                      e.email == currentEvent.email,
+                )
+                .map((e) => e.deviceInfo)
+                .toSet();
 
         if (uniqueDevices.length >= suspiciousDeviceThreshold) {
-          alerts.add(SuspiciousActivityAlert(
-            alertType: 'multiple_devices',
-            title: 'Multiple Device Sign-ins',
-            description: 'Account accessed from ${uniqueDevices.length} different devices in the last 24 hours.',
-            timestamp: DateTime.now(),
-            relatedEvents: recentEvents.where((e) => e.email == currentEvent.email).toList(),
-            riskLevel: uniqueDevices.length > 5 ? 'high' : 'medium',
-          ));
+          alerts.add(
+            SuspiciousActivityAlert(
+              alertType: 'multiple_devices',
+              title: 'Multiple Device Sign-ins',
+              description:
+                  'Account accessed from ${uniqueDevices.length} different devices in the last 24 hours.',
+              timestamp: DateTime.now(),
+              relatedEvents:
+                  recentEvents
+                      .where((e) => e.email == currentEvent.email)
+                      .toList(),
+              riskLevel: uniqueDevices.length > 5 ? 'high' : 'medium',
+            ),
+          );
         }
       }
 
       // Check for excessive password reset requests
       if (currentEvent.eventType == 'password_reset_request') {
         final recentEvents = await _getRecentLocalEvents(24);
-        final passwordResets = recentEvents
-            .where((e) => e.eventType == 'password_reset_request' && e.email == currentEvent.email)
-            .length;
+        final passwordResets =
+            recentEvents
+                .where(
+                  (e) =>
+                      e.eventType == 'password_reset_request' &&
+                      e.email == currentEvent.email,
+                )
+                .length;
 
         if (passwordResets >= maxPasswordResetPerDay) {
-          alerts.add(SuspiciousActivityAlert(
-            alertType: 'excessive_password_resets',
-            title: 'Excessive Password Reset Requests',
-            description: 'Detected $passwordResets password reset requests for ${currentEvent.email} in the last 24 hours.',
-            timestamp: DateTime.now(),
-            relatedEvents: recentEvents.where((e) => e.email == currentEvent.email).toList(),
-            riskLevel: passwordResets > 20 ? 'critical' : 'medium',
-          ));
+          alerts.add(
+            SuspiciousActivityAlert(
+              alertType: 'excessive_password_resets',
+              title: 'Excessive Password Reset Requests',
+              description:
+                  'Detected $passwordResets password reset requests for ${currentEvent.email} in the last 24 hours.',
+              timestamp: DateTime.now(),
+              relatedEvents:
+                  recentEvents
+                      .where((e) => e.email == currentEvent.email)
+                      .toList(),
+              riskLevel: passwordResets > 20 ? 'critical' : 'medium',
+            ),
+          );
         }
       }
 
@@ -291,7 +337,6 @@ class SecurityMonitoringService {
       for (final alert in alerts) {
         await _processSecurityAlert(alert);
       }
-
     } catch (e) {
       _log.error('Error checking for suspicious activity', e);
     }
@@ -323,7 +368,6 @@ class SecurityMonitoringService {
         // - Force password reset
         // - Invalidate all sessions
       }
-
     } catch (e) {
       _log.error('Error processing security alert', e);
     }
@@ -339,25 +383,27 @@ class SecurityMonitoringService {
             .doc(user.uid)
             .collection('security_alerts')
             .add({
-          'alertType': alert.alertType,
-          'title': alert.title,
-          'description': alert.description,
-          'timestamp': alert.timestamp.toIso8601String(),
-          'riskLevel': alert.riskLevel,
-          'relatedEventsCount': alert.relatedEvents.length,
-        });
+              'alertType': alert.alertType,
+              'title': alert.title,
+              'description': alert.description,
+              'timestamp': alert.timestamp.toIso8601String(),
+              'riskLevel': alert.riskLevel,
+              'relatedEventsCount': alert.relatedEvents.length,
+            });
       }
 
       // Also store locally
       final prefs = await SharedPreferences.getInstance();
       final alertsJson = prefs.getStringList('security_alerts') ?? [];
-      alertsJson.add(jsonEncode({
-        'alertType': alert.alertType,
-        'title': alert.title,
-        'description': alert.description,
-        'timestamp': alert.timestamp.toIso8601String(),
-        'riskLevel': alert.riskLevel,
-      }));
+      alertsJson.add(
+        jsonEncode({
+          'alertType': alert.alertType,
+          'title': alert.title,
+          'description': alert.description,
+          'timestamp': alert.timestamp.toIso8601String(),
+          'riskLevel': alert.riskLevel,
+        }),
+      );
 
       // Keep only last 50 alerts locally
       if (alertsJson.length > 50) {
@@ -371,13 +417,15 @@ class SecurityMonitoringService {
   }
 
   // Get recent security alerts
-  Future<List<Map<String, dynamic>>> getRecentSecurityAlerts({int days = 7}) async {
+  Future<List<Map<String, dynamic>>> getRecentSecurityAlerts({
+    int days = 7,
+  }) async {
     try {
       final prefs = await SharedPreferences.getInstance();
       final alertsJson = prefs.getStringList('security_alerts') ?? [];
-      
+
       final cutoffTime = DateTime.now().subtract(Duration(days: days));
-      
+
       return alertsJson
           .map((json) => Map<String, dynamic>.from(jsonDecode(json)))
           .where((alert) {
@@ -385,7 +433,11 @@ class SecurityMonitoringService {
             return timestamp.isAfter(cutoffTime);
           })
           .toList()
-          ..sort((a, b) => DateTime.parse(b['timestamp']).compareTo(DateTime.parse(a['timestamp'])));
+        ..sort(
+          (a, b) => DateTime.parse(
+            b['timestamp'],
+          ).compareTo(DateTime.parse(a['timestamp'])),
+        );
     } catch (e) {
       _log.error('Error getting recent security alerts', e);
       return [];
@@ -403,14 +455,15 @@ class SecurityMonitoringService {
     try {
       final prefs = await SharedPreferences.getInstance();
       final eventsJson = prefs.getStringList('security_events') ?? [];
-      
+
       final cutoffTime = DateTime.now().subtract(Duration(days: 30));
-      
-      final recentEvents = eventsJson
-          .map((json) => SecurityEvent.fromMap(jsonDecode(json)))
-          .where((event) => event.timestamp.isAfter(cutoffTime))
-          .map((event) => jsonEncode(event.toMap()))
-          .toList();
+
+      final recentEvents =
+          eventsJson
+              .map((json) => SecurityEvent.fromMap(jsonDecode(json)))
+              .where((event) => event.timestamp.isAfter(cutoffTime))
+              .map((event) => jsonEncode(event.toMap()))
+              .toList();
 
       if (recentEvents.length != eventsJson.length) {
         await prefs.setStringList('security_events', recentEvents);
@@ -468,7 +521,10 @@ class _SecurityAlertsDialog extends StatelessWidget {
                     SizedBox(height: 16),
                     Text(
                       AppLocalizations.of(context)!.noSecurityAlertsFound,
-                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
+                      ),
                     ),
                     Text(
                       AppLocalizations.of(context)!.yourAccountLooksGood,
@@ -504,24 +560,26 @@ class _SecurityAlertsDialog extends StatelessWidget {
   Widget _buildAlertCard(Map<String, dynamic> alert) {
     final riskLevel = alert['riskLevel'] ?? 'low';
     final timestamp = DateTime.parse(alert['timestamp']);
-    
+
     Color getRiskColor() {
       switch (riskLevel) {
-        case 'critical': return Colors.red;
-        case 'high': return Colors.orange;
-        case 'medium': return Colors.yellow[700]!;
-        case 'low': return Colors.blue;
-        default: return Colors.grey;
+        case 'critical':
+          return Colors.red;
+        case 'high':
+          return Colors.orange;
+        case 'medium':
+          return Colors.yellow[700]!;
+        case 'low':
+          return Colors.blue;
+        default:
+          return Colors.grey;
       }
     }
 
     return Card(
       margin: EdgeInsets.only(bottom: 8),
       child: ListTile(
-        leading: Icon(
-          _getAlertIcon(alert['alertType']),
-          color: getRiskColor(),
-        ),
+        leading: Icon(_getAlertIcon(alert['alertType']), color: getRiskColor()),
         title: Text(
           alert['title'] ?? 'Security Alert',
           style: TextStyle(fontWeight: FontWeight.w600),
@@ -550,10 +608,14 @@ class _SecurityAlertsDialog extends StatelessWidget {
 
   IconData _getAlertIcon(String? alertType) {
     switch (alertType) {
-      case 'repeated_failed_signins': return Icons.login_outlined;
-      case 'multiple_devices': return Icons.devices;
-      case 'excessive_password_resets': return Icons.lock_reset;
-      default: return Icons.warning;
+      case 'repeated_failed_signins':
+        return Icons.login_outlined;
+      case 'multiple_devices':
+        return Icons.devices;
+      case 'excessive_password_resets':
+        return Icons.lock_reset;
+      default:
+        return Icons.warning;
     }
   }
 

@@ -3,7 +3,7 @@ import 'package:flutter/foundation.dart';
 
 class NativePlayIntegrityService {
   static const MethodChannel _channel = MethodChannel('play_integrity_channel');
-  
+
   /// Get integrity token from native Android implementation
   static Future<String?> getIntegrityToken() async {
     try {
@@ -17,7 +17,7 @@ class NativePlayIntegrityService {
       return null;
     }
   }
-  
+
   /// Check device integrity using native Android implementation
   static Future<bool> checkDeviceIntegrity() async {
     try {

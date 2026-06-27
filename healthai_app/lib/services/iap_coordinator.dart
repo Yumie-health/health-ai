@@ -43,5 +43,3 @@ class IapCoordinator {
     _initialized = false;
   }
 }
-
-
