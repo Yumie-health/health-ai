@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Contributing guide
+    url: https://github.com/Yumie-health/health-ai/blob/Health-AI-App/CONTRIBUTING.md
+    about: Read branch naming, commit, and PR conventions before opening an issue or PR.
